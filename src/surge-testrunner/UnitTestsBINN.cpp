@@ -30,11 +30,11 @@ TEST_CASE("binn security invariants", "[binn]")
            handful of bytes of actual data. Must not crash or corrupt memory.
            With ASan enabled this catches any resulting out-of-bounds write. */
         unsigned char payload[] = {
-            0xE0,                         // type: list
-            0x7F, 0xFF, 0xFF, 0xFF,       // size: INT_MAX
-            0x00, 0x00, 0x00, 0x01,       // count: 1
-            0xA0, 0x10,                   // string type, claimed length 16
-            'A',  'A',  'A',  'A',  0x00  // only 5 bytes of string data
+            0xE0,                        // type: list
+            0x7F, 0xFF, 0xFF, 0xFF,      // size: INT_MAX
+            0x00, 0x00, 0x00, 0x01,      // count: 1
+            0xA0, 0x10,                  // string type, claimed length 16
+            'A',  'A',  'A',  'A',  0x00 // only 5 bytes of string data
         };
         binn *obj = binn_open(payload);
         if (obj)
@@ -47,11 +47,11 @@ TEST_CASE("binn security invariants", "[binn]")
         /* Map container claims 12-byte total size but contains a blob item
            with a claimed length of 0xFFFFFFFF. Must not crash. */
         unsigned char payload[] = {
-            0xE1,                               // type: map
-            0x00, 0x00, 0x00, 0x0C,             // size: 12
-            0x00, 0x00, 0x00, 0x01,             // count: 1
-            0x00, 0x01,                         // key id: 1
-            0xC0, 0xFF, 0xFF, 0xFF, 0xFF        // blob with huge claimed length
+            0xE1,                        // type: map
+            0x00, 0x00, 0x00, 0x0C,      // size: 12
+            0x00, 0x00, 0x00, 0x01,      // count: 1
+            0x00, 0x01,                  // key id: 1
+            0xC0, 0xFF, 0xFF, 0xFF, 0xFF // blob with huge claimed length
         };
         binn *obj = binn_open(payload);
         if (obj)
