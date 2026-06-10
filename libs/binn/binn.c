@@ -186,6 +186,8 @@ BINN_PRIVATE void * binn_malloc(int size) {
 BINN_PRIVATE void * binn_memdup(const void *src, int size) {
   void *dest;
 
+  /* Reject sizes above 1 GiB (1<<30) to prevent DoS via enormous allocations
+     and to avoid integer-overflow issues when size is cast to size_t. */
   if (src == NULL || size <= 0 || size > (1 << 30)) return NULL;
   dest = binn_malloc(size);
   if (dest == NULL) return NULL;
