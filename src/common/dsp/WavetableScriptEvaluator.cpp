@@ -548,7 +548,7 @@ static void loadWtscriptSnapshots(const void *compData, size_t blobSize, Oscilla
     if (decompressedSize < sizeof(binn_struct))
         return;
 
-    int sz = 0;
+    int sz = decompressedSize;
     if (!binn_is_valid_ex(decompressed.data(), NULL, NULL, &sz))
         return;
 
