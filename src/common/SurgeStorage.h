@@ -149,7 +149,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 27 -> 28 (XT 1.4.* nightlies) added corrected TX shapes to Sine oscillator
 // clang-format on
 
-const int ff_revision = 28;
+const int ff_revision = 29;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
