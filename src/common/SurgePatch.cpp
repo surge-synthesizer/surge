@@ -3841,6 +3841,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
     TiXmlElement serialization("serialization");
     serialization.SetAttribute("absSize", claimedArbitraryBlockStorageSize);
+    patch.InsertEndChild(serialization);
 
     TiXmlElement parameters("parameters");
 
