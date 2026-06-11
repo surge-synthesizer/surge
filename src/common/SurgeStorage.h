@@ -1371,6 +1371,7 @@ class SurgePatch
     int32_t paramModulationCount{0};
     static constexpr int maxMonophonicParamModulations = 256;
     std::array<MonophonicParamModulation, maxMonophonicParamModulations> monophonicParamModulations;
+    int claimedArbitraryBlockStorageSize{0};
 };
 
 struct Patch
