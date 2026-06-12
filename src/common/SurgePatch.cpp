@@ -1204,7 +1204,24 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
         }
         if (dr < end)
         {
-            dr += load_arbitrary_block_storage(dr, ((char *)end - dr));
+            if (streamingRevision <= 28)
+            {
+                dr += load_arbitrary_block_storage(dr, (char *)end - dr);
+            }
+            else
+            {
+                // Started putting the size in the xml so that we could tack more on to the end.
+                if (static_cast<std::size_t>((char *)end - dr) < claimedArbitraryBlockStorageSize)
+                {
+                    std::cerr << "Missing arbitrary block storage data at the end of the patch, "
+                                 "possible patch corruption."
+                              << std::endl;
+                }
+                else
+                {
+                    dr += load_arbitrary_block_storage(dr, claimedArbitraryBlockStorageSize);
+                }
+            }
         }
     }
     else
@@ -1222,6 +1239,17 @@ unsigned int SurgePatch::save_patch(void **data)
     void *xmldata = 0;
     patch_header header;
     std::vector<std::uint8_t> arbdata;
+
+    arbdata = save_arbitrary_block_storage();
+    if (arbdata.size() > std::numeric_limits<int32_t>::max())
+    {
+        claimedArbitraryBlockStorageSize = 0;
+        arbdata.clear();
+    }
+    else
+    {
+        claimedArbitraryBlockStorageSize = arbdata.size();
+    }
 
     memcpy(header.tag, "sub3", 4);
     size_t xmlsize = save_xml(&xmldata);
@@ -1249,7 +1277,6 @@ unsigned int SurgePatch::save_patch(void **data)
         }
     }
     psize += xmlsize + sizeof(patch_header);
-    arbdata = save_arbitrary_block_storage();
     psize += arbdata.size();
     if (patchptr)
         free(patchptr);
@@ -1470,10 +1497,12 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
 
     data = decompressed.data();
 
-    int sz = 0;
+    int sz = static_cast<int>(decompressedSize);
     if (!binn_is_valid_ex(data, NULL, NULL, &sz))
     {
-        std::cerr << "Failed to find binn; possibly corrupted patch." << std::endl;
+        std::cerr
+            << "Failed to find binn or it was not the reported size; possibly corrupted patch."
+            << std::endl;
         return 0;
     }
     binn *b = binn_open_ex(data, sz);
@@ -1722,6 +1751,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 tag = TINYXML_SAFE_TO_ELEMENT(tag->NextSiblingElement("tag"));
             }
         }
+    }
+
+    TiXmlElement *serialization = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("serialization"));
+    if (serialization)
+    {
+        serialization->QueryIntAttribute("absSize", &claimedArbitraryBlockStorageSize);
     }
 
     TiXmlElement *parameters = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("parameters"));
@@ -3803,6 +3838,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
     meta.InsertEndChild(tagsX);
     patch.InsertEndChild(meta);
+
+    TiXmlElement serialization("serialization");
+    serialization.SetAttribute("absSize", claimedArbitraryBlockStorageSize);
+    patch.InsertEndChild(serialization);
 
     TiXmlElement parameters("parameters");
 

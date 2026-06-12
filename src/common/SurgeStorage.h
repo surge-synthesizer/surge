@@ -147,9 +147,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 26 -> 27 (XT 1.4.* nightlies) fixed OB-Xd and BP12 legacy streaming for sst-filters upgrade
 //                               fixed extendable parameters not extending in Waveshaper effect
 // 27 -> 28 (XT 1.4.* nightlies) added corrected TX shapes to Sine oscillator
+// 28 -> 29 (XT 1.4.* nightlies) save/load size of ArbitraryBlockStorage segment
 // clang-format on
 
-const int ff_revision = 28;
+const int ff_revision = 29;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -1371,6 +1372,7 @@ class SurgePatch
     int32_t paramModulationCount{0};
     static constexpr int maxMonophonicParamModulations = 256;
     std::array<MonophonicParamModulation, maxMonophonicParamModulations> monophonicParamModulations;
+    int claimedArbitraryBlockStorageSize{0};
 };
 
 struct Patch
