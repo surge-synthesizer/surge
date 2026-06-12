@@ -147,6 +147,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 26 -> 27 (XT 1.4.* nightlies) fixed OB-Xd and BP12 legacy streaming for sst-filters upgrade
 //                               fixed extendable parameters not extending in Waveshaper effect
 // 27 -> 28 (XT 1.4.* nightlies) added corrected TX shapes to Sine oscillator
+// 28 -> 29 (XT 1.4.* nightlies) save/load size of ArbitraryBlockStorage segment
 // clang-format on
 
 const int ff_revision = 29;
