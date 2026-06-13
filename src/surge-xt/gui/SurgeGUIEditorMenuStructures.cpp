@@ -171,8 +171,8 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
             const char *lfoName =
                 synth->storage.getPatch().LFOBankLabel[current_scene][currentLfoId][0];
             promptForMiniEdit(
-                lfoName[0] != 0 ? lfoName : "", "Enter the preset name:",
-                "Save " + what + " Preset", juce::Point<int>{},
+                lfoName[0] != 0 ? lfoName : "",
+                "Enter the preset name:", "Save " + what + " Preset", juce::Point<int>{},
                 [this, currentLfoId](const std::string &s) {
                     this->synth->storage.modulatorPreset->savePresetToUser(
                         string_to_path(s), &(this->synth->storage), current_scene, currentLfoId);
