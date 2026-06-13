@@ -14,35 +14,35 @@ jobs:
       matrix:
         include:
           - name: "Windows MSVC surge-common only"
-            os: windows-latest
+            os: windows-2022
             target: surge-common
             cmakeConfig: -A x64
             cmakeOpt: DEBUG
             runTests: false
 
           - name: "Windows MSVC SurgePy"
-            os: windows-latest
+            os: windows-2022
             target: surgepy
             cmakeConfig: -A x64 -DSURGE_BUILD_PYTHON_BINDINGS=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
           - name: "Windows MSVC ARM64EC"
-            os: windows-latest
+            os: windows-2022
             target: surge-xt_Standalone
             cmakeConfig: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
           - name: "Windows MSVC ARM64"
-            os: windows-latest
+            os: windows-2022
             target: surge-xt-distribution
             cmakeConfig: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
           - name: "Windows MSVC JUCE 7"
-            os: windows-latest
+            os: windows-2022
             target: surge-xt_Standalone surge-fx_Standalone
             cmakeConfig: -A x64
             cmakeOpt: DEBUG
@@ -50,7 +50,7 @@ jobs:
             revertJuce: true
 
           #- name: "Windows Clang"
-          #  os: windows-latest
+          #  os: windows-2022
           #  target: surge-xt_Standalone
           #  cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
           #  cmakeOpt: DEBUG
@@ -99,7 +99,7 @@ jobs:
             runTests: true
 
           - name: "Windows test runner"
-            os: windows-latest
+            os: windows-2022
             target: surge-testrunner
             cmakeConfig: -G"Visual Studio 17 2022" -A x64
             #cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
