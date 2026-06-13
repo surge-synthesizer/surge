@@ -850,8 +850,8 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
         {
             mseol->forceRefresh();
         }
+        break;
     }
-
     case FORMULA_EDITOR:
     {
         auto feol = dynamic_cast<Surge::Overlays::FormulaModulatorEditor *>(getOverlayIfOpen(tag));
