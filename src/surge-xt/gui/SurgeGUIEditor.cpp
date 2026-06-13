@@ -2414,6 +2414,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
     sendStructureChangeIn = 120;
 
     frame->repaint();
+
+    // Also bring any torn-out overlay back to the front
+    for (const auto &ol : juceOverlays)
+    {
+        if (ol.second && ol.second->isTornOut() && ol.second->tearOutParent)
+        {
+            ol.second->tearOutParent->toFront(false);
+        }
+    }
 }
 
 void SurgeGUIEditor::close_editor()
