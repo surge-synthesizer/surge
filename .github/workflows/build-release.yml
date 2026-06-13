@@ -50,24 +50,24 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-2022
             name: "Windows 64-bit"
             # cmakeArgs: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
             cmakeArgs: -G"Visual Studio 17 2022" -A x64
             uploadResult: true
 
-          - os: windows-latest
+          - os: windows-2022
             name: "Windows MSVC JUCE 7"
             cmakeArgs: -G"Visual Studio 17 2022" -A x64 -DSURGE_EXTRA_ZIP_NAME="-juce7"
             revertJuce: true
             uploadResult: true
 
-          - os: windows-latest
+          - os: windows-2022
             name: "Windows ARM64EC"
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             uploadResult: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
 
-          - os: windows-latest
+          - os: windows-2022
             name: "Windows ARM64"
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             uploadResult: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
