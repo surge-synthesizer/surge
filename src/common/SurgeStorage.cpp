@@ -82,7 +82,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     else if (samplerate < 12000 || samplerate > 48000 * 32)
     {
         std::ostringstream oss;
-        oss << "SurgeStorage wa constructed with invalid samplerate ()" << samplerate
+        oss << "SurgeStorage was constructed with invalid samplerate (" << samplerate
             << " Hz). It will be reset to 48000 until audio system tells us otherwise!\n";
         reportError(oss.str(), "Initialization Error");
         setSamplerate(48000);
