@@ -433,6 +433,18 @@ void OverlayWrapper::resized()
 
 void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 {
+    if (isTornOut())
+    {
+        // Already torn out edge case: this happens when showOverlay restores the torn-out state on
+        // reopen and the caller then tears out again. Re-recording parentBeforeTearOut here would
+        // break tear-in so just reposition the existing window if a location was requested
+        if (showAt.x >= 0 && showAt.y >= 0)
+        {
+            tearOutParent->setTopLeftPosition(showAt.x, showAt.y);
+        }
+        return;
+    }
+
     auto rvs = juce::ScopedValueSetter(resizeRecordsSize, false);
     auto pt = std::make_pair(-1, -1);
 
