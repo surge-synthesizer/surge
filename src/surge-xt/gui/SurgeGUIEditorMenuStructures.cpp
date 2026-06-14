@@ -245,7 +245,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
         mpeSubMenu.addSeparator();
     }
 
-    mpeSubMenu.addItem(fmt::format("{}able MPE", synth->mpeEnabled ? "En" : "Dis"),
+    mpeSubMenu.addItem(fmt::format("{}able MPE", synth->mpeEnabled ? "Dis" : "En"),
                        [this]() { toggleMPE(); });
 
     mpeSubMenu.addSeparator();
