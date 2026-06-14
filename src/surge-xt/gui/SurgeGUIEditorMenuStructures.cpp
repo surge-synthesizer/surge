@@ -1742,9 +1742,9 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
 {
     auto midiSubMenu = juce::PopupMenu();
 
-    auto smen =
-        makeSmoothMenu(where, Surge::Storage::SmoothingMode, (int)Modulator::SmoothingMode::LEGACY,
-                       [this](auto md) { this->resetSmoothing(md); });
+    auto smen = makeSmoothMenu(where, Surge::Storage::SmoothingMode,
+                               (int)Modulator::SmoothingMode::FAST_LINE,
+                               [this](auto md) { this->resetSmoothing(md); });
     midiSubMenu.addSubMenu(Surge::GUI::toOSCase("Controller Smoothing"), smen);
 
     auto mmom = makeMonoModeOptionsMenu(where, true);

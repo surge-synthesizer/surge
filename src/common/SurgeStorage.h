@@ -1965,8 +1965,8 @@ class alignas(16) SurgeStorage
         return res;
     }
 
-    Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
-    Modulator::SmoothingMode pitchSmoothingMode = Modulator::SmoothingMode::LEGACY;
+    Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::FAST_LINE;
+    Modulator::SmoothingMode pitchSmoothingMode = Modulator::SmoothingMode::FAST_LINE;
 
     float mpePitchBendRange = -1.0f;
     bool mpeTimbreIsUnipolar = false;
