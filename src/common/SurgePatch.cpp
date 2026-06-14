@@ -186,7 +186,8 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                     p_id.next(), id_s++, label, "-",
                     fmt::format("{:c}/osc/{}/param{}", 'a' + sc, osc + 1, i + 1), ct_none,
                     Surge::Skin::Connector::connectorByID("osc.param_" + std::to_string(i + 1)),
-                    sc_id, cg_OSC, osc, true, ((i < 6) ? sceasy : 0)));
+                    sc_id, cg_OSC, osc, true, ((i < 6) ? sceasy : 0), true,
+                    (i < osc_params_per_page) ? 1 : 2));
             }
 
             a->push_back(scene[sc].osc[osc].keytrack.assign(
@@ -493,6 +494,19 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 fmt::format("{:c}/filter/{}/keytrack", 'a' + sc, f + 1), ct_percent_bipolar,
                 Surge::Skin::Connector::connectorByID("filter.keytrack_" + std::to_string(f + 1)),
                 sc_id, cg_FILTER, f, true));
+
+            for (int i = 0; i < n_extra_filter_params; i++)
+            {
+                char label[LABEL_SIZE];
+                snprintf(label, LABEL_SIZE, "extra_param%i", i);
+                // ct_none is a placeholder; actual types are assigned by filters at runtime
+                a->push_back(scene[sc].filterunit[f].extra[i].assign(
+                    p_id.next(), id_s++, label, "-",
+                    fmt::format("{:c}/filter/{}/extra_param{}", 'a' + sc, f + 1, i + 1), ct_none,
+                    Surge::Skin::Connector::connectorByID("filter.extra_param_" +
+                                                         std::to_string(i + 1)),
+                    sc_id, cg_FILTER, f, true, 0, true, 2));
+            }
         }
 
         for (int e = 0; e < 2; e++) // 2 = we have two envelopes, filter and amplifier
