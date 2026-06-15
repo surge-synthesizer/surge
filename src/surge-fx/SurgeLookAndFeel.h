@@ -303,34 +303,47 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
 
     void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override {};
 
-    void paintComponentBackground(juce::Graphics &g, int w, int h)
+    void paintComponentBackground(juce::Graphics &g, const int w, const int h, const float z)
     {
-        int orangeHeight = 40;
+        const float footer = 40.f * z;
+        const float fW = static_cast<float>(w);
+        const float fH = static_cast<float>(h);
 
         g.fillAll(findColour(SurgeColourIds::componentBgStart));
 
-        juce::ColourGradient cg(findColour(SurgeColourIds::componentBgStart), 0, 0,
-                                findColour(SurgeColourIds::componentBgEnd), 0, h - orangeHeight,
+        juce::ColourGradient cg(findColour(SurgeColourIds::componentBgStart), 0.f, 0.f,
+                                findColour(SurgeColourIds::componentBgEnd), 0.f, fH - footer,
                                 false);
         g.setGradientFill(cg);
-        g.fillRect(0, 0, w, h - orangeHeight);
+        g.fillRect(juce::Rectangle<float>(0.f, 0.f, fW, fH - footer));
 
         g.setColour(findColour(SurgeColourIds::orange));
-        g.fillRect(0, h - orangeHeight, w, orangeHeight);
+        g.fillRect(juce::Rectangle<float>(0.f, fH - footer, fW, footer));
 
-        juce::Rectangle<float> logoBound{3, h - orangeHeight + 4.f, orangeHeight - 8.f,
-                                         orangeHeight - 8.f};
-        surgeLogo->drawWithin(g, logoBound,
-                              juce::RectanglePlacement::xMid | juce::RectanglePlacement::yMid, 1.0);
+        const float padding = 4.f * z;
+        const float logoSide = footer - (padding * 2.f);
+
+        juce::Rectangle<float> logoBound{3.f * z, fH - footer + padding, logoSide, logoSide};
+
+        if (surgeLogo != nullptr)
+        {
+            surgeLogo->drawWithin(
+                g, logoBound, juce::RectanglePlacement::xMid | juce::RectanglePlacement::yMid, 1.f);
+        }
 
         g.setColour(juce::Colours::black);
-        g.drawLine(0, h - orangeHeight, w, h - orangeHeight);
+        g.drawLine(0.f, fH - footer, fW, fH - footer, 1.f * z);
 
-        // text
-        g.setFont(SST_JUCE_FONT_OPTIONS(12));
-        g.drawSingleLineText(Surge::Build::FullVersionStr, w - 3, h - 26.f,
+        g.setFont(SST_JUCE_FONT_OPTIONS(12.f * z));
+
+        const float rightMargin = fW - (3.f * z);
+        const float versionY = fH - (26.f * z);
+        const float dateY = fH - (6.f * z);
+
+        g.drawSingleLineText(Surge::Build::FullVersionStr, rightMargin, versionY,
                              juce::Justification::right);
-        g.drawSingleLineText(Surge::Build::BuildDate, w - 3, h - 6.f, juce::Justification::right);
+        g.drawSingleLineText(Surge::Build::BuildDate, rightMargin, dateY,
+                             juce::Justification::right);
     }
 };
 
@@ -531,7 +544,7 @@ class SurgeFXParamDisplay : public juce::Component
     std::unique_ptr<juce::TextEditor> overlayEditor;
 };
 
-class SurgeTempoSyncSwitch : public juce::ToggleButton
+class SurgeParamOptionSwitch : public juce::ToggleButton
 {
   public:
     void setOnOffImage(const char *onimgData, size_t onimgSize, const char *offimgData,
@@ -540,6 +553,7 @@ class SurgeTempoSyncSwitch : public juce::ToggleButton
         onImg = juce::Drawable::createFromImageData(onimgData, onimgSize);
         offImg = juce::Drawable::createFromImageData(offimgData, offimgSize);
     }
+
     std::unique_ptr<juce::Drawable> onImg, offImg;
 
   protected:
@@ -548,12 +562,20 @@ class SurgeTempoSyncSwitch : public juce::ToggleButton
     {
         if (isEnabled() && onImg && offImg)
         {
+            const auto b = getLocalBounds().toFloat();
+
             if (getToggleState())
-                onImg->drawAt(g, 0, 0, 1);
+            {
+                onImg->drawWithin(g, b, juce::RectanglePlacement::centred, 1.f);
+            }
             else
-                offImg->drawAt(g, 0, 0, 1);
+            {
+                offImg->drawWithin(g, b, juce::RectanglePlacement::centred, 1.f);
+            }
+
             return;
         }
+
         auto bounds = getLocalBounds().toFloat().reduced(1.f, 1.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
         auto handle = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
@@ -568,22 +590,30 @@ class SurgeTempoSyncSwitch : public juce::ToggleButton
         }
 
         if (isEnabled())
+        {
             g.fillRoundedRectangle(bounds, radius);
+        }
+
         g.setColour(edge);
         g.drawRoundedRectangle(bounds, radius, 1);
 
         if (!isEnabled())
+        {
             return;
+        }
 
         float controlRadius = bounds.getWidth() - 4;
         float xPos = bounds.getX() + bounds.getWidth() / 2.0 - controlRadius / 2.0;
         float yPos = bounds.getY() + bounds.getHeight() - controlRadius - 2;
 
         auto kbounds = juce::Rectangle<float>(xPos, yPos, controlRadius, controlRadius);
-        g.setColour(handle);
 
+        g.setColour(handle);
         g.drawRoundedRectangle(kbounds, controlRadius, 1);
+
         if (getToggleState())
+        {
             g.fillRoundedRectangle(kbounds, controlRadius);
+        }
     }
 };

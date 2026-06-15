@@ -36,6 +36,7 @@ struct Picker : public juce::Component
         setDescription("Select FX Type");
         setWantsKeyboardFocus(true);
     }
+
     void paint(juce::Graphics &g) override
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
@@ -70,8 +71,82 @@ struct Picker : public juce::Component
         }
         return false;
     }
+
     void mouseDown(const juce::MouseEvent &e) override { editor->showMenu(); }
+
+    void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &wheel) override
+    {
+        if (wheel.deltaY == 0.f)
+        {
+            return;
+        }
+        else
+        {
+            stepMagnitude = (stepMagnitude == 0.f)
+                                ? std::abs(wheel.deltaY)
+                                : std::min(stepMagnitude, std::abs(wheel.deltaY));
+        }
+
+        wheelAccumulator += wheel.deltaY;
+
+        const float sign = std::signbit(wheel.deltaY) ? 1.f : -1.f;
+
+        while (std::abs(wheelAccumulator) >= stepMagnitude * 0.75f)
+        {
+            wheelAccumulator += sign * stepMagnitude;
+            stepFxType(static_cast<int>(sign));
+        }
+    }
+
+    // Walk the editor's menu list to find the next/previous selectable FX entry relative
+    // to the currently active effect type, wrapping around at the ends.
+    void stepFxType(int direction)
+    {
+        const auto &menuItems = editor->menu;
+        const int currentType = editor->processor.getEffectType();
+
+        // Collect indices of all FX entries in the menu vector.
+        std::vector<int> fxIndices;
+
+        for (int i = 0; i < (int)menuItems.size(); ++i)
+        {
+            if (menuItems[i].type == SurgefxAudioProcessorEditor::FxMenu::FX)
+            {
+                fxIndices.push_back(i);
+            }
+        }
+
+        if (fxIndices.empty())
+        {
+            return;
+        }
+
+        // Find the position inside fxIndices that matches the current fx type.
+        int currentPos = 0;
+
+        for (int k = 0; k < (int)fxIndices.size(); ++k)
+        {
+            if (menuItems[fxIndices[k]].fxtype == currentType)
+            {
+                currentPos = k;
+                break;
+            }
+        }
+
+        // Step with wraparound.
+        const int newPos = (currentPos + direction + (int)fxIndices.size()) % (int)fxIndices.size();
+        const int newFxType = menuItems[fxIndices[newPos]].fxtype;
+
+        if (newFxType > 0)
+        {
+            editor->setEffectType(newFxType);
+        }
+    }
+
     SurgefxAudioProcessorEditor *editor{nullptr};
+
+    float wheelAccumulator{0.f};
+    float stepMagnitude{0.f};
 
     struct AH : public juce::AccessibilityHandler
     {
@@ -289,7 +364,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     }
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
-    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(28));
+    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26));
     fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisibleRecordOrder(fxNameLabel.get());
@@ -445,64 +520,64 @@ void SurgefxAudioProcessorEditor::blastToggleState(int w) {}
 //==============================================================================
 void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 {
-    surgeLookFeel->paintComponentBackground(g, getWidth(), getHeight());
+    surgeLookFeel->paintComponentBackground(g, getWidth(), getHeight(), getImpliedZoom());
 }
 
 void SurgefxAudioProcessorEditor::resized()
 {
-    auto impliedZoom = getImpliedZoom();
+    auto z = getImpliedZoom();
 
-    picker->setBounds(100, 10, getWidth() - 200, (topSection - 30) * impliedZoom);
-    int ypos0 = topSection - 5;
-    int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
-    int byoff = 7;
+    picker->setBounds(100 * z, 10 * z, getWidth() - 200 * z, (topSection - 30) * z);
 
-    int sliderOff = 5;
-    if (getWidth() < baseWidth)
-        sliderOff = 2;
+    const auto ypos0 = (topSection - 5.f) * z;
+    const auto rowHeight = (getHeight() - topSection * z - 40.f * z - 10.f * z) / 6.f;
+    const auto byoff = 7 * z;
+    const auto sliderOff = (getWidth() < baseWidth) ? 2.f * z : 5.f * z;
+    const auto buttonSize = (getWidth() < baseWidth) ? 17.f * z : 19.f * z;
+    const auto buttonMargin = std::max(1, (int)(1.f * z));
+
     for (int i = 0; i < n_fx_params; ++i)
     {
-        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + sliderOff,
-                                      (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
-                                      rowHeight - sliderOff};
-        fxParamSliders[i].setBounds(position);
+        juce::Rectangle<float> position{(i / 6) * getWidth() / 2.f + sliderOff,
+                                        (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
+                                        rowHeight - sliderOff};
+        fxParamSliders[i].setBounds(position.toNearestIntEdges());
 
-        int buttonSize = 19;
-        if (getWidth() < baseWidth)
-            buttonSize = 17;
-        int buttonMargin = 1;
-        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
-                                   (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize,
-                                   buttonSize};
-        fxTempoSync[i].setBounds(tsPos);
+        juce::Rectangle<float> tsPos{(i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z,
+                                     (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize,
+                                     buttonSize};
+        fxTempoSync[i].setBounds(tsPos.toNearestIntEdges());
 
-        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
-                                   (i % 6) * rowHeight + ypos0 + byoff + 2 * buttonMargin +
-                                       buttonSize,
-                                   buttonSize, buttonSize};
-        fxDeactivated[i].setBounds(daPos);
+        juce::Rectangle<float> daPos{(i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z,
+                                     (i % 6) * rowHeight + ypos0 + byoff + 2.f * buttonMargin +
+                                         buttonSize,
+                                     buttonSize, buttonSize};
+        fxDeactivated[i].setBounds(daPos.toNearestIntEdges());
 
-        juce::Rectangle<int> exPos{
-            (i / 6) * getWidth() / 2 + 2 + rowHeight - 5 + buttonMargin + buttonSize,
-            (i % 6) * rowHeight + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize, buttonSize,
+        juce::Rectangle<float> exPos{
+            (i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z + buttonMargin + buttonSize,
+            (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize, buttonSize};
+        fxExtended[i].setBounds(exPos.toNearestIntEdges());
+
+        juce::Rectangle<float> abPos{
+            (i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z + buttonMargin + buttonSize,
+            (i % 6) * rowHeight + ypos0 + byoff + 2.f * buttonMargin + buttonSize, buttonSize,
             buttonSize};
-        fxExtended[i].setBounds(exPos);
+        fxAbsoluted[i].setBounds(abPos.toNearestIntEdges());
 
-        juce::Rectangle<int> abPos{
-            (i / 6) * getWidth() / 2 + 2 + rowHeight - 5 + buttonMargin + buttonSize,
-            (i % 6) * rowHeight + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize, buttonSize,
-            buttonSize};
-        fxAbsoluted[i].setBounds(abPos);
-
-        juce::Rectangle<int> dispPos{
-            (i / 6) * getWidth() / 2 + 4 + rowHeight - 5 + 2 * buttonMargin + 2 * buttonSize,
-            (i % 6) * rowHeight + ypos0,
-            getWidth() / 2 - rowHeight - 8 - 2 * buttonMargin - 2 * buttonSize, rowHeight - 5};
-        fxParamDisplay[i].setBounds(dispPos);
+        juce::Rectangle<float> dispPos{(i / 6) * getWidth() / 2.f + 4.f * z + rowHeight - 5.f * z +
+                                           2.f * buttonMargin + 2.f * buttonSize,
+                                       (i % 6) * rowHeight + ypos0,
+                                       getWidth() / 2.f - rowHeight - 8.f * z - 2.f * buttonMargin -
+                                           2.f * buttonSize,
+                                       rowHeight - 5.f * z};
+        fxParamDisplay[i].setBounds(dispPos.toNearestIntEdges());
     }
 
-    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(28));
-    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
+    juce::Rectangle<float> titleRect{34.f * z, getHeight() - (40.f * z), 350.f * z, 40.f * z};
+
+    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26 * z));
+    fxNameLabel->setBounds(titleRect.toNearestIntEdges());
 }
 
 int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(
@@ -655,13 +730,9 @@ void SurgefxAudioProcessorEditor::showMenu()
         p.addSubMenu("Zoom", zm);
     }
 
-    auto o = juce::PopupMenu::Options();
-
-    auto r = juce::Rectangle<int>().withPosition(
-        localPointToGlobal(picker->getBounds().getBottomLeft()));
-
-    o = o.withTargetScreenArea(r).withPreferredPopupDirection(
-        juce::PopupMenu::Options::PopupDirection::downwards);
+    auto o = juce::PopupMenu::Options()
+                 .withTargetComponent(picker.get())
+                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
 
     p.showMenuAsync(o);
 }
@@ -956,15 +1027,16 @@ void SurgefxAudioProcessorEditor::idle()
     if (processor.m_audioValid != priorValid)
     {
         priorValid = processor.m_audioValid;
+
         if (!processor.m_audioValid)
         {
-            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(18));
+            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(18 * getImpliedZoom()));
             fxNameLabel->setText(processor.m_audioValidMessage,
                                  juce::NotificationType::dontSendNotification);
         }
         else
         {
-            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(28));
+            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26 * getImpliedZoom()));
             fxNameLabel->setText("Surge XT Effects", juce::NotificationType::dontSendNotification);
         }
     }
