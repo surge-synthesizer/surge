@@ -167,10 +167,10 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     AccSlider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
-    SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
-    SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
-    SurgeTempoSyncSwitch fxExtended[n_fx_params];
-    SurgeTempoSyncSwitch fxAbsoluted[n_fx_params];
+    SurgeParamOptionSwitch fxTempoSync[n_fx_params];
+    SurgeParamOptionSwitch fxDeactivated[n_fx_params];
+    SurgeParamOptionSwitch fxExtended[n_fx_params];
+    SurgeParamOptionSwitch fxAbsoluted[n_fx_params];
 
     int rubberbandParamIdx{-1};
     float rubberbandValue{0.f};
