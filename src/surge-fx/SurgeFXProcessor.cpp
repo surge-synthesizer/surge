@@ -751,6 +751,61 @@ void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
     resetFxParams(updateJuceParams);
 }
 
+void SurgefxAudioProcessor::loadFxPreset(const Surge::Storage::FxUserPreset::Preset &p)
+{
+    // The preset picker only ever lists presets for the FX type that is
+    // currently loaded (see SurgefxAudioProcessorEditor::rebuildCurrentPresets,
+    // which calls getPresetsForSingleType(getEffectType())). Loading a preset
+    // therefore never changes the effect type - the FX type picker is the
+    // only thing that does that, via resetFxType(). This is a hard invariant,
+    // not a runtime branch: if it's ever violated, that's a bug upstream of
+    // this call, not something to silently "handle" here by respawning.
+    jassert(p.type == effectNum);
+
+    // loadPresetOnto() writes ~12 params' worth of fields (val, temposync,
+    // extend_range, deactivated, deform_type) into fxstorage one at a time,
+    // non-atomically. The audio thread reads this same fxstorage on every
+    // process() call, so we still need the same resettingFx guard
+    // resetFxType() uses - just without any of the respawn/ct_none-reset
+    // machinery, since the effect type and instance aren't changing here.
+    resettingFx = true;
+
+    // loadPresetOnto() spawns its own short-lived Effect internally purely to
+    // run init_ctrltypes()/handleStreamingMismatches() against fxstorage (so
+    // valtype/ranges/deform options are correct before/after the value
+    // write), then deletes it - it never touches surge_effect, the live
+    // effect instance actually used for audio.
+    //
+    // Since surge_effect already holds a pointer into this same fxstorage
+    // (see resetFxType()), it picks up the new values on its very next
+    // process() call once resettingFx is cleared below. No respawn, no
+    // init()/init_default_values(), no DSP state reset (delay lines, filter
+    // histories, LFO phase, etc).
+    Surge::Storage::FxUserPreset loader;
+    loader.loadPresetOnto(p, storage.get(), fxstorage);
+
+    // We deliberately do NOT call resetFxParams() here, even though it does
+    // most of what we need (reorder params, push to JUCE, notify host). The
+    // problem is its feature-flag-wipe loop:
+    //
+    //     for (int i = 0; i < n_fx_params; ++i)
+    //         paramFeatureOntoParam(&(fxstorage->p[i]), 0);
+    //
+    // That loop exists for resetFxType()'s benefit: fxstorage->p[] is a
+    // fixed-size array reused across different effect types, so after
+    // spawning a *different* effect, any temposync/extend/absolute/
+    // deactivated flags left over from the *previous* effect's params need
+    // to be force-cleared. But loadPresetOnto() just wrote the preset's own
+    // (correct) values into these exact flags - calling that loop right
+    // after would immediately zero them all back out, which is exactly the
+    // tempo-sync/deactivate/extend bug this function exists to avoid. Since
+    // we never change the effect type here, there's nothing stale to clear.
+    reorderSurgeParams();
+    updateJuceParamsFromStorage(); // also triggers the async UI update
+    updateHostDisplay();
+    resettingFx = false;
+}
+
 void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
 {
     reorderSurgeParams();

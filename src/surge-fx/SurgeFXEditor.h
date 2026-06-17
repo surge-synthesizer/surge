@@ -25,6 +25,7 @@
 
 #include "SurgeFXProcessor.h"
 #include "SurgeLookAndFeel.h"
+#include "FxPresetAndClipboardManager.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -52,6 +53,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     };
     std::vector<FxMenu> menu;
     std::unique_ptr<juce::Component> picker;
+    std::unique_ptr<juce::Component> presetPicker;
 
     static constexpr int topSection = 80;
 
@@ -59,6 +61,11 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void showMenu();
     void toggleLatencyMode();
     void changeOSCInputPort();
+
+    void showPresetMenu();
+    void stepPreset(int direction); // -1 = prev, +1 = next
+    void loadCurrentPreset();
+    void rebuildCurrentPresets();
 
     //==============================================================================
     void paint(juce::Graphics &) override;
@@ -109,6 +116,10 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
                       const SurgeStorage::ErrorType &errorType) override;
 
     static constexpr int baseWidth = 600, baseHeight = 55 * 6 + 80 + topSection;
+
+    std::vector<Surge::Storage::FxUserPreset::Preset> currentPresets;
+    int currentPresetIndex{-1};
+    int lastSeenEffectType{-1};
 
   private:
     struct AccSlider : public juce::Slider
@@ -183,6 +194,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
     std::unique_ptr<juce::Label> fxNameLabel;
+    std::unique_ptr<Surge::Storage::FxUserPreset> fxPresetManager;
 
     void addAndMakeVisibleRecordOrder(juce::Component *c)
     {
