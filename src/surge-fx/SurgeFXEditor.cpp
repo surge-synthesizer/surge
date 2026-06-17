@@ -37,18 +37,19 @@ static void drawUpDownArrows(juce::Graphics &g, juce::Rectangle<float> arrowRect
     const float cx = arrowRect.getCentreX();
     const float cy = arrowRect.getCentreY();
     const float sz = std::min(w * 0.25f, h * 0.25f);
-    const float gap = sz * 0.4f;
+    const float gap = sz * 0.8f;
 
     juce::Path up;
-    up.addTriangle(cx - sz, cy - gap, cx + sz, cy - gap, cx, cy - gap - sz * 1.3f);
+    up.addTriangle(cx - sz, cy - gap, cx + sz, cy - gap, cx, cy - gap - sz * 1.25f);
     g.fillPath(up);
 
     juce::Path dn;
-    dn.addTriangle(cx - sz, cy + gap, cx + sz, cy + gap, cx, cy + gap + sz * 1.3f);
+    dn.addTriangle(cx - sz, cy + gap, cx + sz, cy + gap, cx, cy + gap + sz * 1.25f);
     g.fillPath(dn);
 }
 
-static constexpr float arrowZoneWidth = 36.f;
+static constexpr float arrowZoneWidth = 24.f;
+static constexpr float pickerFontSize = 20.f;
 
 struct PickerBase : public juce::Component
 {
@@ -63,7 +64,6 @@ struct PickerBase : public juce::Component
     virtual std::string currentLabel() const = 0;
     virtual void openMenu() = 0;
     virtual void step(int direction) = 0;
-    virtual float labelFontSize() const { return 28.f; }
 
     float arrowSplitX() const { return getWidth() - arrowZoneWidth * editor->getImpliedZoom(); }
 
@@ -83,7 +83,7 @@ struct PickerBase : public juce::Component
         g.drawLine(splitX, bounds.getY() + 4, splitX, bounds.getBottom() - 4, 1.f);
 
         g.setColour(textCol);
-        g.setFont(SST_JUCE_FONT_OPTIONS(labelFontSize() * editor->getImpliedZoom()));
+        g.setFont(SST_JUCE_FONT_OPTIONS(pickerFontSize * editor->getImpliedZoom()));
         auto labelRect = bounds.withWidth(splitX - bounds.getX() - 4.f);
         g.drawText(currentLabel(), labelRect.reduced(8, 3), juce::Justification::centred, true);
 
@@ -253,14 +253,13 @@ struct PresetPicker : public PickerBase
         if (editor->currentPresetIndex < 0 || editor->currentPresets.empty() ||
             editor->currentPresetIndex >= (int)editor->currentPresets.size())
         {
-            return "Init";
+            return "- Init -";
         }
         return editor->currentPresets[editor->currentPresetIndex].name;
     }
 
     void openMenu() override { editor->showPresetMenu(); }
     void step(int direction) override { editor->stepPreset(direction); }
-    float labelFontSize() const override { return 20.f; }
 };
 
 //==============================================================================
@@ -315,10 +314,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     fxPresetManager = std::make_unique<Surge::Storage::FxUserPreset>();
     fxPresetManager->doPresetRescan(processor.storage.get());
+
     rebuildCurrentPresets();
+
+    currentPresetIndex = defaultPresetIndexForCurrentType();
     lastSeenEffectType = processor.getEffectType();
 
-    // ---- Preset picker ----
     presetPicker = std::make_unique<PresetPicker>(this);
     addAndMakeVisibleRecordOrder(presetPicker.get());
 
@@ -391,6 +392,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamDeactivated(i, this->fxDeactivated[i].getToggleState());
             this->processor.setFXStorageDeactivated(i, this->fxDeactivated[i].getToggleState());
+
             // Special case - coupled dectivation
             this->resetLabels();
             this->processor.setUserEditingParamFeature(i, false);
@@ -466,7 +468,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     getConstrainer()->setFixedAspectRatio(baseWidth * 1.0 / baseHeight);
 
     idleTimer = std::make_unique<IdleTimer>(this);
-    idleTimer->startTimer(1000 / 5);
+    idleTimer->startTimer(1000 / 25);
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -571,7 +573,7 @@ void SurgefxAudioProcessorEditor::setEffectType(int i)
 
     // Rebuild preset list for the new FX type and reset selection
     rebuildCurrentPresets();
-    currentPresetIndex = -1;
+    currentPresetIndex = defaultPresetIndexForCurrentType();
     lastSeenEffectType = i;
 
     resetLabels();
@@ -614,7 +616,7 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
                     lastSeenEffectType = newType;
                     blastToggleState(newType - 1);
                     rebuildCurrentPresets();
-                    currentPresetIndex = -1;
+                    currentPresetIndex = defaultPresetIndexForCurrentType();
                     resetLabels();
                 }
             }
@@ -630,8 +632,51 @@ void SurgefxAudioProcessorEditor::rebuildCurrentPresets()
         return;
     }
 
+    currentPresets.clear();
+
     const int fxType = processor.getEffectType();
-    currentPresets = fxPresetManager->getPresetsForSingleType(fxType);
+    auto storage = processor.storage.get();
+    auto fxConfiguration = storage->getSnapshotSection("fx");
+
+    for (auto c = fxConfiguration->FirstChildElement(); c; c = c->NextSiblingElement())
+    {
+        if (std::string(c->Value()) != "type")
+        {
+            continue;
+        }
+
+        int t = -1;
+        c->QueryIntAttribute("i", &t);
+
+        if (t != fxType)
+        {
+            continue;
+        }
+
+        for (auto s = c->FirstChildElement("snapshot"); s; s = s->NextSiblingElement("snapshot"))
+        {
+            Surge::Storage::FxUserPreset::Preset preset;
+            preset.type = fxType;
+            preset.isFactory = true;
+
+            if (fxPresetManager->readFromXMLSnapshot(preset, s))
+            {
+                currentPresets.push_back(preset);
+            }
+        }
+
+        break;
+    }
+
+    // Scanned .srgfx presets (factory, then user) come after the configuration.xml
+    // Init presets above. Both report isFactory=true, so showPresetMenu()'s
+    // existing grouping naturally keeps Init presets at the top of the same
+    // "Factory" section, ahead of the scanned ones - no separate header needed.
+    if (fxPresetManager)
+    {
+        auto scanned = fxPresetManager->getPresetsForSingleType(fxType);
+        currentPresets.insert(currentPresets.end(), scanned.begin(), scanned.end());
+    }
 }
 
 void SurgefxAudioProcessorEditor::stepPreset(int direction)
@@ -669,6 +714,7 @@ void SurgefxAudioProcessorEditor::loadCurrentPreset()
     // (see getPresetsForSingleType(processor.getEffectType())), so this can never
     // cross an FX-type boundary.
     processor.loadFxPreset(preset);
+    processor.setCurrentPresetName(preset.name);
     blastToggleState(processor.getEffectType() - 1);
     resetLabels();
 
@@ -680,6 +726,8 @@ void SurgefxAudioProcessorEditor::loadCurrentPreset()
 
 void SurgefxAudioProcessorEditor::showPresetMenu()
 {
+    constexpr int itemsPerColumn = 25;
+
     auto p = juce::PopupMenu();
 
     if (currentPresets.empty())
@@ -697,42 +745,88 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
     // Group by (isFactory, subPath), then list presets within each group.
     // Factory presets come first (already sorted that way by the scanner),
     // and within each factory/user bucket, presets are grouped by subPath.
-    fs::path lastSubPath = "";
     bool lastIsFactory = true;
     bool firstSection = true;
+    juce::PopupMenu currentSubMenu;
+    fs::path currentSubMenuPath;
+    bool haveOpenSubMenu = false;
+
+    auto flushSubMenu = [&]() {
+        if (haveOpenSubMenu)
+        {
+            const bool subMenuIsTicked =
+                currentPresetIndex >= 0 && currentPresetIndex < (int)currentPresets.size() &&
+                currentPresets[currentPresetIndex].subPath == currentSubMenuPath;
+            const bool subMenuHasItems = currentSubMenu.getNumItems() > 0;
+
+            p.addSubMenu(currentSubMenuPath.string(), std::move(currentSubMenu), subMenuHasItems,
+                         juce::Image{}, subMenuIsTicked, 0);
+
+            currentSubMenu = juce::PopupMenu();
+            haveOpenSubMenu = false;
+        }
+    };
+
+    int flatItemsInColumn = 0;
 
     for (int idx = 0; idx < (int)currentPresets.size(); ++idx)
     {
         const auto &preset = currentPresets[idx];
 
         // Section header when crossing the factory/user boundary or when subPath changes
-        if (firstSection || preset.subPath != lastSubPath || preset.isFactory != lastIsFactory)
+        const bool isCurrent = (idx == currentPresetIndex);
+        auto addItem = [&](juce::PopupMenu &menu) {
+            menu.addItem(preset.name, true, isCurrent, [this, idx]() {
+                currentPresetIndex = idx;
+                loadCurrentPreset();
+            });
+        };
+
+        if (firstSection || preset.isFactory != lastIsFactory)
         {
+            flushSubMenu();
+
             if (!firstSection)
             {
                 p.addColumnBreak();
             }
 
             firstSection = false;
+            flatItemsInColumn = 0;
 
-            std::string header = preset.isFactory ? "Factory" : "User";
-
-            if (!preset.subPath.empty())
-            {
-                header += " / " + preset.subPath.string();
-            }
-
-            p.addSectionHeader(header);
-            lastSubPath = preset.subPath;
+            p.addSectionHeader(preset.isFactory ? "Factory" : "User");
             lastIsFactory = preset.isFactory;
+            currentSubMenuPath.clear();
         }
 
-        const bool isCurrent = (idx == currentPresetIndex);
-        p.addItem(preset.name, true, isCurrent, [this, idx]() {
-            currentPresetIndex = idx;
-            loadCurrentPreset();
-        });
+        if (preset.subPath.empty())
+        {
+            flushSubMenu();
+
+            if (flatItemsInColumn >= itemsPerColumn)
+            {
+                p.addColumnBreak();
+                p.addSectionHeader("#GHOST#");
+                flatItemsInColumn = 0;
+            }
+
+            addItem(p);
+            ++flatItemsInColumn;
+        }
+        else
+        {
+            if (!haveOpenSubMenu || preset.subPath != currentSubMenuPath)
+            {
+                flushSubMenu();
+                currentSubMenuPath = preset.subPath;
+                haveOpenSubMenu = true;
+            }
+
+            addItem(currentSubMenu);
+        }
     }
+
+    flushSubMenu();
 
     auto o = juce::PopupMenu::Options()
                  .withTargetComponent(presetPicker.get())
@@ -751,8 +845,8 @@ void SurgefxAudioProcessorEditor::resized()
 {
     auto z = getImpliedZoom();
 
-    const float pickerY = 10 * z;
-    const float pickerH = (topSection - 30) * z;
+    const float pickerY = 16 * z;
+    const float pickerH = (topSection - 36.f) * z;
     const float sideMargin = 9 * z;
     const float pickerGap = 18 * z;
     const float totalPickerW = getWidth() - 2.f * sideMargin - pickerGap;
@@ -1268,5 +1362,24 @@ void SurgefxAudioProcessorEditor::idle()
             fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26 * getImpliedZoom()));
             fxNameLabel->setText("Surge XT Effects", juce::NotificationType::dontSendNotification);
         }
+    }
+
+    auto pending = processor.consumePendingPresetName();
+
+    if (!pending.empty())
+    {
+        rebuildCurrentPresets();
+        currentPresetIndex = -1;
+
+        for (int i = 0; i < (int)currentPresets.size(); ++i)
+        {
+            if (currentPresets[i].name == pending)
+            {
+                currentPresetIndex = i;
+                break;
+            }
+        }
+
+        resetLabels();
     }
 }

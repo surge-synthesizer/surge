@@ -121,6 +121,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     int currentPresetIndex{-1};
     int lastSeenEffectType{-1};
 
+    int defaultPresetIndexForCurrentType() const { return currentPresets.empty() ? -1 : 0; }
+
   private:
     struct AccSlider : public juce::Slider
     {

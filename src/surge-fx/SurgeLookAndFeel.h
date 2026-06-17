@@ -303,6 +303,19 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
 
     void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override {};
 
+    void drawPopupMenuSectionHeader(juce::Graphics &g, const juce::Rectangle<int> &area,
+                                    const juce::String &sectionName) override
+    {
+        if (sectionName == "#GHOST#")
+            return; // Draw nothing, leaving an empty gap
+
+        g.setFont(getPopupMenuFont().boldened());
+        g.setColour(findColour(juce::PopupMenu::headerTextColourId));
+
+        g.drawFittedText(sectionName, area.getX() + 12, area.getY(), area.getWidth() - 16,
+                         (int)((float)area.getHeight() * 0.8f), juce::Justification::bottomLeft, 1);
+    }
+
     void paintComponentBackground(juce::Graphics &g, const int w, const int h, const float z)
     {
         const float footer = 40.f * z;
