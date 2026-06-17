@@ -123,6 +123,15 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
+    void setCurrentPresetName(const std::string &name) { currentPresetName = name; }
+
+    std::string consumePendingPresetName()
+    {
+        auto r = pendingPresetName;
+        pendingPresetName.clear();
+        return r;
+    }
+
     int getEffectType() { return effectNum; }
     float getFXStorageValue01(int i) { return fxstorage->p[fx_param_remap[i]].get_value_f01(); }
     float getFXDefaultValue01(int i)
@@ -431,6 +440,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
   public:
     bool oscStartIn = false;
     int oscPortIn = 53290;
+
+    std::string currentPresetName;
+    std::string pendingPresetName;
 
     void prepareParametersAbsentAudio();
     void setParameterByString(int i, const std::string &s);

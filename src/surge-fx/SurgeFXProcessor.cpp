@@ -573,6 +573,7 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
     xml->setAttribute("fxt", effectNum);
     xml->setAttribute("oscpin", oscPortIn);
     xml->setAttribute("oscin", oscStartIn);
+    xml->setAttribute("currentPresetName", juce::String(currentPresetName));
 
     copyXmlToBinary(*xml, destData);
 }
@@ -661,6 +662,10 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
             }
 
             updateJuceParamsFromStorage();
+
+            auto nm = xmlState->getStringAttribute("currentPresetName", "").toStdString();
+            currentPresetName = nm;
+            pendingPresetName = nm;
         }
     }
 }
