@@ -27,38 +27,67 @@
 #include "fmt/core.h"
 #include "SurgeStorage.h"
 
-struct Picker : public juce::Component
+static void drawUpDownArrows(juce::Graphics &g, juce::Rectangle<float> arrowRect,
+                             juce::Colour colour)
 {
-    Picker(SurgefxAudioProcessorEditor *ed) : editor(ed)
+    g.setColour(colour);
+
+    const float w = arrowRect.getWidth();
+    const float h = arrowRect.getHeight();
+    const float cx = arrowRect.getCentreX();
+    const float cy = arrowRect.getCentreY();
+    const float sz = std::min(w * 0.25f, h * 0.25f);
+    const float gap = sz * 0.4f;
+
+    juce::Path up;
+    up.addTriangle(cx - sz, cy - gap, cx + sz, cy - gap, cx, cy - gap - sz * 1.3f);
+    g.fillPath(up);
+
+    juce::Path dn;
+    dn.addTriangle(cx - sz, cy + gap, cx + sz, cy + gap, cx, cy + gap + sz * 1.3f);
+    g.fillPath(dn);
+}
+
+static constexpr float arrowZoneWidth = 36.f;
+
+struct PickerBase : public juce::Component
+{
+    PickerBase(SurgefxAudioProcessorEditor *ed, const std::string &accessibleName) : editor(ed)
     {
         setAccessible(true);
-        setTitle("Select FX Type");
-        setDescription("Select FX Type");
+        setTitle(accessibleName);
+        setDescription(accessibleName);
         setWantsKeyboardFocus(true);
     }
+
+    virtual std::string currentLabel() const = 0;
+    virtual void openMenu() = 0;
+    virtual void step(int direction) = 0;
+    virtual float labelFontSize() const { return 28.f; }
+
+    float arrowSplitX() const { return getWidth() - arrowZoneWidth * editor->getImpliedZoom(); }
 
     void paint(juce::Graphics &g) override
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
+        auto textCol = findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay);
 
         g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledBg));
         g.fillRoundedRectangle(bounds, 5);
         g.setColour(edge);
         g.drawRoundedRectangle(bounds, 5, 1);
-        g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
-        g.setFont(SST_JUCE_FONT_OPTIONS(28 * editor->getImpliedZoom()));
-        g.drawText(fx_type_names[editor->processor.getEffectType()], bounds.reduced(8, 3),
-                   juce::Justification::centred);
 
-        auto p = juce::Path();
-        int sz = 15;
-        int xp = -10;
-        int yp = (getHeight() - sz) / 2;
-        p.addTriangle(bounds.getTopRight().translated(xp - sz, yp),
-                      bounds.getTopRight().translated(xp, yp),
-                      bounds.getTopRight().translated(xp - sz / 2, yp + sz));
-        g.fillPath(p);
+        const float splitX = arrowSplitX();
+        g.setColour(edge.withAlpha(0.5f));
+        g.drawLine(splitX, bounds.getY() + 4, splitX, bounds.getBottom() - 4, 1.f);
+
+        g.setColour(textCol);
+        g.setFont(SST_JUCE_FONT_OPTIONS(labelFontSize() * editor->getImpliedZoom()));
+        auto labelRect = bounds.withWidth(splitX - bounds.getX() - 4.f);
+        g.drawText(currentLabel(), labelRect.reduced(8, 3), juce::Justification::centred, true);
+
+        drawUpDownArrows(g, bounds.withLeft(splitX), textCol);
     }
 
     bool keyPressed(const juce::KeyPress &p) override
@@ -66,13 +95,37 @@ struct Picker : public juce::Component
         if (p.getKeyCode() == juce::KeyPress::returnKey ||
             (p.getKeyCode() == juce::KeyPress::F10Key && p.getModifiers().isShiftDown()))
         {
-            editor->showMenu();
+            openMenu();
+            return true;
+        }
+
+        if (p.getKeyCode() == juce::KeyPress::upKey)
+        {
+            step(-1);
+            return true;
+        }
+
+        if (p.getKeyCode() == juce::KeyPress::downKey)
+        {
+            step(1);
             return true;
         }
         return false;
     }
 
-    void mouseDown(const juce::MouseEvent &e) override { editor->showMenu(); }
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        if (e.x >= arrowSplitX())
+        {
+
+            const float mid = getHeight() * 0.5f;
+            step(e.y < mid ? -1 : 1);
+        }
+        else
+        {
+            openMenu();
+        }
+    }
 
     void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &wheel) override
     {
@@ -80,27 +133,74 @@ struct Picker : public juce::Component
         {
             return;
         }
-        else
-        {
-            stepMagnitude = (stepMagnitude == 0.f)
-                                ? std::abs(wheel.deltaY)
-                                : std::min(stepMagnitude, std::abs(wheel.deltaY));
-        }
+
+        stepMagnitude = (stepMagnitude == 0.f) ? std::abs(wheel.deltaY)
+                                               : std::min(stepMagnitude, std::abs(wheel.deltaY));
 
         wheelAccumulator += wheel.deltaY;
-
         const float sign = std::signbit(wheel.deltaY) ? 1.f : -1.f;
 
         while (std::abs(wheelAccumulator) >= stepMagnitude * 0.75f)
         {
             wheelAccumulator += sign * stepMagnitude;
-            stepFxType(static_cast<int>(sign));
+            step(static_cast<int>(sign));
         }
     }
 
-    // Walk the editor's menu list to find the next/previous selectable FX entry relative
-    // to the currently active effect type, wrapping around at the ends.
-    void stepFxType(int direction)
+    SurgefxAudioProcessorEditor *editor{nullptr};
+    float wheelAccumulator{0.f};
+    float stepMagnitude{0.f};
+
+    struct AH : public juce::AccessibilityHandler
+    {
+        struct AHV : public juce::AccessibilityValueInterface
+        {
+            explicit AHV(PickerBase *s) : comp(s) {}
+            PickerBase *comp;
+            bool isReadOnly() const override { return true; }
+            double getCurrentValue() const override { return 0.; }
+            void setValue(double) override {}
+            void setValueAsString(const juce::String &) override {}
+            AccessibleValueRange getRange() const override { return {{0, 1}, 1}; }
+            juce::String getCurrentValueAsString() const override { return comp->currentLabel(); }
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AHV);
+        };
+
+        explicit AH(PickerBase *s)
+            : comp(s),
+              juce::AccessibilityHandler(*s, juce::AccessibilityRole::button,
+                                         juce::AccessibilityActions()
+                                             .addAction(juce::AccessibilityActionType::press,
+                                                        [this]() { comp->openMenu(); })
+                                             .addAction(juce::AccessibilityActionType::showMenu,
+                                                        [this]() { comp->openMenu(); }),
+                                         AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
+        {
+        }
+        PickerBase *comp;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AH);
+    };
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<AH>(this);
+    }
+};
+
+struct Picker : public PickerBase
+{
+    Picker(SurgefxAudioProcessorEditor *ed) : PickerBase(ed, "FX Type") {}
+
+    std::string currentLabel() const override
+    {
+        return fx_type_names[editor->processor.getEffectType()];
+    }
+
+    void openMenu() override { editor->showMenu(); }
+
+    // Walk the editor's menu list to find the next/previous selectable FX entry
+    // relative to the currently active effect type, wrapping around at the ends.
+    void step(int direction) override
     {
         const auto &menuItems = editor->menu;
         const int currentType = editor->processor.getEffectType();
@@ -142,54 +242,25 @@ struct Picker : public juce::Component
             editor->setEffectType(newFxType);
         }
     }
+};
 
-    SurgefxAudioProcessorEditor *editor{nullptr};
+struct PresetPicker : public PickerBase
+{
+    PresetPicker(SurgefxAudioProcessorEditor *ed) : PickerBase(ed, "FX Preset") {}
 
-    float wheelAccumulator{0.f};
-    float stepMagnitude{0.f};
-
-    struct AH : public juce::AccessibilityHandler
+    std::string currentLabel() const override
     {
-        struct AHV : public juce::AccessibilityValueInterface
+        if (editor->currentPresetIndex < 0 || editor->currentPresets.empty() ||
+            editor->currentPresetIndex >= (int)editor->currentPresets.size())
         {
-            explicit AHV(Picker *s) : comp(s) {}
-
-            Picker *comp;
-
-            bool isReadOnly() const override { return true; }
-            double getCurrentValue() const override { return 0.; }
-
-            void setValue(double) override {}
-            void setValueAsString(const juce::String &newValue) override {}
-            AccessibleValueRange getRange() const override { return {{0, 1}, 1}; }
-            juce::String getCurrentValueAsString() const override
-            {
-                return fx_type_names[comp->editor->processor.getEffectType()];
-            }
-
-            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AHV);
-        };
-
-        explicit AH(Picker *s)
-            : comp(s),
-              juce::AccessibilityHandler(*s, juce::AccessibilityRole::button,
-                                         juce::AccessibilityActions()
-                                             .addAction(juce::AccessibilityActionType::press,
-                                                        [this]() { comp->editor->showMenu(); })
-                                             .addAction(juce::AccessibilityActionType::showMenu,
-                                                        [this]() { comp->editor->showMenu(); }),
-                                         AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
-        {
+            return "Init";
         }
-
-        Picker *comp;
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AH);
-    };
-
-    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
-    {
-        return std::make_unique<AH>(this);
+        return editor->currentPresets[editor->currentPresetIndex].name;
     }
+
+    void openMenu() override { editor->showPresetMenu(); }
+    void step(int direction) override { editor->stepPreset(direction); }
+    float labelFontSize() const override { return 20.f; }
 };
 
 //==============================================================================
@@ -241,6 +312,15 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
+
+    fxPresetManager = std::make_unique<Surge::Storage::FxUserPreset>();
+    fxPresetManager->doPresetRescan(processor.storage.get());
+    rebuildCurrentPresets();
+    lastSeenEffectType = processor.getEffectType();
+
+    // ---- Preset picker ----
+    presetPicker = std::make_unique<PresetPicker>(this);
+    addAndMakeVisibleRecordOrder(presetPicker.get());
 
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -384,7 +464,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setResizable(true, true);
     getConstrainer()->setMinimumWidth(baseWidth * 0.75);
     getConstrainer()->setFixedAspectRatio(baseWidth * 1.0 / baseHeight);
-    // setResizable(false, false);
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 5);
@@ -474,8 +553,10 @@ void SurgefxAudioProcessorEditor::resetLabels()
     }
 
     picker->repaint();
-
-    int row = 0, col = 0;
+    if (presetPicker)
+    {
+        presetPicker->repaint();
+    }
 
     if (auto h = getAccessibilityHandler())
     {
@@ -487,8 +568,19 @@ void SurgefxAudioProcessorEditor::setEffectType(int i)
 {
     processor.resetFxType(i);
     blastToggleState(i - 1);
+
+    // Rebuild preset list for the new FX type and reset selection
+    rebuildCurrentPresets();
+    currentPresetIndex = -1;
+    lastSeenEffectType = i;
+
     resetLabels();
     picker->repaint();
+
+    if (presetPicker)
+    {
+        presetPicker->repaint();
+    }
 }
 
 void SurgefxAudioProcessorEditor::handleAsyncUpdate() { paramsChangedCallback(); }
@@ -508,14 +600,146 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
             }
             else
             {
-                // My type has changed - blow out the toggle states by hand
-                blastToggleState(processor.getEffectType() - 1);
-                resetLabels();
+                // changedParams[n_fx_params] is set unconditionally by
+                // updateJuceParamsFromStorage() on every call - including
+                // calls from loadFxPreset() which never changes the effect type.
+                // Compare against the last type we actually saw so we
+                // only rebuild/reset the preset selection on a real type
+                // change (e.g. external host automation of the FX type
+                // parameter), not on every preset load.
+                const int newType = processor.getEffectType();
+
+                if (newType != lastSeenEffectType)
+                {
+                    lastSeenEffectType = newType;
+                    blastToggleState(newType - 1);
+                    rebuildCurrentPresets();
+                    currentPresetIndex = -1;
+                    resetLabels();
+                }
             }
         }
 }
 
 void SurgefxAudioProcessorEditor::blastToggleState(int w) {}
+
+void SurgefxAudioProcessorEditor::rebuildCurrentPresets()
+{
+    if (!fxPresetManager)
+    {
+        return;
+    }
+
+    const int fxType = processor.getEffectType();
+    currentPresets = fxPresetManager->getPresetsForSingleType(fxType);
+}
+
+void SurgefxAudioProcessorEditor::stepPreset(int direction)
+{
+    if (currentPresets.empty())
+    {
+        return;
+    }
+
+    const int n = (int)currentPresets.size();
+
+    if (currentPresetIndex < 0)
+    {
+        currentPresetIndex = (direction > 0) ? 0 : n - 1;
+    }
+    else
+    {
+        currentPresetIndex = (currentPresetIndex + direction + n) % n;
+    }
+
+    loadCurrentPreset();
+}
+
+void SurgefxAudioProcessorEditor::loadCurrentPreset()
+{
+    if (currentPresetIndex < 0 || currentPresetIndex >= (int)currentPresets.size())
+    {
+        return;
+    }
+
+    const auto &preset = currentPresets[currentPresetIndex];
+
+    // rebuildCurrentPresets() only ever populates currentPresets with presets
+    // whose type matches the currently loaded effect
+    // (see getPresetsForSingleType(processor.getEffectType())), so this can never
+    // cross an FX-type boundary.
+    processor.loadFxPreset(preset);
+    blastToggleState(processor.getEffectType() - 1);
+    resetLabels();
+
+    if (presetPicker)
+    {
+        presetPicker->repaint();
+    }
+}
+
+void SurgefxAudioProcessorEditor::showPresetMenu()
+{
+    auto p = juce::PopupMenu();
+
+    if (currentPresets.empty())
+    {
+        p.addItem("No presets available", false, false, []() {});
+
+        auto o =
+            juce::PopupMenu::Options()
+                .withTargetComponent(presetPicker.get())
+                .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
+        p.showMenuAsync(o);
+        return;
+    }
+
+    // Group by (isFactory, subPath), then list presets within each group.
+    // Factory presets come first (already sorted that way by the scanner),
+    // and within each factory/user bucket, presets are grouped by subPath.
+    fs::path lastSubPath = "";
+    bool lastIsFactory = true;
+    bool firstSection = true;
+
+    for (int idx = 0; idx < (int)currentPresets.size(); ++idx)
+    {
+        const auto &preset = currentPresets[idx];
+
+        // Section header when crossing the factory/user boundary or when subPath changes
+        if (firstSection || preset.subPath != lastSubPath || preset.isFactory != lastIsFactory)
+        {
+            if (!firstSection)
+            {
+                p.addColumnBreak();
+            }
+
+            firstSection = false;
+
+            std::string header = preset.isFactory ? "Factory" : "User";
+
+            if (!preset.subPath.empty())
+            {
+                header += " / " + preset.subPath.string();
+            }
+
+            p.addSectionHeader(header);
+            lastSubPath = preset.subPath;
+            lastIsFactory = preset.isFactory;
+        }
+
+        const bool isCurrent = (idx == currentPresetIndex);
+        p.addItem(preset.name, true, isCurrent, [this, idx]() {
+            currentPresetIndex = idx;
+            loadCurrentPreset();
+        });
+    }
+
+    auto o = juce::PopupMenu::Options()
+                 .withTargetComponent(presetPicker.get())
+                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
+
+    p.showMenuAsync(o);
+}
 
 //==============================================================================
 void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
@@ -527,7 +751,22 @@ void SurgefxAudioProcessorEditor::resized()
 {
     auto z = getImpliedZoom();
 
-    picker->setBounds(100 * z, 10 * z, getWidth() - 200 * z, (topSection - 30) * z);
+    const float pickerY = 10 * z;
+    const float pickerH = (topSection - 30) * z;
+    const float sideMargin = 9 * z;
+    const float pickerGap = 18 * z;
+    const float totalPickerW = getWidth() - 2.f * sideMargin - pickerGap;
+    const float halfW = totalPickerW * 0.5f;
+
+    picker->setBounds(
+        juce::Rectangle<float>(sideMargin, pickerY, halfW, pickerH).toNearestIntEdges());
+
+    if (presetPicker)
+    {
+        presetPicker->setBounds(
+            juce::Rectangle<float>(sideMargin + halfW + pickerGap, pickerY, halfW, pickerH)
+                .toNearestIntEdges());
+    }
 
     const auto ypos0 = (topSection - 5.f) * z;
     const auto rowHeight = (getHeight() - topSection * z - 40.f * z - 10.f * z) / 6.f;
@@ -580,12 +819,10 @@ void SurgefxAudioProcessorEditor::resized()
     fxNameLabel->setBounds(titleRect.toNearestIntEdges());
 }
 
-int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(
-    int zoomLow,                     // bottom of range
-    int zoomHigh,                    // top of range
-    int zoomQuanta,                  // step size
-    int percentageOfScreenAvailable, // How much to shrink actual screen
-    float baseW, float baseH)
+int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(int zoomLow, int zoomHigh,
+                                                               int zoomQuanta,
+                                                               int percentageOfScreenAvailable,
+                                                               float baseW, float baseH)
 {
     // Here is a very crude implementation
     int result = zoomHigh;
@@ -628,12 +865,7 @@ void SurgefxAudioProcessorEditor::makeMenu()
             auto t = -1;
             c->QueryIntAttribute("i", &t);
             men.fxtype = t;
-            if (t == fxt_audio_input) // skip the "Audio In" effect
-            {
-                c = c->NextSiblingElement();
-                continue;
-            }
-            else if (t == fxt_convolution) // requires GUI work
+            if (t == fxt_audio_input || t == fxt_convolution)
             {
                 c = c->NextSiblingElement();
                 continue;
@@ -702,10 +934,8 @@ void SurgefxAudioProcessorEditor::showMenu()
     {
         lab = fmt::format("Zoom to {:d}%", s);
 
-        // TODO: use this condition once we have a storable zoom factor
         bool ticked = (s == zoomFactor);
 
-        // TODO: make it actually work!
         zm.addItem(lab, true, ticked, [this, s, zoomTo]() { zoomTo(s); });
     }
 
@@ -945,7 +1175,6 @@ struct FxFocusTrav : public juce::ComponentTraverser
     }
     juce::Component *searchDir(juce::Component *from, int dir)
     {
-
         const auto iter = std::find(editor->accessibleOrderWeakRefs.cbegin(),
                                     editor->accessibleOrderWeakRefs.cend(), from);
         if (iter == editor->accessibleOrderWeakRefs.cend())

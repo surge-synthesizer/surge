@@ -29,6 +29,7 @@
 #include "SurgeStorage.h"
 #include "Effect.h"
 #include "FXOpenSoundControl.h"
+#include "FxPresetAndClipboardManager.h"
 #include <atomic>
 #include "sst/filters/HalfRateFilter.h"
 
@@ -326,6 +327,16 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     void resetFxType(int t, bool updateJuceParams = true);
     void resetFxParams(bool updateJuceParams = true);
+
+    // Loads a scanned FX preset's parameter values onto the currently loaded
+    // effect. This does NOT change the effect type and does NOT respawn the
+    // effect - it only writes parameter values into fxstorage, exactly like
+    // setFXParamValue01() does for a single parameter. Callers must only
+    // pass a preset whose type matches the currently loaded effect type
+    // (getEffectType()); the FX type picker is solely responsible for
+    // changing the effect type, via resetFxType(). Violating this is a bug
+    // at the call site, asserted via jassert rather than handled here.
+    void loadFxPreset(const Surge::Storage::FxUserPreset::Preset &p);
 
     // Members for the FX. If this looks a lot like surge-rack/SurgeFX.hpp that's not a coincidence
     std::unique_ptr<SurgeStorage> storage;

@@ -332,13 +332,13 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         }
 
         g.setColour(juce::Colours::black);
-        g.drawLine(0.f, fH - footer, fW, fH - footer, 1.f * z);
+        g.drawLine(0.f, fH - footer, fW, fH - footer, z);
 
         g.setFont(SST_JUCE_FONT_OPTIONS(12.f * z));
 
-        const float rightMargin = fW - (3.f * z);
-        const float versionY = fH - (26.f * z);
-        const float dateY = fH - (6.f * z);
+        const float rightMargin = fW - (8.f * z);
+        const float versionY = fH - (23.f * z);
+        const float dateY = fH - (9.f * z);
 
         g.drawSingleLineText(Surge::Build::FullVersionStr, rightMargin, versionY,
                              juce::Justification::right);
