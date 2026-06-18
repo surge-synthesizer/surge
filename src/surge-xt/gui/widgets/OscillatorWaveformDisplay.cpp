@@ -1148,6 +1148,19 @@ struct ItemWithSharedIconComponent : juce::PopupMenu::CustomComponent
         }
         triggerMenuItem();
     }
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        if (key.isKeyCode(juce::KeyPress::returnKey) || key.isKeyCode(juce::KeyPress::spaceKey))
+        {
+            if (item.action)
+            {
+                item.action();
+            }
+            triggerMenuItem();
+            return true;
+        }
+        return false;
+    }
     void paint(juce::Graphics &g) override
     {
         const auto colour = item.colour != juce::Colour() ? &item.colour : nullptr;
