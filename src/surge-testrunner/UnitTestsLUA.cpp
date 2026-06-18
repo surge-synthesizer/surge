@@ -1030,7 +1030,7 @@ end)FN");
         }
     }
 
-    SECTION("Shared Table Is Wiped On Script Change")
+    SECTION("Shared Table Is Wiped By requestSharedDataWipe")
     {
         SurgeStorage storage;
         FormulaModulatorStorage fs;
@@ -1067,6 +1067,7 @@ end)FN";
             REQUIRE(c.v == 0.25);
         }
         fs.setFormula(scriptB);
+        Surge::Formula::requestSharedDataWipe(&storage);
         auto secondRun = runFormula(&storage, &fs, 0.0321, 5);
         REQUIRE(!secondRun.empty());
         for (auto c : secondRun)

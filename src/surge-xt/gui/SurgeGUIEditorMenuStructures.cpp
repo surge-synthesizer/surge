@@ -33,6 +33,7 @@
 #include "AccessibleHelpers.h"
 #include "DebugHelpers.h"
 #include "ModulatorPresetManager.h"
+#include "FormulaModulationHelper.h"
 
 #include "fmt/core.h"
 
@@ -2080,6 +2081,11 @@ void SurgeGUIEditor::loadModulatorPresetFrom(const fs::path &path, int scene, in
     synth->storage.modulatorPreset->loadPresetFrom(path, &synth->storage, scene, lfoId);
 
     auto newshape = synth->storage.getPatch().scene[scene].lfo[lfoId].shape.val.i;
+
+    if (newshape == lt_formula)
+    {
+        Surge::Formula::requestSharedDataWipe(&(synth->storage));
+    }
 
     if (auto ol = getOverlayIfOpenAs<Surge::Overlays::MSEGEditor>(MSEG_EDITOR))
     {

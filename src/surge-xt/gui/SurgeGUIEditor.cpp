@@ -39,6 +39,7 @@
 #include "ModulatorPresetManager.h"
 #include "ModulationSource.h"
 #include "WavetableScriptEvaluator.h"
+#include "FormulaModulationHelper.h"
 #include "PatchFileHeaderStructs.h"
 
 #include "SurgeSynthEditor.h"
@@ -2811,6 +2812,7 @@ void SurgeGUIEditor::setFormulaFromUndo(int scene, int lfoid, const FormulaModul
         refresh_mod();
     }
     synth->storage.getPatch().formulamods[scene][lfoid] = val;
+    Surge::Formula::requestSharedDataWipe(&(synth->storage));
     synth->refresh_editor = true;
     if (auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR))
     {

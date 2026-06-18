@@ -114,6 +114,9 @@ end
         }
     }
 
+    // Service any pending shared-table wipe here, immediately before init() runs below
+    wipeSharedData(storage, !is_display);
+
     // Calculate lfo_id from the element pointer
     // Requires that formulamods is a contiguous 2D array and that fs points inside it
     auto computeLfoId = [storage](const FormulaModulatorStorage *fs) {
@@ -208,21 +211,6 @@ end
             lua_pop(s.L, 2); // Pop process and init (or nil)
             stateData.knownBadFunctions.insert(s.funcName);
         }
-
-        // Wipe shared table on each script parse
-        lua_getglobal(s.L, sharedTableName);
-        if (lua_istable(s.L, -1))
-        {
-            lua_pushnil(s.L);
-            while (lua_next(s.L, -2))
-            {
-                lua_pop(s.L, 1);        // pop value
-                lua_pushvalue(s.L, -1); // duplicate the key
-                lua_pushnil(s.L);
-                lua_settable(s.L, -4); // clear the key
-            }
-        }
-        lua_pop(s.L, 1); // pop shared (or nil)
 
         // this happens here because we did parse it at least. Don't parse again until it is changed
         lua_pushstring(s.L, fs->formulaString.c_str());
@@ -452,6 +440,49 @@ end
 #endif
 
     return true;
+}
+
+void requestSharedDataWipe(SurgeStorage *storage)
+{
+    auto &stateData = *storage->formulaGlobalData;
+    stateData.audioSharedWipeRequested.store(true, std::memory_order_relaxed);
+    stateData.displaySharedWipeRequested.store(true, std::memory_order_relaxed);
+}
+
+void wipeSharedData(SurgeStorage *storage, bool onAudioThread)
+{
+#if HAS_LUA
+    auto &stateData = *storage->formulaGlobalData;
+
+    auto wipe = [](void *state) {
+        auto *L = (lua_State *)state;
+        lua_getglobal(L, sharedTableName);
+        if (lua_istable(L, -1))
+        {
+            lua_pushnil(L);
+            while (lua_next(L, -2))
+            {
+                lua_pop(L, 1);        // pop value
+                lua_pushvalue(L, -1); // duplicate the key
+                lua_pushnil(L);
+                lua_settable(L, -4); // clear the key
+            }
+        }
+        lua_pop(L, 1); // pop shared (or nil)
+    };
+
+    // Pick the flag set by the calling thread, then wipe its state if a request is pending
+    auto *requested =
+        onAudioThread ? &stateData.audioSharedWipeRequested : &stateData.displaySharedWipeRequested;
+
+    if (requested->load(std::memory_order_relaxed))
+    {
+        requested->store(false, std::memory_order_relaxed);
+        auto *state = onAudioThread ? stateData.audioState : stateData.displayState;
+        if (state)
+            wipe(state);
+    }
+#endif
 }
 
 void removeFunctionsAssociatedWith(SurgeStorage *storage, FormulaModulatorStorage *fs)
