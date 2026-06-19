@@ -493,6 +493,7 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
                                                           &(storage.getPatch().formulamods[sc][m]));
         }
     }
+    Surge::Formula::requestSharedDataWipe(&storage);
 
     storage.getPatch().isDirty = false;
 

@@ -27,6 +27,7 @@
 #include "StringOps.h"
 #include "LuaSupport.h"
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -45,6 +46,8 @@ struct GlobalData
     std::unordered_set<std::string> knownBadFunctions; // these are functions which cause an error
     std::unordered_map<FormulaModulatorStorage *, std::unordered_set<std::string>> functionsPerFMS;
     void *audioState{nullptr}, *displayState{nullptr};
+    std::atomic<bool> audioSharedWipeRequested{false};
+    std::atomic<bool> displaySharedWipeRequested{false};
 };
 
 static constexpr int max_formula_outputs{max_lfo_indices};
@@ -105,6 +108,8 @@ void setupStorage(SurgeStorage *s);
 
 bool initEvaluatorState(EvaluatorState &s);
 bool cleanEvaluatorState(EvaluatorState &s);
+void requestSharedDataWipe(SurgeStorage *storage);
+void wipeSharedData(SurgeStorage *storage, bool onAudioThread);
 void removeFunctionsAssociatedWith(SurgeStorage *,
                                    FormulaModulatorStorage *fs); // audio thread only please
 bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,

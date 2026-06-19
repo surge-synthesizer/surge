@@ -2813,6 +2813,7 @@ void FormulaModulatorEditor::applyCode()
 
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
+    Surge::Formula::requestSharedDataWipe(storage);
     storage->getPatch().isDirty = true;
     editor->forceLfoDisplayRepaint();
     updateDebuggerIfNeeded();
