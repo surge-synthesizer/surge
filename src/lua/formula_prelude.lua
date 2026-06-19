@@ -226,6 +226,54 @@ function math.sinc(t)
     return o
 end
 
+-- returns a normally distributed random number with given mean and standard deviation using the Box-Muller method
+function math.random_normal(mean, stddev)
+    mean = mean or 0
+    stddev = stddev or 1
+    local u1 = 1 - math.random() -- guard log(0)
+    local u2 = math.random()
+    return mean + math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2) * stddev
+end
+
+-- returns a random non-negative integer from a Poisson distribution with given lambda (expected number of events)
+-- uses Knuth's algorithm for lambda < 30, normal approximation for higher values
+function math.random_poisson(lambda)
+    if lambda <= 0 then
+        return 0
+    elseif lambda < 30 then -- Knuth
+        local L = math.exp(-lambda)
+        local k = 0
+        local p = 1
+        repeat
+            k = k + 1
+            local u = math.random()
+            p = p * u
+        until p <= L
+        return k - 1
+    else -- Normal approximation
+        local x = math.random_normal(lambda, math.sqrt(lambda))
+        if x < 0 then
+            return 0
+        end
+        return math.floor(x + 0.5)
+    end
+end
+
+-- returns a random number from an exponential distribution with given lambda (rate)
+-- models time between events in a Poisson process, result is >= 0
+-- lambda <= 0 is invalid and returns math.huge
+function math.random_exponential(lambda)
+    if lambda <= 0 then return math.huge end
+    local u = 1 - math.random() -- guard log(0)
+    return -math.log(u) / lambda
+end
+
+-- returns 1 with probability p (0..1), otherwise 0
+function math.random_bernoulli(p)
+    p = p or 0.5
+    return math.random() < p and 1 or 0
+end
+
 
 --- BUILT-IN MODULATORS ---
 
