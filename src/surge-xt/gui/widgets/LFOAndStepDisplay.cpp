@@ -584,7 +584,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     LFOStorage deactivateStorage;
     bool hasFullWave = false, waveIsAmpWave = false;
 
-    if (lfodata->rate.deactivated)
+    if (lfodata->rate.deactivated && lfodata->shape.val.i != lt_formula)
     {
         hasFullWave = true;
         deactivateStorage = *lfodata;
