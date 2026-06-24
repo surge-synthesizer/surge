@@ -118,7 +118,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     setupSurgeSynthesizerDI();
 
-    auto parent = std::make_unique<juce::AudioProcessorParameterGroup>("", "", "|");
+    auto parent = std::make_unique<juce::AudioProcessorParameterGroup>("", "", "");
     auto macroG = std::make_unique<juce::AudioProcessorParameterGroup>("macros", "Macros", "|");
 
     for (int mn = 0; mn < n_customcontrollers; ++mn)
