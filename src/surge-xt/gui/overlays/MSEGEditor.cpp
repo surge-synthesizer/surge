@@ -2330,6 +2330,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto t = tf(event.position.getX());
         auto drawArea = getDrawArea();
         auto where = event.position.toInt();
+        mouseDownInitiation =
+            (drawArea.contains(event.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
+                                                       : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
+
+        if (mouseDownInitiation == MOUSE_DOWN_IN_DRAW_AREA && event.mods.isShiftDown() &&
+            event.mods.isCommandDown() && event.mods.isAltDown())
+        {
+            setMouseCursor(juce::MouseCursor::PointingHandCursor);
+            return;
+        }
 
         if (drawArea.contains(where))
         {
@@ -2397,6 +2407,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         if (inFreehandDrag)
         {
+            /*             const auto drawArea = getDrawArea();
+
+                        if (drawArea.contains(event.position.toInt()))
+                        {
+                        } */
+
             const auto tf = pxToTime();
             const auto pv = pxToVal();
             const float t = tf(event.position.x);
@@ -2405,6 +2421,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             freehandSamples.push_back({t, v});
 
             repaint();
+
             return;
         }
 
