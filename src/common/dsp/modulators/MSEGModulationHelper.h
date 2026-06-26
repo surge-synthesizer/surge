@@ -58,6 +58,28 @@ struct EvaluatorState
 
     void seed(long l) { gen = std::minstd_rand(l); }
 };
+
+struct FitResult
+{
+    MSEGStorage::segment::Type type;
+    float cpv{0.f};
+    float cpduration{0.5f};
+    float maxResidual{1e10f};
+};
+
+// Fit a single segment spanning samples[start..end] (inclusive endpoints pinned
+// to v0/v1 at absolute times tStart/tEnd).  Returns the best-fitting type and
+// its control-point values. LFO Deform is assumed as 0 throughout.
+FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t start, size_t end,
+                     float v0, float v1, float tStart, float tEnd);
+
+// Index-based Ramer-Douglas-Peucker algorithm using curve-fit residual
+// Appends fitted MSEGStorage::segment values to `result`.
+// epsilon is the max-residual tolerance in normalized value units.
+void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t start, size_t end,
+                 float epsilon, float totalGestureDuration,
+                 std::vector<MSEGStorage::segment> &result);
+
 float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *ms,
               EvaluatorState *state, bool forceOneShot = false);
 

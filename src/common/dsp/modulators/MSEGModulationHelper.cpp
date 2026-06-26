@@ -32,6 +32,435 @@ namespace Surge
 namespace MSEG
 {
 
+// ------------------------------------------------------------
+// Internal helpers
+// ------------------------------------------------------------
+
+// Evaluate LINEAR shape at normalized phase frac in [0,1], cpv in [-1,1], df=0.
+static float evalLinear(float frac, float v0, float v1, float cpv)
+{
+    float V = 0.5f * cpv + 0.5f;
+    float amul = 1.f;
+
+    if (V < 0.5f)
+    {
+        amul = -1.f;
+        V = 1.f - V;
+    }
+
+    float disc = 1.f - 4.f * V * (1.f - V);
+    float a = 0.f;
+
+    if (fabs(V) > 1e-3f)
+    {
+        float Q = std::max(1e-5f, std::min(1e6f, (1.f - sqrtf(disc)) / (2.f * V)));
+        a = amul * 2.f * logf(Q);
+    }
+
+    float cpline = frac;
+
+    if (fabs(a) > 1e-3f)
+        cpline = (expf(a * frac) - 1.f) / (expf(a) - 1.f);
+
+    // df=0 so bend3 is identity — no additional deform step needed
+
+    return cpline * (v1 - v0) + v0;
+}
+
+// Evaluate SCURVE shape at normalized phase frac in [0,1], cpv in [-1,1], df=0.
+static float evalSCurve(float frac, float v0, float v1, float cpv)
+{
+    // df=0 so the adf branch is skipped; frac is used directly for the fold
+    float f2 = frac;
+    bool mirrored = false;
+
+    if (f2 > 0.5f)
+    {
+        f2 = 1.f - (f2 - 0.5f) * 2.f;
+        mirrored = true;
+    }
+    else
+    {
+        f2 = f2 * 2.f;
+    }
+
+    // Reuse LINEAR shape on the half-phase
+    float V = 0.5f * cpv + 0.5f;
+    float amul = 1.f;
+
+    if (V < 0.5f)
+    {
+        amul = -1.f;
+        V = 1.f - V;
+    }
+
+    float disc = 1.f - 4.f * V * (1.f - V);
+    float a = 0.f;
+
+    if (fabs(V) > 1e-3f)
+    {
+        float Q = std::max(1e-5f, std::min(1e6f, (1.f - sqrtf(disc)) / (2.f * V)));
+        a = amul * 2.f * logf(Q);
+    }
+
+    float cpline = f2;
+
+    if (fabs(a) > 1e-3f)
+        cpline = (expf(a * f2) - 1.f) / (expf(a) - 1.f);
+
+    if (!mirrored)
+        cpline *= 0.5f;
+    else
+        cpline = 1.f - 0.5f * cpline;
+
+    return cpline * (v1 - v0) + v0;
+}
+
+// Evaluate QUAD_BEZIER at timeAlongSegment, given segment duration and the
+// stored (on-curve) control point (cpduration normalized 0..1, cpv absolute).
+// df=0 so no pow() warp on t.
+static float evalBezier(float timeAlong, float duration, float v0, float v1, float cpdurNorm,
+                        float cpv)
+{
+    float cpt = cpdurNorm * duration;
+
+    // Guard: walk off exact midpoint to avoid degenerate quadratic
+    if (fabs(cpt - duration * 0.5f) < 1e-5f)
+        cpt += 1e-4f;
+
+    // Convert stored on-curve point to actual Bezier control point
+    float tp = duration * 0.5f;
+    float vp = (v1 - v0) * 0.5f + v0;
+    float dt = cpt - tp;
+    float dy = cpv - vp;
+    float px1 = tp + 2.f * dt; // actual control point time
+    float py1 = vp + 2.f * dy; // actual control point value
+
+    // Solve for Bezier parameter t from timeAlong
+    // (px2 - 2*px1)*t^2 + 2*px1*t - timeAlong = 0  (px0=0)
+    float px2 = duration;
+    float a = px2 - 2.f * px1;
+    float b = 2.f * px1;
+    float c = -timeAlong;
+    float disc = b * b - 4.f * a * c;
+
+    if (a == 0.f || disc < 0.f)
+    {
+        // Degenerate: fall back to linear
+        return (timeAlong / duration) * v1 + (1.f - timeAlong / duration) * v0;
+    }
+
+    float bt = (-b + sqrtf(disc)) / (2.f * a);
+    // df=0: no pow() warp
+
+    return (1.f - bt) * (1.f - bt) * v0 + 2.f * (1.f - bt) * bt * py1 + bt * bt * v1;
+}
+
+// Compute max absolute residual for a set of (time,value) samples against
+// a user-supplied eval function that takes normalized phase [0,1].
+// tStart/tEnd define the segment boundaries.
+template <typename EvalFn>
+static float maxResidual(const std::vector<std::pair<float, float>> &samples, size_t start,
+                         size_t end, float tStart, float tEnd, EvalFn eval)
+{
+    float duration = tEnd - tStart;
+    float maxR = 0.f;
+
+    for (size_t i = start; i <= end; ++i)
+    {
+        float frac = (duration > 1e-6f) ? (samples[i].first - tStart) / duration : 0.f;
+        frac = std::max(0.f, std::min(1.f, frac));
+        float predicted = eval(frac);
+        float r = fabs(samples[i].second - predicted);
+        if (r > maxR)
+            maxR = r;
+    }
+
+    return maxR;
+}
+
+// 1-D golden section search for minimum of f over [lo, hi].
+template <typename F> static float goldenSearch(F f, float lo, float hi, int iters = 30)
+{
+    constexpr float phi = 0.6180339887f; // 1/golden_ratio
+    float c = hi - phi * (hi - lo);
+    float d = lo + phi * (hi - lo);
+    float fc = f(c), fd = f(d);
+
+    for (int i = 0; i < iters; ++i)
+    {
+        if (fc < fd)
+        {
+            hi = d;
+            d = c;
+            fd = fc;
+            c = hi - phi * (hi - lo);
+            fc = f(c);
+        }
+        else
+        {
+            lo = c;
+            c = d;
+            fc = fd;
+            d = lo + phi * (hi - lo);
+            fd = f(d);
+        }
+    }
+
+    return (lo + hi) * 0.5f;
+}
+
+// ------------------------------------------------------------
+
+FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t start, size_t end,
+                     float v0, float v1, float tStart, float tEnd)
+{
+    FitResult best;
+    best.maxResidual = std::numeric_limits<float>::max();
+    float duration = tEnd - tStart;
+
+    // ---- HOLD ----
+    {
+        float r =
+            maxResidual(samples, start, end, tStart, tEnd, [&](float /*frac*/) { return v0; });
+        if (r < best.maxResidual)
+        {
+            best = {MSEGStorage::segment::HOLD, 0.f, 0.5f, r};
+        }
+    }
+
+    // ---- LINEAR ----
+    {
+        auto costFn = [&](float cpv) {
+            return maxResidual(samples, start, end, tStart, tEnd,
+                               [&](float frac) { return evalLinear(frac, v0, v1, cpv); });
+        };
+        float cpv = goldenSearch(costFn, -1.f, 1.f);
+        float r = costFn(cpv);
+
+        if (r < best.maxResidual)
+            best = {MSEGStorage::segment::LINEAR, cpv, 0.5f, r};
+    }
+
+    // ---- SCURVE ----
+    {
+        auto costFn = [&](float cpv) {
+            return maxResidual(samples, start, end, tStart, tEnd,
+                               [&](float frac) { return evalSCurve(frac, v0, v1, cpv); });
+        };
+        float cpv = goldenSearch(costFn, -1.f, 1.f);
+        float r = costFn(cpv);
+
+        if (r < best.maxResidual)
+            best = {MSEGStorage::segment::SCURVE, cpv, 0.5f, r};
+    }
+
+    // ---- QUAD_BEZIER (least-squares for on-curve control point) ----
+    {
+        // The stored control point is an on-curve point (user sees it pass through here).
+        // We fit (cpdurNorm, cpv) directly in the segment's local coordinate system.
+        //
+        // Chord-length parameterisation: tᵢ proportional to cumulative arc length.
+        size_t n = end - start + 1;
+        std::vector<float> param(n);
+        param[0] = 0.f;
+
+        for (size_t i = 1; i < n; ++i)
+        {
+            float dt = samples[start + i].first - samples[start + i - 1].first;
+            float dv = samples[start + i].second - samples[start + i - 1].second;
+            param[i] = param[i - 1] + sqrtf(dt * dt + dv * dv);
+        }
+
+        float totalLen = param[n - 1];
+
+        if (totalLen > 1e-6f)
+        {
+            for (size_t i = 0; i < n; ++i)
+                param[i] /= totalLen;
+        }
+
+        // For each sample at chord-param uᵢ, the Bezier value is:
+        //   B(uᵢ) = (1-uᵢ)² P0 + 2uᵢ(1-uᵢ) P1_actual + uᵢ² P2
+        //
+        // where P1_actual = segment_mid + 2*(P1_stored - segment_mid)
+        //                  = 2*P1_stored - segment_mid
+        //
+        // So B(uᵢ) = (1-uᵢ)² P0 + 2uᵢ(1-uᵢ)*(2*P1_stored - segment_mid) + uᵢ² P2
+        //
+        // The stored control point has two independent components: (px_stored, py_stored).
+        // Both appear linearly, so we can solve two independent 1-D weighted least squares:
+        //
+        //   weight_i = 4 * uᵢ * (1 - uᵢ)                (coefficient of P1_stored in B)
+        //   fixed_i  = (1-uᵢ)² * P0.x + uᵢ² * P2.x
+        //            - 2*uᵢ*(1-uᵢ) * seg_mid.x           (everything except P1_stored)
+        //   target_i = sample.x (for time) or sample.v (for value)
+        //
+        // Least squares: px_stored = Σ wᵢ*(targetᵢ - fixedᵢ) / Σ wᵢ²
+
+        // In time axis:
+        //   P0.x = 0 (local), P2.x = duration, seg_mid.x = duration/2
+        float segMidT = duration * 0.5f;
+        float numT = 0.f, denT = 0.f;
+
+        // In value axis:
+        //   P0.y = v0, P2.y = v1, seg_mid.y = (v0+v1)/2
+        float segMidV = (v0 + v1) * 0.5f;
+        float numV = 0.f, denV = 0.f;
+
+        for (size_t i = 0; i < n; ++i)
+        {
+            float u = param[i];
+            float w = 4.f * u * (1.f - u); // coefficient of P1_stored (×2 already folded in)
+
+            // Time axis
+            float localT = samples[start + i].first - tStart; // 0..duration
+            float fixedT =
+                (1.f - u) * (1.f - u) * 0.f + u * u * duration - 2.f * u * (1.f - u) * segMidT;
+            numT += w * (localT - fixedT);
+            denT += w * w;
+
+            // Value axis
+            float sampleV = samples[start + i].second;
+            float fixedV = (1.f - u) * (1.f - u) * v0 + u * u * v1 - 2.f * u * (1.f - u) * segMidV;
+            numV += w * (sampleV - fixedV);
+            denV += w * w;
+        }
+
+        float pxStored = (denT > 1e-8f) ? (numT / denT) : segMidT;
+        float pyStored = (denV > 1e-8f) ? (numV / denV) : segMidV;
+
+        // Convert px_stored from local time to normalised cpduration
+        float cpdurNorm =
+            (duration > 1e-6f) ? std::max(0.f, std::min(1.f, pxStored / duration)) : 0.5f;
+
+        // Clamp cpv to [-1, 1]
+        float cpv = std::max(-1.f, std::min(1.f, pyStored));
+
+        float r = maxResidual(samples, start, end, tStart, tEnd, [&](float frac) {
+            return evalBezier(frac * duration, duration, v0, v1, cpdurNorm, cpv);
+        });
+
+        if (r < best.maxResidual)
+            best = {MSEGStorage::segment::QUAD_BEZIER, cpv, cpdurNorm, r};
+    }
+
+    return best;
+}
+
+void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t start, size_t end,
+                 float epsilon, float totalGestureDuration,
+                 std::vector<MSEGStorage::segment> &result)
+{
+    if (end <= start + 1)
+    {
+        // Base case: two points — emit one segment
+        float tStart = samples[start].first;
+        float tEnd = samples[end].first;
+        float v0 = samples[start].second;
+        float v1 = samples[end].second;
+        float timeSpan = samples[end].first - samples[start].first;
+        float valueSpan = fabs(samples[end].second - samples[start].second);
+
+        // A span is "nearly vertical" if its time width is tiny relative to
+        // the whole gesture duration, regardless of its own value span
+        if (timeSpan < totalGestureDuration * 0.02f)
+        {
+            MSEGStorage::segment seg{};
+            seg.duration = timeSpan;
+            seg.v0 = samples[start].second;
+            seg.cpv = 0.f;
+            seg.cpduration = 0.5f;
+            seg.type = MSEGStorage::segment::LINEAR;
+            seg.useDeform = true;
+            seg.invertDeform = false;
+            result.push_back(seg);
+            return;
+        }
+
+        FitResult fit = fitSegment(samples, start, end, v0, v1, tStart, tEnd);
+
+        MSEGStorage::segment seg{};
+        seg.duration = tEnd - tStart;
+        seg.v0 = v0;
+        seg.cpv = fit.cpv;
+        seg.cpduration = fit.cpduration;
+        seg.type = fit.type;
+        seg.useDeform = true;
+        seg.invertDeform = false;
+
+        result.push_back(seg);
+        return;
+    }
+
+    float tStart = samples[start].first;
+    float tEnd = samples[end].first;
+    float v0 = samples[start].second;
+    float v1 = samples[end].second;
+
+    // Try fitting the entire span first
+    FitResult fit = fitSegment(samples, start, end, v0, v1, tStart, tEnd);
+
+    if (fit.maxResidual <= epsilon)
+    {
+        // Whole span fits — emit one segment
+        MSEGStorage::segment seg{};
+        seg.duration = tEnd - tStart;
+        seg.v0 = v0;
+        seg.cpv = fit.cpv;
+        seg.cpduration = fit.cpduration;
+        seg.type = fit.type;
+        seg.useDeform = true;
+        seg.invertDeform = false;
+
+        result.push_back(seg);
+        return;
+    }
+
+    // Find the sample with maximum residual against the best fit — split there
+    float maxR = 0.f;
+    size_t splitIdx = (start + end) / 2;
+    float duration = tEnd - tStart;
+
+    for (size_t i = start + 1; i < end; ++i)
+    {
+        float frac = (duration > 1e-6f) ? (samples[i].first - tStart) / duration : 0.f;
+        frac = std::max(0.f, std::min(1.f, frac));
+
+        float predicted;
+        switch (fit.type)
+        {
+        case MSEGStorage::segment::HOLD:
+            predicted = v0;
+            break;
+        case MSEGStorage::segment::LINEAR:
+            predicted = evalLinear(frac, v0, v1, fit.cpv);
+            break;
+        case MSEGStorage::segment::SCURVE:
+            predicted = evalSCurve(frac, v0, v1, fit.cpv);
+            break;
+        case MSEGStorage::segment::QUAD_BEZIER:
+            predicted = evalBezier(frac * duration, duration, v0, v1, fit.cpduration, fit.cpv);
+            break;
+        default:
+            predicted = (v1 - v0) * frac + v0;
+            break;
+        }
+
+        float r = fabs(samples[i].second - predicted);
+
+        if (r > maxR)
+        {
+            maxR = r;
+            splitIdx = i;
+        }
+    }
+
+    // Recurse on both halves
+    freehandRDP(samples, start, splitIdx, epsilon, totalGestureDuration, result);
+    freehandRDP(samples, splitIdx, end, epsilon, totalGestureDuration, result);
+}
+
 void rebuildCache(MSEGStorage *ms)
 {
     forceToConstrainedNormalForm(ms);

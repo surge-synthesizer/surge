@@ -35,6 +35,7 @@
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
 #include "overlays/TypeinParamEditor.h"
+#include <algorithm>
 #include <set>
 #include "widgets/MenuCustomComponents.h"
 
@@ -312,7 +313,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
     }
 
-    // This little struct acts as a SmapGuard so that Shift-drags can (un)reset snap
+    // This little struct acts as a SnapGuard so that Shift-drags can (un)reset snap
     struct SnapGuard
     {
         SnapGuard(MSEGCanvas *c) : c(c)
@@ -1485,12 +1486,44 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
         g.strokePath(path, strokeStyle, tfpath);
 
-        if (hlpathUsed)
+        if (hlpathUsed && !inFreehandDrag)
         {
             strokeStyle = juce::PathStrokeType(1.5 * pathScale, juce::PathStrokeType::beveled,
                                                juce::PathStrokeType::butt);
             g.setColour(skin->getColor(Colors::MSEGEditor::CurveHighlight));
             g.strokePath(highlightPath, strokeStyle, tfpath);
+        }
+
+        // Draw freehand gesture overlay
+        if (inFreehandDrag && freehandSamples.size() >= 2)
+        {
+            auto tpx = timeToPx();
+            auto vpx = valToPx();
+
+            juce::Path freehandPath;
+            bool first = true;
+
+            for (auto &s : freehandSamples)
+            {
+                float px = tpx(s.first);
+                float py = vpx(s.second);
+
+                if (first)
+                {
+                    freehandPath.startNewSubPath(px, py);
+                    first = false;
+                }
+                else
+                {
+                    freehandPath.lineTo(px, py);
+                }
+            }
+
+            auto strokeStyle = juce::PathStrokeType(
+                0.75f * pathScale, juce::PathStrokeType::beveled, juce::PathStrokeType::butt);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::CurveHighlight).withAlpha(0.6f));
+            g.strokePath(freehandPath, strokeStyle);
         }
 
         for (const auto &h : hotzones)
@@ -1646,6 +1679,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     bool cursorResetPosition = false;
     bool inDrag = false;
     bool inDrawDrag = false;
+    bool inFreehandDrag = false;
+
+    std::vector<std::pair<float, float>> freehandSamples;
+
     enum
     {
         NOT_MOUSE_DOWN,
@@ -1671,6 +1708,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 mouseDownInitiation = MOUSE_DOWN_IN_DRAW_AREA;
             }
+        }
+
+        // Start freehand drawing - fun! :)
+        if (mouseDownInitiation == MOUSE_DOWN_IN_DRAW_AREA && e.mods.isShiftDown() &&
+            e.mods.isCommandDown() && e.mods.isAltDown())
+        {
+            inFreehandDrag = true;
+            freehandSamples.clear();
+            return;
         }
 
         if (e.mods.isPopupMenu())
@@ -1953,6 +1999,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         inDrag = false;
         inDrawDrag = false;
 
+        if (inFreehandDrag && !freehandSamples.empty())
+        {
+            commitFreehandGesture();
+            freehandSamples.clear();
+            inFreehandDrag = false;
+        }
+
         if (lasso)
         {
             lasso->endLasso();
@@ -2008,6 +2061,228 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         return;
     }
 
+    void commitFreehandGesture()
+    {
+        prepareForUndo();
+
+        if (freehandSamples.size() < 2)
+        {
+            return;
+        }
+
+        // Samples are already in MSEG (time, value) units — collected during drag.
+        // Clamp values to [-1, 1] defensively.
+        for (auto &s : freehandSamples)
+        {
+            s.second = limit_range(s.second, -1.f, 1.f);
+        }
+
+        float gestureStart = freehandSamples.front().first;
+        float gestureEnd = freehandSamples.back().first;
+
+        // we gestured from right to left, perhaps?
+        if (gestureEnd < gestureStart)
+        {
+            std::swap(gestureStart, gestureEnd);
+            std::reverse(freehandSamples.begin(), freehandSamples.end());
+        }
+
+        gestureStart = std::max(gestureStart, 0.f);
+        gestureEnd = std::min(gestureEnd, ms->totalDuration);
+
+        if (gestureEnd - gestureStart < MSEGStorage::minimumDuration)
+        {
+            return;
+        }
+
+        // 1. Split boundary segments if gesture starts/ends mid-segment
+
+        // splitSegment(ms, t, v) is already available in MSEGModulationHelper.
+        // We evaluate the existing MSEG at the boundary times to get the right v.
+        //
+        // Note: after each split, segmentStart[] indices shift — call rebuildCache
+        // between splits so timeToSegment() stays valid.
+        {
+            int seg = Surge::MSEG::timeToSegment(ms, gestureStart);
+
+            if (seg >= 0 &&
+                fabs(gestureStart - ms->segmentStart[seg]) > MSEGStorage::minimumDuration &&
+                fabs(gestureStart - ms->segmentEnd[seg]) > MSEGStorage::minimumDuration)
+            {
+                // Evaluate existing curve at gestureStart for continuity
+                float v = freehandSamples.front().second; // use gesture's own start value
+                Surge::MSEG::splitSegment(ms, gestureStart, v);
+                Surge::MSEG::rebuildCache(ms);
+            }
+        }
+
+        {
+            int seg = Surge::MSEG::timeToSegment(ms, gestureEnd);
+
+            if (seg >= 0 &&
+                fabs(gestureEnd - ms->segmentStart[seg]) > MSEGStorage::minimumDuration &&
+                fabs(gestureEnd - ms->segmentEnd[seg]) > MSEGStorage::minimumDuration)
+            {
+                float v = freehandSamples.back().second;
+                Surge::MSEG::splitSegment(ms, gestureEnd, v);
+                Surge::MSEG::rebuildCache(ms);
+            }
+        }
+
+        // 2. After both splits, find left and right boundary indices
+
+        int leftIdx = Surge::MSEG::timeToSegment(ms, gestureStart + MSEGStorage::minimumDuration);
+        int rightIdx = Surge::MSEG::timeToSegment(ms, gestureEnd + MSEGStorage::minimumDuration);
+
+        // Segments leftIdx .. rightIdx-1 are the interior ones to remove
+        // Shift rightIdx..n_activeSegments-1 left to fill the gap
+        int interiorCount = rightIdx - leftIdx;
+
+        for (int i = rightIdx; i < ms->n_activeSegments; ++i)
+        {
+            ms->segments[i - interiorCount + 1] = ms->segments[i];
+        }
+
+        ms->n_activeSegments -= (interiorCount - 1); // keep one placeholder
+        ms->segments[leftIdx].duration = gestureEnd - gestureStart;
+        ms->segments[leftIdx].v0 = freehandSamples.front().second;
+
+        Surge::MSEG::rebuildCache(ms);
+
+        // 3. Find the left boundary node index after cleanup
+
+        int leftSeg = Surge::MSEG::timeToSegment(ms, gestureStart);
+
+        if (leftSeg < 0)
+        {
+            leftSeg = 0;
+        }
+
+        // The boundary node values (after splits) are our pinned P0/P2.
+        float v0 = ms->segments[leftSeg].v0;
+        float v1 = ms->segments[leftSeg].nv1;
+
+        // 4. Run RDP + fit with node-budget binary search
+
+        // Maximum nodes we can insert = (128 - existing segments outside gesture) - 1
+        // (we replace the single remaining inside segment with N fitted ones)
+        int budget = max_msegs - ms->n_activeSegments + 1;
+        budget = std::max(1, budget);
+
+        std::vector<MSEGStorage::segment> fitted;
+
+        // Binary search on epsilon: start with a small epsilon, widen if over budget.
+        float epLo = 0.f;
+        float epHi = 2.f; // max possible residual in [-1,1] value space
+        float epsilon = 0.01f;
+
+        for (int iter = 0; iter < 16; ++iter)
+        {
+            fitted.clear();
+
+            // Before running RDP — detect nearly vertical gesture
+            float totalTimeSpan = freehandSamples.back().first - freehandSamples.front().first;
+            float totalValueSpan =
+                fabs(freehandSamples.back().second - freehandSamples.front().second);
+
+            if (totalValueSpan > 0.f && totalTimeSpan / totalValueSpan < 0.1f)
+            {
+                fitted.clear();
+                MSEGStorage::segment seg{};
+                seg.duration = totalTimeSpan;
+                seg.v0 = freehandSamples.front().second;
+                seg.cpv = 0.f;
+                seg.cpduration = 0.5f;
+                seg.type = MSEGStorage::segment::LINEAR;
+                fitted.push_back(seg);
+            }
+            else
+            {
+                Surge::MSEG::freehandRDP(freehandSamples, 0, freehandSamples.size() - 1, epsilon,
+                                         totalTimeSpan, fitted);
+            }
+
+            if ((int)fitted.size() <= budget)
+            {
+                break;
+            }
+
+            epLo = epsilon;
+            epsilon = (epsilon + epHi) * 0.5f;
+        }
+
+        // If still over budget (shouldn't happen but be safe), keep only `budget` segments
+        if ((int)fitted.size() > budget)
+        {
+            fitted.resize(budget);
+        }
+
+        // 5. Write fitted segments directly into ms->segments[]
+
+        // ...shifting any segments after the gesture region to make room, then fix up the right
+        // boundary node value and rebuild.
+
+        // After deletion loop, leftSeg is the index where gesture starts.
+        // Direct write — no splitSegment calls for insertion.
+
+        int newCount = (int)fitted.size();
+        int oldTotal = ms->n_activeSegments;
+
+        // Number of segments after the gesture region
+        int rightSeg = leftSeg + 1; // after deletion there's exactly one segment spanning gesture
+        int segsAfter = oldTotal - rightSeg;
+
+        // Check total won't exceed max_msegs
+        // (binary search already ensured fitted.size() <= budget, but be safe)
+        int newTotal = leftSeg + newCount + segsAfter;
+
+        if (newTotal > max_msegs)
+        {
+            newCount = max_msegs - leftSeg - segsAfter;
+            fitted.resize(newCount);
+        }
+
+        // Shift segments after the gesture region to make room
+        // Work backwards to avoid overwriting
+        for (int i = segsAfter - 1; i >= 0; --i)
+        {
+            ms->segments[leftSeg + newCount + i] = ms->segments[rightSeg + i];
+        }
+
+        // Write fitted segments directly
+        for (int i = 0; i < newCount; ++i)
+        {
+            ms->segments[leftSeg + i] = fitted[i];
+        }
+
+        ms->n_activeSegments = leftSeg + newCount + segsAfter;
+
+        // Fix up the right boundary: first segment after gesture must start at gestureEnd value
+        if (leftSeg + newCount < ms->n_activeSegments)
+        {
+            ms->segments[leftSeg + newCount].v0 = freehandSamples.back().second;
+        }
+
+        // how many extra segments we inserted (fitted count minus the 1 we deleted)
+        int indexDelta = newCount - interiorCount;
+
+        // loop_start/end inside gesture region: remap to nearest boundary
+        if (ms->loop_start >= leftIdx && ms->loop_start < rightIdx)
+            ms->loop_start = leftIdx + newCount - 1;
+        else if (ms->loop_start >= rightIdx)
+            ms->loop_start += indexDelta;
+
+        if (ms->loop_end >= leftIdx && ms->loop_end < rightIdx)
+            ms->loop_end = leftIdx + newCount - 1;
+        else if (ms->loop_end >= rightIdx)
+            ms->loop_end += indexDelta;
+
+        Surge::MSEG::rebuildCache(ms);
+        pushToUndo();
+        modelChanged();
+        repaint();
+    }
+
     void showCursorAt(const juce::Point<float> &w) { cursorHideOrigin = w.toInt(); }
     void showCursorAt(const juce::Point<int> &w) { cursorHideOrigin = w; }
 
@@ -2043,6 +2318,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     void mouseMagnify(const juce::MouseEvent &event, float scaleFactor) override
     {
+
         auto pii = event.position.toInt();
         zoom(pii, -(1.f - scaleFactor) * 4);
         return;
@@ -2119,6 +2395,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     void mouseDrag(const juce::MouseEvent &event) override
     {
+        if (inFreehandDrag)
+        {
+            const auto tf = pxToTime();
+            const auto pv = pxToVal();
+            const float t = tf(event.position.x);
+            const float v = limit_range(pv(event.position.y), -1.f, 1.f);
+
+            freehandSamples.push_back({t, v});
+
+            repaint();
+            return;
+        }
+
         if (lasso)
         {
             lasso->dragLasso(event);
