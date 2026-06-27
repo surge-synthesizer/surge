@@ -221,8 +221,17 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
 
     // ---- HOLD ----
     {
-        float r =
-            maxResidual(samples, start, end, tStart, tEnd, [&](float /*frac*/) { return v0; });
+        float holdV = 0.f;
+
+        for (size_t i = start; i <= end; ++i)
+        {
+            holdV += samples[i].second;
+        }
+
+        holdV /= (end - start + 1);
+
+        float r = maxResidual(samples, start, end, tStart, tEnd, [&](float) { return holdV; });
+
         if (r < best.maxResidual)
         {
             best = {MSEGStorage::segment::HOLD, 0.f, 0.5f, r};
@@ -235,114 +244,141 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
             return maxResidual(samples, start, end, tStart, tEnd,
                                [&](float frac) { return evalLinear(frac, v0, v1, cpv); });
         };
-        float cpv = goldenSearch(costFn, -1.f, 1.f);
+        float cpvRange = std::min(1.f, (float)(end - start) / 10.f);
+        float cpv = goldenSearch(costFn, -cpvRange, cpvRange);
         float r = costFn(cpv);
 
         if (r < best.maxResidual)
+        {
             best = {MSEGStorage::segment::LINEAR, cpv, 0.5f, r};
+        }
     }
 
-    // ---- SCURVE ----
-    {
-        auto costFn = [&](float cpv) {
-            return maxResidual(samples, start, end, tStart, tEnd,
-                               [&](float frac) { return evalSCurve(frac, v0, v1, cpv); });
-        };
-        float cpv = goldenSearch(costFn, -1.f, 1.f);
-        float r = costFn(cpv);
+    const bool enoughSamplesForComplex = (end - start + 1) >= 5;
 
-        if (r < best.maxResidual)
-            best = {MSEGStorage::segment::SCURVE, cpv, 0.5f, r};
-    }
-
-    // ---- QUAD_BEZIER (least-squares for on-curve control point) ----
-    {
-        // The stored control point is an on-curve point (user sees it pass through here).
-        // We fit (cpdurNorm, cpv) directly in the segment's local coordinate system.
-        //
-        // Chord-length parameterisation: tᵢ proportional to cumulative arc length.
-        size_t n = end - start + 1;
-        std::vector<float> param(n);
-        param[0] = 0.f;
-
-        for (size_t i = 1; i < n; ++i)
+    if (enoughSamplesForComplex)
+    { // ---- SCURVE ----
         {
-            float dt = samples[start + i].first - samples[start + i - 1].first;
-            float dv = samples[start + i].second - samples[start + i - 1].second;
-            param[i] = param[i - 1] + sqrtf(dt * dt + dv * dv);
+            auto costFn = [&](float cpv) {
+                return maxResidual(samples, start, end, tStart, tEnd,
+                                   [&](float frac) { return evalSCurve(frac, v0, v1, cpv); });
+            };
+            float cpv = goldenSearch(costFn, -1.f, 1.f);
+            float r = costFn(cpv);
+
+            if (r < best.maxResidual)
+            {
+                best = {MSEGStorage::segment::SCURVE, cpv, 0.5f, r};
+            }
         }
 
-        float totalLen = param[n - 1];
-
-        if (totalLen > 1e-6f)
+        // ---- QUAD_BEZIER (least-squares for on-curve control point) ----
         {
+            // The stored control point is an on-curve point (user sees it pass through here).
+            // We fit (cpdurNorm, cpv) directly in the segment's local coordinate system.
+            //
+            // Chord-length parameterisation: tᵢ proportional to cumulative arc length.
+            size_t n = end - start + 1;
+            std::vector<float> param(n);
+            param[0] = 0.f;
+
+            for (size_t i = 1; i < n; ++i)
+            {
+                float dt = samples[start + i].first - samples[start + i - 1].first;
+                float dv = samples[start + i].second - samples[start + i - 1].second;
+                param[i] = param[i - 1] + sqrtf(dt * dt + dv * dv);
+            }
+
+            float totalLen = param[n - 1];
+
+            if (totalLen > 1e-6f)
+            {
+                for (size_t i = 0; i < n; ++i)
+                    param[i] /= totalLen;
+            }
+
+            // For each sample at chord-param uᵢ, the Bezier value is:
+            //   B(uᵢ) = (1-uᵢ)² P0 + 2uᵢ(1-uᵢ) P1_actual + uᵢ² P2
+            //
+            // where P1_actual = segment_mid + 2*(P1_stored - segment_mid)
+            //                  = 2*P1_stored - segment_mid
+            //
+            // So B(uᵢ) = (1-uᵢ)² P0 + 2uᵢ(1-uᵢ)*(2*P1_stored - segment_mid) + uᵢ² P2
+            //
+            // The stored control point has two independent components: (px_stored, py_stored).
+            // Both appear linearly, so we can solve two independent 1-D weighted least squares:
+            //
+            //   weight_i = 4 * uᵢ * (1 - uᵢ)                (coefficient of P1_stored in B)
+            //   fixed_i  = (1-uᵢ)² * P0.x + uᵢ² * P2.x
+            //            - 2*uᵢ*(1-uᵢ) * seg_mid.x           (everything except P1_stored)
+            //   target_i = sample.x (for time) or sample.v (for value)
+            //
+            // Least squares: px_stored = Σ wᵢ*(targetᵢ - fixedᵢ) / Σ wᵢ²
+
+            // In time axis:
+            //   P0.x = 0 (local), P2.x = duration, seg_mid.x = duration/2
+            float segMidT = duration * 0.5f;
+            float numT = 0.f, denT = 0.f;
+
+            // In value axis:
+            //   P0.y = v0, P2.y = v1, seg_mid.y = (v0+v1)/2
+            float segMidV = (v0 + v1) * 0.5f;
+            float numV = 0.f, denV = 0.f;
+
             for (size_t i = 0; i < n; ++i)
-                param[i] /= totalLen;
+            {
+                float u = param[i];
+                float w = 4.f * u * (1.f - u); // coefficient of P1_stored (×2 already folded in)
+
+                // Time axis
+                float localT = samples[start + i].first - tStart; // 0..duration
+                float fixedT =
+                    (1.f - u) * (1.f - u) * 0.f + u * u * duration - 2.f * u * (1.f - u) * segMidT;
+                numT += w * (localT - fixedT);
+                denT += w * w;
+
+                // Value axis
+                float sampleV = samples[start + i].second;
+                float fixedV =
+                    (1.f - u) * (1.f - u) * v0 + u * u * v1 - 2.f * u * (1.f - u) * segMidV;
+                numV += w * (sampleV - fixedV);
+                denV += w * w;
+            }
+
+            float pxStored = (denT > 1e-8f) ? (numT / denT) : segMidT;
+            float pyStored = (denV > 1e-8f) ? (numV / denV) : segMidV;
+
+            float sampleMeanV = 0.f;
+
+            for (size_t i = start; i <= end; ++i)
+            {
+                sampleMeanV += samples[i].second;
+            }
+
+            sampleMeanV /= (end - start + 1);
+
+            // If mean sample is above chord mid but control point is below, flip
+            if ((sampleMeanV > segMidV) != (pyStored > segMidV))
+            {
+                pyStored = segMidV + (segMidV - pyStored);
+            }
+
+            // Convert px_stored from local time to normalised cpduration
+            float cpdurNorm =
+                (duration > 1e-6f) ? std::max(0.f, std::min(1.f, pxStored / duration)) : 0.5f;
+
+            // Clamp cpv to [-1, 1]
+            float cpv = std::max(-1.f, std::min(1.f, pyStored));
+
+            float r = maxResidual(samples, start, end, tStart, tEnd, [&](float frac) {
+                return evalBezier(frac * duration, duration, v0, v1, cpdurNorm, cpv);
+            });
+
+            if (r < best.maxResidual)
+            {
+                best = {MSEGStorage::segment::QUAD_BEZIER, cpv, cpdurNorm, r};
+            }
         }
-
-        // For each sample at chord-param uᵢ, the Bezier value is:
-        //   B(uᵢ) = (1-uᵢ)² P0 + 2uᵢ(1-uᵢ) P1_actual + uᵢ² P2
-        //
-        // where P1_actual = segment_mid + 2*(P1_stored - segment_mid)
-        //                  = 2*P1_stored - segment_mid
-        //
-        // So B(uᵢ) = (1-uᵢ)² P0 + 2uᵢ(1-uᵢ)*(2*P1_stored - segment_mid) + uᵢ² P2
-        //
-        // The stored control point has two independent components: (px_stored, py_stored).
-        // Both appear linearly, so we can solve two independent 1-D weighted least squares:
-        //
-        //   weight_i = 4 * uᵢ * (1 - uᵢ)                (coefficient of P1_stored in B)
-        //   fixed_i  = (1-uᵢ)² * P0.x + uᵢ² * P2.x
-        //            - 2*uᵢ*(1-uᵢ) * seg_mid.x           (everything except P1_stored)
-        //   target_i = sample.x (for time) or sample.v (for value)
-        //
-        // Least squares: px_stored = Σ wᵢ*(targetᵢ - fixedᵢ) / Σ wᵢ²
-
-        // In time axis:
-        //   P0.x = 0 (local), P2.x = duration, seg_mid.x = duration/2
-        float segMidT = duration * 0.5f;
-        float numT = 0.f, denT = 0.f;
-
-        // In value axis:
-        //   P0.y = v0, P2.y = v1, seg_mid.y = (v0+v1)/2
-        float segMidV = (v0 + v1) * 0.5f;
-        float numV = 0.f, denV = 0.f;
-
-        for (size_t i = 0; i < n; ++i)
-        {
-            float u = param[i];
-            float w = 4.f * u * (1.f - u); // coefficient of P1_stored (×2 already folded in)
-
-            // Time axis
-            float localT = samples[start + i].first - tStart; // 0..duration
-            float fixedT =
-                (1.f - u) * (1.f - u) * 0.f + u * u * duration - 2.f * u * (1.f - u) * segMidT;
-            numT += w * (localT - fixedT);
-            denT += w * w;
-
-            // Value axis
-            float sampleV = samples[start + i].second;
-            float fixedV = (1.f - u) * (1.f - u) * v0 + u * u * v1 - 2.f * u * (1.f - u) * segMidV;
-            numV += w * (sampleV - fixedV);
-            denV += w * w;
-        }
-
-        float pxStored = (denT > 1e-8f) ? (numT / denT) : segMidT;
-        float pyStored = (denV > 1e-8f) ? (numV / denV) : segMidV;
-
-        // Convert px_stored from local time to normalised cpduration
-        float cpdurNorm =
-            (duration > 1e-6f) ? std::max(0.f, std::min(1.f, pxStored / duration)) : 0.5f;
-
-        // Clamp cpv to [-1, 1]
-        float cpv = std::max(-1.f, std::min(1.f, pyStored));
-
-        float r = maxResidual(samples, start, end, tStart, tEnd, [&](float frac) {
-            return evalBezier(frac * duration, duration, v0, v1, cpdurNorm, cpv);
-        });
-
-        if (r < best.maxResidual)
-            best = {MSEGStorage::segment::QUAD_BEZIER, cpv, cpdurNorm, r};
     }
 
     return best;

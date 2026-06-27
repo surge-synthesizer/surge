@@ -1503,6 +1503,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             juce::Path freehandPath;
             bool first = true;
 
+            std::stable_sort(freehandSamples.begin(), freehandSamples.end(),
+                             [](const auto &a, const auto &b) { return a.first < b.first; });
+
             for (auto &s : freehandSamples)
             {
                 float px = tpx(s.first);
@@ -2070,138 +2073,138 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             return;
         }
 
-        // Samples are already in MSEG (time, value) units — collected during drag.
-        // Clamp values to [-1, 1] defensively.
-        for (auto &s : freehandSamples)
-        {
-            s.second = limit_range(s.second, -1.f, 1.f);
-        }
+        // first let's make sure our values are sorted
+        std::sort(freehandSamples.begin(), freehandSamples.end(),
+                  [](const auto &a, const auto &b) { return a.first < b.first; });
+
+        const auto drawArea = getDrawArea();
+        float tMin = pxToTime()(drawArea.getX());
+        float tMax = pxToTime()(drawArea.getRight());
+        float tEpsilon = ((tMax - tMin) / drawArea.getWidth()) * 5.f;
 
         float gestureStart = freehandSamples.front().first;
         float gestureEnd = freehandSamples.back().first;
 
-        // we gestured from right to left, perhaps?
-        if (gestureEnd < gestureStart)
-        {
-            std::swap(gestureStart, gestureEnd);
-            std::reverse(freehandSamples.begin(), freehandSamples.end());
-        }
-
         gestureStart = std::max(gestureStart, 0.f);
         gestureEnd = std::min(gestureEnd, ms->totalDuration);
 
-        if (gestureEnd - gestureStart < MSEGStorage::minimumDuration)
+        if (gestureEnd - gestureStart < tEpsilon)
         {
             return;
         }
 
-        // 1. Split boundary segments if gesture starts/ends mid-segment
+        // Save loop marker times before any modifications
+        float loopStartTime = (ms->loop_start >= 0 && ms->loop_start < ms->n_activeSegments)
+                                  ? ms->segmentStart[ms->loop_start]
+                                  : -1.f;
+        float loopEndTime = (ms->loop_end >= 0 && ms->loop_end < ms->n_activeSegments)
+                                ? ms->segmentStart[ms->loop_end]
+                                : -1.f;
 
-        // splitSegment(ms, t, v) is already available in MSEGModulationHelper.
-        // We evaluate the existing MSEG at the boundary times to get the right v.
-        //
-        // Note: after each split, segmentStart[] indices shift — call rebuildCache
-        // between splits so timeToSegment() stays valid.
+        // Handle nearly-vertical gesture globally
+        float totalTimeSpan = gestureEnd - gestureStart;
+        float totalValueSpan = fabs(freehandSamples.back().second - freehandSamples.front().second);
+
+        // --- 1. Split at gesture boundaries ---
+        for (float t : {gestureStart, gestureEnd})
         {
-            int seg = Surge::MSEG::timeToSegment(ms, gestureStart);
-
-            if (seg >= 0 &&
-                fabs(gestureStart - ms->segmentStart[seg]) > MSEGStorage::minimumDuration &&
-                fabs(gestureStart - ms->segmentEnd[seg]) > MSEGStorage::minimumDuration)
+            int seg = Surge::MSEG::timeToSegment(ms, t);
+            if (seg >= 0 && fabs(t - ms->segmentStart[seg]) > tEpsilon &&
+                fabs(t - ms->segmentEnd[seg]) > tEpsilon)
             {
-                // Evaluate existing curve at gestureStart for continuity
-                float v = freehandSamples.front().second; // use gesture's own start value
-                Surge::MSEG::splitSegment(ms, gestureStart, v);
+                float v = freehandSamples.front().second;
+                float bestDist = std::numeric_limits<float>::max();
+                for (auto &s : freehandSamples)
+                {
+                    float d = fabs(s.first - t);
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        v = s.second;
+                    }
+                }
+                Surge::MSEG::splitSegment(ms, t, v);
                 Surge::MSEG::rebuildCache(ms);
             }
         }
 
-        {
-            int seg = Surge::MSEG::timeToSegment(ms, gestureEnd);
+        // Count original segments in gesture region
+        int originalInteriorCount = 0;
 
-            if (seg >= 0 &&
-                fabs(gestureEnd - ms->segmentStart[seg]) > MSEGStorage::minimumDuration &&
-                fabs(gestureEnd - ms->segmentEnd[seg]) > MSEGStorage::minimumDuration)
+        for (int i = 0; i < ms->n_activeSegments; ++i)
+        {
+            if (ms->segmentStart[i] >= gestureStart - tEpsilon &&
+                ms->segmentStart[i] < gestureEnd - tEpsilon)
             {
-                float v = freehandSamples.back().second;
-                Surge::MSEG::splitSegment(ms, gestureEnd, v);
-                Surge::MSEG::rebuildCache(ms);
+                originalInteriorCount++;
             }
         }
 
-        // 2. After both splits, find left and right boundary indices
+        // --- 2. Delete all segments strictly inside gesture region ---
+        bool deleted = true;
 
-        int leftIdx = Surge::MSEG::timeToSegment(ms, gestureStart + MSEGStorage::minimumDuration);
-        int rightIdx = Surge::MSEG::timeToSegment(ms, gestureEnd + MSEGStorage::minimumDuration);
-
-        // Segments leftIdx .. rightIdx-1 are the interior ones to remove
-        // Shift rightIdx..n_activeSegments-1 left to fill the gap
-        int interiorCount = rightIdx - leftIdx;
-
-        for (int i = rightIdx; i < ms->n_activeSegments; ++i)
+        while (deleted)
         {
-            ms->segments[i - interiorCount + 1] = ms->segments[i];
+            deleted = false;
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float segStart = ms->segmentStart[i];
+
+                if (segStart <= gestureStart + tEpsilon)
+                {
+                    continue;
+                }
+
+                if (segStart >= gestureEnd - tEpsilon)
+                {
+                    continue;
+                }
+
+                // Delete this interior non-pinned segment
+                // Find left neighbor and extend it to cover the gap
+                if (i > 0)
+                {
+                    ms->segments[i - 1].duration += ms->segments[i].duration;
+                    for (int j = i; j < ms->n_activeSegments - 1; ++j)
+                    {
+                        ms->segments[j] = ms->segments[j + 1];
+                    }
+                    ms->n_activeSegments--;
+                    Surge::MSEG::rebuildCache(ms);
+                    deleted = true;
+                    break;
+                }
+            }
         }
 
-        ms->n_activeSegments -= (interiorCount - 1); // keep one placeholder
-        ms->segments[leftIdx].duration = gestureEnd - gestureStart;
-        ms->segments[leftIdx].v0 = freehandSamples.front().second;
+        // --- 3. Run RDP on each sub-range between consecutive pinned times ---
+        //        collecting all fitted segments into one vector
+        std::vector<MSEGStorage::segment> fitted;
 
-        Surge::MSEG::rebuildCache(ms);
-
-        // 3. Find the left boundary node index after cleanup
-
-        int leftSeg = Surge::MSEG::timeToSegment(ms, gestureStart);
-
-        if (leftSeg < 0)
-        {
-            leftSeg = 0;
-        }
-
-        // The boundary node values (after splits) are our pinned P0/P2.
-        float v0 = ms->segments[leftSeg].v0;
-        float v1 = ms->segments[leftSeg].nv1;
-
-        // 4. Run RDP + fit with node-budget binary search
-
-        // Maximum nodes we can insert = (128 - existing segments outside gesture) - 1
-        // (we replace the single remaining inside segment with N fitted ones)
+        // Count how many segments currently span the gesture region
         int budget = max_msegs - ms->n_activeSegments + 1;
         budget = std::max(1, budget);
 
-        std::vector<MSEGStorage::segment> fitted;
+        // binary search on epsilon
+        float epLo = 0.f, epHi = 2.f;
+        float gestureValueRange = 0.f;
 
-        // Binary search on epsilon: start with a small epsilon, widen if over budget.
-        float epLo = 0.f;
-        float epHi = 2.f; // max possible residual in [-1,1] value space
-        float epsilon = 0.01f;
+        for (auto &s : freehandSamples)
+        {
+            gestureValueRange =
+                std::max(gestureValueRange, fabs(s.second - freehandSamples.front().second));
+        }
+
+        gestureValueRange =
+            std::max(gestureValueRange, 0.1f); // minimum range to avoid division issues
+
+        float epsilon = std::max(0.05f, gestureValueRange * 0.05f); // 5% of gesture value range
 
         for (int iter = 0; iter < 16; ++iter)
         {
             fitted.clear();
-
-            // Before running RDP — detect nearly vertical gesture
-            float totalTimeSpan = freehandSamples.back().first - freehandSamples.front().first;
-            float totalValueSpan =
-                fabs(freehandSamples.back().second - freehandSamples.front().second);
-
-            if (totalValueSpan > 0.f && totalTimeSpan / totalValueSpan < 0.1f)
-            {
-                fitted.clear();
-                MSEGStorage::segment seg{};
-                seg.duration = totalTimeSpan;
-                seg.v0 = freehandSamples.front().second;
-                seg.cpv = 0.f;
-                seg.cpduration = 0.5f;
-                seg.type = MSEGStorage::segment::LINEAR;
-                fitted.push_back(seg);
-            }
-            else
-            {
-                Surge::MSEG::freehandRDP(freehandSamples, 0, freehandSamples.size() - 1, epsilon,
-                                         totalTimeSpan, fitted);
-            }
-
+            Surge::MSEG::freehandRDP(freehandSamples, 0, freehandSamples.size() - 1, epsilon,
+                                     totalTimeSpan, fitted);
             if ((int)fitted.size() <= budget)
             {
                 break;
@@ -2211,71 +2214,83 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             epsilon = (epsilon + epHi) * 0.5f;
         }
 
-        // If still over budget (shouldn't happen but be safe), keep only `budget` segments
-        if ((int)fitted.size() > budget)
+        // density-based widening
+        float nodesPerUnit = (float)fitted.size() / totalTimeSpan;
+
+        if (nodesPerUnit > 16.f)
         {
-            fitted.resize(budget);
+            float epLo2 = epsilon, epHi2 = 0.1f;
+
+            for (int iter = 0; iter < 16; ++iter)
+            {
+                float epMid = (epLo2 + epHi2) * 0.5f;
+                std::vector<MSEGStorage::segment> candidate;
+                Surge::MSEG::freehandRDP(freehandSamples, 0, freehandSamples.size() - 1, epMid,
+                                         totalTimeSpan, candidate);
+
+                if ((float)candidate.size() / totalTimeSpan <= 16.f || epMid >= 0.1f)
+                {
+                    fitted = candidate;
+                    break;
+                }
+
+                epLo2 = epMid;
+            }
         }
 
-        // 5. Write fitted segments directly into ms->segments[]
+        // --- 4. Write fitted segments directly into ms->segments[] ---
+        int leftIdx = Surge::MSEG::timeToSegment(ms, gestureStart + tEpsilon);
 
-        // ...shifting any segments after the gesture region to make room, then fix up the right
-        // boundary node value and rebuild.
-
-        // After deletion loop, leftSeg is the index where gesture starts.
-        // Direct write — no splitSegment calls for insertion.
+        if (leftIdx < 0)
+        {
+            leftIdx = 0;
+        }
 
         int newCount = (int)fitted.size();
-        int oldTotal = ms->n_activeSegments;
+        int segsAfter = ms->n_activeSegments - leftIdx - 1;
 
-        // Number of segments after the gesture region
-        int rightSeg = leftSeg + 1; // after deletion there's exactly one segment spanning gesture
-        int segsAfter = oldTotal - rightSeg;
+        segsAfter = std::max(0, segsAfter);
 
-        // Check total won't exceed max_msegs
-        // (binary search already ensured fitted.size() <= budget, but be safe)
-        int newTotal = leftSeg + newCount + segsAfter;
+        int newTotal = leftIdx + newCount + segsAfter;
 
         if (newTotal > max_msegs)
         {
-            newCount = max_msegs - leftSeg - segsAfter;
+            newCount = max_msegs - leftIdx - segsAfter;
             fitted.resize(newCount);
         }
 
-        // Shift segments after the gesture region to make room
-        // Work backwards to avoid overwriting
+        // Shift segments after gesture region
         for (int i = segsAfter - 1; i >= 0; --i)
         {
-            ms->segments[leftSeg + newCount + i] = ms->segments[rightSeg + i];
+            ms->segments[leftIdx + newCount + i] = ms->segments[leftIdx + 1 + i];
         }
 
-        // Write fitted segments directly
+        // Write fitted segments
         for (int i = 0; i < newCount; ++i)
         {
-            ms->segments[leftSeg + i] = fitted[i];
+            ms->segments[leftIdx + i] = fitted[i];
         }
 
-        ms->n_activeSegments = leftSeg + newCount + segsAfter;
+        ms->n_activeSegments = leftIdx + newCount + segsAfter;
 
-        // Fix up the right boundary: first segment after gesture must start at gestureEnd value
-        if (leftSeg + newCount < ms->n_activeSegments)
+        // Fix right boundary v0
+        if (leftIdx + newCount < ms->n_activeSegments)
         {
-            ms->segments[leftSeg + newCount].v0 = freehandSamples.back().second;
+            ms->segments[leftIdx + newCount].v0 = freehandSamples.back().second;
         }
 
-        // how many extra segments we inserted (fitted count minus the 1 we deleted)
-        int indexDelta = newCount - interiorCount;
+        // --- 5. Remap loop markers by saved time positions ---
+        int indexDelta = newCount - originalInteriorCount;
 
-        // loop_start/end inside gesture region: remap to nearest boundary
-        if (ms->loop_start >= leftIdx && ms->loop_start < rightIdx)
-            ms->loop_start = leftIdx + newCount - 1;
-        else if (ms->loop_start >= rightIdx)
+        if (ms->loop_start >= leftIdx + originalInteriorCount)
+        {
             ms->loop_start += indexDelta;
+        }
 
-        if (ms->loop_end >= leftIdx && ms->loop_end < rightIdx)
-            ms->loop_end = leftIdx + newCount - 1;
-        else if (ms->loop_end >= rightIdx)
+        if (ms->loop_end >= leftIdx + originalInteriorCount)
+        {
             ms->loop_end += indexDelta;
+        }
 
         Surge::MSEG::rebuildCache(ms);
         pushToUndo();
@@ -2407,18 +2422,30 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         if (inFreehandDrag)
         {
-            /*             const auto drawArea = getDrawArea();
-
-                        if (drawArea.contains(event.position.toInt()))
-                        {
-                        } */
-
+            const auto drawArea = getDrawArea();
             const auto tf = pxToTime();
             const auto pv = pxToVal();
-            const float t = tf(event.position.x);
-            const float v = limit_range(pv(event.position.y), -1.f, 1.f);
+            const float tMin = tf(drawArea.getX());
+            const float tMax = tf(drawArea.getRight());
+            const float pixelInTime = (tMax - tMin) / drawArea.getWidth();
+            const float minTimeDelta = pixelInTime * 4.f; // at least 4 pixels apart in time
+
+            float t = std::max(0.f, std::min(tf(event.position.x), ms->totalDuration));
+            float v = limit_range(pv(event.position.y), -1.f, 1.f);
 
             freehandSamples.push_back({t, v});
+
+            std::sort(freehandSamples.begin(), freehandSamples.end(),
+                      [](const auto &a, const auto &b) { return a.first < b.first; });
+
+            // Remove samples that are too close in time to their predecessor
+            for (auto it = freehandSamples.begin() + 1; it != freehandSamples.end();)
+            {
+                if (fabs(it->first - std::prev(it)->first) < minTimeDelta)
+                    it = freehandSamples.erase(it);
+                else
+                    ++it;
+            }
 
             repaint();
 
