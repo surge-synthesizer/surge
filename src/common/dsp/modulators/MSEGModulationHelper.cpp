@@ -467,7 +467,7 @@ void freehandRDP(std::span<const std::pair<float, float>> samples, float epsilon
     for (size_t i = 1; i < samples.size() - 1; ++i)
     {
         float frac = (duration > 1e-6f) ? (samples[i].first - tStart) / duration : 0.f;
-        frac = std::clamp(frac, 0.f, 1.f, frac);
+        frac = std::clamp(frac, 0.f, 1.f);
 
         float predicted;
         switch (fit.type)

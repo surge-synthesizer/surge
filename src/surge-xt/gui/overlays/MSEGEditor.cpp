@@ -1516,9 +1516,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             juce::Path freehandPath;
             bool first = true;
 
-            std::stable_sort(freehandSamples.begin(), freehandSamples.end(),
-                             [](const auto &a, const auto &b) { return a.first < b.first; });
-
             for (auto &s : freehandSamples)
             {
                 float px = tpx(s.first);
@@ -2469,9 +2466,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             const float tMin = tf(drawArea.getX());
             const float tMax = tf(drawArea.getRight());
             const float pixelInTime = (tMax - tMin) / drawArea.getWidth();
-            const float minTimeDelta = pixelInTime * 4.f; // at least 4 pixels apart in time
+            const float minTimeDelta = pixelInTime * 2.f; // at least 2 pixels apart in time
 
-            float t = std::max(0.f, std::min(tf(event.position.x), ms->totalDuration));
+            float t = std::clamp(tf(event.position.x), 0.f, ms->totalDuration);
             float v = limit_range(pv(event.position.y), -1.f, 1.f);
 
             freehandSamples.push_back({t, v});
