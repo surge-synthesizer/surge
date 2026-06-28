@@ -64,6 +64,7 @@ struct EvaluatorState
     bool isvalid = false;
     bool useAmplitude = true;
     bool useEnvelope = true;
+    bool useRate = true;
     bool isFinite = true;
 
     float del, a, h, dec, s, r;

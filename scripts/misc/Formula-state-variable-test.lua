@@ -49,6 +49,7 @@ function init(state)
     print("tuned_key", state.tuned_key)
     print("use_amplitude", state.use_amplitude)
     print("use_envelope", state.use_envelope)
+    print("use_rate", state.use_rate)
     print("velocity", state.velocity)
     print("voice_count", state.voice_count)
     print("voice_id", state.voice_id)
@@ -110,10 +111,10 @@ function process(state)
         print("tuned_key", state.tuned_key)
         print("use_amplitude", state.use_amplitude)
         print("use_envelope", state.use_envelope)
+        print("use_rate", state.use_rate)
         print("velocity", state.velocity)
         print("voice_count", state.voice_count)
         print("voice_id", state.voice_id)
-
     end
 
     state.output = 0

@@ -299,6 +299,7 @@ end
             addb("clamp_output", true);
             addb("use_amplitude", true);
             addb("use_envelope", true);
+            addb("use_rate", true);
             addb("retrigger_AEG", false);
             addb("retrigger_FEG", false);
 
@@ -348,6 +349,7 @@ end
 
         s.useAmplitude = true;
         s.useEnvelope = true;
+        s.useRate = true;
 
         {
             auto sub = Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions", s.L);
@@ -389,6 +391,21 @@ end
                     }
 
                     lua_pop(s.L, 1); // Pop use_envelope
+                }
+                {
+                    // read off the rate control
+                    auto gr = Surge::LuaSupport::SGLD("prepareForEvaluation::rateread", s.L);
+                    lua_getfield(s.L, -1, "use_rate");
+                    if (lua_isboolean(s.L, -1))
+                    {
+                        s.useRate = lua_toboolean(s.L, -1);
+                    }
+                    else if (lua_isnumber(s.L, -1))
+                    {
+                        s.useRate = (lua_tonumber(s.L, -1) != 0.0);
+                    }
+
+                    lua_pop(s.L, 1); // Pop use_rate
                 }
                 lua_pop(s.L, 1); // Pop the modulator state
             }
@@ -827,7 +844,7 @@ enum showFilter
 bool isUserDefined(std::string str)
 {
     // clang-format off
-    static constexpr std::array<std::string_view, 57> keywords = {
+    static constexpr std::array<std::string_view, 58> keywords = {
         "amplitude",     "attack",        "block_size",
         "cc_breath",     "cc_expr",       "cc_mw",
         "cc_sus",        "chan_at",       "channel",
@@ -845,8 +862,9 @@ bool isUserDefined(std::string str)
         "retrigger_FEG", "samplerate",    "scene_mode",
         "songpos",       "split_point",   "startphase",
         "sustain",       "tempo",         "tuned_key",
-        "use_amplitude", "use_envelope",  "velocity",
-        "voice_count",   "voice_id",      "subscriptions"};
+        "use_amplitude", "use_envelope",  "use_rate",
+        "velocity",      "voice_count",   "voice_id",
+        "subscriptions"};
     // clang-format on
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
