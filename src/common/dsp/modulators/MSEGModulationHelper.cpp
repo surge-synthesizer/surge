@@ -160,18 +160,18 @@ static float evalBezier(float timeAlong, float duration, float v0, float v1, flo
 // a user-supplied eval function that takes normalized phase [0,1].
 // tStart/tEnd define the segment boundaries.
 template <typename EvalFn>
-static float maxResidual(const std::vector<std::pair<float, float>> &samples, size_t start,
-                         size_t end, float tStart, float tEnd, EvalFn eval)
+static float maxResidual(std::span<const std::pair<float, float>> samples, float tStart, float tEnd,
+                         EvalFn eval)
 {
     float duration = tEnd - tStart;
     float maxR = 0.f;
 
-    for (size_t i = start; i <= end; ++i)
+    for (auto &s : samples)
     {
-        float frac = (duration > 1e-6f) ? (samples[i].first - tStart) / duration : 0.f;
-        frac = std::max(0.f, std::min(1.f, frac));
+        float frac = (duration > 1e-6f) ? (s.first - tStart) / duration : 0.f;
+        frac = std::clamp(frac, 0.f, 1.f);
         float predicted = eval(frac);
-        float r = fabs(samples[i].second - predicted);
+        float r = fabs(s.second - predicted);
         if (r > maxR)
             maxR = r;
     }
@@ -180,6 +180,7 @@ static float maxResidual(const std::vector<std::pair<float, float>> &samples, si
 }
 
 // 1-D golden section search for minimum of f over [lo, hi].
+// https://en.wikipedia.org/wiki/Golden-section_search#Iterative_algorithm
 template <typename F> static float goldenSearch(F f, float lo, float hi, int iters = 30)
 {
     constexpr float phi = 0.6180339887f; // 1/golden_ratio
@@ -212,8 +213,8 @@ template <typename F> static float goldenSearch(F f, float lo, float hi, int ite
 
 // ------------------------------------------------------------
 
-FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t start, size_t end,
-                     float v0, float v1, float tStart, float tEnd)
+FitResult fitSegment(std::span<const std::pair<float, float>> samples, float v0, float v1,
+                     float tStart, float tEnd)
 {
     FitResult best;
     best.maxResidual = std::numeric_limits<float>::max();
@@ -223,14 +224,14 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
     {
         float holdV = 0.f;
 
-        for (size_t i = start; i <= end; ++i)
+        for (auto &s : samples)
         {
-            holdV += samples[i].second;
+            holdV += s.second;
         }
 
-        holdV /= (end - start + 1);
+        holdV /= samples.size();
 
-        float r = maxResidual(samples, start, end, tStart, tEnd, [&](float) { return holdV; });
+        float r = maxResidual(samples, tStart, tEnd, [&](float) { return holdV; });
 
         if (r < best.maxResidual)
         {
@@ -241,10 +242,14 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
     // ---- LINEAR ----
     {
         auto costFn = [&](float cpv) {
-            return maxResidual(samples, start, end, tStart, tEnd,
+            return maxResidual(samples, tStart, tEnd,
                                [&](float frac) { return evalLinear(frac, v0, v1, cpv); });
         };
-        float cpvRange = std::min(1.f, (float)(end - start) / 10.f);
+
+        // scale down the control point value depending on length of the segment
+        // prevents over-exponential fits when we have sparse input data
+        // but still allows wider range for curve fitting dense spans
+        float cpvRange = std::min(1.f, (float)(samples.size() - 1) / 10.f);
         float cpv = goldenSearch(costFn, -cpvRange, cpvRange);
         float r = costFn(cpv);
 
@@ -254,13 +259,14 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
         }
     }
 
-    const bool enoughSamplesForComplex = (end - start + 1) >= 5;
+    const bool enoughSamplesForComplex = samples.size() >= 5;
 
     if (enoughSamplesForComplex)
-    { // ---- SCURVE ----
+    {
+        // ---- SCURVE ----
         {
             auto costFn = [&](float cpv) {
-                return maxResidual(samples, start, end, tStart, tEnd,
+                return maxResidual(samples, tStart, tEnd,
                                    [&](float frac) { return evalSCurve(frac, v0, v1, cpv); });
             };
             float cpv = goldenSearch(costFn, -1.f, 1.f);
@@ -278,14 +284,14 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
             // We fit (cpdurNorm, cpv) directly in the segment's local coordinate system.
             //
             // Chord-length parameterisation: tᵢ proportional to cumulative arc length.
-            size_t n = end - start + 1;
+            size_t n = samples.size();
             std::vector<float> param(n);
             param[0] = 0.f;
 
             for (size_t i = 1; i < n; ++i)
             {
-                float dt = samples[start + i].first - samples[start + i - 1].first;
-                float dv = samples[start + i].second - samples[start + i - 1].second;
+                float dt = samples[i].first - samples[i - 1].first;
+                float dv = samples[i].second - samples[i - 1].second;
                 param[i] = param[i - 1] + sqrtf(dt * dt + dv * dv);
             }
 
@@ -294,7 +300,9 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
             if (totalLen > 1e-6f)
             {
                 for (size_t i = 0; i < n; ++i)
+                {
                     param[i] /= totalLen;
+                }
             }
 
             // For each sample at chord-param uᵢ, the Bezier value is:
@@ -313,7 +321,7 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
             //            - 2*uᵢ*(1-uᵢ) * seg_mid.x           (everything except P1_stored)
             //   target_i = sample.x (for time) or sample.v (for value)
             //
-            // Least squares: px_stored = Σ wᵢ*(targetᵢ - fixedᵢ) / Σ wᵢ²
+            // Least squares: px_stored = Σ wᵢ*(targetᵢ - fixedᵢ) / Σ wᵢy
 
             // In time axis:
             //   P0.x = 0 (local), P2.x = duration, seg_mid.x = duration/2
@@ -331,14 +339,14 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
                 float w = 4.f * u * (1.f - u); // coefficient of P1_stored (×2 already folded in)
 
                 // Time axis
-                float localT = samples[start + i].first - tStart; // 0..duration
+                float localT = samples[i].first - tStart; // 0..duration
                 float fixedT =
                     (1.f - u) * (1.f - u) * 0.f + u * u * duration - 2.f * u * (1.f - u) * segMidT;
                 numT += w * (localT - fixedT);
                 denT += w * w;
 
                 // Value axis
-                float sampleV = samples[start + i].second;
+                float sampleV = samples[i].second;
                 float fixedV =
                     (1.f - u) * (1.f - u) * v0 + u * u * v1 - 2.f * u * (1.f - u) * segMidV;
                 numV += w * (sampleV - fixedV);
@@ -350,12 +358,12 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
 
             float sampleMeanV = 0.f;
 
-            for (size_t i = start; i <= end; ++i)
+            for (auto &s : samples)
             {
-                sampleMeanV += samples[i].second;
+                sampleMeanV += s.second;
             }
 
-            sampleMeanV /= (end - start + 1);
+            sampleMeanV /= samples.size();
 
             // If mean sample is above chord mid but control point is below, flip
             if ((sampleMeanV > segMidV) != (pyStored > segMidV))
@@ -364,13 +372,12 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
             }
 
             // Convert px_stored from local time to normalised cpduration
-            float cpdurNorm =
-                (duration > 1e-6f) ? std::max(0.f, std::min(1.f, pxStored / duration)) : 0.5f;
+            float cpdurNorm = (duration > 1e-6f) ? std::clamp(pxStored / duration, 0.f, 1.f) : 0.5f;
 
             // Clamp cpv to [-1, 1]
-            float cpv = std::max(-1.f, std::min(1.f, pyStored));
+            float cpv = std::clamp(pyStored, -1.f, 1.f);
 
-            float r = maxResidual(samples, start, end, tStart, tEnd, [&](float frac) {
+            float r = maxResidual(samples, tStart, tEnd, [&](float frac) {
                 return evalBezier(frac * duration, duration, v0, v1, cpdurNorm, cpv);
             });
 
@@ -384,19 +391,18 @@ FitResult fitSegment(const std::vector<std::pair<float, float>> &samples, size_t
     return best;
 }
 
-void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t start, size_t end,
-                 float epsilon, float totalGestureDuration,
-                 std::vector<MSEGStorage::segment> &result)
+void freehandRDP(std::span<const std::pair<float, float>> samples, float epsilon,
+                 float totalGestureDuration, std::vector<MSEGStorage::segment> &result)
 {
-    if (end <= start + 1)
+    if (samples.size() <= 2)
     {
         // Base case: two points — emit one segment
-        float tStart = samples[start].first;
-        float tEnd = samples[end].first;
-        float v0 = samples[start].second;
-        float v1 = samples[end].second;
-        float timeSpan = samples[end].first - samples[start].first;
-        float valueSpan = fabs(samples[end].second - samples[start].second);
+        float tStart = samples.front().first;
+        float tEnd = samples.back().first;
+        float v0 = samples.front().second;
+        float v1 = samples.back().second;
+        float timeSpan = samples.back().first - samples.front().first;
+        float valueSpan = fabs(samples.back().second - samples.front().second);
 
         // A span is "nearly vertical" if its time width is tiny relative to
         // the whole gesture duration, regardless of its own value span
@@ -404,7 +410,7 @@ void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t sta
         {
             MSEGStorage::segment seg{};
             seg.duration = timeSpan;
-            seg.v0 = samples[start].second;
+            seg.v0 = samples.front().second;
             seg.cpv = 0.f;
             seg.cpduration = 0.5f;
             seg.type = MSEGStorage::segment::LINEAR;
@@ -414,7 +420,7 @@ void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t sta
             return;
         }
 
-        FitResult fit = fitSegment(samples, start, end, v0, v1, tStart, tEnd);
+        FitResult fit = fitSegment(samples, v0, v1, tStart, tEnd);
 
         MSEGStorage::segment seg{};
         seg.duration = tEnd - tStart;
@@ -429,13 +435,13 @@ void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t sta
         return;
     }
 
-    float tStart = samples[start].first;
-    float tEnd = samples[end].first;
-    float v0 = samples[start].second;
-    float v1 = samples[end].second;
+    float tStart = samples.front().first;
+    float tEnd = samples.back().first;
+    float v0 = samples.front().second;
+    float v1 = samples.back().second;
 
     // Try fitting the entire span first
-    FitResult fit = fitSegment(samples, start, end, v0, v1, tStart, tEnd);
+    FitResult fit = fitSegment(samples, v0, v1, tStart, tEnd);
 
     if (fit.maxResidual <= epsilon)
     {
@@ -455,13 +461,13 @@ void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t sta
 
     // Find the sample with maximum residual against the best fit — split there
     float maxR = 0.f;
-    size_t splitIdx = (start + end) / 2;
+    size_t splitIdx = (samples.size() - 1) / 2;
     float duration = tEnd - tStart;
 
-    for (size_t i = start + 1; i < end; ++i)
+    for (size_t i = 1; i < samples.size() - 1; ++i)
     {
         float frac = (duration > 1e-6f) ? (samples[i].first - tStart) / duration : 0.f;
-        frac = std::max(0.f, std::min(1.f, frac));
+        frac = std::clamp(frac, 0.f, 1.f, frac);
 
         float predicted;
         switch (fit.type)
@@ -493,8 +499,8 @@ void freehandRDP(const std::vector<std::pair<float, float>> &samples, size_t sta
     }
 
     // Recurse on both halves
-    freehandRDP(samples, start, splitIdx, epsilon, totalGestureDuration, result);
-    freehandRDP(samples, splitIdx, end, epsilon, totalGestureDuration, result);
+    freehandRDP(samples.first(splitIdx + 1), epsilon, totalGestureDuration, result);
+    freehandRDP(samples.subspan(splitIdx), epsilon, totalGestureDuration, result);
 }
 
 void rebuildCache(MSEGStorage *ms)
@@ -905,7 +911,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         float px0 = 0, px1 = cpt, px2 = r.duration, py0 = lv0, py1 = cpv, py2 = lv1;
 
         /*
-        ** OK so we want to find the bezier t corresponding to phase ttarget
+        ** OK so we want to find the bezier t corresponding to phase target
         **
         ** (1-t)^2 px0 + 2 * (1-t) t px1 + t * t px2 = ttarget;
         **

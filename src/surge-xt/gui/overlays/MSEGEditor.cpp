@@ -2090,10 +2090,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         std::sort(freehandSamples.begin(), freehandSamples.end(),
                   [](const auto &a, const auto &b) { return a.first < b.first; });
 
+        static constexpr float nodeMinSpacing = 4.f; // px
         const auto drawArea = getDrawArea();
         float tMin = pxToTime()(drawArea.getX());
         float tMax = pxToTime()(drawArea.getRight());
-        float tEpsilon = ((tMax - tMin) / drawArea.getWidth()) * 5.f;
+        float tEpsilon = ((tMax - tMin) / drawArea.getWidth()) * nodeMinSpacing;
 
         float gestureStart = freehandSamples.front().first;
         float gestureEnd = freehandSamples.back().first;
@@ -2216,8 +2217,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
-        // --- 3. Run RDP on each sub-range between consecutive pinned times ---
-        //        collecting all fitted segments into one vector
+        // --- 3. Run RDP on each sub-range between consecutive pinned times
+        //        collecting all fitted segments into one vector ---
         std::vector<MSEGStorage::segment> fitted;
 
         // Count how many segments currently span the gesture region
@@ -2242,8 +2243,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             fitted.clear();
 
-            Surge::MSEG::freehandRDP(freehandSamples, 0, freehandSamples.size() - 1, epsilon,
-                                     totalTimeSpan, fitted);
+            Surge::MSEG::freehandRDP(freehandSamples, epsilon, totalTimeSpan, fitted);
 
             if ((int)fitted.size() <= budget)
             {
@@ -2266,8 +2266,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 float epMid = (epLo2 + epHi2) * 0.5f;
                 std::vector<MSEGStorage::segment> candidate;
 
-                Surge::MSEG::freehandRDP(freehandSamples, 0, freehandSamples.size() - 1, epMid,
-                                         totalTimeSpan, candidate);
+                Surge::MSEG::freehandRDP(freehandSamples, epMid, totalTimeSpan, candidate);
 
                 if ((float)candidate.size() / totalTimeSpan <= 16.f || epMid >= 0.1f)
                 {
