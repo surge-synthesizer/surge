@@ -1547,7 +1547,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             if (h.type == hotzone::MOUSABLE_NODE)
             {
-
                 int sz = 13;
                 int offx = 0, offy = 0;
                 bool showValue = false;
@@ -2432,11 +2431,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto drawArea = getDrawArea();
         auto where = event.position.toInt();
 
-        mouseDownInitiation =
+        const auto inDrawArea =
             (drawArea.contains(event.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
                                                        : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
 
-        if (mouseDownInitiation == MOUSE_DOWN_IN_DRAW_AREA && event.mods.isShiftDown() &&
+        if (inDrawArea == MOUSE_DOWN_IN_DRAW_AREA && event.mods.isShiftDown() &&
             event.mods.isCommandDown() && event.mods.isAltDown())
         {
             setMouseCursor(juce::MouseCursor::PointingHandCursor);
