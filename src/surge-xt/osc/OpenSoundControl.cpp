@@ -1388,10 +1388,32 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
 
     stopSending();
 
-    // Send OSC messages to IP Address:UDP port number
-    if (!juceOSCSender.connect(ipaddr, port))
+    // When the destination is not loopback, bind our own socket to the configured output port
+    // so receivers can identify the transmitter by its source port
+    // Fall back to an OS-assigned source port if we're on loopback or the bind fails
+    auto isLoopbackAddress = [](const std::string &addr) {
+        return addr == "localhost" || addr == "::1" || addr.rfind("127.", 0) == 0;
+    };
+
+    bool bound = false;
+
+    if (!isLoopbackAddress(ipaddr))
     {
-        return false;
+        auto sock = std::make_unique<juce::DatagramSocket>(true);
+
+        if (sock->bindToPort(port) && juceOSCSender.connectToSocket(*sock, ipaddr, port))
+        {
+            ownedOutSocket = std::move(sock);
+            bound = true;
+        }
+    }
+
+    if (!bound)
+    {
+        if (!juceOSCSender.connect(ipaddr, port))
+        {
+            return false;
+        }
     }
 
     // Add listener for patch changes, to send new path to OSC output
@@ -1450,6 +1472,10 @@ void OpenSoundControl::stopSending(bool updateOSCStartInStorage)
     synth->deletePatchLoadedListener("OSC_OUT");
     synth->deleteAudioParamListener("OSC_OUT");
     sspPtr->deleteParamChangeListener("OSC_OUT");
+
+    // Release the sender and any socket we bound to the output port
+    juceOSCSender.disconnect();
+    ownedOutSocket.reset();
 
     if (updateOSCStartInStorage)
     {
