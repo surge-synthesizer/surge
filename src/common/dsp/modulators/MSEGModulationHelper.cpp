@@ -209,7 +209,7 @@ static float evalBezier(float timeAlong, float duration, float v0, float v1, flo
 // Compute max absolute residual for a set of (time,value) samples against
 // a user-supplied eval function that takes normalized phase [0,1].
 // tStart/tEnd define the segment boundaries.
-template <typename EvalFn>
+template <std::invocable<float> EvalFn>
 static float maxResidual(std::span<const std::pair<float, float>> samples, float tStart, float tEnd,
                          EvalFn eval)
 {
@@ -234,7 +234,8 @@ static float maxResidual(std::span<const std::pair<float, float>> samples, float
 
 // 1-D golden section search for minimum of f over [lo, hi].
 // https://en.wikipedia.org/wiki/Golden-section_search#Iterative_algorithm
-template <typename F> static float goldenSearch(F f, float lo, float hi, int iters = 30)
+template <std::invocable<float> F>
+static float goldenSearch(F f, float lo, float hi, int iters = 30)
 {
     constexpr float phi = 0.6180339887f; // 1 / golden_ratio
     float c = hi - phi * (hi - lo);
