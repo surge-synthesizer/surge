@@ -1156,11 +1156,19 @@ void SurgeCodeEditorComponent::performPopupMenuAction(int menuItemID)
 void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
                                                  const juce::MouseEvent *mouseClickEvent)
 {
-    juce::CodeEditorComponent::addPopupMenuItems(menuToAddTo, mouseClickEvent);
+    if (isReadOnly())
+    {
+        menuToAddTo.addItem(juce::StandardApplicationCommandIDs::copy, "Copy",
+                            !getHighlightedRegion().isEmpty());
+        menuToAddTo.addItem(juce::StandardApplicationCommandIDs::selectAll, "Select All");
+    }
+    else
+    {
+        juce::CodeEditorComponent::addPopupMenuItems(menuToAddTo, mouseClickEvent);
+    }
 
 #if MAC
     std::string commandStr = u8"\U00002318";
-
 #else
     std::string commandStr = "Ctrl";
 #endif
@@ -1193,19 +1201,17 @@ void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
         find.setEnabled(false);
         replace.setEnabled(false);
     }
+    menuToAddTo.addItem(find);
 
-    if (isReadOnly())
+    if (!isReadOnly())
     {
-        replace.setEnabled(false);
+        menuToAddTo.addItem(replace);
     }
 
     if (gotoLine == nullptr)
     {
         gotoline.setEnabled(false);
     }
-
-    menuToAddTo.addItem(find);
-    menuToAddTo.addItem(replace);
     menuToAddTo.addItem(gotoline);
 }
 
@@ -2775,6 +2781,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
 
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getFormulaPrelude());
+    preludeDocument->clearUndoHistory();
 
     preludeDisplay =
         std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get(), skin);
@@ -3860,6 +3867,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
 
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getWTSEPrelude());
+    preludeDocument->clearUndoHistory();
 
     preludeDisplay =
         std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get(), skin);
