@@ -776,6 +776,11 @@ bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *or
 
 void CodeEditorSearch::replaceResults(bool all)
 {
+    if (ed->isReadOnly())
+    {
+        return;
+    }
+
     if (resultTotal > 0)
     {
         resultHasChanged = true;
@@ -1053,6 +1058,28 @@ void SurgeCodeEditorComponent::mouseDrag(const juce::MouseEvent &event)
 
 bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
 {
+    // Prelude find
+    if (search != nullptr && key.getModifiers().isCommandDown() && key.isKeyCode('F'))
+    {
+        if (gotoLine != nullptr)
+        {
+            gotoLine->hide();
+        }
+        search->show();
+        search->showReplace(false);
+        return true;
+    }
+
+    // Prelude go to line
+    if (gotoLine != nullptr && key.getModifiers().isCommandDown() && key.isKeyCode('G'))
+    {
+        if (search != nullptr)
+        {
+            search->hide();
+        }
+        gotoLine->show();
+        return true;
+    }
 
     // update search results
     if (search != nullptr)
@@ -1129,11 +1156,19 @@ void SurgeCodeEditorComponent::performPopupMenuAction(int menuItemID)
 void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
                                                  const juce::MouseEvent *mouseClickEvent)
 {
-    juce::CodeEditorComponent::addPopupMenuItems(menuToAddTo, mouseClickEvent);
+    if (isReadOnly())
+    {
+        menuToAddTo.addItem(juce::StandardApplicationCommandIDs::copy, "Copy",
+                            !getHighlightedRegion().isEmpty());
+        menuToAddTo.addItem(juce::StandardApplicationCommandIDs::selectAll, "Select All");
+    }
+    else
+    {
+        juce::CodeEditorComponent::addPopupMenuItems(menuToAddTo, mouseClickEvent);
+    }
 
 #if MAC
     std::string commandStr = u8"\U00002318";
-
 #else
     std::string commandStr = "Ctrl";
 #endif
@@ -1166,14 +1201,17 @@ void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
         find.setEnabled(false);
         replace.setEnabled(false);
     }
+    menuToAddTo.addItem(find);
+
+    if (!isReadOnly())
+    {
+        menuToAddTo.addItem(replace);
+    }
 
     if (gotoLine == nullptr)
     {
         gotoline.setEnabled(false);
     }
-
-    menuToAddTo.addItem(find);
-    menuToAddTo.addItem(replace);
     menuToAddTo.addItem(gotoline);
 }
 
@@ -2743,6 +2781,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
 
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getFormulaPrelude());
+    preludeDocument->clearUndoHistory();
 
     preludeDisplay =
         std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get(), skin);
@@ -2751,6 +2790,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDisplay->setScrollbarThickness(8);
     preludeDisplay->setTitle("Formula Modulator Prelude Code");
     preludeDisplay->setDescription("Formula Modulator Prelude Code");
+    preludeDisplay->setSearch(*search);
+    preludeDisplay->setGotoLine(*gotoLine);
 
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
@@ -2875,16 +2916,38 @@ void FormulaModulatorEditor::resized()
 
 void FormulaModulatorEditor::showModulatorCode()
 {
+    const bool keepFocus = hasKeyboardFocus(true);
+
+    search->hide();
+    gotoLine->hide();
     preludeDisplay->setVisible(false);
     mainEditor->setVisible(true);
+    search->setEditor(*mainEditor);
+    gotoLine->setEditor(*mainEditor);
     getEditState().codeOrPrelude = 0;
+
+    if (keepFocus)
+    {
+        mainEditor->grabKeyboardFocus();
+    }
 }
 
 void FormulaModulatorEditor::showPreludeCode()
 {
+    const bool keepFocus = hasKeyboardFocus(true);
+
+    search->hide();
+    gotoLine->hide();
     preludeDisplay->setVisible(true);
     mainEditor->setVisible(false);
+    search->setEditor(*preludeDisplay);
+    gotoLine->setEditor(*preludeDisplay);
     getEditState().codeOrPrelude = 1;
+
+    if (keepFocus)
+    {
+        preludeDisplay->grabKeyboardFocus();
+    }
 }
 
 void FormulaModulatorEditor::updateDebuggerIfNeeded()
@@ -3804,6 +3867,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
 
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getWTSEPrelude());
+    preludeDocument->clearUndoHistory();
 
     preludeDisplay =
         std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get(), skin);
@@ -3812,6 +3876,9 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     preludeDisplay->setScrollbarThickness(8);
     preludeDisplay->setTitle("Wavetable Prelude Code");
     preludeDisplay->setDescription("Wavetable Prelude Code");
+    preludeDisplay->setSearch(*search);
+    preludeDisplay->setGotoLine(*gotoLine);
+
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
     controlArea = std::make_unique<WavetableScriptControlArea>(this, editor);
@@ -3948,16 +4015,38 @@ void WavetableScriptEditor::resized()
 
 void WavetableScriptEditor::showModulatorCode()
 {
+    const bool keepFocus = hasKeyboardFocus(true);
+
+    search->hide();
+    gotoLine->hide();
     preludeDisplay->setVisible(false);
     mainEditor->setVisible(true);
+    search->setEditor(*mainEditor);
+    gotoLine->setEditor(*mainEditor);
     getEditState().codeOrPrelude = 0;
+
+    if (keepFocus)
+    {
+        mainEditor->grabKeyboardFocus();
+    }
 }
 
 void WavetableScriptEditor::showPreludeCode()
 {
+    const bool keepFocus = hasKeyboardFocus(true);
+
+    search->hide();
+    gotoLine->hide();
     preludeDisplay->setVisible(true);
     mainEditor->setVisible(false);
+    search->setEditor(*preludeDisplay);
+    gotoLine->setEditor(*preludeDisplay);
     getEditState().codeOrPrelude = 1;
+
+    if (keepFocus)
+    {
+        preludeDisplay->grabKeyboardFocus();
+    }
 }
 
 void WavetableScriptEditor::rerenderFromUIState()

@@ -151,6 +151,7 @@ class TextfieldPopup : public juce::Component,
     void setButtonOffsetAtRow(int row, int offset);
 
     void setTextWidth(int w);
+    void setEditor(juce::CodeEditorComponent &editor) { ed = &editor; }
     virtual void show();
     virtual void hide();
 };
@@ -392,7 +393,7 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
 
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::CodeDocument> preludeDocument;
-    std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
+    std::unique_ptr<SurgeCodeEditorComponent> preludeDisplay;
     std::unique_ptr<WavetableScriptControlArea> controlArea;
     std::unique_ptr<WavetablePreviewComponent> rendererComponent;
 
