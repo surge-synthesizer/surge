@@ -53,14 +53,16 @@ static float evalLinear(float frac, float v0, float v1, float cpv)
 
     if (fabs(V) > 1e-3f)
     {
-        float Q = std::max(1e-5f, std::min(1e6f, (1.f - sqrtf(disc)) / (2.f * V)));
+        float Q = std::clamp((1.f - sqrtf(disc)) / (2.f * V), 1e-5f, 1e6f);
         a = amul * 2.f * logf(Q);
     }
 
     float cpline = frac;
 
     if (fabs(a) > 1e-3f)
+    {
         cpline = (expf(a * frac) - 1.f) / (expf(a) - 1.f);
+    }
 
     // df=0 so bend3 is identity — no additional deform step needed
 
@@ -99,14 +101,16 @@ static float evalSCurve(float frac, float v0, float v1, float cpv)
 
     if (fabs(V) > 1e-3f)
     {
-        float Q = std::max(1e-5f, std::min(1e6f, (1.f - sqrtf(disc)) / (2.f * V)));
+        float Q = std::clamp((1.f - sqrtf(disc)) / (2.f * V), 1e-5f, 1e6f);
         a = amul * 2.f * logf(Q);
     }
 
     float cpline = f2;
 
     if (fabs(a) > 1e-3f)
+    {
         cpline = (expf(a * f2) - 1.f) / (expf(a) - 1.f);
+    }
 
     if (!mirrored)
         cpline *= 0.5f;
@@ -126,7 +130,9 @@ static float evalBezier(float timeAlong, float duration, float v0, float v1, flo
 
     // Guard: walk off exact midpoint to avoid degenerate quadratic
     if (fabs(cpt - duration * 0.5f) < 1e-5f)
+    {
         cpt += 1e-4f;
+    }
 
     // Convert stored on-curve point to actual Bezier control point
     float tp = duration * 0.5f;
@@ -172,8 +178,11 @@ static float maxResidual(std::span<const std::pair<float, float>> samples, float
         frac = std::clamp(frac, 0.f, 1.f);
         float predicted = eval(frac);
         float r = fabs(s.second - predicted);
+
         if (r > maxR)
+        {
             maxR = r;
+        }
     }
 
     return maxR;
@@ -183,7 +192,7 @@ static float maxResidual(std::span<const std::pair<float, float>> samples, float
 // https://en.wikipedia.org/wiki/Golden-section_search#Iterative_algorithm
 template <typename F> static float goldenSearch(F f, float lo, float hi, int iters = 30)
 {
-    constexpr float phi = 0.6180339887f; // 1/golden_ratio
+    constexpr float phi = 0.6180339887f; // 1 / golden_ratio
     float c = hi - phi * (hi - lo);
     float d = lo + phi * (hi - lo);
     float fc = f(c), fd = f(d);
@@ -209,6 +218,45 @@ template <typename F> static float goldenSearch(F f, float lo, float hi, int ite
     }
 
     return (lo + hi) * 0.5f;
+}
+
+static std::pair<float, float>
+fitBezierLeastSquares(std::span<const std::pair<float, float>> samples,
+                      std::span<const float> param, float v0, float v1, float tStart, float tEnd)
+{
+    float duration = tEnd - tStart;
+
+    // In time axis:
+    //   P0.x = 0 (local), P2.x = duration, seg_mid.x = duration/2
+    float segMidT = duration * 0.5f;
+    float numT = 0.f, denT = 0.f;
+
+    // In value axis:
+    //   P0.y = v0, P2.y = v1, seg_mid.y = (v0+v1)/2
+    float segMidV = (v0 + v1) * 0.5f;
+    float numV = 0.f, denV = 0.f;
+
+    for (size_t i = 0; i < samples.size(); ++i)
+    {
+        float u = param[i];
+        float w = 4.f * u * (1.f - u);
+
+        float localT = samples[i].first - tStart;
+        float fixedT =
+            (1.f - u) * (1.f - u) * 0.f + u * u * duration - 2.f * u * (1.f - u) * segMidT;
+        numT += w * (localT - fixedT);
+        denT += w * w;
+
+        float fixedV = (1.f - u) * (1.f - u) * v0 + u * u * v1 - 2.f * u * (1.f - u) * segMidV;
+        numV += w * (samples[i].second - fixedV);
+        denV += w * w;
+    }
+
+    float pxStored = (denT > 1e-8f) ? (numT / denT) : duration * 0.5f;
+    float pyStored = (denV > 1e-8f) ? (numV / denV) : (v0 + v1) * 0.5f;
+
+    return {(duration > 1e-6f) ? std::clamp(pxStored / duration, 0.f, 1.f) : 0.5f,
+            std::clamp(pyStored, -1.f, 1.f)};
 }
 
 // ------------------------------------------------------------
@@ -322,60 +370,7 @@ FitResult fitSegment(std::span<const std::pair<float, float>> samples, float v0,
             //   target_i = sample.x (for time) or sample.v (for value)
             //
             // Least squares: px_stored = Σ wᵢ*(targetᵢ - fixedᵢ) / Σ wᵢy
-
-            // In time axis:
-            //   P0.x = 0 (local), P2.x = duration, seg_mid.x = duration/2
-            float segMidT = duration * 0.5f;
-            float numT = 0.f, denT = 0.f;
-
-            // In value axis:
-            //   P0.y = v0, P2.y = v1, seg_mid.y = (v0+v1)/2
-            float segMidV = (v0 + v1) * 0.5f;
-            float numV = 0.f, denV = 0.f;
-
-            for (size_t i = 0; i < n; ++i)
-            {
-                float u = param[i];
-                float w = 4.f * u * (1.f - u); // coefficient of P1_stored (×2 already folded in)
-
-                // Time axis
-                float localT = samples[i].first - tStart; // 0..duration
-                float fixedT =
-                    (1.f - u) * (1.f - u) * 0.f + u * u * duration - 2.f * u * (1.f - u) * segMidT;
-                numT += w * (localT - fixedT);
-                denT += w * w;
-
-                // Value axis
-                float sampleV = samples[i].second;
-                float fixedV =
-                    (1.f - u) * (1.f - u) * v0 + u * u * v1 - 2.f * u * (1.f - u) * segMidV;
-                numV += w * (sampleV - fixedV);
-                denV += w * w;
-            }
-
-            float pxStored = (denT > 1e-8f) ? (numT / denT) : segMidT;
-            float pyStored = (denV > 1e-8f) ? (numV / denV) : segMidV;
-
-            float sampleMeanV = 0.f;
-
-            for (auto &s : samples)
-            {
-                sampleMeanV += s.second;
-            }
-
-            sampleMeanV /= samples.size();
-
-            // If mean sample is above chord mid but control point is below, flip
-            if ((sampleMeanV > segMidV) != (pyStored > segMidV))
-            {
-                pyStored = segMidV + (segMidV - pyStored);
-            }
-
-            // Convert px_stored from local time to normalised cpduration
-            float cpdurNorm = (duration > 1e-6f) ? std::clamp(pxStored / duration, 0.f, 1.f) : 0.5f;
-
-            // Clamp cpv to [-1, 1]
-            float cpv = std::clamp(pyStored, -1.f, 1.f);
+            auto [cpdurNorm, cpv] = fitBezierLeastSquares(samples, param, v0, v1, tStart, tEnd);
 
             float r = maxResidual(samples, tStart, tEnd, [&](float frac) {
                 return evalBezier(frac * duration, duration, v0, v1, cpdurNorm, cpv);
