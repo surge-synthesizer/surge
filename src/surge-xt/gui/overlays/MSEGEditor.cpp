@@ -1539,12 +1539,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             g.strokePath(freehandPath, strokeStyle);
         }
 
+        const hotzone *readoutHotzone{nullptr};
+
+        using type = MSEGStorage::segment::Type;
+
         for (const auto &h : hotzones)
         {
             if (h.type == hotzone::MOUSABLE_NODE)
             {
-                using type = MSEGStorage::segment::Type;
-
                 int sz = 13;
                 int offx = 0, offy = 0;
                 bool showValue = false;
@@ -1565,7 +1567,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                     offx = 1;
 
-                if (lassoSelector && lassoSelector->contains(h.associatedSegment))
+                if (!inZoomLasso && lassoSelector && lassoSelector->contains(h.associatedSegment))
                     offy = 2;
 
                 auto r = h.rect;
@@ -1595,104 +1597,119 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 if (showValue)
                 {
-                    auto fillr = [&g](juce::Rectangle<float> r, juce::Colour c) {
-                        g.setColour(c);
-                        g.fillRect(r);
-                    };
-
-                    const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
-                    const bool is2Dcp =
-                        ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
-                        ms->segments[h.associatedSegment].type == type::BROWNIAN;
-                    const bool readoutHasTwoRows =
-                        h.zoneSubType != hotzone::SEGMENT_CONTROL ||
-                        (h.zoneSubType == hotzone::SEGMENT_CONTROL && is2Dcp);
-
-                    g.setFont(skin->fontManager->lfoTypeFont);
-
-                    float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
-                                                  : ms->segments[h.associatedSegment].v0;
-
-                    std::string txt1, txt2;
-
-                    if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
-                    {
-                        if (readoutHasTwoRows)
-                        {
-                            txt1 = fmt::format("CP X: {:.{}f}",
-                                               ms->segments[h.associatedSegment].cpduration,
-                                               detailedMode);
-                            txt2 = fmt::format("CP Y: {:.{}f}",
-                                               ms->segments[h.associatedSegment].cpv, detailedMode);
-                        }
-                        else
-                        {
-                            txt1 = fmt::format("CP: {:.{}f}", ms->segments[h.associatedSegment].cpv,
-                                               detailedMode);
-                        }
-                    }
-                    else
-                    {
-                        txt1 = fmt::format("X: {:.{}f}", pxt(cx), detailedMode);
-                        txt2 = fmt::format("Y: {:.{}f}", val, detailedMode);
-                    }
-
-                    int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt1),
-                        sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
-
-                    float dragX = r.getRight(), dragY = r.getBottom();
-                    float dragW = 6 + std::max(sw1, sw2), dragH = readoutHasTwoRows ? 22 : 11;
-
-                    // reposition the display if we've reached right or bottom edge of drawArea
-                    if (dragX + dragW > drawArea.getRight())
-                    {
-                        dragX -= int(dragX + dragW) % drawArea.getRight();
-                    }
-
-                    if (dragY + dragH > drawArea.getBottom())
-                    {
-                        dragY -= int(dragY + dragH) % drawArea.getBottom();
-                    }
-
-                    auto readout = juce::Rectangle<float>(dragX, dragY, dragW, dragH);
-
-                    // if the readout intersects with a node rect, shift it up
-                    // (this only happens in bottom right corner)
-                    auto overlap = r.getIntersection(readout);
-
-                    if (!overlap.isEmpty())
-                    {
-                        readout = readout.withRightX(r.getX()).withBottomY(r.getY());
-                    }
-
-                    fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Border));
-
-                    readout.reduce(1, 1);
-
-                    fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
-
-                    readout = readout.withTrimmedLeft(2).withHeight(10);
-
-                    g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
-                    g.drawText(txt1, readout, juce::Justification::centredLeft);
-
-                    if (readoutHasTwoRows)
-                    {
-                        readout = readout.translated(0, 10);
-
-                        g.drawText(txt2, readout, juce::Justification::centredLeft);
-                    }
+                    readoutHotzone = &h;
                 }
+            }
+        }
+
+        if (readoutHotzone)
+        {
+            const auto &h = *readoutHotzone;
+
+            auto fillr = [&g](juce::Rectangle<float> r, juce::Colour c) {
+                g.setColour(c);
+                g.fillRect(r);
+            };
+
+            const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
+            const bool is2Dcp = ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
+                                ms->segments[h.associatedSegment].type == type::BROWNIAN;
+            const bool readoutHasTwoRows = h.zoneSubType != hotzone::SEGMENT_CONTROL ||
+                                           (h.zoneSubType == hotzone::SEGMENT_CONTROL && is2Dcp);
+
+            auto r = h.rect;
+
+            if (h.useDrawRect)
+            {
+                r = h.drawRect;
+            }
+
+            int cx = r.getCentreX();
+
+            g.setFont(skin->fontManager->lfoTypeFont);
+
+            float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
+                                          : ms->segments[h.associatedSegment].v0;
+
+            std::string txt1, txt2;
+
+            if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
+            {
+                if (readoutHasTwoRows)
+                {
+                    txt1 = fmt::format("CP X: {:.{}f}",
+                                       ms->segments[h.associatedSegment].cpduration, detailedMode);
+                    txt2 = fmt::format("CP Y: {:.{}f}", ms->segments[h.associatedSegment].cpv,
+                                       detailedMode);
+                }
+                else
+                {
+                    txt1 = fmt::format("CP: {:.{}f}", ms->segments[h.associatedSegment].cpv,
+                                       detailedMode);
+                }
+            }
+            else
+            {
+                txt1 = fmt::format("X: {:.{}f}", pxt(cx), detailedMode);
+                txt2 = fmt::format("Y: {:.{}f}", val, detailedMode);
+            }
+
+            int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt1),
+                sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
+
+            float dragX = r.getRight(), dragY = r.getBottom();
+            float dragW = 6 + std::max(sw1, sw2), dragH = readoutHasTwoRows ? 22 : 11;
+
+            // reposition the display if we've reached right or bottom edge of drawArea
+            if (dragX + dragW > drawArea.getRight())
+            {
+                dragX -= int(dragX + dragW) % drawArea.getRight();
+            }
+
+            if (dragY + dragH > drawArea.getBottom())
+            {
+                dragY -= int(dragY + dragH) % drawArea.getBottom();
+            }
+
+            auto readout = juce::Rectangle<float>(dragX, dragY, dragW, dragH);
+
+            // if the readout intersects with a node rect, shift it up
+            // (this only happens in bottom right corner)
+            auto overlap = r.getIntersection(readout);
+
+            if (!overlap.isEmpty())
+            {
+                readout = readout.withRightX(r.getX()).withBottomY(r.getY());
+            }
+
+            fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Border));
+
+            readout.reduce(1, 1);
+
+            fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
+
+            readout = readout.withTrimmedLeft(2).withHeight(10);
+
+            g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
+            g.drawText(txt1, readout, juce::Justification::centredLeft);
+
+            if (readoutHasTwoRows)
+            {
+                readout = readout.translated(0, 10);
+
+                g.drawText(txt2, readout, juce::Justification::centredLeft);
             }
         }
     }
 
     juce::Point<int> mouseDownOrigin, lastPanZoomMousePos, cursorHideOrigin;
+    juce::Point<float> zoomLassoStart;
 
     bool cursorResetPosition = false;
     bool inDrag = false;
     bool inDrawDrag = false;
     bool inFreehandDrag = false;
+    bool inZoomLasso = false;
 
     std::vector<std::pair<float, float>> freehandSamples;
 
@@ -1751,12 +1768,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             s.dragDuration = s.duration;
         }
 
+        if (e.mods.isShiftDown() && e.mods.isCommandDown() && !e.mods.isAltDown())
+        {
+            inZoomLasso = true;
+            zoomLassoStart = e.position;
+        }
+
         if (e.mods.isShiftDown())
         {
             lasso = std::make_unique<juce::LassoComponent<MSEGLassoItem>>();
             // FIX ME SKIN COLOR
             lasso->setColour(juce::LassoComponent<MSEGLassoItem>::lassoFillColourId,
                              juce::Colour(220, 220, 250).withAlpha(0.1f));
+
             lassoSelector = std::make_unique<MSEGLassoSelector>(this);
             addAndMakeVisible(*lasso);
 
@@ -2017,6 +2041,29 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             commitFreehandGesture();
             freehandSamples.clear();
             inFreehandDrag = false;
+        }
+
+        if (inZoomLasso)
+        {
+            const auto tf = pxToTime();
+            const float t1 = tf(std::min(zoomLassoStart.x, e.position.x));
+            const float t2 = tf(std::max(zoomLassoStart.x, e.position.x));
+
+            ms->axisStart = std::max(t1, 0.f);
+            ms->axisWidth = t2 - t1;
+
+            applyZoomPanConstraints();
+            recalcHotZones(e.position.toInt());
+
+            lasso->endLasso();
+            removeChildComponent(lasso.get());
+            lasso.reset(nullptr);
+            lassoSelector.reset(nullptr);
+
+            inZoomLasso = false;
+
+            repaint();
+            return;
         }
 
         if (lasso)
@@ -2383,20 +2430,34 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto t = tf(event.position.getX());
         auto drawArea = getDrawArea();
         auto where = event.position.toInt();
-        mouseDownInitiation =
+
+        const auto inDrawArea =
             (drawArea.contains(event.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
                                                        : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
 
-        if (mouseDownInitiation == MOUSE_DOWN_IN_DRAW_AREA && event.mods.isShiftDown() &&
+        if (inDrawArea == MOUSE_DOWN_IN_DRAW_AREA && event.mods.isShiftDown() &&
             event.mods.isCommandDown() && event.mods.isAltDown())
         {
             setMouseCursor(juce::MouseCursor::PointingHandCursor);
             return;
         }
 
+        if (event.mods.isCommandDown() && event.mods.isShiftDown() && !event.mods.isAltDown())
+        {
+            setMouseCursor(juce::MouseCursor::IBeamCursor);
+            return;
+        }
+
+        if (event.mods.isShiftDown())
+        {
+            setMouseCursor(juce::MouseCursor::CrosshairCursor);
+            return;
+        }
+
         if (drawArea.contains(where))
         {
             auto ohs = hoveredSegment;
+
             if (t < 0)
             {
                 hoveredSegment = 0;
@@ -2409,8 +2470,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 hoveredSegment = Surge::MSEG::timeToSegment(ms, t);
             }
+
             if (hoveredSegment != ohs)
+            {
                 repaint();
+            }
         }
         else
         {
@@ -2426,9 +2490,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         for (const auto &h : hotzones)
         {
             if (!h.rect.contains(event.position))
+            {
                 continue;
+            }
 
             reset = true;
+
             if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
             {
                 auto nextCursor = juce::MouseCursor::NormalCursor;
@@ -2449,11 +2516,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
 
             if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+            {
                 setMouseCursor(juce::MouseCursor::UpDownLeftRightResizeCursor);
+            }
         }
 
         if (!reset)
+        {
             setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
     }
 
     void mouseDrag(const juce::MouseEvent &event) override
@@ -2493,6 +2564,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (lasso)
         {
             lasso->dragLasso(event);
+
+            // Force lasso component to full draw area height
+            if (inZoomLasso)
+            {
+                const auto drawArea = getDrawArea();
+                auto b = lasso->getBounds();
+                lasso->setBounds(b.withY(drawArea.getY()).withHeight(drawArea.getHeight()));
+            }
 
             /*
              * You may think 'hey you can repaint locally' and try something like
