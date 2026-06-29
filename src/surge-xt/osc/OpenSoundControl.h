@@ -74,6 +74,7 @@ class OpenSoundControl : public juce::OSCReceiver,
 
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::DatagramSocket> ownedInSocket;
+    std::unique_ptr<juce::DatagramSocket> ownedOutSocket;
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
