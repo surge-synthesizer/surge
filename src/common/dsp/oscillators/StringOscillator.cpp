@@ -85,7 +85,7 @@ std::string stringosc_excitation_name(int i)
     case StringOscillator::constant_audioin:
         return "Audio In";
     case StringOscillator::constant_scene_a_in:
-        return "Scene A In";
+        return "Scene A";
     }
     return "Unknown";
 }
