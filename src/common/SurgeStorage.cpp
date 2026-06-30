@@ -2232,6 +2232,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             Surge::FxClipboard::copyFx(this, &getPatch().fx[sl], *(clipboard_scenefx[i]));
         }
 
+        clipboard_useSustainAsModulatorOnly = useSustainAsModulatorOnly.load();
+
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
         clipboard_envmode = getPatch().scene[scene].monoVoiceEnvelopeMode;
     }
@@ -2530,6 +2532,8 @@ void SurgeStorage::clipboard_paste(
                 updateFxInSlot(clipboard_scenefx[i], sl);
             }
         }
+
+        useSustainAsModulatorOnly.store(clipboard_useSustainAsModulatorOnly);
 
         getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
         getPatch().scene[scene].monoVoiceEnvelopeMode = clipboard_envmode;

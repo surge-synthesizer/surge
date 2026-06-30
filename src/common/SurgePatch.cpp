@@ -2132,6 +2132,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     // Default hardclip value
     storage->hardclipMode = SurgeStorage::HARDCLIP_TO_18DBFS;
+    storage->useSustainAsModulatorOnly = false;
 
     for (int sc = 0; sc < n_scenes; ++sc)
     {
@@ -2206,6 +2207,19 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (tam->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
             {
                 storage->setTuningApplicationMode((SurgeStorage::TuningApplicationMode)(tv));
+            }
+        }
+
+        auto *dspv =
+            TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("detachSustainPedalFromVoicing"));
+
+        if (dspv)
+        {
+            bool tv;
+
+            if (tam->QueryBoolAttribute("v", &tv) == TIXML_SUCCESS)
+            {
+                storage->useSustainAsModulatorOnly.store(tv);
             }
         }
 
@@ -3990,6 +4004,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
     }
     nonparamconfig.InsertEndChild(tam);
+
+    TiXmlElement dspv("detachSustainPedalFromVoicing");
+    dspv.SetAttribute("v", (int)(storage->useSustainAsModulatorOnly));
+
+    nonparamconfig.InsertEndChild(dspv);
 
     patch.InsertEndChild(nonparamconfig);
 

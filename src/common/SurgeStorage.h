@@ -1792,6 +1792,8 @@ class alignas(16) SurgeStorage
     std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
     std::atomic<bool> transposeByTuningPeriod{false};
 
+    std::atomic<bool> useSustainAsModulatorOnly{false};
+
     bool mpeEnabled{false};
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
@@ -2005,6 +2007,9 @@ class alignas(16) SurgeStorage
         clipboard_wtSnapshots;
 
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
+
+    bool clipboard_useSustainAsModulatorOnly = false;
+
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
     MonoVoiceEnvelopeMode clipboard_envmode = RESTART_FROM_ZERO;
 

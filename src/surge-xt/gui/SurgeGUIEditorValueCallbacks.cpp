@@ -1019,6 +1019,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 contextMenu.addSeparator();
             }
 
+            if (modsource == ms_sustain)
+            {
+                auto &opt = synth->storage.useSustainAsModulatorOnly;
+                contextMenu.addItem(Surge::GUI::toOSCase("Detach Sustain Pedal from Voicing"), true,
+                                    opt.load(), [&opt]() { opt.store(!opt.load()); });
+
+                contextMenu.addSeparator();
+            }
+
             int n_total_md = synth->storage.getPatch().param_ptr.size();
             const int max_md = 4096;
 
