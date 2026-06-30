@@ -2191,6 +2191,11 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
                 ->set_target(fval);
         }
 
+        if (storage.useSustainAsModulatorOnly)
+        {
+            break;
+        }
+
         sustainpedalCC = value;
         hasUpdatedMidiCC = true;
 
