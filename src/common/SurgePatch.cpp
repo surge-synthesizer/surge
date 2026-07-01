@@ -2217,7 +2217,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             bool tv;
 
-            if (tam->QueryBoolAttribute("v", &tv) == TIXML_SUCCESS)
+            if (dspv->QueryBoolAttribute("v", &tv) == TIXML_SUCCESS)
             {
                 storage->useSustainAsModulatorOnly.store(tv);
             }
