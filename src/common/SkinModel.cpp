@@ -325,6 +325,13 @@ Connector param_4 = Connector("osc.param_4", 0, 88).asHorizontal().inParent("osc
 Connector param_5 = Connector("osc.param_5", 0, 110).asHorizontal().inParent("osc.param.panel");
 Connector param_6 = Connector("osc.param_6", 0, 132).asHorizontal().inParent("osc.param.panel");
 Connector param_7 = Connector("osc.param_7", 0, 154).asHorizontal().inParent("osc.param.panel");
+Connector param_8 = Connector("osc.param_8", 0, 0).asHorizontal().inParent("osc.param.panel");
+Connector param_9 = Connector("osc.param_9", 0, 0).asHorizontal().inParent("osc.param.panel");
+Connector param_10 = Connector("osc.param_10", 0, 0).asHorizontal().inParent("osc.param.panel");
+Connector param_11 = Connector("osc.param_11", 0, 0).asHorizontal().inParent("osc.param.panel");
+Connector param_12 = Connector("osc.param_12", 0, 0).asHorizontal().inParent("osc.param.panel");
+Connector param_13 = Connector("osc.param_13", 0, 0).asHorizontal().inParent("osc.param.panel");
+Connector param_14 = Connector("osc.param_14", 0, 0).asHorizontal().inParent("osc.param.panel");
 } // namespace Osc
 
 namespace Mixer
@@ -402,6 +409,16 @@ Connector f2_link_resonance =
 
 Connector keytrack_1 = Connector("filter.keytrack_1", 309, 301).asVertical().asWhite();
 Connector keytrack_2 = Connector("filter.keytrack_2", 329, 301).asVertical().asWhite();
+
+Connector extra_param_1 = Connector("filter.extra_param_1", 0, 0).asHorizontal();
+Connector extra_param_2 = Connector("filter.extra_param_2", 0, 0).asHorizontal();
+Connector extra_param_3 = Connector("filter.extra_param_3", 0, 0).asHorizontal();
+Connector extra_param_4 = Connector("filter.extra_param_4", 0, 0).asHorizontal();
+Connector extra_param_5 = Connector("filter.extra_param_5", 0, 0).asHorizontal();
+Connector extra_param_6 = Connector("filter.extra_param_6", 0, 0).asHorizontal();
+Connector extra_param_7 = Connector("filter.extra_param_7", 0, 0).asHorizontal();
+Connector extra_param_8 = Connector("filter.extra_param_8", 0, 0).asHorizontal();
+Connector extra_param_9 = Connector("filter.extra_param_9", 0, 0).asHorizontal();
 
 Connector envmod_1 = Connector("filter.envmod_1", 549, 301).asVertical().asWhite();
 Connector envmod_2 = Connector("filter.envmod_2", 569, 301).asVertical().asWhite();

@@ -28,6 +28,7 @@
 #include <thread>
 #include "Tunings.h"
 #include "SurgeGUIEditorTags.h"
+#include "SurgeGUIEditor.h"
 
 static constexpr auto GRAPH_MIN_FREQ = 13.57f;
 static constexpr auto GRAPH_MAX_FREQ = 25087.f;
@@ -144,20 +145,58 @@ FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s, SurgeSynthesi
     f2Button->onToggle = [this]() { selectFilter(1); };
     addAndMakeVisible(*f2Button);
 
+    modeButton = std::make_unique<SwitchButton>(*this);
+    modeButton->setStorage(storage);
+    modeButton->setRows(1);
+    modeButton->setColumns(2);
+    modeButton->setLabels({"Analysis", "Parameters"});
+    modeButton->setWantsKeyboardFocus(true);
+    modeButton->setValue(0.f);
+    modeButton->setDraggable(false);
+    addAndMakeVisible(*modeButton);
+
     selectFilter(0);
     repushData();
 }
 
-FilterAnalysis::~FilterAnalysis() = default;
+FilterAnalysis::~FilterAnalysis()
+{
+    // Clear any param[] references we own before our sliders are destroyed.
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (int f = 0; f < n_filterunits_per_scene; f++)
+        {
+            auto &fu = editor->getPatch().scene[sc].filterunit[f];
+            for (int i = 0; i < n_extra_filter_params; i++)
+            {
+                auto *p = &fu.extra[i];
+                if (p->id >= 0 && editor->param[p->id] == extraParamSliders[i].get())
+                    editor->param[p->id] = nullptr;
+            }
+        }
+    }
+}
 
 void FilterAnalysis::onSkinChanged()
 {
     f1Button->setSkin(skin, associatedBitmapStore);
     f2Button->setSkin(skin, associatedBitmapStore);
+    modeButton->setSkin(skin, associatedBitmapStore);
+    for (auto &sl : extraParamSliders)
+    {
+        if (sl)
+            sl->setSkin(skin, associatedBitmapStore);
+    }
 }
 
 void FilterAnalysis::paint(juce::Graphics &g)
 {
+    if (displayMode == PARAMETERS)
+    {
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+        return;
+    }
+
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
     constexpr auto dbRange = GRAPH_MAX_DB - GRAPH_MIN_DB;
@@ -438,6 +477,19 @@ bool FilterAnalysis::shouldRepaintOnParamChange(const SurgePatch &patch, Paramet
 {
     if (p->ctrlgroup == cg_FILTER)
     {
+        // If an extra filter param changed externally (e.g. automation), refresh its slider.
+        if (displayMode == PARAMETERS)
+        {
+            auto &fu = patch.scene[editor->current_scene].filterunit[whichFilter];
+            for (int i = 0; i < n_extra_filter_params; i++)
+            {
+                if (p == &fu.extra[i] && extraParamSliders[i])
+                {
+                    extraParamSliders[i]->setValue(p->get_value_f01());
+                    extraParamSliders[i]->setQuantitizedDisplayValue(p->get_value_f01());
+                }
+            }
+        }
         repushData();
         return true;
     }
@@ -490,6 +542,8 @@ void FilterAnalysis::selectFilter(int which)
         f2Button->setValue(1);
     }
     repushData();
+    if (displayMode == PARAMETERS)
+        layoutParameters();
     repaint();
 }
 
@@ -502,13 +556,39 @@ void FilterAnalysis::resized()
     t.transformPoint(w, h);
 
     f1Button->setBounds(2, 2, 40, 15);
-    f2Button->setBounds(w - 42, 2, 40, 15);
+    f2Button->setBounds(44, 2, 40, 15);
+    modeButton->setBounds(w - 122, 2, 120, 15);
 
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
+
+    if (displayMode == PARAMETERS)
+    {
+        const auto contentRect = juce::Rectangle<int>(0, 0, w, h).withTrimmedTop(18).reduced(4);
+        const int nCols = 3;
+        const int nRows = (n_extra_filter_params + nCols - 1) / nCols;
+        const int colWidth = contentRect.getWidth() / nCols;
+        const int rowHeight = std::max(contentRect.getHeight() / nRows, 26);
+        const int sliderH = 26;
+
+        for (int i = 0; i < n_extra_filter_params; i++)
+        {
+            if (extraParamSliders[i] && extraParamSliders[i]->isVisible())
+            {
+                const int col = i / nRows;
+                const int row = i % nRows;
+                const int x = contentRect.getX() + col * colWidth + 2;
+                const int y = contentRect.getY() + row * rowHeight + (rowHeight - sliderH) / 2;
+                extraParamSliders[i]->setBounds(x, y, colWidth - 4, sliderH);
+            }
+        }
+    }
 }
 
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
 
     float rx0 = dRect.getX();
@@ -577,6 +657,9 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 // just by clicking anywhere in the graph, no mouse movement required
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     const auto lb = getLocalBounds().transformedBy(getTransform().inverted());
     auto dRect = lb.withTrimmedTop(18).reduced(4);
     auto where = event.position;
@@ -609,6 +692,9 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     auto dRect = getLocalBounds();
 
     setMouseCursor(juce::MouseCursor::NormalCursor);
@@ -625,6 +711,9 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
     bool reset = false;
     const bool withinHotzone =
@@ -646,6 +735,104 @@ void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
     }
+}
+
+void FilterAnalysis::changeDisplayMode(DisplayMode mode)
+{
+    displayMode = mode;
+    layoutParameters();
+    resized();
+    repaint();
+}
+
+void FilterAnalysis::forceDataRefresh()
+{
+    repushData();
+    if (displayMode == PARAMETERS)
+        layoutParameters();
+}
+
+void FilterAnalysis::layoutParameters()
+{
+    // First, hide all existing extra param sliders and clear editor->param[] references.
+    for (int i = 0; i < n_extra_filter_params; i++)
+    {
+        if (extraParamSliders[i])
+        {
+            auto *p =
+                &editor->getPatch().scene[editor->current_scene].filterunit[whichFilter].extra[i];
+            if (p->id >= 0 && editor->param[p->id] == extraParamSliders[i].get())
+                editor->param[p->id] = nullptr;
+            extraParamSliders[i]->setVisible(false);
+        }
+    }
+
+    if (displayMode != PARAMETERS)
+        return;
+
+    auto &fu =
+        editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
+
+    for (int i = 0; i < n_extra_filter_params; i++)
+    {
+        auto *p = &fu.extra[i];
+
+        if (p->ctrltype == ct_none)
+            continue;
+
+        if (!extraParamSliders[i])
+        {
+            extraParamSliders[i] = std::make_unique<Surge::Widgets::ModulatableSlider>();
+            extraParamSliders[i]->setOrientation(Surge::ParamConfig::kHorizontal);
+            addAndMakeVisible(*extraParamSliders[i]);
+        }
+
+        auto &sl = *extraParamSliders[i];
+        sl.setStorage(&synth->storage);
+        sl.setSkin(skin, associatedBitmapStore);
+        sl.setTag(p->id + start_paramtags);
+        sl.addListener(editor);
+        sl.setValue(p->get_value_f01());
+        sl.setQuantitizedDisplayValue(sl.getValue());
+        sl.parameterType = (ctrltypes)p->ctrltype;
+
+        if (p->supportsDynamicName() && p->dynamicName)
+            sl.setDynamicLabel([p]() { return std::string(p->get_name()); });
+        else
+            sl.setLabel(p->get_name());
+
+        sl.setBipolarFn([p]() { return p->is_bipolar(); });
+        sl.setDeactivated(false);
+        sl.setDeactivatedFn([p]() { return p->appears_deactivated(); });
+
+        if (p->valtype == vt_int || p->valtype == vt_bool)
+        {
+            sl.setIsStepped(true);
+            sl.setIntStepRange(p->val_max.i - p->val_min.i);
+        }
+        else
+        {
+            sl.setIsStepped(false);
+        }
+
+        sl.setFont(skin->fontManager->displayFont);
+        sl.setMoveRate(p->moverate);
+
+        editor->param[p->id] = &sl;
+        sl.setVisible(true);
+    }
+}
+
+FilterAnalysis::SwitchButton::SwitchButton(FilterAnalysis &parent)
+    : Surge::Widgets::MultiSwitchSelfDraw(), parent_(parent)
+{
+    addListener(this);
+}
+
+void FilterAnalysis::SwitchButton::valueChanged(Surge::GUI::IComponentTagValue *p)
+{
+    auto mode = p->getValue() < 0.5 ? FilterAnalysis::ANALYSIS : FilterAnalysis::PARAMETERS;
+    parent_.changeDisplayMode(mode);
 }
 
 } // namespace Overlays

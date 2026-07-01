@@ -201,7 +201,7 @@ TEST_CASE("Unison at Different Sample Rates", "[osc]")
 
         // While this test is correct, the differences depend on samplerate in 1.6.5. That should
         // not be the case here.
-        auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
+        auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[5]); // p[5] = co_unison_detune
 
         char txt[TXT_SIZE];
         ap->get_display(txt);
@@ -225,7 +225,7 @@ TEST_CASE("Unison at Different Sample Rates", "[osc]")
             REQUIRE(surge->loadPatchByPath(pn, -1, "Test"));
             int note = rand() % 70 + 22;
             float abss = rand() * 1.f / (float)RAND_MAX * 0.8 + 0.15;
-            auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
+            auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[5]); // p[5] = co_unison_detune
             ap->set_value_f01(abss);
             char txt[TXT_SIZE];
             ap->get_display(txt);
