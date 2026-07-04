@@ -72,7 +72,7 @@ class ModernOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    template <mo_multitypes multitype, bool subOctave, bool FM>
+    template <mo_multitypes mtype, bool subOctave, bool FM>
     void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
 
     lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],

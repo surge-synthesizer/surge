@@ -121,6 +121,151 @@
  * and the rest is just mixing and lagging. All pretty obvious.
  */
 
+namespace
+{
+constexpr double dpwOneOverSix = 1.0 / 6.0;
+
+// Cubic saw generator (p^3 - p)/6, phase p01 in [0,1) mapped to [-1,1].
+inline double dpwSawGen(double p01)
+{
+    double p = (p01 - 0.5) * 2.0;
+    return (p * p * p - p) * dpwOneOverSix;
+}
+
+/*
+ * DPW saw component value at phase p (in [0,1)) with per-sample phase increment
+ * dp, using the backward 3-point stencil (p, p-dp, p-2dp) centered at p-dp.
+ *
+ * The cubic generator has zero fourth derivative, so away from the wrap its
+ * numerical second difference is *exactly* the analytic saw at the (lagged)
+ * stencil center - so we just return that and skip three cubic evaluations and
+ * the divide. Only near the wrap (or when forced, e.g. under sync) do we run the
+ * full numerical second difference. Result already has the 1/(4 dp^2) scale
+ * folded in, matching (secondDifference * denom) in the caller.
+ */
+inline double dpwSawComp(double p, double dp, bool forceNumeric)
+{
+    if (!forceNumeric && p >= 3.0 * dp)
+    {
+        double pc = p - dp; // lagged stencil center, still in [0,1) here
+        return (pc - 0.5) * 2.0;
+    }
+
+    double p1 = p - dp;
+    p1 += (p1 < 0);
+    double p2 = p - 2.0 * dp;
+    p2 += (p2 < 0);
+    return (dpwSawGen(p) + dpwSawGen(p2) - 2.0 * dpwSawGen(p1)) * (0.25 / (dp * dp));
+}
+
+/*
+ * DPW multitype (triangle / square / sine) component value. Triangle and square
+ * generators are degree <= 3, so the analytic second derivative at the lagged
+ * center is exact away from their corners. The sine generator is a quartic, so
+ * its numerical second difference is not analytically identical - sine always
+ * takes the numerical path (left unchanged by this optimization).
+ */
+template <ModernOscillator::mo_multitypes multitype>
+inline double dpwMultiComp(double p, double dp, bool forceNumeric)
+{
+    bool numeric = forceNumeric || (multitype == ModernOscillator::momt_sine);
+
+    if (!numeric)
+    {
+        // Fall back to numerical near a generator corner / wrap.
+        if (multitype == ModernOscillator::momt_square)
+            numeric = (p < 3.0 * dp) || (fabs(p - 0.5) < 3.0 * dp);
+        if (multitype == ModernOscillator::momt_triangle)
+            numeric = (fabs(p - 0.25) < 3.0 * dp) || (fabs(p - 0.75) < 3.0 * dp);
+    }
+
+    if (!numeric)
+    {
+        double pc = p - dp;
+        pc += (pc < 0);
+        double x = (pc - 0.5) * 2.0;
+
+        if (multitype == ModernOscillator::momt_square)
+        {
+            return (x < 0) * 2.0 - 1.0;
+        }
+        if (multitype == ModernOscillator::momt_triangle)
+        {
+            double tp = x + 0.5;
+            tp -= (tp > 1.0) * 2.0;
+            double Q = 1.0 - (tp < 0) * 2.0;
+            return 1.0 - 2.0 * Q * tp;
+        }
+    }
+
+    // Numerical second difference of the generator (identical math to the
+    // original per-sample path).
+    double ph0 = p;
+    double ph1 = p - dp;
+    ph1 += (ph1 < 0);
+    double ph2 = p - 2.0 * dp;
+    ph2 += (ph2 < 0);
+
+    double g[3];
+    double phs[3] = {ph0, ph1, ph2};
+    for (int s = 0; s < 3; ++s)
+    {
+        double pp = (phs[s] - 0.5) * 2.0;
+        double p3 = pp * pp * pp;
+        if (multitype == ModernOscillator::momt_square)
+        {
+            double Q = (pp < 0) * 2 - 1;
+            g[s] = pp * (Q * pp + 1) * 0.5;
+        }
+        else if (multitype == ModernOscillator::momt_sine)
+        {
+            // double pos = 1.0 - std::signbit(pp);
+            double modpos = 2.0 * (pp < 0) - 1.0;
+            double p4 = p3 * pp;
+            constexpr double oo3 = 1.0 / 3.0;
+
+            /*
+             * So...
+             *
+             * -(pos * (-p4 + 2 * p3 - p) + (pos - 1) * (-p4 - 2 * p3 + p)) * oo3
+             *
+             * Alright so p4 is:
+             *
+             * (pos * -p4 + (pos - 1) * -p4) == ( 1 - 2 * pos ) * p4
+             *
+             * p3 is:
+             *
+             * pos * 2 * p3 + (pos - 1) * -2 * p3
+             * pos * 2 * p3 - pos * 2 + p3 + 2 * p3
+             *       2 * p3
+             *
+             * p is:
+             *
+             * pos * -p + (pos - 1) + p
+             * -pos * p + pos * p - p
+             * or -p
+             *
+             * so our term is actually:
+             *
+             * -((1 - 2 * pos) * p4 + 2 * p3 - p) * oo3
+             *
+             * Moreover, pos is 1-signbit so (1 - 2 * pos) == (1 - 2 + 2 * signbit)
+             * or 2 * signbit - 1
+             */
+            g[s] = -(modpos * p4 + 2 * p3 - pp) * oo3;
+        }
+        else // triangle
+        {
+            double tp = pp + 0.5;
+            tp -= (tp > 1.0) * 2;
+            double Q = 1 - (tp < 0) * 2;
+            g[s] = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * dpwOneOverSix;
+        }
+    }
+    return (g[0] + g[2] - 2.0 * g[1]) * (0.25 / (dp * dp));
+}
+} // namespace
+
 void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     // we need a tiny little portamento since the derivative is pretty
@@ -160,7 +305,7 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
     charFilt.init(storage->getPatch().character.val.i);
 }
 
-template <ModernOscillator::mo_multitypes multitype, bool subOctave, bool FM>
+template <ModernOscillator::mo_multitypes mtype, bool subOctave, bool FM>
 void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float fmdepthV)
 {
     float submul = 1;
@@ -217,10 +362,9 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
     fmdepth.newValue(fv);
 
-    const double oneOverSix = 1.0 / 6.0;
-    // We only use 3 of these
-    double sBuff alignas(16)[4] = {0, 0, 0, 0}, sOffBuff alignas(16)[4] = {0, 0, 0, 0},
-                 triBuff alignas(16)[4] = {0, 0, 0, 0}, phases alignas(16)[4] = {0, 0, 0, 0};
+    // Sync (turnover compensation and reset discontinuities) forces the full
+    // numerical path; away from sync the turnaround-gated shortcut is exact.
+    bool syncActive = sync.v > 1e-4;
 
     bool subsyncskip =
         oscdata->p[mo_tri_mix].deform_type & ModernOscillator::mo_submask::mo_subskipsync;
@@ -234,6 +378,10 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
         {
             fmPhaseShift = FM * fmdepth.v * master_osc[i];
         }
+
+        // pwidth.v is already pulse width * 2 (in [-1,1] phase units); halve it
+        // back to a [0,1) phase offset for the second saw of the pulse.
+        double pwHalf = pwidth.v * 0.5;
 
         for (int u = 0; u < n_unison; ++u)
         {
@@ -257,97 +405,86 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                 }
             }
 
-            phases[0] = pfm;
-            phases[1] = pfm - dsp + (pfm < dsp);
-            phases[2] = pfm - 2 * dsp + (pfm < 2 * dsp);
+            double res;
 
-            for (int s = 0; s < 3; ++s)
+            if (syncActive)
             {
-                // Saw component (p^3 - p) / 6
-                double p01 = phases[s];
-                double p = (p01 - 0.5) * 2;
-                double p3 = p * p * p;
-                double sawcub = (p3 - p) * oneOverSix;
-
-                sBuff[s] = sawcub;
-
                 /*
-                 * Remember these ifs are now on template params so won't
-                 * eject branches
+                 * Under sync the turnover compensation and reset discontinuities
+                 * need the full numerical path on every sample, so the analytic
+                 * shortcut never applies. Use one shared stencil for all three
+                 * components (the original fused form) rather than three
+                 * separately-gated helper calls, which keeps sync as cheap and
+                 * bit-identical as it was before the optimization.
                  */
-                if (subOctave)
+                double denom = 0.25 / (dsp * dsp);
+                double phs[3] = {pfm, pfm - dsp + (pfm < dsp), pfm - 2 * dsp + (pfm < 2 * dsp)};
+                double sB[3], oB[3], tB[3];
+
+                for (int s = 0; s < 3; ++s)
                 {
-                    triBuff[s] = 0.0;
-                }
-                else
-                {
-                    if (multitype == momt_square)
+                    double p = (phs[s] - 0.5) * 2;
+                    double p3 = p * p * p;
+                    sB[s] = (p3 - p) * dpwOneOverSix;
+
+                    if (subOctave)
                     {
-                        // double Q = std::signbit(p) * 2 - 1;
-                        double Q = (p < 0) * 2 - 1;
-                        triBuff[s] = p * (Q * p + 1) * 0.5;
+                        tB[s] = 0.0;
                     }
-                    if (multitype == ModernOscillator::momt_sine)
+                    else if (mtype == momt_square)
                     {
-                        // double pos = 1.0 - std::signbit(p);
+                        double Q = (p < 0) * 2 - 1;
+                        tB[s] = p * (Q * p + 1) * 0.5;
+                    }
+                    else if (mtype == momt_sine)
+                    {
+                        // parabola-pair generator; derivation in dpwMultiComp above
                         double modpos = 2.0 * (p < 0) - 1.0;
                         double p4 = p3 * p;
                         constexpr double oo3 = 1.0 / 3.0;
-
-                        /*
-                         * So...
-                         *
-                         * -(pos * (-p4 + 2 * p3 - p) + (pos - 1) * (-p4 - 2 * p3 + p)) * oo3
-                         *
-                         * Alright so p4 is:
-                         *
-                         * (pos * -p4 + (pos - 1) * -p4) == ( 1 - 2 * pos ) * p4
-                         *
-                         * p3 is:
-                         *
-                         * pos * 2 * p3 + (pos - 1) * -2 * p3
-                         * pos * 2 * p3 - pos * 2 + p3 + 2 * p3
-                         *       2 * p3
-                         *
-                         * p is:
-                         *
-                         * pos * -p + (pos - 1) + p
-                         * -pos * p + pos * p - p
-                         * or -p
-                         *
-                         * so our term is actually:
-                         *
-                         * -((1 - 2 * pos) * p4 + 2 * p3 - p) * oo3
-                         *
-                         * Moreover, pos is 1-signbit so (1 - 2 * pos) == (1 - 2 + 2 * signbit)
-                         * or 2 * signbit - 1
-                         */
-                        triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
+                        tB[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                     }
-                    if (multitype == ModernOscillator::momt_triangle)
+                    else // triangle
                     {
                         double tp = p + 0.5;
                         tp -= (tp > 1.0) * 2;
-
                         double Q = 1 - (tp < 0) * 2;
-                        triBuff[s] = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
+                        tB[s] = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * dpwOneOverSix;
                     }
+
+                    double pwp = p + pwidth.v;
+                    pwp += (pwp > 1) * -2;
+                    oB[s] = (pwp * pwp * pwp - pwp) * dpwOneOverSix;
                 }
 
-                double pwp = p + pwidth.v; // that's actually pw * 2, but we lag the width * 2
-                pwp += (pwp > 1) * -2;     // (pwp > 1 ? -2 : (pwp < -1 ? 2 : 0));
-                sOffBuff[s] = (pwp * pwp * pwp - pwp) * oneOverSix;
+                double saw = sB[0] + sB[2] - 2.0 * sB[1];
+                double sawoff = oB[0] + oB[2] - 2.0 * oB[1];
+                double tri = tB[0] + tB[2] - 2.0 * tB[1];
+                double sqr = sawoff - saw;
+
+                // super important - you have to mix after differentiating to avoid zipper noise
+                res = (sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr) * denom;
+            }
+            else
+            {
+                // Saw: analytic away from the wrap, numerical near it. Each helper
+                // returns the final component value (1/(4 dsp^2) scale folded in).
+                double sawv = dpwSawComp(pfm, dsp, false);
+
+                // Pulse = saw(phase) - saw(phase + width); the second saw turns
+                // around at a different phase so it gates independently.
+                double poff = pfm + pwHalf;
+                poff -= (poff >= 1.0);
+                double sqrv = dpwSawComp(poff, dsp, false) - sawv;
+
+                // Triangle / square analytically; sine stays numerical inside the
+                // helper. Sub-octave moves the multitype to the sub, so it's zero
+                // here (matching the original triBuff = 0 in that case).
+                double triv = subOctave ? 0.0 : dpwMultiComp<mtype>(pfm, dsp, false);
+
+                res = sawmix.v * sawv + trimix.v * triv + sqrmix.v * sqrv;
             }
 
-            double denom = 0.25 / (dsp * dsp);
-            double saw = (sBuff[0] + sBuff[2] - 2.0 * sBuff[1]);
-            double sawoff = (sOffBuff[0] + sOffBuff[2] - 2.0 * sOffBuff[1]);
-            double tri = (triBuff[0] + triBuff[2] - 2.0 * triBuff[1]);
-            double sqr = sawoff - saw;
-
-            // super important - you have to mix after differentiating to avoid zipper noise
-            // but I can save a multiply by putting it here
-            double res = (sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr) * denom;
             res = res * (1.0 - sTurnFrac[u]) + sTurnFrac[u] * sTurnVal[u];
 
             vL += res * mixL[u];
@@ -399,49 +536,12 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             auto dp = subdpbase.v;
             auto dsp = ((1 - subsyncskip) * subdpsbase.v) + (subsyncskip * dp);
 
-            for (int s = 0; s < 3; ++s)
-            {
-                double p01 = subsphase + fmPhaseShift - s * dsp;
+            // FM can be large, so wrap the base phase into [0,1) before the
+            // turnaround-gated helper (which assumes a small backward stencil).
+            double subP = subsphase + fmPhaseShift;
+            subP -= floor(subP);
 
-                if (p01 > 1)
-                {
-                    p01 -= floor(p01);
-                }
-                if (p01 < 0)
-                {
-                    p01 += -ceil(p01) + 1;
-                }
-
-                double p = (p01 - 0.5) * 2;
-                double p3 = p * p * p;
-
-                if (multitype == momt_square)
-                {
-                    double Q = (p < 0) * 2 - 1;
-                    triBuff[s] = p * (Q * p + 1) * 0.5;
-                }
-                if (multitype == momt_sine)
-                {
-                    double modpos = 2.0 * (p < 0) - 1.0;
-                    double p4 = p3 * p;
-                    constexpr double oo3 = 1.0 / 3.0;
-
-                    triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
-                }
-                if (multitype == momt_triangle)
-                {
-                    double tp = p + 0.5;
-
-                    tp -= (tp > 1.0) * 2;
-
-                    double Q = 1 - (tp < 0) * 2;
-                    double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
-
-                    triBuff[s] = tricub;
-                }
-            }
-
-            double sub = (triBuff[0] + triBuff[2] - 2.0 * triBuff[1]) / (4 * dsp * dsp);
+            double sub = dpwMultiComp<mtype>(subP, dsp, syncActive);
 
             vL += trimix.v * sub;
             vR += trimix.v * sub;
