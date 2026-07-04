@@ -427,7 +427,7 @@ end
             lua_getfield(s.L, -1, "randomseed"); // > math > randomseed
             if (lua_isnil(s.L, -1))
             {
-                std::cout << "NUL randomseed" << std::endl;
+                std::cout << "NIL randomseed" << std::endl;
                 lua_pop(s.L, 1); // Pop nil
             }
             else
@@ -710,8 +710,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         }
         if (!lua_istable(s->L, -1))
         {
-            s->adderror("The return of your Lua function must be a number or table!\n"
-                        "Just return input with output set.");
+            s->adderror("Return of your Lua function must be a number or a table!");
             s->isvalid = false;
             lua_pop(s->L, 1);
             return;
@@ -745,12 +744,12 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
                 {
                     std::ostringstream oss;
                     oss << "Error with vector output!\nThe vector output must be"
-                        << " an array with size up to 8. Your table contained"
-                        << " index " << idx;
+                        << " a table with maximum size " << max_formula_outputs
+                        << ". Your table contained ";
                     if (idx == -1)
-                        oss << ", which is not an integer array index.";
+                        oss << "a non-integer index!";
                     if (idx > max_formula_outputs)
-                        oss << ", which means your array is too large.";
+                        oss << "an index larger than the maximum table size!";
                     s->adderror(oss.str());
                     auto &stateData = *storage->formulaGlobalData;
                     stateData.knownBadFunctions.insert(s->funcName);
@@ -759,7 +758,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
                     idx = 0;
                 }
 
-                // Remember - LUA is 0 based
+                // Remember - LUA is 1 based
                 if (idx > 0)
                     output[idx - 1] = checkFinite(lua_tonumber(s->L, -1));
                 lua_pop(s->L, 1);
@@ -825,7 +824,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         const char *err = lua_tostring(s->L, -1);
         // Fallback if error(nil)
         if (!err)
-            err = "Lua error: Value is nil.";
+            err = "Lua error: value is nil!";
         oss << "Failed to evaluate the process() function!\n" << err;
         s->adderror(oss.str());
         lua_pop(s->L, 1);
