@@ -241,8 +241,8 @@ end
         if (lua_isfunction(s.L, -2))
         {
             // CALL HERE
-            auto addn = [&s](const char *q, float f) {
-                lua_pushnumber(s.L, f);
+            auto addn = [&s](const char *q, double d) {
+                lua_pushnumber(s.L, d);
                 lua_setfield(s.L, -2, q);
             };
 
@@ -583,8 +583,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     }
     lua_getglobal(s->L, s->stateName);
 
-    auto addn = [s](const char *q, float f) {
-        lua_pushnumber(s->L, f);
+    auto addn = [s](const char *q, double d) {
+        lua_pushnumber(s->L, d);
         lua_setfield(s->L, -2, q);
     };
 
