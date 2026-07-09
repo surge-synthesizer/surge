@@ -1345,7 +1345,7 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         typeAhead->setVisible(true);
         typeAhead->setEnabled(enable);
 
-        typeAhead->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(typeAhead.get());
         typeAhead->selectAll();
 
         if (!enable)
@@ -1403,7 +1403,7 @@ void PatchSelector::enableTypeAheadIfReady()
 
     if (enable)
     {
-        typeAhead->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(typeAhead.get());
         typeAhead->selectAll();
         typeAhead->searchAndShowListBox();
     }

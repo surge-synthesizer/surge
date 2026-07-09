@@ -21,6 +21,7 @@
  */
 
 #include "TypeAheadTextEditor.h"
+#include "SurgeGUIUtils.h"
 #include "MainFrame.h"
 #include "AccessibleHelpers.h"
 
@@ -299,7 +300,7 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
 
         if (isVisible())
         {
-            grabKeyboardFocus();
+            Surge::GUI::grabKeyboardFocusIfAllowed(this);
         }
     }
 
@@ -317,7 +318,7 @@ void TypeAhead::dismissWithoutValue()
     lbox->setVisible(false);
 
     if (isShowing())
-        grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(this);
 
     for (auto l : taList)
     {
@@ -474,7 +475,7 @@ bool TypeAhead::keyPressed(const juce::KeyPress &press)
             lbox->setSelectedRows(lastSelectedRow);
         }
 
-        lbox->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(lbox.get());
 
         return true;
     }

@@ -38,6 +38,16 @@ static bool hostRequiresShowCursor{false};
 void setHostRequiresShowCursor(bool b) { hostRequiresShowCursor = b; }
 bool getHostRequiresShowCursor() { return hostRequiresShowCursor; }
 
+static bool neverMoveKeyboardFocus{false};
+void setNeverMoveKeyboardFocus(bool b) { neverMoveKeyboardFocus = b; }
+bool getNeverMoveKeyboardFocus() { return neverMoveKeyboardFocus; }
+
+void grabKeyboardFocusIfAllowed(juce::Component *c)
+{
+    if (c && !neverMoveKeyboardFocus)
+        c->grabKeyboardFocus();
+}
+
 bool showCursor(SurgeStorage *storage)
 {
     if (hostRequiresShowCursor)

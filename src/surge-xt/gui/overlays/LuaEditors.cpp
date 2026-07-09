@@ -22,6 +22,7 @@
 
 #include "LuaEditors.h"
 
+#include "SurgeGUIUtils.h"
 #include "LuaSupport.h"
 #include "RuntimeFont.h"
 #include "SkinColors.h"
@@ -234,7 +235,7 @@ void TextfieldPopup::show()
     setVisible(true);
     if (textfield[0]->isShowing())
     {
-        textfield[0]->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(textfield[0].get());
     }
 }
 
@@ -393,14 +394,14 @@ bool GotoLine::keyPressed(const juce::KeyPress &key, juce::Component *originatin
     if (key.getKeyCode() == key.returnKey)
     {
         hide();
-        ed->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(ed);
     }
     else if (key.getKeyCode() == key.escapeKey)
     {
         hide();
         ed->moveCaretTo(startCaretPosition, false);
         ed->scrollToLine(startScroll);
-        ed->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(ed);
     }
     else
     {
@@ -698,7 +699,7 @@ void CodeEditorSearch::show()
     search(true);
     if (textfield[0]->isShowing())
     {
-        textfield[0]->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(textfield[0].get());
     }
     ed->repaint(); // force update selection color
 }
@@ -722,14 +723,14 @@ bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *or
     {
         if (originatingComponent == textfield[0].get())
         {
-            textfield[1]->grabKeyboardFocus();
+            Surge::GUI::grabKeyboardFocusIfAllowed(textfield[1].get());
             textfield[1]->moveCaretToEnd();
             textfield[1]->moveCaretToStartOfLine(false);
             textfield[1]->moveCaretToEndOfLine(true);
         }
         else
         {
-            textfield[0]->grabKeyboardFocus();
+            Surge::GUI::grabKeyboardFocusIfAllowed(textfield[0].get());
             textfield[0]->moveCaretToStartOfLine(false);
             textfield[0]->moveCaretToEndOfLine(true);
         }
@@ -973,7 +974,7 @@ void CodeEditorSearch::showReplace(bool showReplaceRow)
         showRows(2);
         if (textfield[1]->isShowing())
         {
-            textfield[1]->grabKeyboardFocus();
+            Surge::GUI::grabKeyboardFocusIfAllowed(textfield[1].get());
         }
 
         textfield[1]->moveCaretToStartOfLine(false);
@@ -986,7 +987,7 @@ void CodeEditorSearch::showReplace(bool showReplaceRow)
         showRows(1);
         if (textfield[0]->isShowing())
         {
-            textfield[0]->grabKeyboardFocus();
+            Surge::GUI::grabKeyboardFocusIfAllowed(textfield[0].get());
         }
 
         textfield[0]->moveCaretToStartOfLine(false);
@@ -1840,7 +1841,7 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
             if (auto *k = getCurrentlyFocusedComponent())
             {
                 k->giveAwayKeyboardFocus();
-                olw->grabKeyboardFocus();
+                Surge::GUI::grabKeyboardFocusIfAllowed(olw);
                 return true;
             }
 
@@ -2861,7 +2862,7 @@ void FormulaModulatorEditor::applyCode()
     editor->repaintFrame();
     setApplyEnabled(false);
     if (mainEditor->isShowing())
-        mainEditor->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(mainEditor.get());
 
     if (debugPanel->isOpen)
         debugPanel->initializeLfoDebugger();
@@ -2928,7 +2929,7 @@ void FormulaModulatorEditor::showModulatorCode()
 
     if (keepFocus)
     {
-        mainEditor->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(mainEditor.get());
     }
 }
 
@@ -2946,7 +2947,7 @@ void FormulaModulatorEditor::showPreludeCode()
 
     if (keepFocus)
     {
-        preludeDisplay->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(preludeDisplay.get());
     }
 }
 
@@ -3952,7 +3953,7 @@ void WavetableScriptEditor::applyCode()
     editor->repaintFrame();
     setApplyEnabled(false);
     if (mainEditor->isShowing())
-        mainEditor->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(mainEditor.get());
 
     repaint();
 }
@@ -4027,7 +4028,7 @@ void WavetableScriptEditor::showModulatorCode()
 
     if (keepFocus)
     {
-        mainEditor->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(mainEditor.get());
     }
 }
 
@@ -4045,7 +4046,7 @@ void WavetableScriptEditor::showPreludeCode()
 
     if (keepFocus)
     {
-        preludeDisplay->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(preludeDisplay.get());
     }
 }
 

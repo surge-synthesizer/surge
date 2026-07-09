@@ -1379,6 +1379,17 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addSubMenu(str, kbfMenu);
 
+    bool neverMoveFocus = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::NeverMoveKeyboardFocus, false);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Never Move Keyboard Focus"), true, neverMoveFocus,
+                   [this, neverMoveFocus]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::NeverMoveKeyboardFocus,
+                           !neverMoveFocus);
+                       Surge::GUI::setNeverMoveKeyboardFocus(!neverMoveFocus);
+                   });
+
 #if WINDOWS
     wfMenu.addSeparator();
 

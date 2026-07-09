@@ -24,6 +24,7 @@
 #define SURGE_SRC_SURGE_XT_GUI_OVERLAYS_MINIEDIT_H
 
 #include "SkinSupport.h"
+#include "SurgeGUIUtils.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -68,7 +69,7 @@ struct MiniEdit : public juce::Component,
 
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
-    void grabFocus() { typein->grabKeyboardFocus(); }
+    void grabFocus() { Surge::GUI::grabKeyboardFocusIfAllowed(typein.get()); }
 
     juce::Component *returnFocusComp{nullptr};
     void setFocusReturnTarget(juce::Component *c) { returnFocusComp = c; }

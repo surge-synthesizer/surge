@@ -406,6 +406,11 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     Surge::GUI::setHostRequiresShowCursor(juce::PluginHostType().isLogic() ||
                                           juce::PluginHostType().isGarageBand());
 
+    // Mirror the "never move keyboard focus" preference into the GUI layer so
+    // deep widget code can honor it without needing a storage reference.
+    Surge::GUI::setNeverMoveKeyboardFocus(Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::NeverMoveKeyboardFocus, false));
+
     currentSkin = Surge::GUI::SkinDB::get()->defaultSkin(&(this->synth->storage));
 
     // init the size of the plugin
@@ -665,7 +670,7 @@ void SurgeGUIEditor::idle()
             if (!(alert && alert->isVisible()))
             {
                 componentToFocusAfterAlertDismissal->setWantsKeyboardFocus(true);
-                componentToFocusAfterAlertDismissal->grabKeyboardFocus();
+                Surge::GUI::grabKeyboardFocusIfAllowed(componentToFocusAfterAlertDismissal);
             }
         }
 
@@ -2409,7 +2414,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     if (!somethingHasFocus && patchSelector && patchSelector->isShowing())
     {
-        patchSelector->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(patchSelector.get());
     }
 
     sendStructureChangeIn = 120;
@@ -3213,7 +3218,14 @@ void SurgeGUIEditor::setRecommendedAccessibility()
                                            Surge::Storage::ExpandModMenusWithSubMenus, true);
     Surge::Storage::updateUserDefaultValue(
         &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, true);
-    oss << "Expanded Modulation Menus and Modulation Focus.";
+    oss << "Expanded Modulation Menus and Modulation Focus; ";
+
+    // Accessibility relies on Surge moving keyboard focus, so make sure the
+    // "never move keyboard focus" preference is off.
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::NeverMoveKeyboardFocus, false);
+    Surge::GUI::setNeverMoveKeyboardFocus(false);
+    oss << "Keyboard focus movement on.";
 
     enqueueAccessibleAnnouncement(oss.str());
 }
@@ -6082,7 +6094,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     // So now focus the first element of focusThis
                     if (focusThis->getWantsKeyboardFocus())
                     {
-                        focusThis->grabKeyboardFocus();
+                        Surge::GUI::grabKeyboardFocusIfAllowed(focusThis);
 
                         return true;
                     }
@@ -6091,7 +6103,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     {
                         if (c->getWantsKeyboardFocus() && c->isShowing())
                         {
-                            c->grabKeyboardFocus();
+                            Surge::GUI::grabKeyboardFocusIfAllowed(c);
 
                             return true;
                         }
@@ -6133,7 +6145,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                         {
                             if (c->getWantsKeyboardFocus() && c->isShowing())
                             {
-                                c->grabKeyboardFocus();
+                                Surge::GUI::grabKeyboardFocusIfAllowed(c);
 
                                 return true;
                             }

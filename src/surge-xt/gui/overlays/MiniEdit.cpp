@@ -185,7 +185,7 @@ void MiniEdit::doReturnFocus()
 {
     if (returnFocusComp)
     {
-        returnFocusComp->grabKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(returnFocusComp);
     }
     returnFocusComp = nullptr;
 }
