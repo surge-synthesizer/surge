@@ -37,6 +37,42 @@ namespace GUI
 }
 } // namespace Surge
 
+namespace
+{
+std::string escapeForHTML(const std::string &s)
+{
+    std::string res;
+    res.reserve(s.size());
+
+    for (const auto c : s)
+    {
+        switch (c)
+        {
+        case '&':
+            res += "&amp;";
+            break;
+        case '<':
+            res += "&lt;";
+            break;
+        case '>':
+            res += "&gt;";
+            break;
+        case '"':
+            res += "&quot;";
+            break;
+        case '\'':
+            res += "&#39;";
+            break;
+        default:
+            res += c;
+            break;
+        }
+    }
+
+    return res;
+}
+} // namespace
+
 void SurgeGUIEditor::showHTML(const std::string &html)
 {
     static struct filesToDelete : juce::DeletedAtShutdown
@@ -98,7 +134,7 @@ std::string SurgeGUIEditor::tuningToHtml()
         Surge XT Tuning Information
       </div>
       <div style="font-size: 12pt; font-family: Lato; padding: 2pt;">
-    )HTML" << synth->storage.currentScale.description
+    )HTML" << escapeForHTML(synth->storage.currentScale.description)
           <<
         R"HTML(
       </div>
@@ -235,8 +271,8 @@ std::string SurgeGUIEditor::tuningToHtml()
       <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawscl">Tuning Raw File</a>:
            )HTML"
-          << synth->storage.currentScale.name << "</div><br/>\n<pre>\n"
-          << synth->storage.currentScale.rawText << R"HTML(
+          << escapeForHTML(synth->storage.currentScale.name) << "</div><br/>\n<pre>\n"
+          << escapeForHTML(synth->storage.currentScale.rawText) << R"HTML(
       </pre>
     </div>
 )HTML";
@@ -248,8 +284,8 @@ std::string SurgeGUIEditor::tuningToHtml()
       <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawkbm">Keyboard Mapping Raw File</a>:
            )HTML"
-              << synth->storage.currentMapping.name << "</div><br/>\n<pre>\n"
-              << synth->storage.currentMapping.rawText << R"HTML(
+              << escapeForHTML(synth->storage.currentMapping.name) << "</div><br/>\n<pre>\n"
+              << escapeForHTML(synth->storage.currentMapping.rawText) << R"HTML(
       </pre>
     </div>
 )HTML";
@@ -261,7 +297,7 @@ std::string SurgeGUIEditor::tuningToHtml()
         <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="matrices">Interval Matrices</a>:
            )HTML"
-          << synth->storage.currentScale.name << "</div><br/>\n";
+          << escapeForHTML(synth->storage.currentScale.name) << "</div><br/>\n";
 
     if (synth->storage.currentMapping.count > 48)
     {
@@ -410,7 +446,8 @@ th {
             auto chtxt = (ch == -1) ? "Omni" : std::to_string(ch + 1);
 
             htmls << "<tr><td class=\"center\">" << p->midictrl << "</td><td class=\"center\"> "
-                  << chtxt << "</td><td> " << sc << p->get_full_name() << "</td></tr>\n";
+                  << chtxt << "</td><td> " << sc << escapeForHTML(p->get_full_name())
+                  << "</td></tr>\n";
         }
     }
 
@@ -441,7 +478,7 @@ th {
 
         htmls << "<tr><td class=\"center\">" << (ccval == -1 ? "N/A" : std::to_string(ccval))
               << "</td><td class=\"center\">" << chtxt << "</td><td class=\"center\">" << i + 1
-              << "</td><td>" << ccname << "</td></tr>" << std::endl;
+              << "</td><td>" << escapeForHTML(ccname) << "</td></tr>" << std::endl;
     }
     htmls << R"HTML(
          </table>
@@ -630,9 +667,10 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
             if (comp)
             {
                 if (comp->classname == comp->ultimateparentclassname)
-                    htmls << comp->classname;
+                    htmls << escapeForHTML(comp->classname);
                 else
-                    htmls << comp->classname << " : " << comp->ultimateparentclassname;
+                    htmls << escapeForHTML(comp->classname) << " : "
+                          << escapeForHTML(comp->ultimateparentclassname);
             }
 
             htmls << "</td><td>";
@@ -641,7 +679,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
                 {
                     if (p.first != "x" && p.first != "y" && p.first != "w" && p.first != "h")
                     {
-                        htmls << p.first << ": " << p.second;
+                        htmls << escapeForHTML(p.first) << ": " << escapeForHTML(p.second);
                         if (p.first == "bg_id")
                         {
                             int id = std::atoi(p.second.c_str());
@@ -667,12 +705,12 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::STRINGID);
         for (const auto &v : r1)
         {
-            htmls << "<li>" << v << "</li>\n";
+            htmls << "<li>" << escapeForHTML(v) << "</li>\n";
         }
         auto r2 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::PATH);
         for (const auto &v : r2)
         {
-            htmls << "<li>" << v << "</li>\n";
+            htmls << "<li>" << escapeForHTML(v) << "</li>\n";
         }
         htmls << "</ul>\n";
     }
@@ -696,7 +734,8 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
 
         if (includeDefaults || p.get_value_f01() != p.get_default_value_f01())
         {
-            htmls << tab3 << "<b>" << p.get_name() << ":</b> " << p.get_display() << "<br/>\n";
+            htmls << tab3 << "<b>" << escapeForHTML(p.get_name()) << ":</b> "
+                  << escapeForHTML(p.get_display()) << "<br/>\n";
         }
     };
 
@@ -749,8 +788,8 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
 
     htmls << std::endl << tab2 << "<div class=\"frame\">\n";
     htmls << tab3 << "<p>" << std::endl;
-    htmls << tab4 << "<b>Patch Name:</b> " << patch.name << "<br/> " << std::endl
-          << tab4 << "<b>Category:</b> " << cat << std::endl
+    htmls << tab4 << "<b>Patch Name:</b> " << escapeForHTML(patch.name) << "<br/> " << std::endl
+          << tab4 << "<b>Category:</b> " << escapeForHTML(cat) << std::endl
           << tab3 << "</p>" << std::endl;
     htmls << tab2 << "</div>\n";
 
@@ -784,9 +823,10 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
             synth->isBipolarModulation(thisms), Parameter::Menu);
 
         globmods << tab4 << "<b>"
-                 << ModulatorName::modulatorName(&synth->storage, mr.source_id, false,
-                                                 current_scene)
-                 << " -> " << p->get_full_name() << ":</b> " << depth << "<br/>\n";
+                 << escapeForHTML(ModulatorName::modulatorName(&synth->storage, mr.source_id, false,
+                                                               current_scene))
+                 << " -> " << escapeForHTML(p->get_full_name()) << ":</b> " << escapeForHTML(depth)
+                 << "<br/>\n";
         modsourceSceneActive.emplace(mr.source_id, mr.source_scene);
     }
 
@@ -821,9 +861,10 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
                     synth->isBipolarModulation(thisms), Parameter::Menu);
 
                 curscenemods << tab4 << "<b>"
-                             << ModulatorName::modulatorName(&synth->storage, thisms, false,
-                                                             current_scene)
-                             << " -> " << p->get_full_name() << ":</b> " << depth << "<br/>\n";
+                             << escapeForHTML(ModulatorName::modulatorName(&synth->storage, thisms,
+                                                                           false, current_scene))
+                             << " -> " << escapeForHTML(p->get_full_name()) << ":</b> "
+                             << escapeForHTML(depth) << "<br/>\n";
                 modsourceSceneActive.emplace(thisms, mr.source_scene);
             }
 
@@ -876,8 +917,8 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
         for (const auto &o : sc.osc)
         {
             htmls << std::endl
-                  << tab3 << "<h3>Oscillator " << idx << ": " << o.type.get_display() << "</h3>"
-                  << std::endl;
+                  << tab3 << "<h3>Oscillator " << idx << ": " << escapeForHTML(o.type.get_display())
+                  << "</h3>" << std::endl;
             htmls << tab3 << "<p>\n";
 
             const auto *p = &(o.type);
@@ -894,7 +935,8 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
 
             if (uses_wavetabledata(o.type.val.i))
             {
-                htmls << tab4 << "<b>Wavetable:</b> " << o.wavetable_display_name << std::endl;
+                htmls << tab4 << "<b>Wavetable:</b> " << escapeForHTML(o.wavetable_display_name)
+                      << std::endl;
             }
 
             htmls << tab3 << "</p>\n";
@@ -954,9 +996,10 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
                       << tab3 << "<h3>Filter " << idx << "</h3>" << std::endl
                       << tab3 << "<p>" << std::endl;
 
-                htmls << tab4 << "<b>Type:</b> " << f.type.get_display() << "<br/>" << std::endl;
-                htmls << tab4 << "<b>Subtype:</b> " << f.subtype.get_display() << "<br/>"
+                htmls << tab4 << "<b>Type:</b> " << escapeForHTML(f.type.get_display()) << "<br/>"
                       << std::endl;
+                htmls << tab4 << "<b>Subtype:</b> " << escapeForHTML(f.subtype.get_display())
+                      << "<br/>" << std::endl;
 
                 const auto *p = &(f.cutoff);
                 const auto *e = &(f.keytrack);
@@ -1053,7 +1096,8 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
             {
                 htmls << std::endl
                       << tab3 << "<h3>"
-                      << ModulatorName::modulatorName(&synth->storage, ms, false, current_scene)
+                      << escapeForHTML(ModulatorName::modulatorName(&synth->storage, ms, false,
+                                                                    current_scene))
                       << "</h3>" << std::endl
                       << tab3 << "<p>" << std::endl;
 
