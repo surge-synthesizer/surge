@@ -1869,6 +1869,10 @@ struct WaveTable3DEditor : public juce::Component,
 
     void paint(juce::Graphics &g) override
     {
+        // The audio thread can rebuild and reallocate the wavetable underneath us
+        // (BuildWT), so hold the wt lock while we read it, like the 2D display does.
+        std::lock_guard<std::mutex> wtLock(storage->waveTableDataMutex);
+
         auto &wt = oscdata->wt;
         wt_size = wt.size;
         wt_nframes = wt.n_tables;

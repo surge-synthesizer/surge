@@ -1456,38 +1456,51 @@ void SurgeStorage::perform_queued_wtloads()
     {
         for (int o = 0; o < n_oscs; o++)
         {
-            if (patch.scene[sc].osc[o].wt.queue_id != -1)
+            // A malformed wavetable must never let an exception escape into the
+            // audio thread; catch here so a bad load can't terminate the process.
+            try
             {
-                if (patch.scene[sc].osc[o].wt.everBuilt)
-                    patch.isDirty = true;
-                load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt,
-                        &patch.scene[sc].osc[o]);
-                patch.scene[sc].osc[o].wt.force_refresh_display = false;
-                patch.scene[sc].osc[o].wt.refresh_display = true;
-            }
-            else if (patch.scene[sc].osc[o].wt.queue_filename[0])
-            {
-                if (!(uses_wavetabledata(patch.scene[sc].osc[o].type.val.i)))
+                if (patch.scene[sc].osc[o].wt.queue_id != -1)
                 {
-                    patch.scene[sc].osc[o].queue_type = ot_wavetable;
+                    if (patch.scene[sc].osc[o].wt.everBuilt)
+                        patch.isDirty = true;
+                    load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt,
+                            &patch.scene[sc].osc[o]);
+                    patch.scene[sc].osc[o].wt.force_refresh_display = false;
+                    patch.scene[sc].osc[o].wt.refresh_display = true;
                 }
-                int wtidx = -1, ct = 0;
-                for (const auto &wti : wt_list)
+                else if (patch.scene[sc].osc[o].wt.queue_filename[0])
                 {
-                    if (path_to_string(wti.path) == patch.scene[sc].osc[0].wt.queue_filename)
+                    if (!(uses_wavetabledata(patch.scene[sc].osc[o].type.val.i)))
                     {
-                        wtidx = ct;
+                        patch.scene[sc].osc[o].queue_type = ot_wavetable;
                     }
-                    ct++;
-                }
+                    int wtidx = -1, ct = 0;
+                    for (const auto &wti : wt_list)
+                    {
+                        if (path_to_string(wti.path) == patch.scene[sc].osc[0].wt.queue_filename)
+                        {
+                            wtidx = ct;
+                        }
+                        ct++;
+                    }
 
-                patch.scene[sc].osc[o].wt.current_id = wtidx;
-                load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
-                        &patch.scene[sc].osc[o]);
-                patch.scene[sc].osc[o].wt.force_refresh_display = true;
-                patch.scene[sc].osc[o].wt.refresh_display = true;
-                if (patch.scene[sc].osc[o].wt.everBuilt)
-                    patch.isDirty = true;
+                    patch.scene[sc].osc[o].wt.current_id = wtidx;
+                    load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
+                            &patch.scene[sc].osc[o]);
+                    patch.scene[sc].osc[o].wt.force_refresh_display = true;
+                    patch.scene[sc].osc[o].wt.refresh_display = true;
+                    if (patch.scene[sc].osc[o].wt.everBuilt)
+                        patch.isDirty = true;
+                }
+            }
+            catch (const std::exception &e)
+            {
+                // Clear the queue so we don't retry the bad load every block
+                patch.scene[sc].osc[o].wt.queue_id = -1;
+                patch.scene[sc].osc[o].wt.queue_filename = "";
+                reportError(std::string("Unable to load wavetable: ") + e.what(),
+                            "Wavetable Load Error");
             }
         }
     }
