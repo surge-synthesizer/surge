@@ -2080,7 +2080,10 @@ bool Parameter::supportsDynamicName() const
     switch (ctrltype)
     {
     case ct_modern_trimix:
+    case ct_lfoamplitude:
+    case ct_lfodeform:
     case ct_lfophaseshuffle:
+    case ct_lforate_deactivatable:
     case ct_percent:
     case ct_percent_bipolar:
     case ct_percent_bipolar_deactivatable:
