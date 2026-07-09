@@ -157,6 +157,7 @@ enum ctrltypes
     ct_flangerpitch,
     ct_flangermode,
     ct_fxlfowave,
+    ct_fxlfowave_extended, // Phaser waveform: adds Saw, so 7 values instead of 6
     ct_flangervoices,
     ct_flangerspacing,
     ct_filter_feedback,

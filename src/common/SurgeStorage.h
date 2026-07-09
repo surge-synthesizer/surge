@@ -148,9 +148,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                               fixed extendable parameters not extending in Waveshaper effect
 // 27 -> 28 (XT 1.4.* nightlies) added corrected TX shapes to Sine oscillator
 // 28 -> 29 (XT 1.4.* nightlies) save/load size of ArbitraryBlockStorage segment
+// 29 -> 30 (XT 1.4.* nightlies) reordered Phaser LFO waveforms and added a Saw shape (sst-effects upgrade)
 // clang-format on
 
-const int ff_revision = 29;
+const int ff_revision = 30;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type

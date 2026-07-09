@@ -25,6 +25,7 @@
 #include "SurgeFXEditor.h"
 #include "DebugHelpers.h"
 #include "UserDefaults.h"
+#include "PhaserEffect.h"
 #include <fmt/core.h>
 
 #if LINUX
@@ -527,7 +528,7 @@ juce::AudioProcessorEditor *SurgefxAudioProcessor::createEditor()
 void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     std::unique_ptr<juce::XmlElement> xml(new juce::XmlElement("surgefx"));
-    xml->setAttribute("streamingVersion", (int)2);
+    xml->setAttribute("streamingVersion", (int)3);
 
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -588,7 +589,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
         if (xmlState->hasTagName("surgefx"))
         {
             auto streamingVersion = xmlState->getIntAttribute("streamingVersion", (int)2);
-            if (streamingVersion > 2 || streamingVersion < 0)
+            if (streamingVersion > 3 || streamingVersion < 0)
                 streamingVersion = 1; // assume some corrupted ancient session
 
             effectNum = xmlState->getIntAttribute("fxt", fxt_delay);
@@ -609,7 +610,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                     float v = xmlState->getDoubleAttribute(nm, 0.0);
                     fxstorage->p[fx_param_remap[i]].set_value_f01(v);
                 }
-                else if (streamingVersion == 2)
+                else if (streamingVersion >= 2)
                 {
                     auto &spar = fxstorage->p[fx_param_remap[i]];
                     nm = fmt::format("fxp_{:d}", i);
@@ -652,6 +653,14 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                     int pf = xmlState->getIntAttribute(nm, 0);
                     paramFeaturesCache[i] = pf;
                 }
+            }
+
+            // sst-effects reordered the Phaser LFO waveforms and added a Saw shape,
+            // decoupled from this plugin's stream. Sessions before v3 stored the old
+            // ordering, so remap them with the shared sst-effects remapper.
+            if (streamingVersion < 3 && effectNum == fxt_phaser)
+            {
+                PhaserEffect::remapLegacyWaveform(fxstorage);
             }
 
             resetFxParams(true);
