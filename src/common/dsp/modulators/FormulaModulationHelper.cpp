@@ -131,10 +131,7 @@ end
     // Reset the dynamic slider labels on every display script eval
     if (is_display)
     {
-        fs->labelAmplitude = "";
-        fs->labelDeform = "";
-        fs->labelPhase = "";
-        fs->labelRate = "";
+        fs->labels.reset();
     }
 
     // OK so now evaluate the formula. This is a mistake - the loading and
@@ -425,6 +422,7 @@ end
                     lua_getfield(s.L, -1, "labels");
                     if (lua_istable(s.L, -1))
                     {
+                        auto labels = std::make_shared<FormulaModulatorStorage::Labels>();
                         auto readLabel = [&s](const char *key, std::string &dest) {
                             lua_getfield(s.L, -1, key);
                             if (lua_isstring(s.L, -1))
@@ -434,10 +432,11 @@ end
                             lua_pop(s.L, 1); // Pop the value
                         };
 
-                        readLabel("amplitude", fs->labelAmplitude);
-                        readLabel("deform", fs->labelDeform);
-                        readLabel("phase", fs->labelPhase);
-                        readLabel("rate", fs->labelRate);
+                        readLabel("amplitude", labels->amplitude);
+                        readLabel("deform", labels->deform);
+                        readLabel("phase", labels->phase);
+                        readLabel("rate", labels->rate);
+                        fs->labels = labels;
                     }
                     lua_pop(s.L, 1); // Pop labels (table or non-table)
                 }

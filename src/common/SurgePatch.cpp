@@ -694,16 +694,21 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
             auto &fs = p->storage->getPatch().formulamods[p->scene - 1][cge];
 
+            if (!fs.labels)
+            {
+                return nullptr;
+            }
+
             switch (p->ctrltype)
             {
             case ct_lfoamplitude:
-                return &fs.labelAmplitude;
+                return &fs.labels->amplitude;
             case ct_lfodeform:
-                return &fs.labelDeform;
+                return &fs.labels->deform;
             case ct_lfophaseshuffle:
-                return &fs.labelPhase;
+                return &fs.labels->phase;
             case ct_lforate_deactivatable:
-                return &fs.labelRate;
+                return &fs.labels->rate;
             default:
                 return nullptr;
             }

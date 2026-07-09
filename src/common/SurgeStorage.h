@@ -963,7 +963,11 @@ struct FormulaModulatorStorage
     std::string formulaString = "";
     size_t formulaHash = 0;
 
-    std::string labelAmplitude = "", labelDeform = "", labelPhase = "", labelRate = "";
+    struct Labels
+    {
+        std::string amplitude, deform, phase, rate;
+    };
+    std::shared_ptr<Labels> labels;
 
     // these values stream so don't change the numerical equivalents
     enum Interpreter
