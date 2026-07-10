@@ -1129,16 +1129,12 @@ struct ItemWithSharedIconComponent : juce::PopupMenu::CustomComponent
     juce::PopupMenu::Options options;
     ItemWithSharedIconComponent(ItemWithSharedIcon &i) : item(i) {}
 
-    bool hl{false};
-    void mouseEnter(const juce::MouseEvent &event) override
+    void parentHierarchyChanged() override
     {
-        hl = true;
-        repaint();
-    }
-    void mouseExit(const juce::MouseEvent &event) override
-    {
-        hl = false;
-        repaint();
+        if (getParentComponent() == nullptr && isItemHighlighted())
+        {
+            setHighlighted(false);
+        }
     }
     void mouseDown(const juce::MouseEvent &event) override
     {
@@ -1166,6 +1162,7 @@ struct ItemWithSharedIconComponent : juce::PopupMenu::CustomComponent
         const auto colour = item.colour != juce::Colour() ? &item.colour : nullptr;
         const auto hasSubMenu =
             item.subMenu != nullptr && (item.itemID == 0 || item.subMenu->getNumItems() > 0);
+        const auto hl = isItemHighlighted();
         getLookAndFeel().drawPopupMenuItem(
             g, getLocalBounds(), item.isSeparator, item.isEnabled, hl, item.isTicked, hasSubMenu,
             item.text, item.shortcutKeyDescription, item.sharedDrawable.get(), colour);
