@@ -141,6 +141,7 @@ Oscillator *setupModern(const ModernConfig &c, float pitch,
     auto o = spawn_osc(ot_modern, storage, osc, storage->getPatch().scenedata[0],
                        storage->getPatch().scenedataOrig[0], oscbuffer);
     o->init_ctrltypes();
+    o->init_default_values();
     o->init_extra_config();
 
     // Configure the Parameter objects directly (types set by init_ctrltypes above).
