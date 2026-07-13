@@ -1283,7 +1283,8 @@ std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string
     // FIXME - cache this by pushing it to the worker
     std::string query = "select p.id, p.path, p.category, p.name, pf.feature_svalue from Patches "
                         "as p, PatchFeature as pf where pf.patch_id == p.id and pf.feature LIKE "
-                        "'AUTHOR' and p.name LIKE ? ORDER BY p.category_type, p.category, p.name";
+                        "'AUTHOR' and p.name LIKE ? ORDER BY p.category_type, p.category COLLATE "
+                        "NOCASE, p.name COLLATE NOCASE";
 
     try
     {
@@ -1557,7 +1558,9 @@ PatchDB::queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &
                         "author, p.search_over from Patches "
                         "as p, PatchFeature as pf where pf.patch_id == p.id and pf.feature LIKE "
                         "'AUTHOR' and " +
-                        sqlWhereClauseFor(t) + " ORDER BY p.category_type, p.category, p.name";
+                        sqlWhereClauseFor(t) +
+                        " ORDER BY p.category_type, p.category COLLATE NOCASE, p.name "
+                        "COLLATE NOCASE";
 
     // std::cout << "QUERY IS \n" << query << "\n";
     try
