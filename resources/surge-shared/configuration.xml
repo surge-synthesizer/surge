@@ -8,13 +8,13 @@
               retrigger="0"/>
 </type>
 <type i="8" name="Modern">
-    <snapshot name="Sawtooth" p0="1.0" p1="0.0" p2="0.0" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0" p6="1"
+    <snapshot name="Sawtooth" p0="1.0" p1="0.0" p1_deactivated="1" p2="0.0" p2_deactivated="1" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0" p6="1"
               retrigger="0"/>
-    <snapshot name="Square" p0="0.0" p1="1.0" p2="0.0" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0" p6="1"
+    <snapshot name="Square" p0="0.0" p0_deactivated="1" p1="1.0" p2="0.0" p2_deactivated="1" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0" p6="1"
               retrigger="0"/>
-    <snapshot name="Triangle" p0="0.0" p1="0.0" p2="1.0" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0" p6="1"
+    <snapshot name="Triangle" p0="0.0" p0_deactivated="1" p1="0.0" p1_deactivated="1" p2="1.0" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0" p6="1"
               retrigger="0"/>
-    <snapshot name="Sine" p0="0.0" p1="0.0" p2="1.0" p2_deform_type="2" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0"
+    <snapshot name="Sine" p0="0.0" p0_deactivated="1" p1="0.0" p1_deactivated="1" p2="1.0" p2_deform_type="2" p3="0.5" p4="0.0" p5="0.1" p5_extend_range="0"
               p6="1" retrigger="0"/>
 </type>
 <separator/>

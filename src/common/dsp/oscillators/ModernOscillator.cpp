@@ -308,10 +308,25 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
 template <ModernOscillator::mo_multitypes mtype, bool subOctave, bool FM>
 void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float fmdepthV)
 {
-    float submul = 1;
+    const bool sawActive = !oscdata->p[mo_saw_mix].deactivated;
+    const bool pulseActive = !oscdata->p[mo_pulse_mix].deactivated;
+    const bool thirdActive = !oscdata->p[mo_tri_mix].deactivated;
+    const bool needSaw = sawActive || pulseActive;
+    int numUnisonVoices = n_unison;
+
+    float submul = 1.f;
+
     if (subOctave)
     {
-        submul = 0.5;
+        const bool subdowntwo =
+            oscdata->p[mo_tri_mix].deform_type & ModernOscillator::mo_submask::mo_subdowntwo;
+
+        submul = 0.5f - (0.25f * subdowntwo);
+
+        if (!needSaw)
+        {
+            numUnisonVoices = 1;
+        }
     }
 
     float ud = oscdata->p[mo_unison_detune].get_extended(
@@ -319,14 +334,15 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     pitchlag.startValue(pitch);
     sync.newValue(std::max(0.f, localcopy[oscdata->p[mo_sync].param_id_in_scene].f));
 
-    float absOff = 0;
+    float absOff = 0.f;
+
     if (oscdata->p[mo_unison_detune].absolute)
     {
         absOff = ud * 16;
         ud = 0;
     }
 
-    for (int u = 0; u < n_unison; ++u)
+    for (int u = 0; u < numUnisonVoices; ++u)
     {
         auto dval = driftLFO[u].next();
         auto lfodetune = drift * dval;
@@ -343,15 +359,16 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     auto subdt = drift * driftLFO[0].val();
 
     subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
-    subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
+    subdspbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
     sync.process();
 
     // Let people modulate outside the sliders a bit. but not catastrophically
-    sawmix.newValue(0.5 *
+    sawmix.newValue(sawActive * 0.5 *
                     limit_range(localcopy[oscdata->p[mo_saw_mix].param_id_in_scene].f, -2.f, 2.f));
     sqrmix.newValue(
-        0.5 * limit_range(localcopy[oscdata->p[mo_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
-    trimix.newValue(0.5 *
+        pulseActive * 0.5 *
+        limit_range(localcopy[oscdata->p[mo_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
+    trimix.newValue(thirdActive * 0.5 *
                     limit_range(localcopy[oscdata->p[mo_tri_mix].param_id_in_scene].f, -2.f, 2.f));
 
     // Since we always use this multiplied by 2, put the mul here to save it later
@@ -366,7 +383,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     // numerical path; away from sync the turnaround-gated shortcut is exact.
     bool syncActive = sync.v > 1e-4;
 
-    bool subsyncskip =
+    const bool subsyncskip =
         oscdata->p[mo_tri_mix].deform_type & ModernOscillator::mo_submask::mo_subskipsync;
 
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
@@ -383,7 +400,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
         // back to a [0,1) phase offset for the second saw of the pulse.
         double pwHalf = pwidth.v * 0.5;
 
-        for (int u = 0; u < n_unison; ++u)
+        for (int u = 0; u < numUnisonVoices; ++u)
         {
             auto dp = dpbase[u].v;
             auto dsp = dspbase[u].v;
@@ -425,9 +442,22 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                 {
                     double p = (phs[s] - 0.5) * 2;
                     double p3 = p * p * p;
-                    sB[s] = (p3 - p) * dpwOneOverSix;
 
-                    if (subOctave)
+                    if (needSaw)
+                    {
+                        sB[s] = (p3 - p) * dpwOneOverSix;
+
+                        double pwp = p + pwidth.v;
+                        pwp += (pwp > 1) * -2;
+                        oB[s] = (pwp * pwp * pwp - pwp) * dpwOneOverSix;
+                    }
+                    else
+                    {
+                        sB[s] = 0.0;
+                        oB[s] = 0.0;
+                    }
+
+                    if (subOctave || !thirdActive)
                     {
                         tB[s] = 0.0;
                     }
@@ -451,10 +481,6 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                         double Q = 1 - (tp < 0) * 2;
                         tB[s] = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * dpwOneOverSix;
                     }
-
-                    double pwp = p + pwidth.v;
-                    pwp += (pwp > 1) * -2;
-                    oB[s] = (pwp * pwp * pwp - pwp) * dpwOneOverSix;
                 }
 
                 double saw = sB[0] + sB[2] - 2.0 * sB[1];
@@ -467,20 +493,26 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             }
             else
             {
-                // Saw: analytic away from the wrap, numerical near it. Each helper
-                // returns the final component value (1/(4 dsp^2) scale folded in).
-                double sawv = dpwSawComp(pfm, dsp, false);
+                double sawv = 0.0, sqrv = 0.0;
 
-                // Pulse = saw(phase) - saw(phase + width); the second saw turns
-                // around at a different phase so it gates independently.
-                double poff = pfm + pwHalf;
-                poff -= (poff >= 1.0);
-                double sqrv = dpwSawComp(poff, dsp, false) - sawv;
+                if (needSaw)
+                {
+                    // Saw: analytic away from the wrap, numerical near it. Each helper
+                    // returns the final component value (1/(4 dsp^2) scale folded in).
+                    sawv = dpwSawComp(pfm, dsp, false);
+
+                    // Pulse = saw(phase) - saw(phase + width); the second saw turns
+                    // around at a different phase so it gates independently.
+                    double poff = pfm + pwHalf;
+                    poff -= (poff >= 1.0);
+                    sqrv = dpwSawComp(poff, dsp, false) - sawv;
+                }
 
                 // Triangle / square analytically; sine stays numerical inside the
                 // helper. Sub-octave moves the multitype to the sub, so it's zero
                 // here (matching the original triBuff = 0 in that case).
-                double triv = subOctave ? 0.0 : dpwMultiComp<mtype>(pfm, dsp, false);
+                double triv =
+                    (subOctave || !thirdActive) ? 0.0 : dpwMultiComp<mtype>(pfm, dsp, false);
 
                 res = sawmix.v * sawv + trimix.v * triv + sqrmix.v * sqrv;
             }
@@ -510,7 +542,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                      * forward and then difference over the new phase. WHat we should really do is
                      * figure out continuous generators with sync in but ugh that's super hard and
                      * it is late in the 1.9 cycle. So instead what we do is a little compensating
-                     * turnover where we linearly itnerpolate the prior phase forward one sample
+                     * turnover where we linearly interpolate the prior phase forward one sample
                      * (that is sTurnVal) and then average it into the next sample. Resetting
                      * sTurnFrac above means this only happens at the turnover sample. Only do this
                      * if sync is on of course
@@ -531,10 +563,10 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             dspbase[u].process();
         }
 
-        if (subOctave)
+        if (subOctave && thirdActive)
         {
             auto dp = subdpbase.v;
-            auto dsp = ((1 - subsyncskip) * subdpsbase.v) + (subsyncskip * dp);
+            auto dsp = ((1 - subsyncskip) * subdspbase.v) + (subsyncskip * dp);
 
             // FM can be large, so wrap the base phase into [0,1) before the
             // turnaround-gated helper (which assumes a small backward stencil).
@@ -556,7 +588,9 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             }
 
             if (subsphase > 1)
+            {
                 subsphase -= floor(subsphase);
+            }
         }
 
         output[i] = vL;
@@ -568,7 +602,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
         pwidth.process();
         fmdepth.process();
         subdpbase.process();
-        subdpsbase.process();
+        subdspbase.process();
     }
 
     if (!stereo)
@@ -670,13 +704,28 @@ static struct ModernTriName : public ParameterDynamicNameFunction
     }
 } dpwTriName;
 
+static struct ModernDynamicDeact : public ParameterDynamicDeactivationFunction
+{
+    bool getValue(const Parameter *p) const override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+        return oscs->p[ModernOscillator::mo_pulse_mix].deactivated;
+    }
+
+    Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+        return &(oscs->p[ModernOscillator::mo_pulse_mix]);
+    }
+} moDynamicDeact;
+
 void ModernOscillator::init_ctrltypes()
 {
     oscdata->p[mo_saw_mix].set_name("Sawtooth");
-    oscdata->p[mo_saw_mix].set_type(ct_percent_bipolar);
+    oscdata->p[mo_saw_mix].set_type(ct_percent_bipolar_deactivatable);
 
     oscdata->p[mo_pulse_mix].set_name("Pulse");
-    oscdata->p[mo_pulse_mix].set_type(ct_percent_bipolar);
+    oscdata->p[mo_pulse_mix].set_type(ct_percent_bipolar_deactivatable);
 
     oscdata->p[mo_tri_mix].set_name("--DYNAMIC-NAME--");
     oscdata->p[mo_tri_mix].set_type(ct_modern_trimix);
@@ -685,6 +734,7 @@ void ModernOscillator::init_ctrltypes()
     oscdata->p[mo_pulse_width].set_name("Width");
     oscdata->p[mo_pulse_width].set_type(ct_percent);
     oscdata->p[mo_pulse_width].val_default.f = 0.5;
+    oscdata->p[mo_pulse_width].dynamicDeactivation = &moDynamicDeact;
 
     oscdata->p[mo_sync].set_name("Sync");
     oscdata->p[mo_sync].set_type(ct_syncpitch);
@@ -698,11 +748,25 @@ void ModernOscillator::init_ctrltypes()
 void ModernOscillator::init_default_values()
 {
     oscdata->p[mo_saw_mix].val.f = 0.5;
+    oscdata->p[mo_saw_mix].deactivated = false;
+    oscdata->p[mo_pulse_mix].val.f = 0.0;
+    oscdata->p[mo_pulse_mix].deactivated = false;
     oscdata->p[mo_tri_mix].val.f = 0.0;
     oscdata->p[mo_tri_mix].deform_type = 0;
-    oscdata->p[mo_pulse_mix].val.f = 0.0;
+    oscdata->p[mo_tri_mix].deactivated = false;
     oscdata->p[mo_pulse_width].val.f = 0.5;
     oscdata->p[mo_sync].val.f = 0.0;
     oscdata->p[mo_unison_detune].val.f = 0.2;
     oscdata->p[mo_unison_voices].val.i = 1;
+}
+
+void ModernOscillator::handleStreamingMismatches(int streamingRevision,
+                                                 int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 29)
+    {
+        oscdata->p[mo_saw_mix].deactivated = false;
+        oscdata->p[mo_pulse_mix].deactivated = false;
+        oscdata->p[mo_tri_mix].deactivated = false;
+    }
 }

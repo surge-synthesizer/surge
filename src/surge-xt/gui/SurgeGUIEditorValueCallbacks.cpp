@@ -2344,87 +2344,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
-                    case ct_modern_trimix:
-                    {
-                        contextMenu.addSeparator();
-
-                        std::vector<int> waves = {ModernOscillator::mo_multitypes::momt_triangle,
-                                                  ModernOscillator::mo_multitypes::momt_sine,
-                                                  ModernOscillator::mo_multitypes::momt_square};
-
-                        bool isChecked = false;
-
-                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
-                                                                                        "WAVEFORM");
-
-                        for (int m : waves)
-                        {
-                            isChecked = ((p->deform_type & 0x0F) == m);
-
-                            contextMenu.addItem(
-                                mo_multitype_names[m], true, isChecked, [this, isChecked, p, m]() {
-                                    undoManager()->pushParameterChange(p->id, p, p->val);
-                                    update_deform_type(p, (p->deform_type & 0xFFF0) | m);
-                                    if (!isChecked)
-                                    {
-                                        synth->storage.getPatch().isDirty = true;
-                                    }
-                                    synth->refresh_editor = true;
-                                });
-                        }
-
-                        int subosc = ModernOscillator::mo_submask::mo_subone;
-
-                        isChecked = (p->deform_type & subosc);
-
-                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                            contextMenu, "SUB-OSCILLATOR");
-
-                        contextMenu.addItem(
-                            Surge::GUI::toOSCase("Enabled"), true, isChecked, [p, subosc, this]() {
-                                auto usubosc = subosc;
-                                int usubskipsync =
-                                    p->deform_type & ModernOscillator::mo_submask::mo_subskipsync;
-
-                                if (p->deform_type & subosc)
-                                {
-                                    usubosc = 0;
-                                }
-
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-                                update_deform_type(p,
-                                                   (p->deform_type & 0xF) | usubosc | usubskipsync);
-
-                                synth->storage.getPatch().isDirty = true;
-                                synth->refresh_editor = true;
-                            });
-
-                        int subskipsync = ModernOscillator::mo_submask::mo_subskipsync;
-
-                        isChecked = (p->deform_type & subskipsync);
-
-                        contextMenu.addItem(
-                            Surge::GUI::toOSCase("Disable Hardsync"), true, isChecked,
-                            [p, subskipsync, this]() {
-                                auto usubskipsync = subskipsync;
-                                int usubosc =
-                                    p->deform_type & ModernOscillator::mo_submask::mo_subone;
-
-                                if (p->deform_type & subskipsync)
-                                {
-                                    usubskipsync = 0;
-                                }
-
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-                                update_deform_type(p,
-                                                   (p->deform_type & 0xF) | usubosc | usubskipsync);
-
-                                synth->storage.getPatch().isDirty = true;
-                                synth->refresh_editor = true;
-                            });
-
-                        break;
-                    }
                     case ct_alias_mask:
                     {
                         contextMenu.addSeparator();
@@ -2918,6 +2837,126 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             p, true, juceEditor->processor.SCT_EX_ENABLE, (float)!p->deactivated,
                             .0, .0, "");
                     });
+                }
+
+                // special casing this for Modern osc so that we don't have two "Enabled" menu
+                // entries close together
+                if (p->has_deformoptions())
+                {
+                    switch (p->ctrltype)
+                    {
+                    case ct_modern_trimix:
+                    {
+                        contextMenu.addSeparator();
+
+                        std::vector<int> waves = {ModernOscillator::mo_multitypes::momt_triangle,
+                                                  ModernOscillator::mo_multitypes::momt_sine,
+                                                  ModernOscillator::mo_multitypes::momt_square};
+
+                        bool isChecked = false;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "WAVEFORM");
+
+                        for (int m : waves)
+                        {
+                            isChecked = ((p->deform_type & 0x0F) == m);
+
+                            contextMenu.addItem(
+                                mo_multitype_names[m], true, isChecked, [this, isChecked, p, m]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+                                    update_deform_type(p, (p->deform_type & 0xFFF0) | m);
+                                    if (!isChecked)
+                                    {
+                                        synth->storage.getPatch().isDirty = true;
+                                    }
+                                    synth->refresh_editor = true;
+                                });
+                        }
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "SUB-OSCILLATOR");
+
+                        const int subosc = ModernOscillator::mo_submask::mo_subone;
+
+                        isChecked = (p->deform_type & subosc);
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Enabled"), true, isChecked, [p, subosc, this]() {
+                                auto usubosc = subosc;
+                                const int usubskipsync =
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subskipsync;
+                                const int usubdowntwo =
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subdowntwo;
+
+                                if (p->deform_type & subosc)
+                                {
+                                    usubosc = 0;
+                                }
+
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, (p->deform_type & 0xF) | usubosc |
+                                                          usubdowntwo | usubskipsync);
+
+                                synth->storage.getPatch().isDirty = true;
+                                synth->refresh_editor = true;
+                            });
+
+                        const int subdowntwo = ModernOscillator::mo_submask::mo_subdowntwo;
+
+                        isChecked = (p->deform_type & subdowntwo);
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Two Octaves Down"), true, isChecked,
+                            [p, subdowntwo, this]() {
+                                auto usubdowntwo = subdowntwo;
+                                const int usubosc =
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subone;
+                                const int usubskipsync =
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subskipsync;
+
+                                if (p->deform_type & subdowntwo)
+                                {
+                                    usubdowntwo = 0;
+                                }
+
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, (p->deform_type & 0xF) | usubosc |
+                                                          usubdowntwo | usubskipsync);
+
+                                synth->storage.getPatch().isDirty = true;
+                                synth->refresh_editor = true;
+                            });
+
+                        const int subskipsync = ModernOscillator::mo_submask::mo_subskipsync;
+
+                        isChecked = (p->deform_type & subskipsync);
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Disable Hardsync"), true, isChecked,
+                            [p, subskipsync, this]() {
+                                auto usubskipsync = subskipsync;
+                                const int usubosc =
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subone;
+                                const int usubdowntwo =
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subdowntwo;
+
+                                if (p->deform_type & subskipsync)
+                                {
+                                    usubskipsync = 0;
+                                }
+
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, (p->deform_type & 0xF) | usubosc |
+                                                          usubdowntwo | usubskipsync);
+
+                                synth->storage.getPatch().isDirty = true;
+                                synth->refresh_editor = true;
+                            });
+
+                        break;
+                    }
+                    }
                 }
 
                 int n_ms = 0;

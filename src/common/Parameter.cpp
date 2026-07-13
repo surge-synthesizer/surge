@@ -349,6 +349,7 @@ bool Parameter::can_deactivate() const
     case ct_wstype:
     case ct_filtertype:
     case ct_amplitude_clipper:
+    case ct_modern_trimix:
         return true;
     }
     return false;
