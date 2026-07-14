@@ -75,7 +75,9 @@ class ModernOscillator : public Oscillator
                                float FMdepth = 0.f) override;
 
     template <mo_multitypes mtype, bool subOctave, bool FM>
-    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
+    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f,
+                      bool sawActive = true, bool pulseActive = true, bool thirdActive = true,
+                      bool needSaw = true);
 
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;

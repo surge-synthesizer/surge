@@ -306,15 +306,12 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
 }
 
 template <ModernOscillator::mo_multitypes mtype, bool subOctave, bool FM>
-void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float fmdepthV)
+void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float FMdepth,
+                                    bool sawActive, bool pulseActive, bool thirdActive,
+                                    bool needSaw)
 {
-    const bool sawActive = !oscdata->p[mo_saw_mix].deactivated;
-    const bool pulseActive = !oscdata->p[mo_pulse_mix].deactivated;
-    const bool thirdActive = !oscdata->p[mo_tri_mix].deactivated;
-    const bool needSaw = sawActive || pulseActive;
-    int numUnisonVoices = n_unison;
-
     float submul = 1.f;
+    int numUnisonVoices = n_unison;
 
     if (subOctave)
     {
@@ -376,7 +373,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                                     0.01f, 0.99f));
     pitchlag.process();
 
-    double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
+    double fv = 16 * FMdepth * FMdepth * FMdepth;
     fmdepth.newValue(fv);
 
     // Sync (turnover compensation and reset discontinuities) forces the full
@@ -443,19 +440,11 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                     double p = (phs[s] - 0.5) * 2;
                     double p3 = p * p * p;
 
-                    if (needSaw)
-                    {
-                        sB[s] = (p3 - p) * dpwOneOverSix;
+                    sB[s] = (p3 - p) * dpwOneOverSix;
 
-                        double pwp = p + pwidth.v;
-                        pwp += (pwp > 1) * -2;
-                        oB[s] = (pwp * pwp * pwp - pwp) * dpwOneOverSix;
-                    }
-                    else
-                    {
-                        sB[s] = 0.0;
-                        oB[s] = 0.0;
-                    }
+                    double pwp = p + pwidth.v;
+                    pwp += (pwp > 1) * -2;
+                    oB[s] = (pwp * pwp * pwp - pwp) * dpwOneOverSix;
 
                     if (subOctave || !thirdActive)
                     {
@@ -495,18 +484,15 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             {
                 double sawv = 0.0, sqrv = 0.0;
 
-                if (needSaw)
-                {
-                    // Saw: analytic away from the wrap, numerical near it. Each helper
-                    // returns the final component value (1/(4 dsp^2) scale folded in).
-                    sawv = dpwSawComp(pfm, dsp, false);
+                // Saw: analytic away from the wrap, numerical near it. Each helper
+                // returns the final component value (1/(4 dsp^2) scale folded in).
+                sawv = dpwSawComp(pfm, dsp, false);
 
-                    // Pulse = saw(phase) - saw(phase + width); the second saw turns
-                    // around at a different phase so it gates independently.
-                    double poff = pfm + pwHalf;
-                    poff -= (poff >= 1.0);
-                    sqrv = dpwSawComp(poff, dsp, false) - sawv;
-                }
+                // Pulse = saw(phase) - saw(phase + width); the second saw turns
+                // around at a different phase so it gates independently.
+                double poff = pfm + pwHalf;
+                poff -= (poff >= 1.0);
+                sqrv = dpwSawComp(poff, dsp, false) - sawv;
 
                 // Triangle / square analytically; sine stays numerical inside the
                 // helper. Sub-octave moves the multitype to the sub, so it's zero
@@ -642,25 +628,37 @@ void ModernOscillator::process_block(float pitch, float drift, bool stereo, bool
         subOct = true;
     }
 
+    const bool sawActive = !oscdata->p[mo_saw_mix].deactivated;
+    const bool pulseActive = !oscdata->p[mo_pulse_mix].deactivated;
+    const bool thirdActive = !oscdata->p[mo_tri_mix].deactivated;
+    const bool needSaw = sawActive || pulseActive;
+
     if (!FM)
     {
         switch (multitype)
         {
         case momt_sine:
             if (subOct)
-                return process_sblk<momt_sine, true, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_sine, true, false>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
             else
-                return process_sblk<momt_sine, false, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_sine, false, false>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
         case momt_square:
             if (subOct)
-                return process_sblk<momt_square, true, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_square, true, false>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
             else
-                return process_sblk<momt_square, false, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_square, false, false>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
+
         case momt_triangle:
             if (subOct)
-                return process_sblk<momt_triangle, true, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, true, false>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
             else
-                return process_sblk<momt_triangle, false, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, false, false>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
         }
     }
     else
@@ -669,19 +667,26 @@ void ModernOscillator::process_block(float pitch, float drift, bool stereo, bool
         {
         case momt_sine:
             if (subOct)
-                return process_sblk<momt_sine, true, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_sine, true, true>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
             else
-                return process_sblk<momt_sine, false, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_sine, false, true>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
         case momt_square:
             if (subOct)
-                return process_sblk<momt_square, true, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_square, true, true>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
             else
-                return process_sblk<momt_square, false, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_square, false, true>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
+
         case momt_triangle:
             if (subOct)
-                return process_sblk<momt_triangle, true, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, true, true>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
             else
-                return process_sblk<momt_triangle, false, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, false, true>(
+                    pitch, drift, stereo, fmdepthV, sawActive, pulseActive, thirdActive, needSaw);
         }
     }
 }
