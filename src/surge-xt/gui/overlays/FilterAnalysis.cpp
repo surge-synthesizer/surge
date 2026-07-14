@@ -427,7 +427,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
         g.drawText(txt2, readout, juce::Justification::centredLeft);
     }
 
-    const auto txtr = lb.withHeight(15);
+    const auto txtr = lb.withTrimmedTop(1).withHeight(17);
 
     g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
     g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
