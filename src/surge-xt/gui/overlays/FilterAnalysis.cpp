@@ -186,7 +186,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
     const auto lb = getLocalBounds();
-    const auto dRect = lb.withTrimmedTop(18).reduced(4);
+    const auto dRect = getDrawRegion();
     const auto width = dRect.getWidth();
     const auto height = dRect.getHeight();
     const auto labelHeight = 9;
@@ -507,31 +507,26 @@ void FilterAnalysis::resized()
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
 
+juce::Rectangle<int> FilterAnalysis::getDrawRegion()
+{
+    return getLocalBounds().withTrimmedTop(18).reduced(4);
+}
+
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 {
-    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
+    const auto dRect = getDrawRegion();
+    const auto width = dRect.getWidth() - 1;
+    const auto height = dRect.getHeight() - 1;
 
-    float rx0 = dRect.getX();
-    float rx1 = dRect.getX() + dRect.getWidth() - 1;
-    float ry0 = dRect.getY();
-    float ry1 = dRect.getY() + dRect.getHeight() - 1;
+    auto mousePoint = event.position - dRect.getPosition().toFloat();
 
-    juce::Point<float> mousePoint =
-        event.getPosition()
-            .transformedBy(
-                juce::AffineTransform().translated(dRect.getX(), dRect.getY()).inverted())
-            .toFloat();
+    mousePoint.setX(std::clamp(mousePoint.getX(), 0.f, (float)width));
+    mousePoint.setY(std::clamp(mousePoint.getY(), 0.f, (float)height));
 
-    mousePoint.setX(std::clamp(mousePoint.getX(), rx0, rx1));
-    mousePoint.setY(std::clamp(mousePoint.getY(), ry0, ry1));
-
-    if (isPressed && dRect.contains(mousePoint.toInt()))
+    if (isPressed)
     {
         auto &ss = editor->getPatch().scene[editor->current_scene];
         auto &fs = ss.filterunit[whichFilter];
-
-        auto width = dRect.getWidth() - 1;
-        auto height = dRect.getHeight() - 1;
 
         auto xNorm = mousePoint.x / (float)width;
         auto freq = std::pow(GRAPH_MAX_FREQ / GRAPH_MIN_FREQ, xNorm) * GRAPH_MIN_FREQ;
@@ -539,7 +534,6 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
         float cutoff =
             limit_range(12.0f * std::log2(freq / 440.0f), fs.cutoff.val_min.f, fs.cutoff.val_max.f);
         float resonance = limit01((height - mousePoint.y) / (float)height);
-        float f = fs.cutoff.value_to_normalized(cutoff);
 
         fs.cutoff.val.f = cutoff;
         fs.resonance.val.f = resonance;
@@ -547,6 +541,8 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
         // assert if filter cutoff or resonance params are not assigned in SurgeGUIEditor.cpp
         jassert(editor->filterCutoffSlider[whichFilter] != nullptr);
         jassert(editor->filterResonanceSlider[whichFilter] != nullptr);
+
+        float f = fs.cutoff.value_to_normalized(cutoff);
 
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
         editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
@@ -577,11 +573,11 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 // just by clicking anywhere in the graph, no mouse movement required
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 {
-    const auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
+    auto dRect = getDrawRegion();
     auto where = event.position;
+    const bool withinHotzone = hotzone.contains(where);
 
-    if (dRect.contains(where.toInt()))
+    if (dRect.contains(where.toInt()) || withinHotzone)
     {
         isPressed = true;
 

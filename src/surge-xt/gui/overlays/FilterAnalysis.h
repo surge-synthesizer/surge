@@ -57,6 +57,8 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
     void repushData();
     void forceDataRefresh() override { repushData(); }
 
+    juce::Rectangle<int> getDrawRegion();
+
     juce::Rectangle<float> hotzone;
     juce::Point<int> cursorHideOrigin;
 
