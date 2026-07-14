@@ -3262,6 +3262,15 @@ bool SurgeSynthesizer::loadOscalgos()
                         }
                     }
 
+                    lbl = fmt::format("p{:d}_deactivated", k);
+
+                    if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
+                    {
+                        osc_st.p[k].deactivated = j;
+                        for (const auto &it : audioThreadParamListeners)
+                            (it.second)(oname, j, sx);
+                    }
+
                     lbl = fmt::format("p{:d}_deform_type", k);
 
                     if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
