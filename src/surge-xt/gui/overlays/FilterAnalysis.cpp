@@ -158,7 +158,8 @@ void FilterAnalysis::onSkinChanged()
 
 void FilterAnalysis::paint(juce::Graphics &g)
 {
-    auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
+    auto &sc = editor->getPatch().scene[editor->current_scene];
+    auto &fs = sc.filterunit[whichFilter];
 
     constexpr auto dbRange = GRAPH_MAX_DB - GRAPH_MIN_DB;
 
@@ -171,16 +172,18 @@ void FilterAnalysis::paint(juce::Graphics &g)
         return (float)height * (GRAPH_MAX_DB - db) / dbRange;
     };
 
-    std::string nm, snm;
+    std::array<std::string, n_filterunits_per_scene> nm, snm, label;
 
-    nm = fs.type.get_display();
-    snm = fs.subtype.get_display();
-
-    auto label = fmt::format("{}", nm);
-
-    if (sst::filters::fut_subcount[fs.type.val.i] > 0)
+    for (int i = 0; i < n_filterunits_per_scene; i++)
     {
-        label = fmt::format("{} ({})", nm, snm);
+        nm[i] = sc.filterunit[i].type.get_display();
+        snm[i] = sc.filterunit[i].subtype.get_display();
+        label[i] = fmt::format("{}", nm[i]);
+
+        if (sst::filters::fut_subcount[fs.type.val.i] > 0)
+        {
+            label[i] = fmt::format("{} ({})", nm[i], snm[i]);
+        }
     }
 
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
@@ -427,11 +430,24 @@ void FilterAnalysis::paint(juce::Graphics &g)
         g.drawText(txt2, readout, juce::Justification::centredLeft);
     }
 
-    const auto txtr = lb.withTrimmedTop(1).withHeight(17);
+    auto txtr = lb.withTrimmedTop(1).withHeight(17).withWidth((lb.getWidth() / 2) - 4).withLeft(48);
 
-    g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
     g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
-    g.drawText(label, txtr, juce::Justification::centred);
+
+    for (int i = 0; i < n_filterunits_per_scene; i++)
+    {
+        g.setColour((i == whichFilter) ? skin->getColor(Colors::MSEGEditor::Curve)
+                                       : skin->getColor(Colors::Waveshaper::Preview::Text));
+
+        if (i == 1)
+        {
+            txtr = txtr.withRightX(lb.getWidth() - 48);
+        }
+
+        g.drawFittedText(
+            label[i], txtr,
+            (i == 0) ? juce::Justification::centredLeft : juce::Justification::centredRight, 1);
+    }
 }
 
 bool FilterAnalysis::shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p)
@@ -496,13 +512,13 @@ void FilterAnalysis::selectFilter(int which)
 void FilterAnalysis::resized()
 {
     auto t = getTransform().inverted();
-    auto h = getHeight();
     auto w = getWidth();
+    auto h = getHeight();
 
     t.transformPoint(w, h);
 
-    f1Button->setBounds(2, 2, 40, 15);
-    f2Button->setBounds(w - 42, 2, 40, 15);
+    f1Button->setBounds(4, 2, 40, 15);
+    f2Button->setBounds(w - 44, 2, 40, 15);
 
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
