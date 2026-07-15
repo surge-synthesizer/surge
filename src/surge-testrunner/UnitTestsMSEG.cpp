@@ -101,8 +101,8 @@ static MSEGStorage makeRamp4()
         ms.segments[i].nv1 = (i + 1) * 0.25f;
     }
 
-    ms.loop_start = -1;
-    ms.loop_end = -1;
+    ms.loop_start = MSEGStorage::kLoopPointUnset;
+    ms.loop_end = MSEGStorage::kLoopPointUnset;
 
     resetCP(&ms);
     Surge::MSEG::rebuildCache(&ms);

@@ -1523,8 +1523,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // draw the loop region borders
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
 
             float pxs = tpx(ms->segmentStart[ls]);
             float pxe = tpx(ms->segmentEnd[le]);
@@ -2230,14 +2231,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         gestureEnd = snapToNearestNode(gestureEnd, true);
 
         float totalTimeSpan = gestureEnd - gestureStart;
-
-        // Save loop marker times before any modifications
-        float loopStartTime = (ms->loop_start >= 0 && ms->loop_start < ms->n_activeSegments)
-                                  ? ms->segmentStart[ms->loop_start]
-                                  : -1.f;
-        float loopEndTime = (ms->loop_end >= 0 && ms->loop_end < ms->n_activeSegments)
-                                ? ms->segmentStart[ms->loop_end]
-                                : -1.f;
 
         // --- 1. Split at gesture boundaries ---
         for (float t : {gestureStart, gestureEnd})

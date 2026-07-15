@@ -558,6 +558,18 @@ void rebuildCache(MSEGStorage *ms)
         ms->loop_end = MSEGStorage::kLoopPointUnset;
     }
 
+    // loop_start has no valid negative value; loop_end's only valid negative is
+    // -1 (point 0). Anything else negative is stale data — treat as unset so we
+    // never index segmentStart[-1].
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start < 0)
+    {
+        ms->loop_start = MSEGStorage::kLoopPointUnset;
+    }
+    if (ms->loop_end != MSEGStorage::kLoopPointUnset && ms->loop_end < -1)
+    {
+        ms->loop_end = MSEGStorage::kLoopPointUnset;
+    }
+
     float totald = 0;
 
     for (int i = 0; i < ms->n_activeSegments; ++i)
@@ -1259,7 +1271,7 @@ void extendTo(MSEGStorage *ms, float t, float nv)
     // We want to keep the loop end at the same spot when we extend
     bool fixupLoopEnd = false;
 
-    if (ms->loop_end < 0 || ms->loop_end == ms->n_activeSegments - 1)
+    if (ms->loop_end < MSEGStorage::kLoopPointUnset || ms->loop_end == ms->n_activeSegments - 1)
     {
         fixupLoopEnd = true;
     }

@@ -545,7 +545,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     {
         // We want the sus time to get us through at least one loop
         if (ms->loopMode == MSEGStorage::GATED_LOOP && ms->editMode == MSEGStorage::ENVELOPE &&
-            ms->loop_end >= 0)
+            (ms->loop_end != MSEGStorage::kLoopPointUnset && ms->loop_end >= 0))
         {
             float loopEndsAt = ms->segmentEnd[ms->loop_end];
             susTime = std::max(0.5f, loopEndsAt - lfoEnvelopeDAHDTime);

@@ -4576,8 +4576,12 @@ void SurgePatch::msegToXMLElement(MSEGStorage *ms, TiXmlElement &p) const
     p.SetAttribute("endpointMode", ms->endpointMode);
     p.SetAttribute("editMode", ms->editMode);
     p.SetAttribute("loopMode", ms->loopMode);
-    p.SetAttribute("loopStart", ms->loop_start);
-    p.SetAttribute("loopEnd", ms->loop_end);
+
+    // Endpoint-based markers. loop_end == -1 legitimately means "point 0" now,
+    // which collides with the legacy loopStart/loopEnd "-1 == unset" sentinel,
+    // so write under new names and stop writing the ambiguous legacy attributes.
+    p.SetAttribute("loopStartPoint", ms->loop_start);
+    p.SetAttribute("loopEndPoint", ms->loop_end);
 
     p.SetDoubleAttribute("hSnapDefault", ms->hSnapDefault);
     p.SetDoubleAttribute("vSnapDefault", ms->vSnapDefault);
@@ -4626,15 +4630,24 @@ void SurgePatch::msegFromXMLElement(MSEGStorage *ms, TiXmlElement *p, bool resto
         ms->loopMode = (MSEGStorage::LoopMode)v;
     else
         ms->loopMode = MSEGStorage::LoopMode::LOOP;
-    if (p->QueryIntAttribute("loopStart", &v) == TIXML_SUCCESS)
-        ms->loop_start = v;
-    else
-        ms->loop_start = -1;
 
-    if (p->QueryIntAttribute("loopEnd", &v) == TIXML_SUCCESS)
-        ms->loop_end = v;
+    // Prefer the new endpoint-based markers; fall back to legacy segment-based
+    // loopStart/loopEnd, translating the old "-1 == unset" into kLoopPointUnset.
+    // Legacy 0..n-1 values keep the same meaning. Works for both patches and the
+    // revision-less MSEG .modpreset files, since it keys on attribute name.
+    if (p->QueryIntAttribute("loopStartPoint", &v) == TIXML_SUCCESS)
+        ms->loop_start = v;
+    else if (p->QueryIntAttribute("loopStart", &v) == TIXML_SUCCESS)
+        ms->loop_start = (v < 0) ? MSEGStorage::kLoopPointUnset : v;
     else
-        ms->loop_end = -1;
+        ms->loop_start = MSEGStorage::kLoopPointUnset;
+
+    if (p->QueryIntAttribute("loopEndPoint", &v) == TIXML_SUCCESS)
+        ms->loop_end = v;
+    else if (p->QueryIntAttribute("loopEnd", &v) == TIXML_SUCCESS)
+        ms->loop_end = (v < 0) ? MSEGStorage::kLoopPointUnset : v;
+    else
+        ms->loop_end = MSEGStorage::kLoopPointUnset;
 
     double dv;
     if (p->QueryDoubleAttribute("hSnapDefault", &dv) == TIXML_SUCCESS)
