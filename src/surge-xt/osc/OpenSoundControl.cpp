@@ -32,6 +32,7 @@
 #include "SurgeSynthProcessor.h"
 #include "SurgeStorage.h"
 #include "WavetableScriptEvaluator.h"
+#include "WtGenService.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -962,15 +963,35 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         if (synth->storage.wt_list[new_id].path.extension() == ".wtscript")
         {
-            if (!evaluator)
-                evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+            namespace WS = Surge::WavetableScript;
 
-            evaluator->loadWtscript(synth->storage.wt_list[new_id].path, &synth->storage, oscdata);
+            // Parse on this OSC background thread (Lua-free), then submit a Generate and
+            // block-wait. Collect parse errors into parseErr and sendError them.
+            std::string parseErr;
+            if (WS::LuaWTEvaluator::loadWtscriptMetadata(synth->storage.wt_list[new_id].path,
+                                                         &synth->storage, oscdata, &parseErr))
+            {
+                auto job = WS::makeLiveGenerateJob(&synth->storage, scene_num, osc_num - 1);
+                synth->storage.wtGenService->submitBlocking(job);
 
-            oscdata->wt.current_id = new_id;
-            oscdata->wt.refresh_display = true;
-            oscdata->wt.force_refresh_display = true;
-            oscdata->wt.refresh_script_editor = true;
+                auto st = job->status.load(std::memory_order_acquire);
+                if (st == WS::WtGenJob::Status::Complete && job->published)
+                {
+                    oscdata->wavetable_display_name = job->wtName;
+                    oscdata->wt.current_id = new_id;
+                    oscdata->wt.refresh_display = true;
+                    oscdata->wt.force_refresh_display = true;
+                    oscdata->wt.refresh_script_editor = true;
+                }
+                else if (st == WS::WtGenJob::Status::Failed && !job->error.empty())
+                {
+                    sendError(job->error);
+                }
+            }
+            else if (!parseErr.empty())
+            {
+                sendError(parseErr);
+            }
         }
         else
         {

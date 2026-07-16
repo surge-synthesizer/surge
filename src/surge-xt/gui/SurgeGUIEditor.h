@@ -57,6 +57,14 @@
 
 class SurgeSynthEditor;
 
+namespace Surge
+{
+namespace WavetableScript
+{
+struct WtGenJob;
+}
+} // namespace Surge
+
 #if SURGE_INCLUDE_MELATONIN_INSPECTOR
 namespace melatonin
 {
@@ -355,8 +363,25 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void toggleTuning();
     void scaleFileDropped(const juce::String &fname);
     void mappingFileDropped(const juce::String &fname);
-    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     void wtscriptFileDropped(const std::string &fn);
+
+    // Background wavetable generates from drop/menu load. idle() polls these and runs the
+    // activation tail on completion. Parse stays on the message thread, generation moves to the
+    // worker.
+    struct PendingWtGenJob
+    {
+        std::shared_ptr<Surge::WavetableScript::WtGenJob> job;
+        int scene{0}, osc{0}, currentId{-1};
+
+        // How the poll tail activates the finished generate. A drop can land on a non-Wavetable
+        // osc, so true retypes it to Wavetable via queue_type.
+        bool retypeToWavetable{false};
+    };
+    std::vector<PendingWtGenJob> pendingWtGenJobs;
+    void submitWtGenJob(int scene, int osc, int currentId, bool retypeToWavetable);
+    void pollWtGenJobs();
+    void idleWtGenService();
+
     std::string tuningToHtml();
     void tuningChanged();
 

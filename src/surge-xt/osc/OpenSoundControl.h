@@ -72,7 +72,6 @@ class OpenSoundControl : public juce::OSCReceiver,
     bool sendingOSC = false;
     bool restoredFromLastBound = false;
 
-    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::DatagramSocket> ownedInSocket;
     std::unique_ptr<juce::DatagramSocket> ownedOutSocket;
     void oscMessageReceived(const juce::OSCMessage &message) override;

@@ -36,6 +36,7 @@
 #include "SurgeSynthEditor.h"
 #include "SurgeXTBinary.h"
 #include "WavetableScriptEvaluator.h"
+#include "WtGenService.h"
 
 #include "overlays/TypeinParamEditor.h"
 
@@ -44,6 +45,7 @@
 #include "widgets/NumberField.h"
 #include "widgets/MenuCustomComponents.h"
 #include "widgets/OscillatorWaveformDisplay.h"
+#include "widgets/WtGenSpinner.h"
 
 #include "util/LuaTokeniserSurge.h"
 
@@ -3034,6 +3036,8 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         : overlay(ol), editor(ed)
     {
         setSkin(skin);
+        genSpinner = std::make_unique<Surge::Widgets::WtGenSpinner>();
+        addChildComponent(*genSpinner);
     }
 
     void setFilmstrip() { mode = 0; }
@@ -3086,11 +3090,12 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                     continue;
                 }
 
-                auto pointsOpt = overlay->evaluator->getFrame(idx);
+                const std::vector<float> *pointsPtr =
+                    (idx < (int)frameCache.size()) ? &frameCache[idx] : nullptr;
 
-                if (pointsOpt && pointsOpt->size() >= minWtFrameSize)
+                if (pointsPtr && pointsPtr->size() >= minWtFrameSize)
                 {
-                    const auto &points = *pointsOpt;
+                    const auto &points = *pointsPtr;
 
                     auto pGradient = juce::Path();
                     auto pStroke = juce::Path();
@@ -3164,11 +3169,14 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             g.drawLine(0.f, middle, width, middle);
 
             // Graph
-            auto pointsOpt = overlay->evaluator->getFrame(frameNumber - 1);
+            const int singleIdx = frameNumber - 1;
+            const std::vector<float> *pointsPtr =
+                (singleIdx >= 0 && singleIdx < (int)frameCache.size()) ? &frameCache[singleIdx]
+                                                                       : nullptr;
 
-            if (pointsOpt && pointsOpt->size() >= minWtFrameSize)
+            if (pointsPtr && pointsPtr->size() >= minWtFrameSize)
             {
-                const auto &points = *pointsOpt;
+                const auto &points = *pointsPtr;
 
                 auto pGradient = juce::Path();
                 auto pStroke = juce::Path();
@@ -3308,12 +3316,21 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         repaint();
     }
 
-    void resized() override {}
+    void resized() override
+    {
+        if (genSpinner)
+        {
+            genSpinner->setBounds(getLocalBounds());
+        }
+    }
     void onSkinChanged() override { repaint(); }
 
     int frameNumber{1};
     int frameCount{1};
     int mode{0};
+
+    std::vector<std::vector<float>> frameCache;
+    std::unique_ptr<Surge::Widgets::WtGenSpinner> genSpinner;
 
   private:
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
@@ -3801,7 +3818,6 @@ struct WavetableScriptControlArea : public juce::Component,
         break;
 
         case tag_generate_wt:
-            overlay->applyCode();
             overlay->generateWavetable();
             break;
 
@@ -3896,6 +3912,10 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     rendererComponent = std::make_unique<WavetablePreviewComponent>(this, editor, skin);
     addAndMakeVisible(*rendererComponent);
 
+    rendererComponent->genSpinner->isGenerating = [this]() {
+        return storage->wtGenService->isBusy(this->scene, this->osc_id);
+    };
+
     switch (getEditState().codeOrPrelude)
     {
     case 0:
@@ -3906,9 +3926,6 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
         break;
     }
 
-    evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-    evaluator->setStorage(storage);
-
     auto xml = juce::parseXML(SurgeXTBinary::wtscript_icon_svg);
     wtScriptIcon = juce::Drawable::createFromSVG(*xml);
 
@@ -3916,7 +3933,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     loadState();
 }
 
-WavetableScriptEditor::~WavetableScriptEditor() = default;
+WavetableScriptEditor::~WavetableScriptEditor() { stopTimer(); }
 
 DAWExtraStateStorage::EditorState::WavetableScriptEditState &WavetableScriptEditor::getEditState()
 {
@@ -3932,7 +3949,7 @@ void WavetableScriptEditor::onSkinChanged()
     rendererComponent->setSkin(skin, associatedBitmapStore);
 }
 
-void WavetableScriptEditor::applyCode()
+void WavetableScriptEditor::applyCodeToOsc()
 {
     removeTrailingWhitespaceFromDocument();
 
@@ -3948,8 +3965,6 @@ void WavetableScriptEditor::applyCode()
         controlArea->currentFrameN->setIntValue(maxFrames);
     }
 
-    lastFrames = -1;
-    rerenderFromUIState();
     editor->repaintFrame();
     setApplyEnabled(false);
     if (mainEditor->isShowing())
@@ -3958,7 +3973,14 @@ void WavetableScriptEditor::applyCode()
     repaint();
 }
 
-void WavetableScriptEditor::forceRefresh()
+void WavetableScriptEditor::applyCode()
+{
+    applyCodeToOsc();
+    lastFrames = -1;
+    rerenderFromUIState(); // Preview only
+}
+
+void WavetableScriptEditor::reloadCodeFromOscData()
 {
     if (osc->wavetable_script.empty())
     {
@@ -3976,7 +3998,17 @@ void WavetableScriptEditor::forceRefresh()
     editor->repaintFrame();
     setApplyEnabled(false);
     setCurrentFrame(1);
+}
 
+void WavetableScriptEditor::forceRefresh()
+{
+    reloadCodeFromOscData();
+    lastFrames = -1;
+    rerenderFromUIState();
+}
+
+void WavetableScriptEditor::refreshPreview()
+{
     lastFrames = -1;
     rerenderFromUIState();
 }
@@ -4074,13 +4106,47 @@ void WavetableScriptEditor::rerenderFromUIState()
     lastFrames = nfr;
     lastRm = rm;
 
-    auto respt = 32;
-    for (int i = 1; i < resi; ++i)
-        respt *= 2;
-
-    setupEvaluator();
-
     rendererComponent->frameCount = nfr;
+
+    namespace WS = Surge::WavetableScript;
+
+    // Build the Preview job first, then derive the cache key from its inputs
+    auto job = makeGenJob(false);
+    auto key = WS::WtGenService::previewCacheKey(job->script, job->resolution, job->frameCount,
+                                                 job->snapshot ? job->snapshot->version : 0);
+
+    // Reuse cached frames when this osc's inputs are unchanged.
+    {
+        std::vector<std::vector<float>> cached;
+        int cachedCount = 0;
+        if (storage->wtGenService->tryGetCachedPreview(scene, osc_id, key, cached, cachedCount))
+        {
+            previewJob.reset();
+            awaitingGenerate = false;
+            rendererComponent->frameCache = std::move(cached);
+            rendererComponent->frameCount = cachedCount;
+            rendererComponent->repaint();
+            return;
+        }
+    }
+
+    // Cache miss, but a live-osc generate for this osc is already generating so wait for it rather
+    // than launching a duplicate Preview pass.
+    if (storage->wtGenService->isGeneratingToOscillator(scene, osc_id))
+    {
+        previewJob.reset();
+        awaitingGenerate = true;
+        startTimerHz(30);
+        stepGenSpinner();
+        rendererComponent->repaint();
+        return;
+    }
+
+    // Submit the Preview we already built; timerCallback fills frameCache on completion.
+    awaitingGenerate = false;
+    previewJob = storage->wtGenService->submit(std::move(job));
+    startTimerHz(30);
+    stepGenSpinner();
     rendererComponent->repaint();
 }
 
@@ -4097,28 +4163,136 @@ void WavetableScriptEditor::setCurrentFrame(int val)
     controlArea->currentFrameN->setIntValue(val);
 }
 
-void WavetableScriptEditor::setupEvaluator()
-{
-    auto resi = controlArea->resolutionN->getIntValue();
-    auto respt = 32;
-    for (int i = 1; i < resi; ++i)
-        respt *= 2;
-
-    evaluator->setStorage(storage);
-    evaluator->setOscillatorStorage(scene, osc_id);
-    evaluator->setScript(mainDocument->getAllContent().toStdString());
-    evaluator->setResolution(respt);
-    evaluator->setFrameCount(controlArea->framesN->getIntValue());
-}
-
 void WavetableScriptEditor::generateWavetable()
 {
-    setupEvaluator();
-    evaluator->forceInvalidate();
-    evaluator->generateWavetable(storage, osc, &osc->wt);
+    applyCodeToOsc();
+    lastFrames = -1;
+    generateJob = storage->wtGenService->submit(makeGenJob(true));
+    startTimerHz(30);
+    stepGenSpinner();
+}
 
-    editor->oscWaveform->repaintForceForWT();
-    editor->repaintFrame();
+std::shared_ptr<Surge::WavetableScript::WtGenJob> WavetableScriptEditor::makeGenJob(bool generate)
+{
+    namespace WS = Surge::WavetableScript;
+    auto job = std::make_shared<WS::WtGenJob>();
+    job->scene = scene;
+    job->osc = osc_id;
+    job->mode = generate ? WS::WtGenJob::Mode::Generate : WS::WtGenJob::Mode::Preview;
+    job->script = mainDocument->getAllContent().toStdString();
+
+    auto resi = controlArea->resolutionN->getIntValue();
+    job->resolution = WS::resolutionForResBase(resi);
+    job->frameCount = controlArea->framesN->getIntValue();
+
+    // Immutable snapshot copy captured on the message thread (under wtSnapshotMutex).
+    job->snapshot = WS::ensureSnapshotBundle(storage, *osc);
+
+    if (generate)
+    {
+        job->generateTarget = osc;
+        job->publishToken =
+            storage->wtGenPublishToken[scene * n_oscs + osc_id].load(std::memory_order_relaxed);
+        job->supersedable = true;
+    }
+
+    return job;
+}
+
+void WavetableScriptEditor::pollGenJobs()
+{
+    namespace WS = Surge::WavetableScript;
+
+    if (previewJob)
+    {
+        auto st = previewJob->status.load(std::memory_order_acquire);
+        if (st == WS::WtGenJob::Status::Complete || st == WS::WtGenJob::Status::Failed)
+        {
+            if (st == WS::WtGenJob::Status::Complete)
+            {
+                rendererComponent->frameCache = std::move(previewJob->frames);
+                rendererComponent->frameCount = previewJob->frameCount;
+                rendererComponent->repaint();
+            }
+
+            auto err = previewJob->error;
+            previewJob.reset();
+            if (!err.empty())
+            {
+                storage->reportError(err, "Wavetable Script Error");
+            }
+        }
+    }
+
+    if (generateJob)
+    {
+        auto st = generateJob->status.load(std::memory_order_acquire);
+        if (st == WS::WtGenJob::Status::Complete || st == WS::WtGenJob::Status::Failed)
+        {
+            if (st == WS::WtGenJob::Status::Complete)
+            {
+                // Reuse a published Generate's frames for the preview, unless a newer Preview is
+                // pending. Skip unpublished results so a mid-generate osc swap can't paint stale
+                // frames.
+                if (generateJob->published && !previewJob && !generateJob->frames.empty())
+                {
+                    rendererComponent->frameCache = std::move(generateJob->frames);
+                    rendererComponent->frameCount = generateJob->frameCount;
+                    rendererComponent->repaint();
+                }
+                if (generateJob->published)
+                {
+                    osc->wavetable_display_name = generateJob->wtName;
+                    editor->oscWaveform->repaintForceForWT();
+                    editor->repaintFrame();
+                }
+            }
+
+            auto err = generateJob->error;
+            generateJob.reset();
+            if (!err.empty())
+            {
+                storage->reportError(err, "Wavetable Script Error");
+            }
+        }
+    }
+}
+
+void WavetableScriptEditor::stepGenSpinner()
+{
+    if (!rendererComponent || !rendererComponent->genSpinner || !skin)
+        return;
+
+    // Kick spinner only while a job is actually running for this osc, covers the overlay's own
+    // Preview/Generate and an external generate alike.
+    auto &sp = rendererComponent->genSpinner;
+    if (sp->isGenerating && sp->isGenerating())
+    {
+        sp->arcColour = skin->getColor(Colors::MSEGEditor::Curve);
+        sp->kick();
+    }
+}
+
+void WavetableScriptEditor::timerCallback()
+{
+    pollGenJobs();
+
+    // An external generate for this osc just finished: re-render (forcing past the unchanged-input
+    // guard) to pick its frames up from the cache. The cache is keyed on
+    // script+res+frames+snapshot, so if the script was edited while it ran, the lookup misses and
+    // the re-render falls through to a fresh Preview of the current content.
+    if (awaitingGenerate && !storage->wtGenService->isGeneratingToOscillator(scene, osc_id))
+    {
+        awaitingGenerate = false;
+        lastFrames = -1;
+        rerenderFromUIState();
+    }
+
+    // This timer only drives job polling, so it can stop as soon as nothing is outstanding.
+    if (previewJob == nullptr && generateJob == nullptr && !awaitingGenerate)
+    {
+        stopTimer();
+    }
 }
 
 void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
@@ -4203,10 +4377,13 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
                 }
                 if (action == Surge::Widgets::WavetableSnapshotMenuComponent::Action::Clear)
                 {
+                    std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
                     osc->wtSnapshots[slot].reset();
+                    osc->wtSnapshotsVersion++;
                 }
                 else
                 {
+                    // captureWavetableSnapshot bumps the version under its own lock.
                     storage->getPatch().captureWavetableSnapshot(scene, static_cast<int>(action),
                                                                  osc_id, slot);
                 }
@@ -4520,17 +4697,21 @@ void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
 
-            auto &snap = osc->wtSnapshots[slot];
-            if (!snap)
-            {
-                snap = std::make_unique<Wavetable>();
-            }
+            // Build into a temp wt first: load_wt takes waveTableDataMutex internally, so we
+            // must NOT hold wtSnapshotMutex around it then swap the finished wt into the snapshot
+            // slot under wtSnapshotMutex, so a concurrent bundle build sees the old or the fully
+            // built snapshot, never a half-built one.
+            auto tmp = std::make_unique<Wavetable>();
+            storage->load_wt(rString, tmp.get(), nullptr);
+            const bool built = tmp->everBuilt && tmp->n_tables != 0 && tmp->size != 0;
 
-            storage->load_wt(rString, snap.get(), nullptr);
-
-            if (!snap->everBuilt || snap->n_tables == 0 || snap->size == 0)
             {
-                snap.reset();
+                std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
+                if (built)
+                    osc->wtSnapshots[slot] = std::move(tmp);
+                else
+                    osc->wtSnapshots[slot].reset();
+                osc->wtSnapshotsVersion++;
             }
 
             lastFrames = -1;

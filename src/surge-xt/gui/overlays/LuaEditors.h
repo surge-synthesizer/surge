@@ -41,6 +41,14 @@ class SurgeGUIEditor;
 
 namespace Surge
 {
+namespace WavetableScript
+{
+struct WtGenJob;
+}
+} // namespace Surge
+
+namespace Surge
+{
 namespace Overlays
 {
 
@@ -360,7 +368,9 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 struct WavetablePreviewComponent;
 struct WavetableScriptControlArea;
 
-struct WavetableScriptEditor : public CodeEditorContainerWithApply, public RefreshableOverlay
+struct WavetableScriptEditor : public CodeEditorContainerWithApply,
+                               public RefreshableOverlay,
+                               public juce::Timer
 {
     WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os, int oscid,
                           int scene, Surge::GUI::Skin::ptr_t sk);
@@ -370,14 +380,23 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void onSkinChanged() override;
     void applyCode() override;
     void forceRefresh() override;
+    void reloadCodeFromOscData();
+    void refreshPreview();
     void setApplyEnabled(bool b) override;
     void showModulatorCode();
     void showPreludeCode();
 
-    void setupEvaluator();
     void generateWavetable();
+    void applyCodeToOsc();
 
     void rerenderFromUIState();
+
+    void timerCallback() override;
+    void pollGenJobs();
+    void stepGenSpinner();
+    std::shared_ptr<Surge::WavetableScript::WtGenJob> makeGenJob(bool generate);
+    std::shared_ptr<Surge::WavetableScript::WtGenJob> previewJob, generateJob;
+    bool awaitingGenerate{false};
     void adjustCurrentFrame(int value);
     void setCurrentFrame(int value);
 
@@ -391,7 +410,6 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
 
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
 
-    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<SurgeCodeEditorComponent> preludeDisplay;
     std::unique_ptr<WavetableScriptControlArea> controlArea;

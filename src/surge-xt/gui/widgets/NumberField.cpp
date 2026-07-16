@@ -28,6 +28,7 @@
 #include "basic_dsp.h"
 #include "SurgeGUIUtils.h"
 #include "AccessibleHelpers.h"
+#include "WavetableScriptEvaluator.h"
 #include <iomanip>
 #include <fmt/core.h>
 
@@ -63,13 +64,8 @@ std::string NumberField::valueToDisplay() const
         oss << poly << " / " << iValue;
         break;
     case Skin::Parameters::WTSE_RESOLUTION:
-    {
-        auto respt = 32;
-        for (int i = 1; i < iValue; ++i)
-            respt *= 2;
-        oss << respt;
-    }
-    break;
+        oss << Surge::WavetableScript::resolutionForResBase(iValue);
+        break;
     default:
         if (extended)
             return fmt::format("{:.2f}", (float)(iValue / 100.0));

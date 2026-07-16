@@ -42,6 +42,7 @@ namespace Surge
 namespace Widgets
 {
 struct OscillatorWaveformDisplay;
+struct WtGenSpinner;
 template <> void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold();
 
 struct OscillatorWaveformDisplay : public juce::Component,
@@ -82,6 +83,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void repaintIfIdIsInRange(int id);
     void repaintBasedOnOscMuteState();
     void repaintForceForWT() { forceWTRepaint = true; };
+    void idleWtGen();
 
     ::Oscillator *setupOscillator();
     unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
@@ -150,6 +152,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
   private:
     std::shared_ptr<juce::Drawable> wtFileIcon;
     std::shared_ptr<juce::Drawable> wtScriptIcon;
+    std::unique_ptr<WtGenSpinner> wtGenSpinner;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };

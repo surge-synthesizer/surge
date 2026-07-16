@@ -188,6 +188,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/SurgeTextButton.cpp
   gui/widgets/Tooltip.cpp
   gui/widgets/Tooltip.h
+  gui/widgets/WtGenSpinner.h
   gui/widgets/TypeAheadTextEditor.cpp
   gui/widgets/VerticalLabel.cpp
   gui/widgets/VerticalLabel.h

@@ -716,6 +716,22 @@ struct ArbitraryBlockStorage
     static std::shared_ptr<std::vector<std::uint8_t>> from_string(const std::string &s);
 };
 
+namespace Surge
+{
+namespace WavetableScript
+{
+// Immutable, refcount-shared copy of an oscillator's wtSnapshots, built copy-on-mutate
+// Defined in WavetableScriptEvaluator.h, only referenced here through a shared_ptr so a
+// forward declaration is enough.
+struct SnapshotBundle;
+
+// Persistent background wavetable-script generation worker (WtGenService.h). Held here by
+// unique_ptr; ~SurgeStorage joins it. Declared after _patch / waveTableDataMutex below so it
+// destructs first.
+class WtGenService;
+} // namespace WavetableScript
+} // namespace Surge
+
 // I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
 // from first/last position.
 struct OscillatorStorage : public CountedSetUserData // The counted set is the wavetables
@@ -731,6 +747,13 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     int wavetable_script_res_base = 5, // 32 * 2^this
         wavetable_script_nframes = 10;
     std::array<std::unique_ptr<Wavetable>, n_wt_snapshots> wtSnapshots;
+
+    // Immutable, refcount-shared copy of wtSnapshots for off-thread generation. Rebuilt
+    // copy-on-mutate: every wtSnapshots mutation bumps wtSnapshotsVersion (under
+    // SurgeStorage::wtSnapshotMutex), and the bundle is (re)built lazily when its stamped
+    // version differs. A job/worker captures the shared_ptr with an O(1) copy.
+    std::shared_ptr<const Surge::WavetableScript::SnapshotBundle> wtSnapshotBundle;
+    uint64_t wtSnapshotsVersion{0};
 
     void *queue_xmldata;
     int queue_type;
@@ -1282,7 +1305,8 @@ class SurgePatch
     unsigned int save_patch(void **data);
     std::vector<std::uint8_t> save_arbitrary_block_storage();
     static bool writeOscSnapshotsToBinn(binn *oscmap, const OscillatorStorage &osc);
-    static bool readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc);
+    static bool readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc,
+                                         SurgeStorage *storage);
     Parameter *parameterFromOSCName(std::string stName);
     void captureWavetableSnapshot(int scene, int srcOsc, int dstOsc, int slot);
 
@@ -1731,6 +1755,24 @@ class alignas(16) SurgeStorage
     void storeMidiMappingToName(std::string name);
 
     std::mutex waveTableDataMutex;
+
+    // Guards oscdata.wtSnapshots mutations + wtSnapshotsVersion bumps against the
+    // copy-on-mutate SnapshotBundle rebuild. Distinct from waveTableDataMutex; the two are
+    // never held nested except captureWavetableSnapshot (waveTableDataMutex outer,
+    // wtSnapshotMutex inner).
+    std::mutex wtSnapshotMutex;
+
+    // Per-(scene,osc) config-generation token. Bumped INSIDE a waveTableDataMutex region
+    // whenever an oscillator's wavetable is replaced from outside the WtGenService (patch load,
+    // undo/redo). A Generate job captures it lock-free at submit: the worker re-checks it under
+    // waveTableDataMutex before publishing, and skips the publish on a mismatch (the osc was
+    // replaced mid-generate). Indexed scene * n_oscs + osc.
+    std::array<std::atomic<uint64_t>, n_scenes * n_oscs> wtGenPublishToken{};
+
+    // Background wavetable-script generation worker. Declared after _patch and
+    // waveTableDataMutex so ~SurgeStorage destructs (and joins) it before them
+    std::unique_ptr<Surge::WavetableScript::WtGenService> wtGenService;
+
     std::recursive_mutex modRoutingMutex;
     Wavetable WindowWT;
 
