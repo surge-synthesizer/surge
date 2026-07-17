@@ -74,8 +74,6 @@ std::shared_ptr<const SnapshotBundle> ensureSnapshotBundle(SurgeStorage *storage
 
 struct LuaWTEvaluator
 {
-    struct Details;
-    std::unique_ptr<Details> details;
     LuaWTEvaluator();
     ~LuaWTEvaluator();
 
@@ -132,6 +130,9 @@ struct LuaWTEvaluator
     static std::string defaultWavetableScript();
 
   private:
+    struct Details;
+    std::unique_ptr<Details> details;
+
     struct WtscriptData
     {
         std::string script;
