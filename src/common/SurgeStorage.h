@@ -1762,11 +1762,11 @@ class alignas(16) SurgeStorage
     // wtSnapshotMutex inner).
     std::mutex wtSnapshotMutex;
 
-    // Per-(scene,osc) config-generation token. Bumped INSIDE a waveTableDataMutex region
-    // whenever an oscillator's wavetable is replaced from outside the WtGenService (patch load,
-    // undo/redo). A Generate job captures it lock-free at submit: the worker re-checks it under
-    // waveTableDataMutex before publishing, and skips the publish on a mismatch (the osc was
-    // replaced mid-generate). Indexed scene * n_oscs + osc.
+    // Per-(scene,osc) token guarding against a mid-generate wt swap. Bumped under
+    // waveTableDataMutex whenever an oscillator's wt is replaced outside the WtGenService (patch
+    // load, undo/redo, wt load, paste). A Generate captures it lock-free at submit; the worker
+    // re-checks it under the lock before publishing and skips on a mismatch. Atomic because that
+    // lock-free capture races the guarded bumps. Indexed scene * n_oscs + osc.
     std::array<std::atomic<uint64_t>, n_scenes * n_oscs> wtGenPublishToken{};
 
     // Background wavetable-script generation worker. Declared after _patch and
