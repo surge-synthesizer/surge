@@ -258,12 +258,6 @@ void WtGenService::runThread()
             evaluator.setSnapshotBundle(job->snapshot);
             evaluator.forceInvalidate();
 
-            // One Lua pass fills job->frames (the preview), a Generate additionally BuildWTs the
-            // same frames into the target.
-            // wd owns the flat buffer and frees itself on every path (including a throw).
-            wt_header wh;
-            std::unique_ptr<float[]> wd;
-
             // Bail the generation at the next frame's pcall on either teardown (cancelGeneration)
             // or mid-generate supersede.
             auto cancelPred = [this, &job, idx]() {
@@ -272,11 +266,14 @@ void WtGenService::runThread()
                         job->requestId < latestGeneratePerOsc[idx].load(std::memory_order_relaxed));
             };
 
-            // A Preview discards the flat buffer, so don't build it.
+            // One Lua pass yields the preview frames plus (unless previewOnly) the flat BuildWT
+            // buffer, owned by gen.samples which frees itself on every path (including a throw).
             const bool previewOnly = (job->mode == WtGenJob::Mode::Preview);
-            ok = evaluator.populateWavetable(wh, wd, &job->frames, cancelPred, previewOnly);
+            auto gen = evaluator.populateWavetable(cancelPred, previewOnly);
+            ok = gen.ok;
             if (ok)
             {
+                job->frames = std::move(gen.frames);
                 job->wtName = evaluator.getSuggestedWavetableName();
                 if (job->mode == WtGenJob::Mode::Generate && job->generateTarget)
                 {
@@ -288,7 +285,8 @@ void WtGenService::runThread()
                     if (storage->wtGenPublishToken[idx].load(std::memory_order_relaxed) ==
                         job->publishToken)
                     {
-                        job->generateTarget->wt.BuildWT(wd.get(), wh, wh.flags & wtf_is_sample);
+                        job->generateTarget->wt.BuildWT(gen.samples.get(), gen.header,
+                                                        gen.header.flags & wtf_is_sample);
                         job->published = true;
                     }
                 }
@@ -296,7 +294,8 @@ void WtGenService::runThread()
                 {
                     // Export: build into the job-owned exportOut (no shared state, so no
                     // mutex and no config guard). The block-waiting submitter writes it to file.
-                    job->exportOut.BuildWT(wd.get(), wh, wh.flags & wtf_is_sample);
+                    job->exportOut.BuildWT(gen.samples.get(), gen.header,
+                                           gen.header.flags & wtf_is_sample);
                 }
 
                 if (job->mode == WtGenJob::Mode::Preview ||

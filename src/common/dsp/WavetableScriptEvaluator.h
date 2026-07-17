@@ -101,15 +101,22 @@ struct LuaWTEvaluator
     using validFrame_t = std::vector<float>;
     using frame_t = std::optional<validFrame_t>;
 
-    // Generate all frames into "wavdata" (a flat buffer for BuildWT, owned by the unique_ptr so it
-    // frees itself on any error/exception path). If outFrames is non-null it also receives the
-    // per-frame preview vectors from the same Lua pass, so a Generate feeds both oscillator and
-    // preview in one pass. Pass previewOnly=true (the preview path) to skip the flat-buffer
-    // alloc/fill and produce only outFrames. If "cancel" returns true, generation stops at the next
-    // frame pcall. Returns false (wavdata reset) on failure or cancellation.
-    bool populateWavetable(wt_header &wh, std::unique_ptr<float[]> &wavdata,
-                           std::vector<std::vector<float>> *outFrames = nullptr,
-                           const std::function<bool()> &cancel = {}, bool previewOnly = false);
+    // Product of one generation pass: the owning flat BuildWT buffer (null in previewOnly mode),
+    // its header, and the per-frame preview vectors. On failure/cancellation ok is false and the
+    // buffers are empty.
+    struct PopulatedWavetable
+    {
+        bool ok{false};
+        wt_header header{};
+        std::unique_ptr<float[]> samples;       // flat header.n_tables * header.n_samples
+        std::vector<std::vector<float>> frames; // [frame][sample]
+    };
+
+    // Generate all frames in one Lua pass, returning the result by value (buffer ownership
+    // transfers to the caller). previewOnly skips the flat-buffer alloc/fill; canceled() true stops
+    // at the next frame pcall and returns an empty (ok==false) result.
+    PopulatedWavetable populateWavetable(const std::function<bool()> &canceled = {},
+                                         bool previewOnly = false);
 
     void loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
                                 OscillatorStorage *oscdata);

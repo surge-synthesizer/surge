@@ -494,13 +494,15 @@ LuaWTEvaluator::frame_t LuaWTEvaluator::getFrame(size_t frame)
 #endif
 }
 
-bool LuaWTEvaluator::populateWavetable(wt_header &wh, std::unique_ptr<float[]> &wavdata,
-                                       std::vector<std::vector<float>> *outFrames,
-                                       const std::function<bool()> &cancel, bool previewOnly)
+LuaWTEvaluator::PopulatedWavetable
+LuaWTEvaluator::populateWavetable(const std::function<bool()> &canceled, bool previewOnly)
 {
+    PopulatedWavetable result;
 #if HAS_LUA
     if (!details->makeValid())
-        return false;
+    {
+        return result; // ok == false
+    }
 
     // Build then cache the wt.snapshot Lua table once for this regen cycle
     struct SnapshotCacheGuard
@@ -513,40 +515,26 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, std::unique_ptr<float[]> &
     auto resolution = details->resolution;
     auto frames = details->frameCount;
 
-    // A Preview only needs the per-frame vectors in outFrames, not the flat BuildWT buffer, so skip
-    // the multi-MB alloc + per-frame memcpy when previewOnly is set. reset(new float[...]) (not
-    // make_unique) leaves the buffer uninitialized. We fill every sample below, rather than paying
-    // to zero it.
+    // A Preview needs only the per-frame vectors, so skip the multi-MB flat buffer. reset(new ...)
+    // leaves it uninitialized; we fill every sample below rather than pay to zero it.
     float *wd = nullptr;
     if (!previewOnly)
     {
-        wavdata.reset(new float[frames * resolution]);
-        wd = wavdata.get();
-        wh.n_samples = resolution;
-        wh.n_tables = frames;
-        wh.flags = 0;
-    }
-    else
-    {
-        wavdata.reset();
+        result.samples.reset(new float[frames * resolution]);
+        wd = result.samples.get();
+        result.header.n_samples = resolution;
+        result.header.n_tables = frames;
+        result.header.flags = 0;
     }
 
-    if (outFrames)
-    {
-        outFrames->assign(frames, {});
-    }
+    result.frames.assign(frames, {});
 
     for (size_t i = 0; i < frames; ++i)
     {
         // Cancellation is checked between each frame's pcall
-        if (cancel && cancel())
+        if (canceled && canceled())
         {
-            wavdata.reset();
-            if (outFrames)
-            {
-                outFrames->clear();
-            }
-            return false;
+            return {}; // discard partial buffers, ok == false
         }
 
         auto v = getFrame(i);
@@ -556,25 +544,16 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, std::unique_ptr<float[]> &
             {
                 memcpy(&(wd[i * resolution]), &((*v)[0]), resolution * sizeof(float));
             }
-            if (outFrames)
-            {
-                (*outFrames)[i] = std::move(*v); // capture after the memcpy read
-            }
+            result.frames[i] = std::move(*v); // capture after the memcpy read
         }
         else
         {
-            wavdata.reset(); // free the buffer; caller sees a null wavdata on failure
-            if (outFrames)
-            {
-                outFrames->clear();
-            }
-            return false;
+            return {}; // failure: empty result
         }
     }
-    return true;
-#else
-    return false;
+    result.ok = true;
 #endif
+    return result;
 }
 
 #if HAS_LUA
