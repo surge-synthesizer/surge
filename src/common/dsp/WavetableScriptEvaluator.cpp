@@ -60,9 +60,10 @@ struct LuaWTEvaluator::Details
     lua_State *L{nullptr};
     int snapshotRef{LUA_NOREF}; // Registry ref for cached wt.snapshot table
 
-    // When pushSnapshotTable is set builds wt.snapshot from this immutable bundle rather than
-    // touching live oscdata. The worker injects the job's frozen bundle here.
-    std::shared_ptr<const SnapshotBundle> snapshotBundle;
+    // wt.snapshot is always built from this immutable bundle (never live oscdata). Defaults to an
+    // empty bundle and is never null; the worker/tests inject a frozen bundle via
+    // setSnapshotBundle.
+    std::shared_ptr<const SnapshotBundle> snapshotBundle{std::make_shared<SnapshotBundle>()};
 
     // When deferErrors is set (worker path), generation errors are collected
     // into deferredError instead of storage->reportError which invokes UI error listeners
@@ -101,33 +102,29 @@ struct LuaWTEvaluator::Details
     {
         lua_newtable(L); // Outer snapshot table
 
-        // wt.snapshot is built from an injected immutable SnapshotBundle
-        if (snapshotBundle)
+        // wt.snapshot is built from an injected immutable SnapshotBundle.
+        for (int s = 0; s < n_wt_snapshots; ++s)
         {
-            for (int s = 0; s < n_wt_snapshots; ++s)
+            lua_newtable(L); // Slot table (empty if not imported)
+            const auto &slot = snapshotBundle->slots[s];
+
+            if (slot.nframes > 0 && slot.nsamples > 0)
             {
-                lua_newtable(L); // Slot table (empty if not imported)
-                const auto &slot = snapshotBundle->slots[s];
+                const int nsamples = slot.nsamples;
 
-                if (slot.nframes > 0 && slot.nsamples > 0)
+                for (unsigned int t = 0; t < slot.nframes; ++t)
                 {
-                    const int nsamples = slot.nsamples;
-
-                    for (unsigned int t = 0; t < slot.nframes; ++t)
+                    lua_newtable(L); // Frame table
+                    const float *tbl = slot.data.data() + (size_t)t * nsamples;
+                    for (int i = 0; i < nsamples; ++i)
                     {
-                        lua_newtable(L); // Frame table
-                        const float *tbl = slot.data.data() + (size_t)t * nsamples;
-                        for (int i = 0; i < nsamples; ++i)
-                        {
-                            lua_pushnumber(L, tbl[i]); // Push sample value
-                            lua_rawseti(L, -2, i + 1); // frame[i + 1] = value
-                        }
-                        lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
+                        lua_pushnumber(L, tbl[i]); // Push sample value
+                        lua_rawseti(L, -2, i + 1); // frame[i + 1] = value
                     }
+                    lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
                 }
-                lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
             }
-            return;
+            lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
         }
     }
 
@@ -406,6 +403,7 @@ void LuaWTEvaluator::setStorage(SurgeStorage *s)
 void LuaWTEvaluator::setSnapshotBundle(std::shared_ptr<const SnapshotBundle> bundle)
 {
 #if HAS_LUA
+    assert(bundle);
     details->snapshotBundle = std::move(bundle);
 #endif
 }
