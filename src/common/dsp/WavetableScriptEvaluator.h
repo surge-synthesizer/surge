@@ -87,11 +87,9 @@ struct LuaWTEvaluator
     // the message thread.
     void setSnapshotBundle(std::shared_ptr<const SnapshotBundle>);
 
-    // Worker error routing: when enabled, generation errors are collected rather than shown
-    // via storage->reportError (which touches UI and must not run off the message thread)
-    // takeDeferredError() returns the accumulated text and clears it.
-    void setDeferErrors(bool);
-    std::string takeDeferredError();
+    // Worker error routing: point generation errors at a caller-owned string. Pass nullptr to route
+    // errors directly.
+    void setErrorOut(std::string *errorOut);
 
     void setScript(const std::string &);
     void setResolution(size_t);

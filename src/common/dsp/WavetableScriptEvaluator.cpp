@@ -46,6 +46,30 @@ namespace WavetableScript
 static constexpr const char *statetable{"statetable"};
 
 #if HAS_LUA
+
+// Route an evaluation or parse error. When errorOut is non-null (worker/OSC) the message is written
+// there for the poller/caller to surface.
+static void emitError(std::string *errorOut, SurgeStorage *storage, const std::string &err,
+                      const std::string &title)
+{
+    if (errorOut)
+    {
+        // Only keep the first error of a run.
+        if (errorOut->empty())
+        {
+            *errorOut = err;
+        }
+    }
+    else if (storage)
+    {
+        storage->reportError(err, title);
+    }
+    else
+    {
+        std::cerr << err << std::endl;
+    }
+}
+
 struct LuaWTEvaluator::Details
 {
     SurgeStorage *storage{nullptr};
@@ -65,31 +89,11 @@ struct LuaWTEvaluator::Details
     // setSnapshotBundle.
     std::shared_ptr<const SnapshotBundle> snapshotBundle{std::make_shared<SnapshotBundle>()};
 
-    // When deferErrors is set (worker path), generation errors are collected
-    // into deferredError instead of storage->reportError which invokes UI error listeners
-    // and must not run off the message thread. The poller surfaces the string.
-    bool deferErrors{false};
-    std::string deferredError;
-
-    void emitError(const std::string &msg, const std::string &title)
-    {
-        if (deferErrors)
-        {
-            if (!deferredError.empty())
-            {
-                deferredError += "\n";
-            }
-            deferredError += msg;
-        }
-        else if (storage)
-        {
-            storage->reportError(msg, title);
-        }
-        else
-        {
-            std::cerr << msg << std::endl;
-        }
-    }
+    // Off-thread error sink, aimed at a caller-owned string via setErrorOut. When non-null (the
+    // worker points it at its job's error string) emitError writes there instead of calling
+    // storage->reportError, which invokes UI error listeners and must not run off the message
+    // thread.
+    std::string *errorOut{nullptr};
 
     void invalidate()
     {
@@ -252,7 +256,7 @@ struct LuaWTEvaluator::Details
                 err = "Lua error: Value is nil.";
             oss << "Failed to evaluate the generate() function!\n" << err;
 
-            emitError(oss.str(), "Wavetable Script Evaluator Error");
+            emitError(errorOut, storage, oss.str(), "Wavetable Script Evaluator Error");
         }
         lua_pop(L, 1); // Error string or pcall result
 
@@ -285,7 +289,7 @@ struct LuaWTEvaluator::Details
                 }
                 else
                 {
-                    emitError("Init function returned a non-table.",
+                    emitError(errorOut, storage, "Init function returned a non-table.",
                               "Wavetable Script Evaluator Error");
                     makeEmptyState(true);
                 }
@@ -298,7 +302,7 @@ struct LuaWTEvaluator::Details
                 if (!err)
                     err = "Lua error: Value is nil.";
                 oss << "Failed to evaluate init() function!\n" << err;
-                emitError(oss.str(), "Wavetable Script Evaluator Error");
+                emitError(errorOut, storage, oss.str(), "Wavetable Script Evaluator Error");
                 lua_pop(L, -1);
 
                 makeEmptyState(true);
@@ -352,7 +356,7 @@ struct LuaWTEvaluator::Details
                 {
                     oss << "\n" << emsg;
                 }
-                emitError(oss.str(), "Wavetable Script Parse Error");
+                emitError(errorOut, storage, oss.str(), "Wavetable Script Parse Error");
             }
             lua_pop(L, 2); // remove the 2 functions added in the global state
 
@@ -408,25 +412,10 @@ void LuaWTEvaluator::setSnapshotBundle(std::shared_ptr<const SnapshotBundle> bun
 #endif
 }
 
-void LuaWTEvaluator::setDeferErrors(bool defer)
+void LuaWTEvaluator::setErrorOut(std::string *errorOut)
 {
 #if HAS_LUA
-    details->deferErrors = defer;
-    if (defer)
-    {
-        details->deferredError.clear();
-    }
-#endif
-}
-
-std::string LuaWTEvaluator::takeDeferredError()
-{
-#if HAS_LUA
-    auto err = std::move(details->deferredError);
-    details->deferredError.clear();
-    return err;
-#else
-    return {};
+    details->errorOut = errorOut;
 #endif
 }
 
@@ -596,25 +585,11 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
         where wtscript_header = { tag "wts1", xmlsize, blobsize }
     */
 
-    // Route parse errors to errorOut when the caller must surface them itself (the OSC thread must
-    // not call reportError). Message-thread callers pass errorOut == nullptr and get the
-    // direct dialog.
-    auto fail = [&](const char *msg) -> std::optional<WtscriptData> {
-        if (errorOut)
-        {
-            *errorOut = msg;
-        }
-        else
-        {
-            storage->reportError(msg, "Load Error");
-        }
-        return std::nullopt;
-    };
-
     std::ifstream inFile(filename, std::ios::binary | std::ios::ate);
     if (!inFile)
     {
-        return fail("Failed to load XML file.");
+        emitError(errorOut, storage, "Failed to load XML file.", "Load Error");
+        return std::nullopt;
     }
     const auto fileSize = static_cast<size_t>(inFile.tellg());
     inFile.seekg(0);
@@ -647,7 +622,9 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
 
         if (xmlSize > bytesAfterHeader || blobSize > bytesAfterHeader - xmlSize)
         {
-            return fail("Wavetable script file is truncated or corrupt!");
+            emitError(errorOut, storage, "Wavetable script file is truncated or corrupt!",
+                      "Load Error");
+            return std::nullopt;
         }
 
         const void *compData = fileData.data() + xmlOffset + xmlSize;
@@ -660,37 +637,44 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     doc.Parse(xmlStr.c_str(), nullptr, TIXML_ENCODING_LEGACY);
     if (doc.Error())
     {
-        return fail("Failed to parse wavetable script XML!");
+        emitError(errorOut, storage, "Failed to parse wavetable script XML!", "Load Error");
+        return std::nullopt;
     }
 
     auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
     if (!wtscript)
     {
-        return fail("No root wtscript element found!");
+        emitError(errorOut, storage, "No root wtscript element found!", "Load Error");
+        return std::nullopt;
     }
 
     auto wavetable_script = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("script"));
     if (!wavetable_script)
     {
-        return fail("No wavetable_script element found!");
+        emitError(errorOut, storage, "No wavetable_script element found!", "Load Error");
+        return std::nullopt;
     }
 
     auto b64script = wavetable_script->Attribute("lua");
     if (!b64script || std::strlen(b64script) == 0)
     {
-        return fail("Empty or missing lua attribute in wavetable_script!");
+        emitError(errorOut, storage, "Empty or missing lua attribute in wavetable_script!",
+                  "Load Error");
+        return std::nullopt;
     }
 
     int nframes = 0;
     if (wavetable_script->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
     {
-        return fail("Missing or invalid frames attribute!");
+        emitError(errorOut, storage, "Missing or invalid frames attribute!", "Load Error");
+        return std::nullopt;
     }
 
     int res_base = 0;
     if (wavetable_script->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
     {
-        return fail("Missing or invalid samples attribute!");
+        emitError(errorOut, storage, "Missing or invalid samples attribute!", "Load Error");
+        return std::nullopt;
     }
 
     LuaWTEvaluator::WtscriptData data;

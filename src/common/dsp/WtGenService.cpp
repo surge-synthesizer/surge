@@ -48,12 +48,7 @@ std::shared_ptr<WtGenJob> makeLiveGenerateJob(SurgeStorage *storage, int scene, 
     return job;
 }
 
-WtGenService::WtGenService(SurgeStorage *s) : storage(s)
-{
-    // Generation errors must never reach storage->reportError from the worker thread, collect them
-    // into the job's `error` and let the poller surface them
-    evaluator.setDeferErrors(true);
-}
+WtGenService::WtGenService(SurgeStorage *s) : storage(s) {}
 
 WtGenService::~WtGenService()
 {
@@ -250,8 +245,10 @@ void WtGenService::runThread()
         bool ok = false;
         try
         {
-            // Drive the private evaluator entirely from the job.
+            // Drive the private evaluator entirely from the job. Generation errors land straight
+            // in job->error (first error wins) instead of touching the UI off-thread.
             evaluator.setStorage(storage);
+            evaluator.setErrorOut(&job->error);
             evaluator.setScript(job->script);
             evaluator.setResolution((size_t)job->resolution);
             evaluator.setFrameCount((size_t)job->frameCount);
@@ -324,29 +321,23 @@ void WtGenService::runThread()
             }
         }
 
-        // A job a replaced mid-run is not a failure. Checked here, not in the cancel predicate, so
+        // A job replaced mid-run is not a failure. Checked here, not in the cancel predicate, so
         // a genuine failure that is also superseded is cleared.
         const bool superseded =
             !ok && job->supersedable &&
             job->requestId < latestGeneratePerOsc[idx].load(std::memory_order_relaxed);
 
-        // Drain the deferred error (also clears it for the next job). A superseded failure is a
-        // no-op the newer Generate owns, so drop any message.
-        auto deferred = evaluator.takeDeferredError();
+        // The first error was set into job->error via the error sink. Stop aiming at this job's
+        // string now the run is done. A superseded job is a no-op the newer Generate owns, so drop
+        // any message, otherwise supply a generic one if it failed silently.
+        evaluator.setErrorOut(nullptr);
         if (superseded)
         {
             job->error.clear();
         }
-        else if (job->error.empty())
+        else if (!ok && job->error.empty())
         {
-            if (!deferred.empty())
-            {
-                job->error = deferred;
-            }
-            else if (!ok)
-            {
-                job->error = "Wavetable script generation failed.";
-            }
+            job->error = "Wavetable script generation failed.";
         }
 
         // Release-store the status (publishes frames/wtName/published/exportOut to the poller or
