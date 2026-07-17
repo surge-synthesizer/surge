@@ -30,7 +30,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <deque>
-#include <future>
+#include <latch>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -98,10 +98,9 @@ struct WtGenJob
     // The worker's terminal release-store, acquired by the poller/waiter.
     std::atomic<Status> status{Status::Pending};
 
-    // Block-wait handshake for synchronous submitters (export, OSC). These wait on
-    // done.get_future(), the worker fulfills it right after the status store. Pollers ignore it.
-    // Generates only (never superseded).
-    std::promise<void> done;
+    // Block-wait handshake for synchronous submitters (export, OSC): they wait on this latch, the
+    // worker counts it down exactly once right after the status store. Pollers ignore it.
+    std::latch done{1};
 
     // Preview: written by the worker before status=Complete, read by the poller/waiter after.
     std::vector<std::vector<float>> frames; // [frame][sample]
