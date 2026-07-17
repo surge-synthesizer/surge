@@ -1056,13 +1056,13 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         if (frac >= 1.0f)
             localFrac = lv1;
 
-        // Deform swings exponential factor k between 12 and 0, with k = 3 at Deform = 0
+        // Deform swings exponential factor k between 12 and 0, with k ≈ 3 at Deform = 0
         float k = 3.0f;
 
         if (df < 0.f)
             k += abs(df) * 9.f;
         else if (df > 0.f)
-            k -= df * 3.f;
+            k -= df * 2.999999f;
 
         // exponential charge formula
         float curve = (1.0f - exp(-k * localFrac)) / (1.0f - exp(-k));

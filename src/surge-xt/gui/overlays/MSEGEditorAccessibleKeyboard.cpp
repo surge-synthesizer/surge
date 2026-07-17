@@ -144,7 +144,8 @@ bool MSEGAccessibleKeyboardHandler::controlPointUsable(int seg) const
 bool MSEGAccessibleKeyboardHandler::controlPointIs2D(int seg) const
 {
     auto t = ms->segments[seg].type;
-    return t == MSEGStorage::segment::QUAD_BEZIER || t == MSEGStorage::segment::BROWNIAN;
+    return t == MSEGStorage::segment::QUAD_BEZIER || t == MSEGStorage::segment::BROWNIAN ||
+           (t >= MSEGStorage::segment::RATCHET_1 && t <= MSEGStorage::segment::RATCHET_8);
 }
 
 std::pair<float, float> MSEGAccessibleKeyboardHandler::cursorPosition() const
