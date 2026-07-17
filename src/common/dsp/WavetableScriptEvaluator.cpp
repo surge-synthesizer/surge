@@ -730,7 +730,7 @@ void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStora
     setScript(data->script);
     setResolution(resolutionForResBase(data->res_base));
     setFrameCount(data->nframes);
-    setSnapshotBundle(buildSnapshotBundle(*oscdata));
+    setSnapshotBundle(SnapshotBundle::build(*oscdata));
 
     oscdata->wavetable_display_name = getSuggestedWavetableName();
 #endif
@@ -746,7 +746,7 @@ std::string LuaWTEvaluator::getSuggestedWavetableName()
 #endif
 }
 
-std::shared_ptr<SnapshotBundle> buildSnapshotBundle(const OscillatorStorage &osc)
+std::shared_ptr<SnapshotBundle> SnapshotBundle::build(const OscillatorStorage &osc)
 {
     auto bundle = std::make_shared<SnapshotBundle>();
     for (int s = 0; s < n_wt_snapshots; ++s)
@@ -768,13 +768,13 @@ std::shared_ptr<SnapshotBundle> buildSnapshotBundle(const OscillatorStorage &osc
     return bundle;
 }
 
-std::shared_ptr<const SnapshotBundle> ensureSnapshotBundle(SurgeStorage *storage,
-                                                           OscillatorStorage &osc)
+std::shared_ptr<const SnapshotBundle> SnapshotBundle::current(SurgeStorage *storage,
+                                                             OscillatorStorage &osc)
 {
     std::lock_guard<std::mutex> g(storage->wtSnapshotMutex);
     if (!osc.wtSnapshotBundle || osc.wtSnapshotBundle->version != osc.wtSnapshotsVersion)
     {
-        auto bundle = buildSnapshotBundle(osc);
+        auto bundle = build(osc);
         bundle->version = osc.wtSnapshotsVersion;
         osc.wtSnapshotBundle = bundle;
     }

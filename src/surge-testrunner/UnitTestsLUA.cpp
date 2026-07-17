@@ -1183,7 +1183,7 @@ end
         auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
         la->setResolution(64);
         la->setStorage(nullptr);
-        la->setSnapshotBundle(Surge::WavetableScript::buildSnapshotBundle(osc));
+        la->setSnapshotBundle(Surge::WavetableScript::SnapshotBundle::build(osc));
         la->setFrameCount(2);
         la->setScript(s);
 
@@ -1238,7 +1238,7 @@ end
         la->setResolution(64);
         la->setStorage(nullptr);
         la->setSnapshotBundle(
-            Surge::WavetableScript::buildSnapshotBundle(storage.getPatch().scene[0].osc[0]));
+            Surge::WavetableScript::SnapshotBundle::build(storage.getPatch().scene[0].osc[0]));
         la->setFrameCount(1);
         la->setScript(s);
 
@@ -1339,7 +1339,7 @@ end
             la->setScript(script);
             la->setResolution(resolution);
             la->setFrameCount(nframes);
-            la->setSnapshotBundle(WS::buildSnapshotBundle(osc));
+            la->setSnapshotBundle(WS::SnapshotBundle::build(osc));
             la->forceInvalidate();
             for (int f = 0; f < nframes; ++f)
             {
@@ -1383,7 +1383,7 @@ end
         job->script = script;
         job->resolution = resolution;
         job->frameCount = nframes;
-        job->snapshot = WS::ensureSnapshotBundle(&storage, osc);
+        job->snapshot = WS::SnapshotBundle::current(&storage, osc);
 
         storage.wtGenService->submitBlocking(job);
 

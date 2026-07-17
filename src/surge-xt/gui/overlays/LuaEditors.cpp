@@ -4186,7 +4186,7 @@ std::shared_ptr<Surge::WavetableScript::WtGenJob> WavetableScriptEditor::makeGen
     job->frameCount = controlArea->framesN->getIntValue();
 
     // Immutable snapshot copy captured on the message thread (under wtSnapshotMutex).
-    job->snapshot = WS::ensureSnapshotBundle(storage, *osc);
+    job->snapshot = WS::SnapshotBundle::current(storage, *osc);
 
     if (generate)
     {

@@ -61,16 +61,17 @@ struct SnapshotBundle
     };
     std::array<Slot, n_wt_snapshots> slots;
     uint64_t version{0};
+
+    // Build a fresh bundle by copying the live wtSnapshots of osc. Does NOT lock, so the caller
+    // must hold storage->wtSnapshotMutex (it reads the snapshot sample data, which mutation sites
+    // write under that mutex).
+    static std::shared_ptr<SnapshotBundle> build(const OscillatorStorage &osc);
+
+    // Return osc.wtSnapshotBundle. Always takes storage->wtSnapshotMutex, rebuilding via build()
+    // when the bundle is missing or its set version is stale.
+    static std::shared_ptr<const SnapshotBundle> current(SurgeStorage *storage,
+                                                         OscillatorStorage &osc);
 };
-
-// Copy the live wtSnapshots of osc into a fresh bundle. Caller must hold storage->wtSnapshotMutex
-// (it reads the snapshot sample data, which mutation sites write under that mutex).
-std::shared_ptr<SnapshotBundle> buildSnapshotBundle(const OscillatorStorage &osc);
-
-// Return osc.wtSnapshotBundle, rebuilding it (under storage->wtSnapshotMutex) if it is
-// missing or its set version is stale.
-std::shared_ptr<const SnapshotBundle> ensureSnapshotBundle(SurgeStorage *storage,
-                                                           OscillatorStorage &osc);
 
 struct LuaWTEvaluator
 {

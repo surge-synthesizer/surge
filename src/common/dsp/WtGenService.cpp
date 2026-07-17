@@ -39,7 +39,7 @@ std::shared_ptr<WtGenJob> makeLiveGenerateJob(SurgeStorage *storage, int scene, 
     job->script = oscdata->wavetable_script;
     job->resolution = resolutionForResBase(oscdata->wavetable_script_res_base);
     job->frameCount = oscdata->wavetable_script_nframes;
-    job->snapshot = ensureSnapshotBundle(storage, *oscdata);
+    job->snapshot = SnapshotBundle::current(storage, *oscdata);
 
     // Lock-free capture of the config token, re-checked under waveTableDataMutex at publish.
     job->publishToken =

@@ -6961,7 +6961,7 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
             job->script = oscdata.wavetable_script;
             job->resolution = WS::resolutionForResBase(resBase);
             job->frameCount = oscdata.wavetable_script_nframes;
-            job->snapshot = WS::ensureSnapshotBundle(&this->synth->storage, oscdata);
+            job->snapshot = WS::SnapshotBundle::current(&this->synth->storage, oscdata);
 
             // Export is block-waiting on the message thread, the job inserts before pending jobs.
             this->synth->storage.wtGenService->submitBlocking(job);
