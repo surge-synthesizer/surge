@@ -769,7 +769,7 @@ std::shared_ptr<SnapshotBundle> SnapshotBundle::build(const OscillatorStorage &o
 }
 
 std::shared_ptr<const SnapshotBundle> SnapshotBundle::current(SurgeStorage *storage,
-                                                             OscillatorStorage &osc)
+                                                              OscillatorStorage &osc)
 {
     std::lock_guard<std::mutex> g(storage->wtSnapshotMutex);
     if (!osc.wtSnapshotBundle || osc.wtSnapshotBundle->version != osc.wtSnapshotsVersion)
