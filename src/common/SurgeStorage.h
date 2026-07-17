@@ -748,10 +748,9 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
         wavetable_script_nframes = 10;
     std::array<std::unique_ptr<Wavetable>, n_wt_snapshots> wtSnapshots;
 
-    // Immutable, refcount-shared copy of wtSnapshots for off-thread generation. Rebuilt
-    // copy-on-mutate: every wtSnapshots mutation bumps wtSnapshotsVersion (under
-    // SurgeStorage::wtSnapshotMutex), and the bundle is (re)built lazily when its stamped
-    // version differs. A job/worker captures the shared_ptr with an O(1) copy.
+    // Immutable, refcount-shared copy of wtSnapshots for off-thread generation, rebuilt
+    // copy-on-mutate (bumped by wtSnapshotsVersion). Only read/written in SnapshotBundle::current()
+    // under wtSnapshotMutex; the worker holds its own copy, so this handle is never shared.
     std::shared_ptr<const Surge::WavetableScript::SnapshotBundle> wtSnapshotBundle;
     uint64_t wtSnapshotsVersion{0};
 

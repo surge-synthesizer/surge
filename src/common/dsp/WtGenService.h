@@ -87,12 +87,15 @@ struct WtGenJob
     // Input, const once submitted. Read by the worker after it claims the job.
     std::string script;
     int resolution{2048}, frameCount{10};
-    std::shared_ptr<const SnapshotBundle> snapshot; // immutable, refcount-shared
+
+    // Immutable bundle. Set before submit, then read ONLY by the worker. Pollers/waiters must
+    // never touch this handle after submit (const pointee is safe to share; this instance is not).
+    std::shared_ptr<const SnapshotBundle> snapshot;
 
     // Generate: publish wt buffers into ->wt, nullptr == export (build into exportOut).
     OscillatorStorage *generateTarget{nullptr};
 
-    // Status barrier: release on store in the worker, acquire on load in the poller/waiter.
+    // The worker's terminal release-store, acquired by the poller/waiter.
     std::atomic<Status> status{Status::Pending};
 
     // Block-wait handshake for synchronous submitters (export, OSC). These wait on
