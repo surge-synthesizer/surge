@@ -177,9 +177,8 @@ std::shared_ptr<WtGenJob> WtGenService::submit(std::shared_ptr<WtGenJob> job, bo
 
 void WtGenService::submitBlocking(const std::shared_ptr<WtGenJob> &job)
 {
-    auto fut = job->done.get_future();
     submit(job, /*front*/ true);
-    fut.wait();
+    job->done.get_future().wait();
 }
 
 bool WtGenService::isBusy(int scene, int osc) const
