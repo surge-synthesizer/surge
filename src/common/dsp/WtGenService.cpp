@@ -177,8 +177,9 @@ std::shared_ptr<WtGenJob> WtGenService::submit(std::shared_ptr<WtGenJob> job, bo
 
 void WtGenService::submitBlocking(const std::shared_ptr<WtGenJob> &job)
 {
+    auto fut = job->done.get_future();
     submit(job, /*front*/ true);
-    job->done.wait();
+    fut.wait();
 }
 
 bool WtGenService::isBusy(int scene, int osc) const
@@ -232,7 +233,7 @@ void WtGenService::runThread()
                             1, std::memory_order_relaxed);
                     }
                     job->status.store(WtGenJob::Status::Complete, std::memory_order_release);
-                    job->done.count_down();
+                    job->done.set_value();
                     continue; // Drop without running
                 }
             }
@@ -345,7 +346,7 @@ void WtGenService::runThread()
         job->status.store((ok || superseded) ? WtGenJob::Status::Complete
                                              : WtGenJob::Status::Failed,
                           std::memory_order_release);
-        job->done.count_down(); // unblocks submitBlocking (export/OSC); pollers ignore the latch
+        job->done.set_value(); // unblocks submitBlocking (export/OSC); pollers never wait on it
         busyCountPerOsc[idx].fetch_sub(1, std::memory_order_relaxed);
         if (job->mode == WtGenJob::Mode::Generate && job->generateTarget)
         {
