@@ -1025,6 +1025,52 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
         break;
     }
+    case MSEGStorage::segment::RATCHET_1:
+    case MSEGStorage::segment::RATCHET_2:
+    case MSEGStorage::segment::RATCHET_3:
+    case MSEGStorage::segment::RATCHET_4:
+    case MSEGStorage::segment::RATCHET_5:
+    case MSEGStorage::segment::RATCHET_6:
+    case MSEGStorage::segment::RATCHET_7:
+    case MSEGStorage::segment::RATCHET_8:
+    {
+        const auto numRatchets = (int)r.type - (int)MSEGStorage::segment::RATCHET_1 + 1;
+        const float frac = timeAlongSegment / r.duration;
+
+        // identify the discrete start time of the current ratchet
+        const float totalFrac = frac * numRatchets;
+        const float ratchetIdx = std::floor(totalFrac);
+        const float ratchetStartFrac = ratchetIdx / numRatchets;
+        float localFrac = totalFrac - ratchetIdx;
+
+        // calculate global envelope at the start of each ratchet
+        const float cpX = std::clamp(r.cpduration, 0.0001f, 0.9999f);
+        float startEnv = 0.0f;
+
+        if (ratchetStartFrac < cpX)
+            startEnv = lv0 + (lcpv - lv0) * (ratchetStartFrac / cpX);
+        else
+            startEnv = lcpv + (lv1 - lcpv) * ((ratchetStartFrac - cpX) / (1.0f - cpX));
+
+        // Force the final sample to connect cleanly to the next segment
+        if (frac >= 1.0f)
+            localFrac = lv1;
+
+        // Deform swings exponential factor k between 12 and 0, with k = 3 at Deform = 0
+        float k = 3.0f;
+
+        if (df < 0.f)
+            k += abs(df) * 9.f;
+        else if (df > 0.f)
+            k -= df * 3.f;
+
+        // exponential charge formula
+        float curve = (1.0f - exp(-k * localFrac)) / (1.0f - exp(-k));
+
+        res = startEnv + (lv1 - startEnv) * curve;
+
+        break;
+    }
     case MSEGStorage::segment::RESERVED:
         // Should never occur
         break;
@@ -1489,6 +1535,13 @@ void resetControlPoint(MSEGStorage *ms, int idx)
     if (ms->segments[idx].type == MSEGStorage::segment::QUAD_BEZIER)
     {
         ms->segments[idx].cpv = 0.5 * (ms->segments[idx].v0 + ms->segments[idx].nv1);
+    }
+
+    if (ms->segments[idx].type >= MSEGStorage::segment::RATCHET_1 &&
+        ms->segments[idx].type <= MSEGStorage::segment::RATCHET_8)
+    {
+        ms->segments[idx].cpduration = 0.0;
+        ms->segments[idx].cpv = 1.0;
     }
 }
 

@@ -549,6 +549,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 // Ones where we scan the entire square
                 case MSEGStorage::segment::QUAD_BEZIER:
                 case MSEGStorage::segment::BROWNIAN:
+                case MSEGStorage::segment::RATCHET_1:
+                case MSEGStorage::segment::RATCHET_2:
+                case MSEGStorage::segment::RATCHET_3:
+                case MSEGStorage::segment::RATCHET_4:
+                case MSEGStorage::segment::RATCHET_5:
+                case MSEGStorage::segment::RATCHET_6:
+                case MSEGStorage::segment::RATCHET_7:
+                case MSEGStorage::segment::RATCHET_8:
                     horizontalMotion = true;
                     break;
                 // Ones where we stay within the range
@@ -1620,8 +1628,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             };
 
             const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
-            const bool is2Dcp = ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
-                                ms->segments[h.associatedSegment].type == type::BROWNIAN;
+            const bool is2Dcp =
+                ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
+                ms->segments[h.associatedSegment].type == type::BROWNIAN ||
+                (ms->segments[h.associatedSegment].type >= MSEGStorage::segment::RATCHET_1 &&
+                 ms->segments[h.associatedSegment].type <= MSEGStorage::segment::RATCHET_8);
             const bool readoutHasTwoRows = h.zoneSubType != hotzone::SEGMENT_CONTROL ||
                                            (h.zoneSubType == hotzone::SEGMENT_CONTROL && is2Dcp);
 
@@ -2951,8 +2962,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         using type = MSEGStorage::segment::Type;
 
-        const bool is2Dcp =
-            ms->segments[i].type == type::QUAD_BEZIER || ms->segments[i].type == type::BROWNIAN;
+        const bool is2Dcp = ms->segments[i].type == type::QUAD_BEZIER ||
+                            ms->segments[i].type == type::BROWNIAN ||
+                            (ms->segments[i].type >= MSEGStorage::segment::RATCHET_1 &&
+                             ms->segments[i].type <= MSEGStorage::segment::RATCHET_8);
 
         float *propValue = nullptr;
         std::string propName;
@@ -3066,6 +3079,61 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         contextMenu.addSeparator();
 
+        auto typeTo = [this, &contextMenu, t, tts](std::string n, MSEGStorage::segment::Type type) {
+            contextMenu.addItem(
+                n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
+                    // ADJUST HERE
+                    Surge::MSEG::changeTypeAt(this->ms, t, type);
+
+                    for (auto &h : hotzones)
+                    {
+                        if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
+                            h.type == hotzone::MOUSABLE_NODE &&
+                            h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                        {
+                            this->ms->segments[h.associatedSegment].type = type;
+                        }
+                    }
+
+                    pushToUndo();
+                    modelChanged();
+                });
+        };
+
+        typeTo("Hold", type::HOLD);
+        typeTo("Linear", type::LINEAR);
+        typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
+        typeTo("Bezier", type::QUAD_BEZIER);
+
+        contextMenu.addSeparator();
+
+        typeTo("Sine", type::SINE);
+        typeTo("Triangle", type::TRIANGLE);
+        typeTo("Sawtooth", type::SAWTOOTH);
+        typeTo("Square", type::SQUARE);
+
+        contextMenu.addSeparator();
+
+        for (int i = 0; i < 8; i++)
+        {
+            typeTo(fmt::format("Ratchet {:d}", i + 1), static_cast<type>(type::RATCHET_1 + i));
+        }
+
+        contextMenu.addSeparator();
+
+        typeTo("Bump", type::BUMP);
+        typeTo("Stairs", type::STAIRS);
+        typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
+        typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
+
+        contextMenu.addColumnBreak();
+
+        auto ecomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("", hurl);
+
+        contextMenu.addCustomItem(-1, std::move(ecomp), nullptr, ecomp->getTitle());
+
+        contextMenu.addSeparator();
+
         const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
         contextMenu.addItem(
@@ -3075,8 +3143,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode), true, false,
             [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::value, iw.toInt()); });
 
-        const bool is2Dcp =
-            ms->segments[tts].type == type::QUAD_BEZIER || ms->segments[tts].type == type::BROWNIAN;
+        const bool is2Dcp = ms->segments[tts].type == type::QUAD_BEZIER ||
+                            ms->segments[tts].type == type::BROWNIAN ||
+                            (ms->segments[tts].type >= MSEGStorage::segment::RATCHET_1 &&
+                             ms->segments[tts].type <= MSEGStorage::segment::RATCHET_8);
 
         if (ms->segments[tts].type != type::HOLD)
         {
@@ -3410,49 +3480,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                  });
 
             contextMenu.addSubMenu("Settings", settingsMenu);
-
-            contextMenu.addSeparator();
-
-            auto typeTo = [this, &contextMenu, t, tts](std::string n,
-                                                       MSEGStorage::segment::Type type) {
-                contextMenu.addItem(
-                    n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
-                        // ADJUST HERE
-                        Surge::MSEG::changeTypeAt(this->ms, t, type);
-
-                        for (auto &h : hotzones)
-                        {
-                            if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
-                                h.type == hotzone::MOUSABLE_NODE &&
-                                h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
-                            {
-                                this->ms->segments[h.associatedSegment].type = type;
-                            }
-                        }
-
-                        pushToUndo();
-                        modelChanged();
-                    });
-            };
-
-            typeTo("Hold", type::HOLD);
-            typeTo("Linear", type::LINEAR);
-            typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
-            typeTo("Bezier", type::QUAD_BEZIER);
-
-            contextMenu.addSeparator();
-
-            typeTo("Sine", type::SINE);
-            typeTo("Triangle", type::TRIANGLE);
-            typeTo("Sawtooth", type::SAWTOOTH);
-            typeTo("Square", type::SQUARE);
-
-            contextMenu.addSeparator();
-
-            typeTo("Bump", type::BUMP);
-            typeTo("Stairs", type::STAIRS);
-            typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
-            typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
 
             contextMenu.showMenuAsync(sge->popupMenuOptions());
         }
