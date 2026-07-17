@@ -742,6 +742,80 @@ void OverlayWrapper::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
+bool OverlayWrapper::keyPressed(const juce::KeyPress &key)
+{
+    if (!editor || !editor->keyMapManager || !editor->getUseKeyboardShortcuts())
+        return false;
+
+    auto action = editor->keyMapManager->matches(key);
+
+    if (!action.has_value() || (*action != Surge::GUI::FOCUS_NEXT_CONTROL_GROUP &&
+                                *action != Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP))
+        return false;
+
+    auto firstFocusTarget = [](juce::Component *g) -> juce::Component * {
+        if (!g || !g->isShowing())
+            return nullptr;
+
+        if (g->getWantsKeyboardFocus())
+            return g;
+
+        juce::Component *best{nullptr};
+
+        for (auto c : g->getChildren())
+        {
+            if (!c->getWantsKeyboardFocus() || !c->isShowing())
+                continue;
+            if (!best || c->getExplicitFocusOrder() < best->getExplicitFocusOrder())
+                best = c;
+        }
+
+        return best;
+    };
+
+    std::vector<juce::Component *> groups;
+
+    if (auto oc = getPrimaryChildAsOverlayComponent())
+    {
+        for (auto g : oc->getGroupNavigationComponents())
+        {
+            if (firstFocusTarget(g))
+                groups.push_back(g);
+        }
+    }
+
+    if (groups.size() < 2)
+    {
+        editor->enqueueImmediateAccessibleAnnouncement("No other control groups in this window");
+        return true;
+    }
+
+    auto next = *action == Surge::GUI::FOCUS_NEXT_CONTROL_GROUP;
+    int n = (int)groups.size(), focused = -1;
+
+    for (int i = 0; i < n; ++i)
+    {
+        if (groups[i]->hasKeyboardFocus(true))
+        {
+            focused = i;
+            break;
+        }
+    }
+
+    // focus outside any group (say, on the titlebar buttons): next goes
+    // to the first group, prior to the last
+    int target;
+
+    if (focused < 0)
+        target = next ? 0 : n - 1;
+    else
+        target = (focused + (next ? 1 : n - 1)) % n;
+
+    Surge::GUI::grabKeyboardFocusIfAllowed(firstFocusTarget(groups[target]));
+
+    return true;
+}
+
 OverlayComponent *OverlayWrapper::getPrimaryChildAsOverlayComponent()
 {
     return dynamic_cast<OverlayComponent *>(primaryChild.get());

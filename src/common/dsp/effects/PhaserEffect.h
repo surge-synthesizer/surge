@@ -40,8 +40,14 @@ class PhaserEffect
     virtual ~PhaserEffect() = default;
 
     virtual void init_ctrltypes() override;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
+
+    // Apply the sst-effects LFO waveform reorder (streaming version 1 -> 2) to a
+    // Surge FxStorage. Shared by the synth patch stream and the surge-fx plugin.
+    static void remapLegacyWaveform(FxStorage *fxdata);
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_PHASEREFFECT_H

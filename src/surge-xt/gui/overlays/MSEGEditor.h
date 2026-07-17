@@ -62,6 +62,10 @@ struct MSEGEditor : public OverlayComponent,
     void resized() override;
     void paint(juce::Graphics &g) override;
 
+    // the canvas and the control strip are the two in-window control groups
+    // for the FOCUS_NEXT/PRIOR_CONTROL_GROUP shortcuts (Alt+. / Alt+, by default)
+    std::vector<juce::Component *> getGroupNavigationComponents() override;
+
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
     {
         if (p->ctrlgroup == cg_LFO)
@@ -71,6 +75,7 @@ struct MSEGEditor : public OverlayComponent,
 
     std::unique_ptr<MSEGControlRegion> controls;
     std::unique_ptr<MSEGCanvas> canvas;
+    SurgeGUIEditor *sge{nullptr};
 
     std::function<void()> onModelChanged = []() {};
 

@@ -677,40 +677,80 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     // Assign the dynamic name handlers
     static struct : public ParameterDynamicNameFunction
     {
+        const std::string *formulaLabel(const Parameter *p) const
+        {
+            if (!p || !p->storage)
+            {
+                return nullptr;
+            }
+
+            auto cge = p->ctrlgroup_entry - ms_lfo1;
+            auto &lf = p->storage->getPatch().scene[p->scene - 1].lfo[cge];
+
+            if (lf.shape.val.i != lt_formula)
+            {
+                return nullptr;
+            }
+
+            auto &fs = p->storage->getPatch().formulamods[p->scene - 1][cge];
+
+            if (!fs.labels)
+            {
+                return nullptr;
+            }
+
+            switch (p->ctrltype)
+            {
+            case ct_lfoamplitude:
+                return &fs.labels->amplitude;
+            case ct_lfodeform:
+                return &fs.labels->deform;
+            case ct_lfophaseshuffle:
+                return &fs.labels->phase;
+            case ct_lforate_deactivatable:
+                return &fs.labels->rate;
+            default:
+                return nullptr;
+            }
+        }
+
         const char *getName(const Parameter *p) const override
         {
             static char res[TXT_SIZE];
 
-            if (p && p->storage)
+            // Check for Formula script-set label for the four main LFO sliders
+            auto l = formulaLabel(p);
+            if (l && !l->empty())
             {
-                auto cge = p->ctrlgroup_entry - ms_lfo1;
-                auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
-                auto tp = lf->shape.val.i;
+                snprintf(res, TXT_SIZE, "%s", l->c_str());
+                return res;
+            }
 
-                switch (tp)
+            // Phase slider has a dynamic default for the Step Sequencer
+            if (p->ctrltype == ct_lfophaseshuffle)
+            {
+                if (p->storage)
                 {
-                case lt_stepseq:
-                    if (lf->rate.deactivated)
-                    {
-                        snprintf(res, TXT_SIZE, "Phase");
-                    }
-                    else
+                    auto cge = p->ctrlgroup_entry - ms_lfo1;
+                    auto &lf = p->storage->getPatch().scene[p->scene - 1].lfo[cge];
+                    if (lf.shape.val.i == lt_stepseq && !lf.rate.deactivated)
                     {
                         snprintf(res, TXT_SIZE, "Shuffle");
                     }
-                    break;
-                default:
-                    snprintf(res, TXT_SIZE, "Phase");
-                    break;
+                    else
+                    {
+                        snprintf(res, TXT_SIZE, "Phase");
+                    }
                 }
+                else
+                {
+                    snprintf(res, TXT_SIZE, "Phase/Shuffle");
+                }
+                return res;
             }
-            else
-            {
-                snprintf(res, TXT_SIZE, "Phase/Shuffle");
-            }
-            return res;
+            return p->dispname;
         }
-    } lfoPhaseName;
+    } lfoSliderName;
 
     // Assign the dynamic deactivation handlers
     static struct OscAudioInDeact : public ParameterDynamicDeactivationFunction
@@ -774,9 +814,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
         for (int lf = 0; lf < n_lfos; ++lf)
         {
-            scene[sc].lfo[lf].start_phase.dynamicName = &lfoPhaseName;
             scene[sc].lfo[lf].start_phase.dynamicDeactivation = &lfoRatePhaseDeact;
             scene[sc].lfo[lf].rate.dynamicDeactivation = &lfoRatePhaseDeact;
+            scene[sc].lfo[lf].start_phase.dynamicName = &lfoSliderName;
+            scene[sc].lfo[lf].rate.dynamicName = &lfoSliderName;
+            scene[sc].lfo[lf].deform.dynamicName = &lfoSliderName;
+            scene[sc].lfo[lf].magnitude.dynamicName = &lfoSliderName;
 
             auto *curr = &(scene[sc].lfo[lf].delay), *end = &(scene[sc].lfo[lf].release);
 

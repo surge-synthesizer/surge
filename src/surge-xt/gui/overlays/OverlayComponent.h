@@ -27,6 +27,7 @@
 #include "UserDefaults.h"
 #include <optional>
 #include <utility>
+#include <vector>
 
 class Parameter;
 class SurgePatch;
@@ -55,6 +56,10 @@ struct OverlayComponent : juce::Component
 
     // For A11Y: should the overlay be granted keyboard focus as soon as it appears.
     virtual bool wantsInitialKeyboardFocus() const { return true; }
+
+    // Components acting as keyboard control groups for in-window group
+    // navigation, in navigation order. Empty = window has no internal groups.
+    virtual std::vector<juce::Component *> getGroupNavigationComponents() { return {}; }
 
     /*
      * This is called when a parent wrapper finally decides to show me, which will

@@ -469,6 +469,7 @@ bool Parameter::is_discrete_selection() const
     case ct_airwindows_fx:
     case ct_flangermode:
     case ct_fxlfowave:
+    case ct_fxlfowave_extended:
     case ct_distortion_waveshape:
     case ct_reson_mode:
     case ct_vocoder_bandcount:
@@ -1168,6 +1169,12 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_int;
         val_min.i = 0;
         val_max.i = 5; // sin, tri, saw, s&g, s&h, square
+        val_default.i = 0;
+        break;
+    case ct_fxlfowave_extended:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = 6; // sin, tri, ramp, saw, square, noise, s&h
         val_default.i = 0;
         break;
     case ct_twist_engine:
@@ -2080,7 +2087,10 @@ bool Parameter::supportsDynamicName() const
     switch (ctrltype)
     {
     case ct_modern_trimix:
+    case ct_lfoamplitude:
+    case ct_lfodeform:
     case ct_lfophaseshuffle:
+    case ct_lforate_deactivatable:
     case ct_percent:
     case ct_percent_bipolar:
     case ct_percent_bipolar_deactivatable:
@@ -4140,6 +4150,34 @@ std::string Parameter::get_display(bool external, float ef) const
                 break;
             case 5:
                 txt = "Square";
+                break;
+            }
+        }
+        break;
+        case ct_fxlfowave_extended:
+        {
+            switch (i)
+            {
+            case 0:
+                txt = "Sine";
+                break;
+            case 1:
+                txt = "Triangle";
+                break;
+            case 2:
+                txt = "Ramp";
+                break;
+            case 3:
+                txt = "Saw";
+                break;
+            case 4:
+                txt = "Square";
+                break;
+            case 5:
+                txt = "Noise";
+                break;
+            case 6:
+                txt = "Sample & Hold";
                 break;
             }
         }

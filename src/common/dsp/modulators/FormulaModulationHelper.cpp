@@ -128,6 +128,12 @@ end
     };
     s.lfo_id = computeLfoId(fs);
 
+    // Reset the dynamic slider labels on every display script eval
+    if (is_display)
+    {
+        fs->labels.reset();
+    }
+
     // OK so now evaluate the formula. This is a mistake - the loading and
     // compiling can be expensive so lets look it up by hash first
     auto h = fs->formulaHash;
@@ -406,6 +412,33 @@ end
                     }
 
                     lua_pop(s.L, 1); // Pop use_rate
+                }
+
+                // Display only, optional labels table for setting LFO slider dynamic names
+                if (is_display)
+                {
+                    auto gl = Surge::LuaSupport::SGLD("prepareForEvaluation::labelsread", s.L);
+
+                    lua_getfield(s.L, -1, "labels");
+                    if (lua_istable(s.L, -1))
+                    {
+                        auto labels = std::make_shared<FormulaModulatorStorage::Labels>();
+                        auto readLabel = [&s](const char *key, std::string &dest) {
+                            lua_getfield(s.L, -1, key);
+                            if (lua_isstring(s.L, -1))
+                            {
+                                dest = lua_tostring(s.L, -1);
+                            }
+                            lua_pop(s.L, 1); // Pop the value
+                        };
+
+                        readLabel("amplitude", labels->amplitude);
+                        readLabel("deform", labels->deform);
+                        readLabel("phase", labels->phase);
+                        readLabel("rate", labels->rate);
+                        fs->labels = labels;
+                    }
+                    lua_pop(s.L, 1); // Pop labels (table or non-table)
                 }
                 lua_pop(s.L, 1); // Pop the modulator state
             }
@@ -843,27 +876,27 @@ enum showFilter
 bool isUserDefined(std::string str)
 {
     // clang-format off
-    static constexpr std::array<std::string_view, 58> keywords = {
+    static constexpr std::array<std::string_view, 59> keywords = {
         "amplitude",     "attack",        "block_size",
         "cc_breath",     "cc_expr",       "cc_mw",
         "cc_sus",        "chan_at",       "channel",
         "clamp_output",  "cycle",         "decay",
         "deform",        "delay",         "highest_key",
         "hold",          "intphase",      "is_rendering_to_ui",
-        "is_voice",      "key",           "latest_key",
-        "lfo_id",        "lowest_key",    "macros",
-        "mpe_bend",      "mpe_bendrange", "mpe_enabled",
-        "mpe_pressure",  "mpe_timbre",    "output",
-        "pb",            "pb_range_dn",   "pb_range_up",
-        "phase",         "play_mode",     "poly_at",
-        "poly_limit",    "rate",          "rel_velocity",
-        "release",       "released",      "retrigger_AEG",
-        "retrigger_FEG", "samplerate",    "scene_mode",
-        "songpos",       "split_point",   "startphase",
-        "sustain",       "tempo",         "tuned_key",
-        "use_amplitude", "use_envelope",  "use_rate",
-        "velocity",      "voice_count",   "voice_id",
-        "subscriptions"};
+        "is_voice",      "key",           "labels",
+        "latest_key",    "lfo_id",        "lowest_key",
+        "macros",        "mpe_bend",      "mpe_bendrange",
+        "mpe_enabled",   "mpe_pressure",  "mpe_timbre",
+        "output",        "pb",            "pb_range_dn",
+        "pb_range_up",   "phase",         "play_mode",
+        "poly_at",       "poly_limit",    "rate",
+        "rel_velocity",  "release",       "released",
+        "retrigger_AEG", "retrigger_FEG", "samplerate",
+        "scene_mode",    "songpos",       "split_point",
+        "startphase",    "sustain",       "tempo",
+        "tuned_key",     "use_amplitude", "use_envelope",
+        "use_rate",      "velocity",      "voice_count",
+        "voice_id",      "subscriptions"};
     // clang-format on
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();

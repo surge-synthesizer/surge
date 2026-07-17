@@ -21,6 +21,8 @@
  */
 #include "PhaserEffect.h"
 
+#include <cmath>
+
 #include "globals.h"
 #include "sst/basic-blocks/mechanics/block-ops.h"
 #include "sst/basic-blocks/dsp/MidSide.h"
@@ -49,7 +51,7 @@ void PhaserEffect::init_ctrltypes()
     Effect::init_ctrltypes();
 
     fxdata->p[ph_mod_wave].set_name("Waveform");
-    fxdata->p[ph_mod_wave].set_type(ct_fxlfowave);
+    fxdata->p[ph_mod_wave].set_type(ct_fxlfowave_extended);
     fxdata->p[ph_mod_rate].set_name("Rate");
     fxdata->p[ph_mod_rate].set_type(ct_lforate_deactivatable);
     fxdata->p[ph_mod_depth].set_name("Depth");
@@ -95,6 +97,57 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_spread].dynamicDeactivation = &phGroupDeact;
 
     configureControlsFromFXMetadata();
+}
+
+void PhaserEffect::handleStreamingMismatches(int streamingRevision,
+                                             int currentSynthStreamingRevision)
+{
+    // These early fixups predate the move to sst-effects and were lost in that
+    // port; restore them so very old patches load as they used to.
+    if (streamingRevision <= 13)
+    {
+        fxdata->p[ph_stages].val.i = 4;
+        fxdata->p[ph_width].val.f = 0.f;
+    }
+
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[ph_mod_wave].val.i = 1;
+        fxdata->p[ph_mod_rate].deactivated = false;
+    }
+
+    if (streamingRevision <= 17)
+    {
+        fxdata->p[ph_tone].val.f = 0.f;
+        fxdata->p[ph_tone].deactivated = true;
+    }
+
+    if (streamingRevision < 30)
+    {
+        // sst-effects reordered the Phaser LFO waveforms and added a Saw (its own
+        // streaming version 1 -> 2), decoupled from the Surge stream. Surge
+        // revisions before 30 stored the old ordering, so remap the values.
+        remapLegacyWaveform(fxdata);
+    }
+}
+
+void PhaserEffect::remapLegacyWaveform(FxStorage *fxdata)
+{
+    // Bridge Surge's FxStorage to the sst-effects streaming-version-1 -> 2 remapper,
+    // which reorders the LFO waveforms and forces Stereo on for the wrapped shapes.
+    float p[n_fx_params];
+    for (int i = 0; i < n_fx_params; ++i)
+        p[i] = (fxdata->p[i].valtype == vt_int) ? (float)fxdata->p[i].val.i : fxdata->p[i].val.f;
+
+    remapParametersForStreamingVersion(1, p);
+
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        if (fxdata->p[i].valtype == vt_int)
+            fxdata->p[i].val.i = (int)std::round(p[i]);
+        else
+            fxdata->p[i].val.f = p[i];
+    }
 }
 
 const char *PhaserEffect::group_label(int id)

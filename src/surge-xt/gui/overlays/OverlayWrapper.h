@@ -144,6 +144,14 @@ struct OverlayWrapper : public juce::Component,
 
     void onSkinChanged() override;
 
+    /*
+     * Group navigation (FOCUS_NEXT/PRIOR_CONTROL_GROUP) is constrained to the
+     * groups the content exposes via getGroupNavigationComponents, wrapping
+     * around; with fewer than two groups we announce that instead. Either way
+     * the key is consumed so focus never jumps out of an open overlay.
+     */
+    bool keyPressed(const juce::KeyPress &key) override;
+
     OverlayComponent *getPrimaryChildAsOverlayComponent();
 
     /*

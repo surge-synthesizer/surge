@@ -127,6 +127,12 @@ struct MultiSwitch : public juce::Component,
     bool isAlwaysAccessibleMomentary() const { return iam; }
     void setIsAlwaysAccessibleMomentary(bool b) { iam = b; }
 
+    // When set, setupAccessibility() labels each cell from this list (row-major by
+    // selection index) instead of asking the SurgeGUIEditor for a display string, so
+    // switches with custom (non-parameter) tags can still speak proper names.
+    std::vector<std::string> accessibleCellLabels;
+    void setAccessibleCellLabels(const std::vector<std::string> &l) { accessibleCellLabels = l; }
+
     void setupAccessibility();
     std::vector<std::unique_ptr<juce::Component>> selectionComponents;
     juce::Component *getCurrentAccessibleSelectionComponent() override;

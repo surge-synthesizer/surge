@@ -954,3 +954,93 @@ TEST_CASE("Manipulation With Loop Preservation Playback", "[mseg]")
         }
     }
 }
+
+TEST_CASE("Accessible Keyboard Editing Backend Assumptions", "[mseg]")
+{
+    // The accessible MSEG editor keyboard handler
+    // (src/surge-xt/gui/overlays/MSEGEditorAccessibleKeyboard.cpp) drives these
+    // Surge::MSEG calls directly; these sections pin the behaviors it relies on.
+
+    SECTION("Split at segment midpoint with an explicit value places that node")
+    {
+        MSEGStorage ms = makeRamp4();
+
+        auto t = ms.segmentStart[1] + ms.segments[1].duration * 0.5f;
+        Surge::MSEG::splitSegment(&ms, t, 0.9f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.segmentStart[2] == Approx(t).margin(1e-5));
+        REQUIRE(ms.segments[2].v0 == Approx(0.9f).margin(1e-5));
+    }
+
+    SECTION("ExtendTo past the end appends a segment ending at the given value")
+    {
+        MSEGStorage ms = makeRamp4();
+
+        auto newEnd = ms.totalDuration + 0.125f;
+        Surge::MSEG::extendTo(&ms, newEnd, 0.5f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.totalDuration == Approx(newEnd).margin(1e-5));
+        REQUIRE(ms.segments[ms.n_activeSegments - 1].nv1 == Approx(0.5f).margin(1e-5));
+    }
+
+    SECTION("Constant total duration nudge clamps at the neighbor and keeps the total")
+    {
+        MSEGStorage ms = makeRamp4();
+        auto total = ms.totalDuration;
+
+        // node 2 nudged right by more than segment 2's width: clamps, total kept
+        Surge::MSEG::adjustDurationConstantTotalDuration(&ms, 1, 1.0f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.totalDuration == Approx(total).margin(1e-5));
+        REQUIRE(ms.segments[2].duration >= 0.f);
+        REQUIRE(ms.segmentStart[2] <= ms.segmentEnd[2] + 1e-5);
+    }
+
+    SECTION("Shifting nudge respects the maximum total duration")
+    {
+        MSEGStorage ms = makeRamp4();
+
+        Surge::MSEG::adjustDurationShiftingSubsequent(&ms, 1, 200.f, 0, 128);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.totalDuration <= 128.f + 1e-3);
+    }
+
+    SECTION("Unsplit at an interior node merges its two segments")
+    {
+        MSEGStorage ms = makeRamp4();
+
+        Surge::MSEG::unsplitSegment(&ms, ms.segmentStart[2]);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.totalDuration == Approx(1.f).margin(1e-5));
+    }
+
+    SECTION("Constrain control point clamps cpv and cpduration")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.segments[1].type = MSEGStorage::segment::QUAD_BEZIER;
+
+        ms.segments[1].cpv = 4.f;
+        ms.segments[1].cpduration = 9.f;
+        Surge::MSEG::constrainControlPointAt(&ms, 1);
+
+        REQUIRE(ms.segments[1].cpv <= 1.f);
+        REQUIRE(ms.segments[1].cpv >= -1.f);
+        REQUIRE(ms.segments[1].cpduration <= 1.f);
+        REQUIRE(ms.segments[1].cpduration >= 0.f);
+
+        ms.segments[1].cpv = -4.f;
+        ms.segments[1].cpduration = -9.f;
+        Surge::MSEG::constrainControlPointAt(&ms, 1);
+
+        REQUIRE(ms.segments[1].cpv >= -1.f);
+        REQUIRE(ms.segments[1].cpduration >= 0.f);
+    }
+}
