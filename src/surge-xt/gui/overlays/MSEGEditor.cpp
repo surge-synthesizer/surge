@@ -1546,6 +1546,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             float pxs = tpx(ms->segmentStart[ls]);
             float pxe = tpx(ms->segmentEnd[le]);
 
+            // one-past-end sentinel: loop start is pinned at the current envelope end
+            if (ls >= ms->n_activeSegments)
+            {
+                pxs = tpx(ms->segmentEnd[ms->n_activeSegments - 1]);
+            }
+
             if (!(pxs > drawArea.getRight() || pxe < drawArea.getX()))
             {
                 auto cb = skin->getColor(Colors::MSEGEditor::Loop::RegionBorder);
@@ -2022,8 +2028,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         auto drawArea = getDrawArea();
+        const auto inDrawArea =
+            (drawArea.contains(event.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
+                                                       : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
 
-        if (drawArea.contains(where))
+        if (inDrawArea)
         {
             auto tf = pxToTime();
             auto pv = pxToVal();
@@ -2916,9 +2925,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             reset = true;
 
-            if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
+            switch (h.zoneSubType)
+            {
+            case hotzone::SEGMENT_CONTROL:
             {
                 auto nextCursor = juce::MouseCursor::NormalCursor;
+
                 switch (h.segmentDirection)
                 {
                 case hotzone::VERTICAL_ONLY:
@@ -2933,11 +2945,22 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }
 
                 setMouseCursor(nextCursor);
-            }
 
-            if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                break;
+            }
+            case hotzone::SEGMENT_ENDPOINT:
             {
                 setMouseCursor(juce::MouseCursor::UpDownLeftRightResizeCursor);
+                break;
+            }
+            case hotzone::LOOP_START:
+            case hotzone::LOOP_END:
+            {
+                setMouseCursor(juce::MouseCursor::LeftRightResizeCursor);
+                break;
+            }
+            default:
+                break;
             }
         }
 
