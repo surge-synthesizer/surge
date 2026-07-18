@@ -1275,7 +1275,8 @@ void insertAtIndex(MSEGStorage *ms, int insertIndex)
 
     // Handle the loops. We have just inserted at index so if start or end
     // is later we need to push them out
-    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start >= insertIndex)
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start >= insertIndex &&
+        ms->loop_start != ms->n_activeSegments)
     {
         ms->loop_start++;
     }
@@ -1318,6 +1319,9 @@ void insertBefore(MSEGStorage *ms, float t)
 
 void extendTo(MSEGStorage *ms, float t, float nv)
 {
+    std::cout << "extendTo ENTRY: n_activeSegments=" << ms->n_activeSegments
+              << " loop_start=" << ms->loop_start << " loop_end=" << ms->loop_end << std::endl;
+
     if (ms->editMode == MSEGStorage::LFO)
     {
         return;
@@ -1347,6 +1351,9 @@ void extendTo(MSEGStorage *ms, float t, float nv)
             ms->loop_end = ms->n_activeSegments - 2;
         }
     }
+
+    std::cout << "extendTo EXIT:  n_activeSegments=" << ms->n_activeSegments
+              << " loop_start=" << ms->loop_start << " loop_end=" << ms->loop_end << std::endl;
 
     auto sn = ms->n_activeSegments - 1;
 
