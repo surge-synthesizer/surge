@@ -2253,11 +2253,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 if (fabs(ms->segmentStart[i] - t) < tEpsilon)
                 {
+                    // Use the gesture's OWN nearby value here, not the
+                    // existing curve's stale value. This snap should only
+                    // align the TIME to an existing node boundary so
+                    // leftIdx/segsAfter compute cleanly - it must never
+                    // resurrect the old value the user is actively drawing over.
+                    float gestureValue =
+                        isEnd ? freehandSamples.back().second : freehandSamples.front().second;
+
                     if (isEnd)
-                        freehandSamples.push_back({ms->segmentStart[i], ms->segments[i].v0});
+                        freehandSamples.push_back({ms->segmentStart[i], gestureValue});
                     else
                         freehandSamples.insert(freehandSamples.begin(),
-                                               {ms->segmentStart[i], ms->segments[i].v0});
+                                               {ms->segmentStart[i], gestureValue});
                     return ms->segmentStart[i];
                 }
             }
@@ -2268,11 +2276,167 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         gestureStart = snapToNearestNode(gestureStart);
         gestureEnd = snapToNearestNode(gestureEnd, true);
 
+        if (gestureStart > 0.f && gestureStart <= tEpsilon)
+        {
+            gestureStart = 0.f;
+        }
+
+        if (gestureEnd < ms->totalDuration && gestureEnd >= ms->totalDuration - tEpsilon)
+        {
+            gestureEnd = ms->totalDuration;
+        }
+
         float totalTimeSpan = gestureEnd - gestureStart;
+
+        // --- 0. Save loop marker time positions up front ---
+        //
+        // We save *time* positions now, and at the very end - once the segment
+        // array is in its final state - we look up which segment starts at that time.
+        // This is immune to however many segments got shuffled, merged, or split in between.
+        //
+        // For this to work when a loop marker's time falls inside the
+        // gesture region, we need to guarantee a node survives at exactly
+        // that time (otherwise the final lookup has nothing exact to find).
+        // That's what the pinned-time sub-range fitting below does.
+        bool hasLoopStart = ms->loop_start != MSEGStorage::kLoopPointUnset;
+        bool hasLoopEnd = ms->loop_end != MSEGStorage::kLoopPointUnset;
+
+        float loopStartTime = hasLoopStart ? ms->segmentStart[ms->loop_start] : 0.f;
+        // loop_end indexes the LAST segment included in the loop (inclusive),
+        // not a segment that starts at the loop-end marker. Its marker time
+        // is therefore that segment's END, not its start - when loop_start
+        // and loop_end reference the same single-segment loop, segmentStart
+        // would (wrongly) give the same value as loopStartTime.
+        float loopEndTime = hasLoopEnd ? ms->segmentEnd[ms->loop_end] : 0.f;
+
+        bool preserveLoopStart = hasLoopStart && (loopStartTime > gestureStart + tEpsilon) &&
+                                 (loopStartTime < gestureEnd - tEpsilon);
+        bool preserveLoopEnd = hasLoopEnd && (loopEndTime > gestureStart + tEpsilon) &&
+                               (loopEndTime < gestureEnd - tEpsilon);
+
+        // Pinned times: gestureStart, any interior loop marker(s), gestureEnd.
+        // Deduped with tEpsilon tolerance - this is what makes loop_start ==
+        // loop_end (same node) fall out for free: both collapse to a single
+        // pinned time instead of creating a degenerate zero-length sub-range.
+        std::vector<float> pinnedTimes = {gestureStart};
+
+        if (preserveLoopStart)
+        {
+            pinnedTimes.push_back(loopStartTime);
+        }
+
+        if (preserveLoopEnd)
+        {
+            pinnedTimes.push_back(loopEndTime);
+        }
+
+        pinnedTimes.push_back(gestureEnd);
+
+        std::sort(pinnedTimes.begin(), pinnedTimes.end());
+        pinnedTimes.erase(std::unique(pinnedTimes.begin(), pinnedTimes.end(),
+                                      [&](float a, float b) { return fabs(a - b) < tEpsilon; }),
+                          pinnedTimes.end());
+
+        // Make sure every pinned time actually has a sample sitting exactly on
+        // it, so each sub-range fit below starts/ends precisely there. Where
+        // one doesn't exist yet (a loop marker time the freehand stroke just
+        // passed over), synthesize one via linear interpolation against the
+        // raw gesture samples - it only needs to anchor the split, not be a
+        // perfect representation of the stroke at that instant.
+        //
+        // IMPORTANT: interpAt must read from a snapshot taken before this
+        // loop starts appending new samples, not the live freehandSamples
+        // array. freehandSamples is only re-sorted once, AFTER this whole
+        // loop finishes - so once the first pinned sample gets appended
+        // (out of chronological order, at the back of the vector), a
+        // second interpAt() call against the live array sees a corrupted
+        // "back()" and can return a value from entirely the wrong part of
+        // the stroke.
+        const std::vector<std::pair<float, float>> sortedStrokeSamples = freehandSamples;
+
+        auto interpAt = [&](float t) -> float {
+            if (t <= sortedStrokeSamples.front().first)
+                return sortedStrokeSamples.front().second;
+            if (t >= sortedStrokeSamples.back().first)
+                return sortedStrokeSamples.back().second;
+
+            for (size_t i = 1; i < sortedStrokeSamples.size(); ++i)
+            {
+                if (sortedStrokeSamples[i].first >= t)
+                {
+                    float t0 = sortedStrokeSamples[i - 1].first, t1 = sortedStrokeSamples[i].first;
+                    float v0 = sortedStrokeSamples[i - 1].second,
+                          v1 = sortedStrokeSamples[i].second;
+                    float a = (t1 > t0) ? (t - t0) / (t1 - t0) : 0.f;
+                    return v0 + a * (v1 - v0);
+                }
+            }
+
+            return sortedStrokeSamples.back().second;
+        };
+
+        for (float t : pinnedTimes)
+        {
+            bool exists = std::any_of(freehandSamples.begin(), freehandSamples.end(),
+                                      [&](auto &s) { return fabs(s.first - t) < 1e-5f; });
+
+            if (!exists)
+            {
+                freehandSamples.push_back({t, interpAt(t)});
+            }
+        }
+
+        std::sort(freehandSamples.begin(), freehandSamples.end(),
+                  [](const auto &a, const auto &b) { return a.first < b.first; });
+
+        // Sub-ranges between consecutive pinned times, as index ranges into
+        // freehandSamples (inclusive on both ends - shared boundary sample).
+        struct SubRange
+        {
+            size_t beginIdx, endIdx;
+        };
+
+        std::vector<SubRange> subRanges;
+
+        for (size_t p = 0; p + 1 < pinnedTimes.size(); ++p)
+        {
+            float tA = pinnedTimes[p], tB = pinnedTimes[p + 1];
+            size_t iA = 0, iB = freehandSamples.size() - 1;
+            bool foundA = false, foundB = false;
+
+            for (size_t i = 0; i < freehandSamples.size(); ++i)
+            {
+                if (!foundA && fabs(freehandSamples[i].first - tA) < 1e-5f)
+                {
+                    iA = i;
+                    foundA = true;
+                }
+
+                if (fabs(freehandSamples[i].first - tB) < 1e-5f)
+                {
+                    iB = i;
+                    foundB = true;
+                }
+            }
+
+            if (foundA && foundB && iB > iA)
+            {
+                subRanges.push_back({iA, iB});
+            }
+        }
 
         // --- 1. Split at gesture boundaries ---
         for (float t : {gestureStart, gestureEnd})
         {
+            // Nothing to split at the very start/end of the MSEG - those are
+            // terminal boundaries, not points inside a segment, and there's
+            // already a natural boundary there (segment 0 always starts at
+            // 0, and the last segment always ends at totalDuration).
+            if (t <= tEpsilon || t >= ms->totalDuration - tEpsilon)
+            {
+                continue;
+            }
+
             int seg = Surge::MSEG::timeToSegment(ms, t);
 
             if (seg >= 0 && fabs(t - ms->segmentStart[seg]) > tEpsilon &&
@@ -2330,16 +2494,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                     ms->n_activeSegments--;
 
-                    if (ms->loop_start > i)
-                    {
-                        ms->loop_start--;
-                    }
-
-                    if (ms->loop_end > i)
-                    {
-                        ms->loop_end--;
-                    }
-
                     Surge::MSEG::rebuildCache(ms);
 
                     deleted = true;
@@ -2350,7 +2504,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         // --- 3. Run RDP on each sub-range between consecutive pinned times
-        //        collecting all fitted segments into one vector ---
+        //
+        //        ...while collecting all fitted segments into one vector.
+        //        Fitting each pinned interval independently (rather than the whole
+        //        gesture in one call) is what guarantees a segment boundary lands
+        //        exactly on a loop marker time: RDP always terminates a segment at
+        //        samples.front()/back() of whatever span it's given, so handing it
+        //        one span per pinned interval forces the split there.
         std::vector<MSEGStorage::segment> fitted;
 
         // Count how many segments currently span the gesture region
@@ -2371,11 +2531,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         float epsilon = std::max(0.05f, gestureValueRange * 0.05f); // 5% of gesture value range
 
+        auto fitAllSubRanges = [&](float eps, std::vector<MSEGStorage::segment> &out) {
+            out.clear();
+
+            for (auto &sr : subRanges)
+            {
+                std::span<const std::pair<float, float>> sub(freehandSamples.data() + sr.beginIdx,
+                                                             sr.endIdx - sr.beginIdx + 1);
+
+                Surge::MSEG::freehandRDP(sub, eps, totalTimeSpan, out);
+            }
+        };
+
         for (int iter = 0; iter < 16; ++iter)
         {
-            fitted.clear();
-
-            Surge::MSEG::freehandRDP(freehandSamples, epsilon, totalTimeSpan, fitted);
+            fitAllSubRanges(epsilon, fitted);
 
             if ((int)fitted.size() <= budget)
             {
@@ -2398,7 +2568,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 float epMid = (epLo2 + epHi2) * 0.5f;
                 std::vector<MSEGStorage::segment> candidate;
 
-                Surge::MSEG::freehandRDP(freehandSamples, epMid, totalTimeSpan, candidate);
+                fitAllSubRanges(epMid, candidate);
 
                 if ((float)candidate.size() / totalTimeSpan <= 16.f || epMid >= 0.1f)
                 {
@@ -2411,7 +2581,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         // --- 4. Write fitted segments directly into ms->segments[] ---
-        int leftIdx = Surge::MSEG::timeToSegment(ms, gestureStart + tEpsilon);
+        int leftIdxRaw = Surge::MSEG::timeToSegment(ms, gestureStart + tEpsilon);
+        int leftIdx = leftIdxRaw;
 
         if (leftIdx < 0)
         {
@@ -2428,7 +2599,52 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (newTotal > max_msegs)
         {
             newCount = max_msegs - leftIdx - segsAfter;
-            fitted.resize(newCount);
+            newCount = std::max(1, newCount);
+
+            if (newCount < (int)fitted.size())
+            {
+                // Collapse the excess into the last kept segment instead of
+                // just resizing it away. A plain resize() silently drops
+                // whatever time span those trailing segments covered, which
+                // shifts every segment after the gesture region - including
+                // the whole point of step 5 below, which relies on segments
+                // outside the gesture region never having moved in absolute
+                // time. Losing fidelity here is fine (this is already a
+                // last-resort budget cap); losing time span is not.
+                float droppedDuration = 0.f;
+
+                for (int i = newCount; i < (int)fitted.size(); ++i)
+                {
+                    droppedDuration += fitted[i].duration;
+                }
+
+                fitted.resize(newCount);
+                fitted.back().duration += droppedDuration;
+            }
+        }
+
+        // Defensive: guarantee the fitted segments' total duration exactly
+        // matches the gesture region span, regardless of any float
+        // accumulation or fitting edge case. Everything after the gesture
+        // region - and the loop marker relocation in step 5 - depends on
+        // this being exact. If it drifts even slightly, a marker time
+        // outside the gesture region can miss the lookup below and fall
+        // back to a nearest-match that isn't actually close.
+        if (!fitted.empty())
+        {
+            float fittedDurationSum = 0.f;
+
+            for (auto &seg : fitted)
+            {
+                fittedDurationSum += seg.duration;
+            }
+
+            float durationError = totalTimeSpan - fittedDurationSum;
+
+            if (fabs(durationError) > 1e-6f)
+            {
+                fitted.back().duration += durationError;
+            }
         }
 
         // Shift segments after gesture region
@@ -2448,23 +2664,139 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // Fix right boundary v0
         if (leftIdx + newCount < ms->n_activeSegments)
         {
+            std::cout << "commitFreehandGesture BOUNDARY-V0: took INNER branch, writing segments["
+                      << (leftIdx + newCount) << "].v0=" << freehandSamples.back().second
+                      << std::endl;
             ms->segments[leftIdx + newCount].v0 = freehandSamples.back().second;
         }
-
-        // --- 5. Remap loop markers by saved time positions ---
-        int indexDelta = newCount - 1;
-
-        if (ms->loop_start >= leftIdx + 1)
+        else if (ms->endpointMode != MSEGStorage::EndpointMode::LOCKED)
         {
-            ms->loop_start += indexDelta;
+            // The gesture reached the very end of the MSEG - there's no
+            // "next segment" for the last fitted segment's end value to
+            // come from. That value instead lives in the one-past-the-end
+            // slot that rebuildCache() reads as nv1 for the final segment,
+            // and nothing else in this function ever touches it, so it was
+            // silently left stale.
+            std::cout
+                << "commitFreehandGesture BOUNDARY-V0: took TERMINAL branch, writing segments["
+                << ms->n_activeSegments << "].v0=" << freehandSamples.back().second << std::endl;
+            ms->segments[ms->n_activeSegments - 1].nv1 = freehandSamples.back().second;
+        }
+        else
+        {
+            // Endpoints are linked: rebuildCache() unconditionally mirrors
+            // nv1 of the last segment from segments[0].v0, so segments[0].v0
+            // is the only real source of truth for both ends. Writing the
+            // terminal slot here would just be ignored. To make the
+            // gesture's actual drawn ending value "stick" under linking, we
+            // have to drive it through segments[0].v0 instead - which also
+            // correctly moves the start node to match, since that's what
+            // linking means.
+            std::cout << "commitFreehandGesture BOUNDARY-V0: took LOCKED-TERMINAL branch, writing "
+                         "segments[0].v0="
+                      << freehandSamples.back().second << std::endl;
+            ms->segments[0].v0 = freehandSamples.back().second;
         }
 
-        if (ms->loop_end >= leftIdx + 1)
-        {
-            ms->loop_end += indexDelta;
-        }
-
+        // Cache needs to be fresh before we can look up segments by time below.
         Surge::MSEG::rebuildCache(ms);
+
+        // --- 5. Relocate loop markers by their saved time positions ---
+        //
+        // Loop markers outside of the gesture region never moved in absolute time,
+        // so this finds them exactly. Markers inside the gesture region were pinned above,
+        // so a segment boundary is guaranteed to exist at their saved time too.
+        //
+        // loop_start and loop_end need DIFFERENT lookups: loop_start is the
+        // index of the segment that STARTS the loop, but loop_end is the
+        // index of the segment that ENDS the loop (the last segment
+        // included in it) - so we search segmentStart[] for one and
+        // segmentEnd[] for the other.
+        auto findSegmentIndexByStart = [&](float t) -> int {
+            // Closest match within tolerance, not first match - a dense fit
+            // can pack multiple segment boundaries within tEpsilon of each
+            // other, and the pin only guarantees an exact node exists at t,
+            // not that it's the only candidate within tolerance.
+            int best = -1;
+            float bestDist = std::numeric_limits<float>::max();
+
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentStart[i] - t);
+
+                if (d < tEpsilon && d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            if (best >= 0)
+            {
+                return best;
+            }
+
+            // Shouldn't happen given the pinning guarantee above, but fall
+            // back to the nearest segment start rather than leaving the
+            // marker on a stale/meaningless index.
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentStart[i] - t);
+
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            return best;
+        };
+
+        auto findSegmentIndexByEnd = [&](float t) -> int {
+            int best = -1;
+            float bestDist = std::numeric_limits<float>::max();
+
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentEnd[i] - t);
+
+                if (d < tEpsilon && d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            if (best >= 0)
+            {
+                return best;
+            }
+
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentEnd[i] - t);
+
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            return best;
+        };
+
+        if (hasLoopStart)
+        {
+            ms->loop_start = findSegmentIndexByStart(loopStartTime);
+        }
+
+        if (hasLoopEnd)
+        {
+            ms->loop_end = findSegmentIndexByEnd(loopEndTime);
+        }
+
         pushToUndo();
         modelChanged();
         repaint();
