@@ -1316,14 +1316,7 @@ void extendTo(MSEGStorage *ms, float t, float nv)
 
     if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
     {
-        // The first point has to match where I just clicked. Adjust it and its control point
-        float cpdratio = 0.5;
-
-        if (ms->segments[0].duration > 0)
-        {
-            cpdratio = ms->segments[0].cpduration / ms->segments[0].duration;
-        }
-
+        // The first point has to match where I just clicked. Adjust it
         float cpvratio = 0.5;
 
         if (ms->segments[0].nv1 != ms->segments[0].v0)
@@ -1333,7 +1326,6 @@ void extendTo(MSEGStorage *ms, float t, float nv)
         }
 
         ms->segments[0].v0 = nv;
-        ms->segments[0].cpduration = cpdratio * ms->segments[0].duration;
         ms->segments[0].cpv =
             (ms->segments[0].nv1 - ms->segments[0].v0) * cpvratio + ms->segments[0].v0;
     }
@@ -1438,7 +1430,6 @@ void unsplitSegment(MSEGStorage *ms, float t, bool wrapTime)
         return;
     }
 
-    float cpdratio = ms->segments[prior].cpduration / ms->segments[prior].duration;
     float cpvratio = 0.5;
 
     if (ms->segments[prior].nv1 != ms->segments[prior].v0)
@@ -1449,7 +1440,7 @@ void unsplitSegment(MSEGStorage *ms, float t, bool wrapTime)
 
     ms->segments[prior].duration += ms->segments[idx].duration;
     ms->segments[prior].nv1 = ms->segments[idx].nv1;
-    ms->segments[prior].cpduration = cpdratio * ms->segments[prior].duration;
+    ms->segments[prior].cpduration = ms->segments[prior].duration;
 
     for (int i = idx; i < ms->n_activeSegments - 1; ++i)
     {
@@ -2017,13 +2008,6 @@ void adjustDurationShiftingSubsequent(MSEGStorage *ms, int idx, float dx, float 
 
     if (idx >= 0)
     {
-        auto rcv = 0.5;
-
-        if (ms->segments[idx].duration > 0)
-        {
-            rcv = ms->segments[idx].cpduration / ms->segments[idx].duration;
-        }
-
         float prior = ms->segments[idx].duration;
 
         adjustDurationInternal(ms, idx, dx, snap);
@@ -2031,8 +2015,6 @@ void adjustDurationShiftingSubsequent(MSEGStorage *ms, int idx, float dx, float 
         float after = ms->segments[idx].duration;
 
         durationChange = after - prior;
-
-        ms->segments[idx].cpduration = ms->segments[idx].duration * rcv;
     }
 
     if (ms->editMode == MSEGStorage::LFO)
@@ -2101,25 +2083,13 @@ void adjustDurationConstantTotalDuration(MSEGStorage *ms, int idx, float dx, flo
 
     if (prior >= 0)
     {
-        auto rcv = 0.5;
-
-        if (ms->segments[prior].duration > 0)
-        {
-            rcv = ms->segments[prior].cpduration / ms->segments[prior].duration;
-        }
-
         adjustDurationInternal(ms, prior, dx, snap, csum);
-        ms->segments[prior].cpduration = ms->segments[prior].duration * rcv;
         pd = ms->segments[prior].duration;
     }
 
     if (next < ms->n_activeSegments)
     {
-        auto rcv = ms->segments[next].cpduration / ms->segments[next].duration;
-
-        // offsetDuration( ms->segments[next].duration, -dx );
         ms->segments[next].duration = csum - pd;
-        ms->segments[next].cpduration = ms->segments[next].duration * rcv;
     }
 
     rebuildCache(ms);

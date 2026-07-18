@@ -499,7 +499,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         if (isLast)
                         {
                             Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx,
-                                                                          ms->hSnap, longestMSEG);
+                                                                          ms->hSnap, max_msegs);
                         }
                         else
                         {
@@ -510,7 +510,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     else
                     {
                         Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx,
-                                                                      ms->hSnap, longestMSEG);
+                                                                      ms->hSnap, max_msegs);
                     }
                     break;
                 case SINGLE:
@@ -756,7 +756,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             }
 
                             Surge::MSEG::adjustDurationShiftingSubsequent(
-                                ms, ms->n_activeSegments - 1, dx / tscale, ms->hSnap, longestMSEG);
+                                ms, ms->n_activeSegments - 1, dx / tscale, ms->hSnap, max_msegs);
                         }
                     });
 
@@ -3268,14 +3268,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             actionsMenu.addSeparator();
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), isActive, false, [this]() {
-                Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
+                Surge::MSEG::scaleDurations(this->ms, 2.0, max_msegs);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), isActive, false, [this]() {
-                Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
+                Surge::MSEG::scaleDurations(this->ms, 0.5, max_msegs);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
@@ -3510,7 +3510,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         repaint();
     }
 
-    static constexpr int longestMSEG = 128;
     static constexpr int longestSmallZoom = 32;
 
     void applyZoomPanConstraints(int activeSegment = -1, bool specialEndpoint = false)
@@ -3529,8 +3528,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             auto bd = std::max(ms->totalDuration, 1.f);
             auto longest = bd * 2;
-            if (longest > longestMSEG)
-                longest = longestMSEG;
+            if (longest > max_msegs)
+                longest = max_msegs;
             if (longest < longestSmallZoom)
                 longest = longestSmallZoom;
             if (ms->axisWidth > longest)
