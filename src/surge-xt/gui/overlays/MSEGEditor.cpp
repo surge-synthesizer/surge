@@ -21,7 +21,9 @@
  */
 
 #include "MSEGEditor.h"
+#include "MSEGEditorAccessibleKeyboard.h"
 #include "MSEGModulationHelper.h"
+#include "UserDefaults.h"
 #include "SurgeGUIUtils.h"
 #include "DebugHelpers.h"
 #include "SkinColors.h"
@@ -35,6 +37,7 @@
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
 #include "overlays/TypeinParamEditor.h"
+#include "overlays/OverlayWrapper.h"
 #include <algorithm>
 #include <set>
 #include "widgets/MenuCustomComponents.h"
@@ -88,7 +91,10 @@ struct MSEGControlRegion : public juce::Component,
         setAccessible(true);
         setTitle("Controls");
         setDescription("Controls");
-        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+        // Accessibility grouping only. A keyboardFocusContainer here would wall the
+        // widgets off from the overlay's tab order while the region itself never
+        // takes focus, leaving them unreachable by tab.
+        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
         rebuild();
     };
 
@@ -148,6 +154,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         setOpaque(true);
         setTitle("MSEG Display and Edit Canvas");
         setDescription("MSEG Display and Edit Canvas");
+        setAccessible(true);
+        setupAccessibleKeyboard();
     };
 
     enum SegmentProps
@@ -593,6 +601,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 // Ones where we scan the entire square
                 case MSEGStorage::segment::QUAD_BEZIER:
                 case MSEGStorage::segment::BROWNIAN:
+                case MSEGStorage::segment::RATCHET_1:
+                case MSEGStorage::segment::RATCHET_2:
+                case MSEGStorage::segment::RATCHET_3:
+                case MSEGStorage::segment::RATCHET_4:
+                case MSEGStorage::segment::RATCHET_5:
+                case MSEGStorage::segment::RATCHET_6:
+                case MSEGStorage::segment::RATCHET_7:
+                case MSEGStorage::segment::RATCHET_8:
                     horizontalMotion = true;
                     break;
                 // Ones where we stay within the range
@@ -1670,8 +1686,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             };
 
             const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
-            const bool is2Dcp = ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
-                                ms->segments[h.associatedSegment].type == type::BROWNIAN;
+            const bool is2Dcp =
+                ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
+                ms->segments[h.associatedSegment].type == type::BROWNIAN ||
+                (ms->segments[h.associatedSegment].type >= MSEGStorage::segment::RATCHET_1 &&
+                 ms->segments[h.associatedSegment].type <= MSEGStorage::segment::RATCHET_8);
             const bool readoutHasTwoRows = h.zoneSubType != hotzone::SEGMENT_CONTROL ||
                                            (h.zoneSubType == hotzone::SEGMENT_CONTROL && is2Dcp);
 
@@ -1758,6 +1777,25 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 g.drawText(txt2, readout, juce::Justification::centredLeft);
             }
         }
+
+        paintKeyboardCursor(g);
+    }
+
+    void paintKeyboardCursor(juce::Graphics &g)
+    {
+        if (!hasKeyboardFocus(false))
+            return;
+
+        const float handleRadius = 6.5f; // matches recalcHotZones
+        auto valpx = valToPx();
+        auto tpx = timeToPx();
+        auto pos = kbdHandler->cursorPosition();
+        auto cx = tpx(pos.first);
+        auto cy = valpx(pos.second);
+
+        g.setColour(skin->getColor(Colors::MSEGEditor::CurveHighlight));
+        g.drawEllipse(cx - handleRadius - 2, cy - handleRadius - 2, 2 * (handleRadius + 2),
+                      2 * (handleRadius + 2), 2.f);
     }
 
     juce::Point<int> mouseDownOrigin, lastPanZoomMousePos, cursorHideOrigin;
@@ -2974,8 +3012,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         using type = MSEGStorage::segment::Type;
 
-        const bool is2Dcp =
-            ms->segments[i].type == type::QUAD_BEZIER || ms->segments[i].type == type::BROWNIAN;
+        const bool is2Dcp = ms->segments[i].type == type::QUAD_BEZIER ||
+                            ms->segments[i].type == type::BROWNIAN ||
+                            (ms->segments[i].type >= MSEGStorage::segment::RATCHET_1 &&
+                             ms->segments[i].type <= MSEGStorage::segment::RATCHET_8);
 
         float *propValue = nullptr;
         std::string propName;
@@ -3089,6 +3129,61 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         contextMenu.addSeparator();
 
+        auto typeTo = [this, &contextMenu, t, tts](std::string n, MSEGStorage::segment::Type type) {
+            contextMenu.addItem(
+                n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
+                    // ADJUST HERE
+                    Surge::MSEG::changeTypeAt(this->ms, t, type);
+
+                    for (auto &h : hotzones)
+                    {
+                        if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
+                            h.type == hotzone::MOUSABLE_NODE &&
+                            h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                        {
+                            this->ms->segments[h.associatedSegment].type = type;
+                        }
+                    }
+
+                    pushToUndo();
+                    modelChanged();
+                });
+        };
+
+        typeTo("Hold", type::HOLD);
+        typeTo("Linear", type::LINEAR);
+        typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
+        typeTo("Bezier", type::QUAD_BEZIER);
+
+        contextMenu.addSeparator();
+
+        typeTo("Sine", type::SINE);
+        typeTo("Triangle", type::TRIANGLE);
+        typeTo("Sawtooth", type::SAWTOOTH);
+        typeTo("Square", type::SQUARE);
+
+        contextMenu.addSeparator();
+
+        for (int i = 0; i < 8; i++)
+        {
+            typeTo(fmt::format("Ratchet {:d}", i + 1), static_cast<type>(type::RATCHET_1 + i));
+        }
+
+        contextMenu.addSeparator();
+
+        typeTo("Bump", type::BUMP);
+        typeTo("Stairs", type::STAIRS);
+        typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
+        typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
+
+        contextMenu.addColumnBreak();
+
+        auto ecomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("", hurl);
+
+        contextMenu.addCustomItem(-1, std::move(ecomp), nullptr, ecomp->getTitle());
+
+        contextMenu.addSeparator();
+
         const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
         contextMenu.addItem(
@@ -3098,8 +3193,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode), true, false,
             [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::value, iw.toInt()); });
 
-        const bool is2Dcp =
-            ms->segments[tts].type == type::QUAD_BEZIER || ms->segments[tts].type == type::BROWNIAN;
+        const bool is2Dcp = ms->segments[tts].type == type::QUAD_BEZIER ||
+                            ms->segments[tts].type == type::BROWNIAN ||
+                            (ms->segments[tts].type >= MSEGStorage::segment::RATCHET_1 &&
+                             ms->segments[tts].type <= MSEGStorage::segment::RATCHET_8);
 
         if (ms->segments[tts].type != type::HOLD)
         {
@@ -3125,46 +3222,73 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         if (ms->editMode != MSEGStorage::LFO && ms->loopMode != MSEGStorage::LoopMode::ONESHOT)
         {
-            const int effectiveLoopStart =
-                (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
-            const int effectiveLoopEnd = (ms->loop_end == MSEGStorage::kLoopPointUnset)
-                                             ? ms->n_activeSegments - 1
-                                             : ms->loop_end;
-
-            if (tts <= effectiveLoopEnd + 1 && tts != ms->loop_start)
+            if (keyboardMenuNode >= 0)
             {
-                contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, tts]() {
-                    Surge::MSEG::setLoopStart(ms, tts);
-                    pushToUndo();
-                    modelChanged();
-                });
+                // the accessible keyboard cursor sits on a node, so the intent
+                // is exact: the loop starts or ends at this node
+                auto node = keyboardMenuNode;
+
+                if (node < ms->n_activeSegments && node != ms->loop_start)
+                {
+                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, node]() {
+                        Surge::MSEG::setLoopStart(ms, node);
+                        pushToUndo();
+                        modelChanged();
+                        if (sge)
+                            sge->enqueueImmediateAccessibleAnnouncement(
+                                fmt::format("Loop starts at node {}", node + 1));
+                    });
+                }
+
+                if (node > 0 && node - 1 != ms->loop_end)
+                {
+                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop End"), [this, node]() {
+                        Surge::MSEG::setLoopEnd(ms, node - 1);
+                        pushToUndo();
+                        modelChanged();
+                        if (sge)
+                            sge->enqueueImmediateAccessibleAnnouncement(
+                                fmt::format("Loop ends at node {}", node + 1));
+                    });
+                }
             }
-
-            if (tts >= effectiveLoopStart - 1 && tts != ms->loop_end)
+            else
             {
-                contextMenu.addItem(Surge::GUI::toOSCase("Set Loop End"), [this, tts, t]() {
-                    auto along = t - ms->segmentStart[tts];
+                if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
+                {
+                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, tts]() {
+                        Surge::MSEG::setLoopStart(ms, tts);
+                        pushToUndo();
+                        modelChanged();
+                    });
+                }
 
-                    if (ms->segments[tts].duration == 0)
-                    {
-                        along = 0;
-                    }
-                    else
-                    {
-                        along = along / ms->segments[tts].duration;
-                    }
+                if (tts >= ms->loop_start - 1 && tts != ms->loop_end)
+                {
+                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop End"), [this, tts, t]() {
+                        auto along = t - ms->segmentStart[tts];
 
-                    int target = tts;
+                        if (ms->segments[tts].duration == 0)
+                        {
+                            along = 0;
+                        }
+                        else
+                        {
+                            along = along / ms->segments[tts].duration;
+                        }
 
-                    if (along < 0.1 && tts > 0)
-                    {
-                        target = tts - 1;
-                    }
+                        int target = tts;
 
-                    Surge::MSEG::setLoopEnd(ms, target);
-                    pushToUndo();
-                    modelChanged();
-                });
+                        if (along < 0.1 && tts > 0)
+                        {
+                            target = tts - 1;
+                        }
+
+                        Surge::MSEG::setLoopEnd(ms, target);
+                        pushToUndo();
+                        modelChanged();
+                    });
+                }
             }
 
             contextMenu.addSeparator();
@@ -3407,49 +3531,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             contextMenu.addSubMenu("Settings", settingsMenu);
 
-            contextMenu.addSeparator();
-
-            auto typeTo = [this, &contextMenu, t, tts](std::string n,
-                                                       MSEGStorage::segment::Type type) {
-                contextMenu.addItem(
-                    n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
-                        // ADJUST HERE
-                        Surge::MSEG::changeTypeAt(this->ms, t, type);
-
-                        for (auto &h : hotzones)
-                        {
-                            if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
-                                h.type == hotzone::MOUSABLE_NODE &&
-                                h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
-                            {
-                                this->ms->segments[h.associatedSegment].type = type;
-                            }
-                        }
-
-                        pushToUndo();
-                        modelChanged();
-                    });
-            };
-
-            typeTo("Hold", type::HOLD);
-            typeTo("Linear", type::LINEAR);
-            typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
-            typeTo("Bezier", type::QUAD_BEZIER);
-
-            contextMenu.addSeparator();
-
-            typeTo("Sine", type::SINE);
-            typeTo("Triangle", type::TRIANGLE);
-            typeTo("Sawtooth", type::SAWTOOTH);
-            typeTo("Square", type::SQUARE);
-
-            contextMenu.addSeparator();
-
-            typeTo("Bump", type::BUMP);
-            typeTo("Stairs", type::STAIRS);
-            typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
-            typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
-
             contextMenu.showMenuAsync(sge->popupMenuOptions());
         }
     }
@@ -3473,6 +3554,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
         this->sge->forceLfoDisplayRepaint();
         onModelChanged();
+
+        kbdHandler->revalidateCursor(!kbdHandler->inFlightEdit);
+
         repaint();
     }
 
@@ -3605,6 +3689,131 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             pushToUndo();
         }
+    }
+
+    /*
+     * The accessible keyboard model: the canvas takes keyboard focus and forwards
+     * keys to a handler which edits the storage through the same Surge::MSEG API
+     * the mouse uses.
+     */
+    std::unique_ptr<MSEGAccessibleKeyboardHandler> kbdHandler;
+
+    // >= 0 while openPopup runs for the accessible keyboard cursor: the node
+    // the menu was invoked on, so position-inferred items (the loop points)
+    // can act on the exact node instead of guessing from pixel coordinates
+    int keyboardMenuNode{-1};
+
+    void setupAccessibleKeyboard()
+    {
+        setWantsKeyboardFocus(true);
+
+        kbdHandler = std::make_unique<MSEGAccessibleKeyboardHandler>();
+        kbdHandler->storage = storage;
+        kbdHandler->ms = ms;
+        kbdHandler->lfodata = lfodata;
+
+        auto &cbk = kbdHandler->cb;
+
+        cbk.announce = [this](const std::string &s) {
+            if (sge)
+                sge->enqueueImmediateAccessibleAnnouncement(s);
+        };
+        cbk.prepareForUndo = [this]() { prepareForUndo(); };
+        cbk.pushToUndo = [this]() { pushToUndo(); };
+        cbk.modelChanged = [this](int seg) { modelChanged(seg, false); };
+        cbk.openContextMenuForSegment = [this](int seg) {
+            hoveredSegment = seg;
+            keyboardMenuNode = kbdHandler->index;
+            // the mouse path snapshots undo state on mouseDown before the popup
+            prepareForUndo();
+            auto pos = kbdHandler->cursorPosition();
+            openPopup(juce::Point<float>(timeToPx()(pos.first), valToPx()(pos.second)));
+            keyboardMenuNode = -1;
+        };
+        cbk.showTypein = [this](int seg, int prop) {
+            auto pos = kbdHandler->cursorPosition();
+            auto at = juce::Point<int>((int)timeToPx()(pos.first), (int)valToPx()(pos.second));
+
+            if (prop < 0)
+            {
+                // 2D control point: let the user pick which axis to type in
+                auto m = juce::PopupMenu();
+                m.addItem("Control Point X", [this, seg, at]() {
+                    showSegmentTypein(seg, SegmentProps::cp_duration, at);
+                });
+                m.addItem("Control Point Y", [this, seg, at]() {
+                    showSegmentTypein(seg, SegmentProps::cp_value, at);
+                });
+                m.showMenuAsync(sge->popupMenuOptions());
+            }
+            else
+            {
+                showSegmentTypein(seg, (SegmentProps)prop, at);
+            }
+        };
+        cbk.getTimeEditMode = [this]() { return (int)timeEditMode; };
+        cbk.getSelection = [this]() {
+            std::vector<int> r;
+            if (lassoSelector)
+            {
+                for (auto i : lassoSelector->items)
+                {
+                    r.push_back(i);
+                }
+            }
+            return r;
+        };
+        cbk.setSelection = [this](const std::vector<int> &sel) {
+            if (!lassoSelector)
+            {
+                lassoSelector = std::make_unique<MSEGLassoSelector>(this);
+            }
+            lassoSelector->items.deselectAll();
+            for (auto i : sel)
+            {
+                lassoSelector->items.addToSelection(i);
+            }
+            repaint();
+        };
+        cbk.repaint = [this]() { repaint(); };
+    }
+
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        if (hasKeyboardFocus(false))
+        {
+            return kbdHandler->processKey(key);
+        }
+        return false;
+    }
+
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        kbdHandler->revalidateCursor(false);
+        kbdHandler->announceFocus();
+        repaint();
+    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        kbdHandler->cancelModes();
+        repaint();
+    }
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<juce::AccessibilityHandler>(
+            *this, juce::AccessibilityRole::group,
+            juce::AccessibilityActions().addAction(
+                juce::AccessibilityActionType::showMenu, [this]() {
+                    auto seg = kbdHandler->segmentForCursor();
+                    hoveredSegment = seg;
+                    keyboardMenuNode = kbdHandler->index;
+                    prepareForUndo();
+                    auto pos = kbdHandler->cursorPosition();
+                    openPopup(juce::Point<float>(timeToPx()(pos.first), valToPx()(pos.second)));
+                    keyboardMenuNode = -1;
+                }));
     }
 };
 
@@ -3994,8 +4203,12 @@ void MSEGControlRegion::rebuild()
         {
             movementMode->setValue(eds->timeEditMode / 2.f);
         }
+        movementMode->setTitle("Movement Mode");
+        movementMode->setDescription("Movement Mode");
+        movementMode->setAccessibleCellLabels({"Single", "Shift", "Draw"});
         movementMode->setExplicitFocusOrder(10);
         addAndMakeVisible(*movementMode);
+        movementMode->setupAccessibility();
         // this value centers the loop mode and snap sections against the MSEG editor width
         // if more controls are to be added to that center section, reduce this value
         xpos += 173;
@@ -4037,8 +4250,12 @@ void MSEGControlRegion::rebuild()
         editMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
         editMode->setValue(ms->editMode);
+        editMode->setTitle("Edit Mode");
+        editMode->setDescription("Edit Mode");
+        editMode->setAccessibleCellLabels({"Envelope", "LFO"});
         editMode->setExplicitFocusOrder(20);
         addAndMakeVisible(*editMode);
+        editMode->setupAccessibility();
 
         xpos += segWidth;
     }
@@ -4078,8 +4295,12 @@ void MSEGControlRegion::rebuild()
         loopMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
         loopMode->setValue((ms->loopMode - 1) / 2.f);
+        loopMode->setTitle("Loop Mode");
+        loopMode->setDescription("Loop Mode");
+        loopMode->setAccessibleCellLabels({"Off", "Loop", "Gated Loop"});
         loopMode->setExplicitFocusOrder(30);
         addAndMakeVisible(*loopMode);
+        loopMode->setupAccessibility();
 
         xpos += segWidth;
     }
@@ -4115,6 +4336,8 @@ void MSEGControlRegion::rebuild()
             nullptr, dynamic_cast<SurgeImage *>(hsbmp), associatedBitmapStore,
             Surge::GUI::Skin::HoverType::HOVER);
         hSnapButton->setHoverSwitchDrawable(hoverBmp);
+        hSnapButton->setTitle("Horizontal Snap");
+        hSnapButton->setDescription("Horizontal Snap");
         hSnapButton->setExplicitFocusOrder(40);
         addAndMakeVisible(*hSnapButton);
 
@@ -4142,6 +4365,8 @@ void MSEGControlRegion::rebuild()
             }
             return false;
         };
+        hSnapSize->setTitle("Horizontal Snap Grid");
+        hSnapSize->setDescription("Horizontal Snap Grid, divisions per unit");
         hSnapSize->setExplicitFocusOrder(50);
         addAndMakeVisible(*hSnapSize);
 
@@ -4159,6 +4384,8 @@ void MSEGControlRegion::rebuild()
         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             nullptr, vsbmp, associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
         vSnapButton->setHoverSwitchDrawable(hoverBmp);
+        vSnapButton->setTitle("Vertical Snap");
+        vSnapButton->setDescription("Vertical Snap");
         vSnapButton->setExplicitFocusOrder(60);
         addAndMakeVisible(*vSnapButton);
 
@@ -4186,6 +4413,8 @@ void MSEGControlRegion::rebuild()
             }
             return false;
         };
+        vSnapSize->setTitle("Vertical Snap Grid");
+        vSnapSize->setDescription("Vertical Snap Grid, divisions per unit");
         vSnapSize->setExplicitFocusOrder(70);
         addAndMakeVisible(*vSnapSize);
     }
@@ -4196,6 +4425,8 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
                        SurgeGUIEditor *sge)
     : OverlayComponent("MSEG Editor")
 {
+    this->sge = sge;
+
     // Leave these in for now
     if (ms->n_activeSegments <= 0) // This is an error state! Compensate
     {
@@ -4224,11 +4455,18 @@ void MSEGEditor::forceRefresh()
     {
         auto ed = dynamic_cast<MSEGCanvas *>(kid);
         if (ed)
+        {
             ed->modelChanged();
+        }
         auto cr = dynamic_cast<MSEGControlRegion *>(kid);
         if (cr)
             cr->rebuild();
     }
+}
+
+std::vector<juce::Component *> MSEGEditor::getGroupNavigationComponents()
+{
+    return {canvas.get(), controls.get()};
 }
 
 void MSEGEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }

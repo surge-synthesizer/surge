@@ -861,6 +861,7 @@ struct SurgeSceneStorage
 };
 
 const int n_stepseqsteps = 16;
+
 struct StepSequencerStorage
 {
     float steps[n_stepseqsteps];
@@ -869,7 +870,8 @@ struct StepSequencerStorage
     uint64_t trigmask;
 };
 
-const int max_msegs = 128;
+const int max_msegs = 256;
+
 struct MSEGStorage
 {
     struct segment // If you add something here fix blankAllSegments in MSEGModulationHelper
@@ -903,6 +905,14 @@ struct MSEGStorage
                       // so we ditched it - can add a different curve type later on!
             BUMP,
             SMOOTH_STAIRS,
+            RATCHET_1,
+            RATCHET_2,
+            RATCHET_3,
+            RATCHET_4,
+            RATCHET_5,
+            RATCHET_6,
+            RATCHET_7,
+            RATCHET_8,
         } type;
     };
 

@@ -117,6 +117,10 @@
 #include "juce_core/juce_core.h"
 #include "AccessibleHelpers.h"
 
+#if JUCE_WINDOWS
+#include "AccessibleAnnouncementWin.h"
+#endif
+
 const int yofs = 10;
 
 using namespace std;
@@ -578,17 +582,11 @@ void SurgeGUIEditor::idle()
 
     if (!accAnnounceStrings.empty())
     {
-        auto h = frame->getAccessibilityHandler();
+        auto &nm = accAnnounceStrings.front();
 
-        if (h)
+        if (nm.second == 0)
         {
-            auto &nm = accAnnounceStrings.front();
-
-            if (nm.second == 0)
-            {
-                h->postAnnouncement(nm.first,
-                                    juce::AccessibilityHandler::AnnouncementPriority::high);
-            }
+            postAccessibleAnnouncement(nm.first);
         }
 
         accAnnounceStrings.front().second--;
@@ -597,6 +595,16 @@ void SurgeGUIEditor::idle()
         {
             accAnnounceStrings.pop_front();
         }
+    }
+
+    if (immediateAccAnnounce.second >= 0)
+    {
+        if (immediateAccAnnounce.second == 0)
+        {
+            postAccessibleAnnouncement(immediateAccAnnounce.first);
+        }
+
+        immediateAccAnnounce.second--;
     }
 
     if (getShowVirtualKeyboard() && synth->hasUpdatedMidiCC)
@@ -2495,6 +2503,11 @@ bool SurgeGUIEditor::open(void *parent)
 
 void SurgeGUIEditor::close()
 {
+#if JUCE_WINDOWS
+    // The announcer's hidden window is a child of the host window we are
+    // about to lose; rebuild it lazily against the next one
+    uiaAnnouncer.reset();
+#endif
     populateDawExtraState(synth);
     firstIdleCountdown = 0;
 }
@@ -6758,6 +6771,40 @@ void SurgeGUIEditor::enqueueAccessibleAnnouncement(const std::string &s)
     if (doAcc)
     {
         accAnnounceStrings.push_back({s, 3});
+    }
+}
+
+void SurgeGUIEditor::enqueueImmediateAccessibleAnnouncement(const std::string &s)
+{
+    // latest wins; a one-idle-tick delay coalesces rapid key repeats
+    immediateAccAnnounce = {s, 1};
+}
+
+void SurgeGUIEditor::postAccessibleAnnouncement(const std::string &s)
+{
+    if (!frame)
+    {
+        return;
+    }
+
+#if JUCE_WINDOWS
+    if (!uiaAnnouncer)
+    {
+        if (auto *peer = frame->getPeer())
+        {
+            uiaAnnouncer = std::make_unique<Surge::GUI::UiaAnnouncer>(peer->getNativeHandle());
+        }
+    }
+
+    if (uiaAnnouncer && uiaAnnouncer->announce(s, true))
+    {
+        return;
+    }
+#endif
+
+    if (auto h = frame->getAccessibilityHandler())
+    {
+        h->postAnnouncement(s, juce::AccessibilityHandler::AnnouncementPriority::high);
     }
 }
 

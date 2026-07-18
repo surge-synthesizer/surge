@@ -130,6 +130,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/LuaEditors.h
   gui/overlays/MSEGEditor.cpp
   gui/overlays/MSEGEditor.h
+  gui/overlays/MSEGEditorAccessibleKeyboard.cpp
+  gui/overlays/MSEGEditorAccessibleKeyboard.h
   gui/overlays/MiniEdit.cpp
   gui/overlays/MiniEdit.h
   gui/overlays/Alert.cpp
@@ -202,6 +204,13 @@ target_sources(${PROJECT_NAME} PRIVATE
   osc/OpenSoundControl.cpp
   osc/OpenSoundControl.h
 )
+
+if(WIN32)
+  target_sources(${PROJECT_NAME} PRIVATE
+    gui/AccessibleAnnouncementWin.cpp
+    gui/AccessibleAnnouncementWin.h
+  )
+endif()
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
   message(FATAL_ERROR "You must build against at least JUCE 6.1 with accessibility support!")

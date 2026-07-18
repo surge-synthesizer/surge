@@ -434,9 +434,9 @@ void MultiSwitch::setupAccessibility()
     }
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
-    jassert(sge);
+    jassert(sge || !accessibleCellLabels.empty());
 
-    if (!sge)
+    if (!sge && accessibleCellLabels.empty())
     {
         return;
     }
@@ -450,7 +450,15 @@ void MultiSwitch::setupAccessibility()
         for (int r = 0; r < rows; ++r)
         {
             float val = ((float)sel) / (rows * columns - 1);
-            auto title = sge->getDisplayForTag(getTag(), true, val);
+            std::string title;
+            if (sel < (int)accessibleCellLabels.size())
+            {
+                title = accessibleCellLabels[sel];
+            }
+            else if (sge)
+            {
+                title = sge->getDisplayForTag(getTag(), true, val);
+            }
             std::unique_ptr<juce::Component> ac;
             if (isAlwaysAccessibleMomentary())
             {
@@ -464,6 +472,14 @@ void MultiSwitch::setupAccessibility()
                     MultiSwitchAccOverlayButton<juce::AccessibilityRole::radioButton>>(this, val,
                                                                                        sel, title);
             }
+            // When explicit cell labels are in use (custom-tag hosts like the MSEG
+            // control strip), give the cells a deterministic spot in the tab order,
+            // right after their parent switch
+            if (!accessibleCellLabels.empty() && getExplicitFocusOrder() > 0)
+            {
+                ac->setExplicitFocusOrder(getExplicitFocusOrder() + sel + 1);
+            }
+
             sel++;
             ac->getProperties().set("ControlGroup", (int)(c * columns + rows));
             ac->setBounds(juce::Rectangle<int>(c * dc, r * dr, dc, dr));
@@ -502,6 +518,26 @@ template <> struct DiscreteAHRange<MultiSwitch>
 {
     static int iMaxV(MultiSwitch *t) { return t->rows * t->columns - 1; }
     static int iMinV(MultiSwitch *t) { return 0; }
+};
+
+template <> struct DiscreteAHStringValue<MultiSwitch>
+{
+    static std::string stringValue(MultiSwitch *comp, double ahValue)
+    {
+        auto v = comp->getIntegerValue();
+
+        if (v >= 0 && v < (int)comp->accessibleCellLabels.size())
+        {
+            return comp->accessibleCellLabels[v];
+        }
+
+        auto sge = comp->firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+        {
+            return sge->getDisplayForTag(comp->getTag());
+        }
+        return std::to_string(ahValue);
+    }
 };
 
 template <> struct DiscreteRO<MultiSwitch>

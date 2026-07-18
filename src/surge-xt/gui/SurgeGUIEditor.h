@@ -100,6 +100,13 @@ struct Alert;
 struct OverlayWrapper;
 struct PatchStoreDialog;
 } // namespace Overlays
+
+#if JUCE_WINDOWS
+namespace GUI
+{
+struct UiaAnnouncer;
+} // namespace GUI
+#endif
 } // namespace Surge
 
 #include "sst/plugininfra/keybindings.h"
@@ -517,6 +524,22 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::deque<std::pair<std::string, int>> accAnnounceStrings;
     void enqueueAccessibleAnnouncement(const std::string &s);
+
+    // An ungated, latest-wins announcement channel used by the accessible MSEG
+    // editor, which is its own opt-in and far chattier than the narrator-gated
+    // deque above. Only the most recent string is spoken, so holding an arrow
+    // key doesn't build a backlog.
+    std::pair<std::string, int> immediateAccAnnounce{"", -1};
+    void enqueueImmediateAccessibleAnnouncement(const std::string &s);
+
+    // Speaks through the screen reader (UIA notifications) on Windows, falling
+    // back to juce::AccessibilityHandler::postAnnouncement (SAPI on Windows,
+    // native announcements elsewhere)
+    void postAccessibleAnnouncement(const std::string &s);
+#if JUCE_WINDOWS
+    std::unique_ptr<Surge::GUI::UiaAnnouncer> uiaAnnouncer;
+#endif
+
     void announceGuiState();
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
