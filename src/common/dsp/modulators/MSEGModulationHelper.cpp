@@ -1333,7 +1333,7 @@ void extendTo(MSEGStorage *ms, float t, float nv)
     // We want to keep the loop end at the same spot when we extend
     bool fixupLoopEnd = false;
 
-    if (ms->loop_end < MSEGStorage::kLoopPointUnset || ms->loop_end == ms->n_activeSegments - 1)
+    if (ms->loop_end == MSEGStorage::kLoopPointUnset || ms->loop_end == ms->n_activeSegments - 1)
     {
         fixupLoopEnd = true;
     }
