@@ -710,7 +710,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
     else
     {
         if (ms->loop_end == MSEGStorage::kLoopPointUnset ||
-            ms->loop_end >= ms->n_activeSegments - 1)
+            ms->loop_end >= ms->n_activeSegments - 1 || ms->loop_end < 0)
         {
             return es->releaseStartValue;
         }
@@ -1185,6 +1185,14 @@ int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlon
         else if (ms->loop_start != MSEGStorage::kLoopPointUnset &&
                  ms->loop_end != MSEGStorage::kLoopPointUnset && ms->loop_start > ms->loop_end)
         {
+            if (ms->loop_end < 0)
+            {
+                // loop_end == -1 means hold at point 0; clamp to start of segment 0
+                // to avoid segments[-1] OOB and division by zero in the loop below.
+                amountAlongSegment = 0;
+                return 0;
+            }
+
             // This basically means we just iterate around the loop_end endpoint which we do by
             // saying we are basically at the end point all the way along
             auto idx = ms->loop_end;
@@ -1195,6 +1203,14 @@ int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlon
         }
         else
         {
+            if (ms->durationLoopStartToLoopEnd <= 0)
+            {
+                // Zero-span loop with unset start: clamp to loop end point.
+                // Avoids divide-by-zero; segmentStart[0] is the safe anchor.
+                amountAlongSegment = 0;
+                return 0;
+            }
+
             double nt = t - ms->durationToLoopEnd;
             // OK so now we have a cycle which has length durationFromStartToEnd;
             double nup = nt / ms->durationLoopStartToLoopEnd;
