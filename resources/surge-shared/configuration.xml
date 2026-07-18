@@ -124,7 +124,8 @@
     <snapshot name="Init (Send)" p0="0" p1="1" p2="0" p3="0" p3_deactivated="1" p4="3" p4_deactivated="1" p5="0" p6="-60" p6_deactivated="1" p7="70" p7_deactivated="1" p8="1" />
 </type>
 <type i="30" name="Floaty Delay">
-    <snapshot name="Init" p0="-1.73699" p1="1.0"  p2="0.5" p3="20.0" p4="0.5" p5="0.0" p6="0.0" p7="0.0" p8="0.0" p9="-60.0"  p10="0.3"/>
+    <snapshot name="Init (Dry)" p0="-1.73699" p1="1.0"  p2="0.5" p3="20.0" p4="0.5" p5="0.0" p6="0.0" p7="0.0" p8="0.0" p9="-60.0"  p10="0.5"/>
+    <snapshot name="Init (Send)" p0="-1.73699" p1="1.0"  p2="0.5" p3="20.0" p4="0.5" p5="0.0" p6="0.0" p7="0.0" p8="0.0" p9="-60.0"  p10="1.0"/>
 </type>
 <type i="1" name="Delay">
     <snapshot name="Init (Dry)" p0="-1.000000" p0_temposync="1" p1="-1.000000" p1_temposync="1" p2="0.000000"

@@ -1,0 +1,17 @@
+<single-fx streaming_version="30">
+  <snapshot name="Whole Note Going Down"
+     type="30"
+     p0="1"
+     p0_temposync="1"
+     p1="0.5"
+     p2="1"
+     p3="70"
+     p4="0"
+     p5="0"
+     p6="0.596429"
+     p7="0.01"
+     p8="0"
+     p9="-17.5132"
+     p10="0.5"
+  />
+</single-fx>
