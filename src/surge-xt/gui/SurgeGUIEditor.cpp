@@ -1045,15 +1045,29 @@ void SurgeGUIEditor::idle()
 
             vu->setIsAudioActive(synth->audio_processing_active);
 
-            if (synth->cpu_level != vu->getCpuLevel())
-            {
-                vu->setCpuLevel(synth->cpu_level);
-                vuInvalid = true;
-            }
+            bool showCPU = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                               Surge::Storage::ShowCPUUsage, false);
 
-            if (vuInvalid)
+            if (showCPU)
             {
-                vu->repaint();
+                auto quantizedCpuPct = [](float f) {
+                    return (int)(std::clamp(f, 0.f, 1.f) * 100.f);
+                };
+
+                bool cpuLevelChanged =
+                    quantizedCpuPct(synth->cpu_level) != quantizedCpuPct(vu->getCpuLevel());
+
+                vu->setCpuLevel(synth->cpu_level);
+
+                if (cpuLevelChanged)
+                {
+                    vuInvalid = true;
+                }
+
+                if (vuInvalid)
+                {
+                    vu->repaint();
+                }
             }
         }
 
