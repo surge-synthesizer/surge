@@ -34,9 +34,25 @@ namespace Widgets
 
 struct WtGenSpinner : juce::Component, juce::Timer
 {
+    static constexpr float radiusScale = 0.15f;
+    static constexpr float strokeWidth = 4.0f;
+    static constexpr float trackWidth = 1.5f;
+
     std::function<bool()> isGenerating;           // parent-supplied: still generating?
     juce::Colour arcColour{juce::Colours::white}; // accent colour, set by the parent
     float phase{0.f};                             // 0..1 animation phase
+
+    // Bounding box of the circle, so timerCallback can repaint just this region instead of the
+    // whole component.
+    juce::Rectangle<int> arcBounds() const
+    {
+        const float half = arcRadius() + strokeWidth;
+        return juce::Rectangle<float>{half * 2.f, half * 2.f}
+            .withCentre(getLocalBounds().toFloat().getCentre())
+            .getSmallestIntegerContainer();
+    }
+
+    float arcRadius() const { return juce::jmin(getWidth(), getHeight()) * radiusScale; }
 
     WtGenSpinner()
     {
@@ -71,21 +87,13 @@ struct WtGenSpinner : juce::Component, juce::Timer
         {
             phase -= 1.f;
         }
-        repaint();
+        repaint(arcBounds());
     }
 
     void paint(juce::Graphics &g) override
     {
-        constexpr float radiusScale = 0.15f;
-        constexpr float strokeWidth = 4.0f;
-        constexpr float trackWidth = 1.5f;
-
-        const float width = getWidth();
-        const float height = getHeight();
-
-        const float cx = width * 0.5f;
-        const float cy = height * 0.5f;
-        const float r = juce::jmin(width, height) * radiusScale;
+        const auto centre = getLocalBounds().toFloat().getCentre();
+        const float r = arcRadius();
 
         const float rotation = phase * juce::MathConstants<float>::twoPi * 2.0f;
         const float sweepPhase = phase * juce::MathConstants<float>::twoPi;
@@ -94,10 +102,10 @@ struct WtGenSpinner : juce::Component, juce::Timer
                        juce::MathConstants<float>::pi * 1.5f);
 
         juce::Path arc;
-        arc.addCentredArc(cx, cy, r, r, 0.0f, rotation, rotation + sweep, true);
+        arc.addCentredArc(centre.x, centre.y, r, r, 0.0f, rotation, rotation + sweep, true);
 
         g.setColour(arcColour.withAlpha(0.1f));
-        g.drawEllipse(cx - r, cy - r, r * 2.0f, r * 2.0f, trackWidth);
+        g.drawEllipse(centre.x - r, centre.y - r, r * 2.0f, r * 2.0f, trackWidth);
 
         g.setColour(arcColour);
         g.strokePath(arc, juce::PathStrokeType(strokeWidth, juce::PathStrokeType::curved,
