@@ -1208,8 +1208,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                     // The osc's WT was just replaced by the loaded patch so invalidate any
                     // in-progress WT script job for it. Bump inside the mutex so the worker's
                     // re-check sees it.
-                    storage->wtGenPublishToken[sc * n_oscs + osc].fetch_add(
-                        1, std::memory_order_relaxed);
+                    storage->wtGenPublishToken[sc * n_oscs + osc]++;
 
                     bool hadName{true};
 

@@ -1470,7 +1470,7 @@ void SurgeStorage::perform_queued_wtloads()
                     patch.scene[sc].osc[o].wt.queue_filename[0])
                 {
                     std::lock_guard<std::mutex> lk(waveTableDataMutex);
-                    wtGenPublishToken[sc * n_oscs + o].fetch_add(1, std::memory_order_relaxed);
+                    wtGenPublishToken[sc * n_oscs + o]++;
                 }
 
                 if (patch.scene[sc].osc[o].wt.queue_id != -1)
@@ -2519,7 +2519,7 @@ void SurgeStorage::clipboard_paste(
                 // Pasting replaces this osc's live wt so bump wtGenPublishToken and copy under
                 // waveTableDataMutex so an in-progress WT script skips its stale publish.
                 std::lock_guard<std::mutex> lk(waveTableDataMutex);
-                wtGenPublishToken[scene * n_oscs + i].fetch_add(1, std::memory_order_relaxed);
+                wtGenPublishToken[scene * n_oscs + i]++;
                 getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             }
             getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
@@ -2650,8 +2650,7 @@ void SurgeStorage::clipboard_paste(
                     // Pasting replaces this osc's live wt so bump wtGenPublishToken and copy under
                     // waveTableDataMutex so an in-progress WT script skips its stale publish.
                     std::lock_guard<std::mutex> lk(waveTableDataMutex);
-                    wtGenPublishToken[scene * n_oscs + entry].fetch_add(1,
-                                                                        std::memory_order_relaxed);
+                    wtGenPublishToken[scene * n_oscs + entry]++;
                     getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
                 }
                 getPatch().scene[scene].osc[entry].wavetable_display_name = clipboard_wt_names[0];

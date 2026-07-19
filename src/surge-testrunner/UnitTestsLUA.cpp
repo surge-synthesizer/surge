@@ -1404,7 +1404,10 @@ end
 
         // Force a token mismatch: the worker must skip BuildWT and leave the oscillator untouched.
         auto staleReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
-        staleReq.publishToken = storage.wtGenPublishToken[0].load(std::memory_order_relaxed) + 1;
+        {
+            std::lock_guard<std::mutex> g(storage.waveTableDataMutex);
+            staleReq.publishToken = storage.wtGenPublishToken[0] + 1;
+        }
         auto rStale = storage.wtGenService->submitBlocking(std::move(staleReq));
 
         REQUIRE(rStale.ok);

@@ -41,9 +41,12 @@ WtGenJobRequest makeLiveGenerateRequest(SurgeStorage *storage, int scene, int os
     req.frameCount = oscdata->wavetable_script_nframes;
     req.snapshot = SnapshotBundle::current(storage, *oscdata);
 
-    // Lock-free capture of the publish token, re-checked under waveTableDataMutex at publish.
-    req.publishToken =
-        storage->wtGenPublishToken[scene * n_oscs + osc].load(std::memory_order_relaxed);
+    // Capture the publish token under waveTableDataMutex. The worker re-checks the token under the
+    // same lock before publishing.
+    {
+        std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
+        req.publishToken = storage->wtGenPublishToken[scene * n_oscs + osc];
+    }
 
     return req;
 }
@@ -275,8 +278,7 @@ void WtGenService::runThread()
                     // Re-check the publish token inside the lock: if the osc was replaced since
                     // submit, skip.
                     std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
-                    if (storage->wtGenPublishToken[idx].load(std::memory_order_relaxed) ==
-                        req.publishToken)
+                    if (storage->wtGenPublishToken[idx] == req.publishToken)
                     {
                         req.generateTarget->wt.BuildWT(gen.samples.get(), gen.header,
                                                        gen.header.flags & wtf_is_sample);

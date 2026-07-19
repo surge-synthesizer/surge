@@ -960,8 +960,7 @@ struct UndoManagerImpl
                 // script job for it.
                 // Bump under waveTableDataMutex so the worker's re-check sees it.
                 std::lock_guard<std::mutex> lk(synth->storage.waveTableDataMutex);
-                synth->storage.wtGenPublishToken[p->scene * n_oscs + p->oscNum].fetch_add(
-                    1, std::memory_order_relaxed);
+                synth->storage.wtGenPublishToken[p->scene * n_oscs + p->oscNum]++;
             }
 
             if (!p->displayName.empty())

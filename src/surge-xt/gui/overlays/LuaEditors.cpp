@@ -4192,8 +4192,10 @@ Surge::WavetableScript::WtGenJobRequest WavetableScriptEditor::makeGenRequest(bo
     if (generate)
     {
         req.generateTarget = osc;
-        req.publishToken =
-            storage->wtGenPublishToken[scene * n_oscs + osc_id].load(std::memory_order_relaxed);
+        {
+            std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
+            req.publishToken = storage->wtGenPublishToken[scene * n_oscs + osc_id];
+        }
         req.supersedable = true;
     }
 

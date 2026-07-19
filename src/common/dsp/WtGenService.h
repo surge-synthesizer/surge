@@ -70,8 +70,8 @@ struct WtGenJobRequest
     // exportOut).
     OscillatorStorage *generateTarget{nullptr};
 
-    // storage->wtGenPublishToken at submit, re-checked under waveTableDataMutex before a live-osc
-    // publish. Ignored for preview/export.
+    // storage->wtGenPublishToken, captured under waveTableDataMutex at submit and re-checked
+    // under it before a live-osc publish. Ignored for preview/export.
     uint64_t publishToken{0};
 
     // Poll-based Generates (overlay Generate, drop/menu) set this so a newer same-osc Generate
