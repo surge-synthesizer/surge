@@ -115,7 +115,7 @@ struct WtGenInputs
 struct WtGenJobResponse
 {
     bool ok{false};        // populateWavetable succeeded (frames / exportOut are valid)
-    bool published{false}; // live-osc Generate only: true if BuildWT ran into generateTarget->wt
+    bool published{false}; // live-osc Generate only: result was built into generateTarget->wt
     int frameCount{0};
 
     std::vector<std::vector<float>> frames; // [frame][sample]
