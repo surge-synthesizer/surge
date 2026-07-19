@@ -149,6 +149,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 27 -> 28 (XT 1.4.* nightlies) added corrected TX shapes to Sine oscillator
 // 28 -> 29 (XT 1.4.* nightlies) save/load size of ArbitraryBlockStorage segment
 // 29 -> 30 (XT 1.4.* nightlies) reordered Phaser LFO waveforms and added a Saw shape (sst-effects upgrade)
+//                               Modern oscillator can now disable waveforms 2 and 3 to save CPU
 // clang-format on
 
 const int ff_revision = 30;
@@ -879,6 +880,7 @@ struct SurgeSceneStorage
 };
 
 const int n_stepseqsteps = 16;
+
 struct StepSequencerStorage
 {
     float steps[n_stepseqsteps];
@@ -887,7 +889,8 @@ struct StepSequencerStorage
     uint64_t trigmask;
 };
 
-const int max_msegs = 128;
+const int max_msegs = 256;
+
 struct MSEGStorage
 {
     struct segment // If you add something here fix blankAllSegments in MSEGModulationHelper
@@ -921,6 +924,14 @@ struct MSEGStorage
                       // so we ditched it - can add a different curve type later on!
             BUMP,
             SMOOTH_STAIRS,
+            RATCHET_1,
+            RATCHET_2,
+            RATCHET_3,
+            RATCHET_4,
+            RATCHET_5,
+            RATCHET_6,
+            RATCHET_7,
+            RATCHET_8,
         } type;
     };
 
@@ -949,7 +960,12 @@ struct MSEGStorage
                        // at current value and progress to end once
     } loopMode = LOOP;
 
-    int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context
+    static constexpr int kLoopPointUnset = -13214;
+
+    // loop_start: 0..n_activeSegments (n_activeSegments = starts at very last point)
+    // loop_end:   -1..n_activeSegments-1 (-1 = ends at very first point, point 0)
+    // Either field == kLoopPointUnset means "unset, use full-range default"
+    int loop_start = kLoopPointUnset, loop_end = kLoopPointUnset;
 
     int n_activeSegments = 0;
     std::array<segment, max_msegs> segments;

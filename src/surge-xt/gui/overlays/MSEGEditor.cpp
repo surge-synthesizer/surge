@@ -368,10 +368,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // Put in the loop marker boxes
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-            float pxs = tpx(ms->segmentStart[ls]);
-            float pxe = tpx(ms->segmentEnd[le]);
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
+            float pxs =
+                (ls >= ms->n_activeSegments) ? tpx(ms->totalDuration) : tpx(ms->segmentStart[ls]);
+            float pxe = (le < 0) ? tpx(0.f) : tpx(ms->segmentEnd[le]);
             auto hs = hotzone();
             hs.type = hotzone::Type::LOOPMARKER;
             hs.segmentDirection = hotzone::HORIZONTAL_ONLY;
@@ -385,31 +387,53 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 hs.onDrag = [pxt, this](float x, float y, const juce::Point<float> &w) {
                     auto t = pxt(w.x);
-                    t = limit_range(t, 0.f, ms->segmentStart[ms->n_activeSegments - 1]);
+                    t = limit_range(t, 0.f, ms->totalDuration);
 
-                    auto seg = Surge::MSEG::timeToSegment(this->ms, t);
+                    int seg;
 
-                    float pct = 0;
-                    if (this->ms->segments[seg].duration > 0)
+                    if (t >= ms->totalDuration)
                     {
-                        pct = (t - this->ms->segmentStart[seg]) / this->ms->segments[seg].duration;
+                        seg = ms->n_activeSegments; // last point
                     }
-                    if (pct > 0.5)
+                    else
                     {
-                        seg++;
+                        seg = Surge::MSEG::timeToSegment(this->ms, t);
+                        float pct = 0;
+
+                        if (this->ms->segments[seg].duration > 0)
+                        {
+                            pct = (t - this->ms->segmentStart[seg]) /
+                                  this->ms->segments[seg].duration;
+                        }
+
+                        if (pct > 0.5)
+                        {
+                            seg++;
+                        }
                     }
+
                     if (seg != ms->loop_start)
                     {
                         Surge::MSEG::setLoopStart(ms, seg);
                         modelChanged();
                         repaint();
                     }
+
                     loopDragTime = t;
                     loopDragIsStart = true;
-                    if (ms->loop_start >= 0)
-                        loopDragEnd = this->ms->segmentStart[ms->loop_start];
-                    else
+
+                    if (ms->loop_start == MSEGStorage::kLoopPointUnset)
+                    {
                         loopDragEnd = 0;
+                    }
+                    else if (ms->loop_start >= ms->n_activeSegments)
+                    {
+                        loopDragEnd = ms->totalDuration;
+                    }
+                    else
+                    {
+                        loopDragEnd = ms->segmentStart[ms->loop_start];
+                    }
                 };
 
                 hs.rect = juce::Rectangle<float>(pxs - 0.5, haxisArea.getY() + 1, loopMarkerWidth,
@@ -422,34 +446,62 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 he.onDrag = [pxt, this](float x, float y, const juce::Point<float> &w) {
                     auto t = pxt(w.x);
-                    t = limit_range(t, ms->segmentEnd[0], ms->totalDuration);
-                    auto seg = Surge::MSEG::timeToSegment(this->ms, t);
-                    if (t == ms->totalDuration)
+                    t = limit_range(t, 0.f, ms->totalDuration);
+
+                    int seg;
+                    if (t <= 0.f)
+                    {
+                        seg = -1; // point 0
+                    }
+                    else if (t >= ms->totalDuration)
+                    {
                         seg = ms->n_activeSegments - 1;
-                    if (seg > 0)
-                        seg--; // since this is the END marker
-                    float pct = 0;
-                    if (this->ms->segments[seg + 1].duration > 0)
-                    {
-                        pct =
-                            (t - this->ms->segmentEnd[seg]) / this->ms->segments[seg + 1].duration;
                     }
-                    if (pct > 0.5)
+                    else
                     {
-                        seg++;
+                        seg = Surge::MSEG::timeToSegment(this->ms, t);
+
+                        if (seg > 0)
+                        {
+                            seg--; // END marker: seg index is the one that ends here
+                        }
+
+                        float pct = 0;
+
+                        if (seg + 1 < ms->n_activeSegments &&
+                            this->ms->segments[seg + 1].duration > 0)
+                        {
+                            pct = (t - ms->segmentEnd[seg]) / this->ms->segments[seg + 1].duration;
+                        }
+
+                        if (pct > 0.5)
+                        {
+                            seg++;
+                        }
                     }
+
                     if (seg != ms->loop_end)
                     {
                         Surge::MSEG::setLoopEnd(ms, seg);
                         modelChanged();
                         repaint();
                     }
+
                     loopDragTime = t;
                     loopDragIsStart = false;
-                    if (ms->loop_end >= 0)
-                        loopDragEnd = this->ms->segmentEnd[ms->loop_end];
+
+                    if (ms->loop_end == MSEGStorage::kLoopPointUnset)
+                    {
+                        loopDragEnd = ms->totalDuration;
+                    }
+                    else if (ms->loop_end < 0)
+                    {
+                        loopDragEnd = 0.f;
+                    }
                     else
-                        loopDragEnd = this->ms->totalDuration;
+                    {
+                        loopDragEnd = ms->segmentEnd[ms->loop_end];
+                    }
                 };
 
                 hotzones.push_back(hs);
@@ -499,7 +551,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         if (isLast)
                         {
                             Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx,
-                                                                          ms->hSnap, longestMSEG);
+                                                                          ms->hSnap, max_msegs);
                         }
                         else
                         {
@@ -510,7 +562,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     else
                     {
                         Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx,
-                                                                      ms->hSnap, longestMSEG);
+                                                                      ms->hSnap, max_msegs);
                     }
                     break;
                 case SINGLE:
@@ -549,6 +601,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 // Ones where we scan the entire square
                 case MSEGStorage::segment::QUAD_BEZIER:
                 case MSEGStorage::segment::BROWNIAN:
+                case MSEGStorage::segment::RATCHET_1:
+                case MSEGStorage::segment::RATCHET_2:
+                case MSEGStorage::segment::RATCHET_3:
+                case MSEGStorage::segment::RATCHET_4:
+                case MSEGStorage::segment::RATCHET_5:
+                case MSEGStorage::segment::RATCHET_6:
+                case MSEGStorage::segment::RATCHET_7:
+                case MSEGStorage::segment::RATCHET_8:
                     horizontalMotion = true;
                     break;
                 // Ones where we stay within the range
@@ -748,7 +808,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             }
 
                             Surge::MSEG::adjustDurationShiftingSubsequent(
-                                ms, ms->n_activeSegments - 1, dx / tscale, ms->hSnap, longestMSEG);
+                                ms, ms->n_activeSegments - 1, dx / tscale, ms->hSnap, max_msegs);
                         }
                     });
 
@@ -833,19 +893,20 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // draw looped area of the axis
         if (ms->loopMode != MSEGStorage::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-
-            float pxs = limit_range((float)tpx(ms->segmentStart[ls]), (float)haxisArea.getX(),
-                                    (float)haxisArea.getRight());
-            float pxe = limit_range((float)tpx(ms->segmentEnd[le]), (float)haxisArea.getX(),
-                                    (float)haxisArea.getRight());
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
+            float pxs =
+                (ls >= ms->n_activeSegments) ? tpx(ms->totalDuration) : tpx(ms->segmentStart[ls]);
+            float pxe = (le < 0) ? tpx(0.f) : tpx(ms->segmentEnd[le]);
 
             auto r = juce::Rectangle<float>(juce::Point<float>(pxs, haxisArea.getY()),
                                             juce::Point<float>(pxe, haxisArea.getY() + 15));
 
             // draw the loop region start to end
-            if (!(ms->loop_start == ms->loop_end + 1))
+            if (!(ms->loop_start != MSEGStorage::kLoopPointUnset &&
+                  ms->loop_end != MSEGStorage::kLoopPointUnset &&
+                  ms->loop_start == ms->loop_end + 1))
             {
                 g.setColour(skin->getColor(Colors::MSEGEditor::Loop::RegionAxis));
                 g.fillRect(r);
@@ -854,14 +915,17 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto mcolor = skin->getColor(Colors::MSEGEditor::Loop::Marker);
 
             // draw loop markers
-            if ((loopDragTime < 0 || !loopDragIsStart) && (ls >= 0 && ls < ms->segmentStart.size()))
+            if ((loopDragTime < 0 || !loopDragIsStart))
             {
-                drawLoopDragMarker(g, mcolor, hotzone::LOOP_START, ms->segmentStart[ls]);
+                float startT =
+                    (ls >= ms->n_activeSegments) ? ms->totalDuration : ms->segmentStart[ls];
+                drawLoopDragMarker(g, mcolor, hotzone::LOOP_START, startT);
             }
 
-            if ((loopDragTime < 0 || loopDragIsStart) && (le >= 0 && le < ms->segmentStart.size()))
+            if ((loopDragTime < 0 || loopDragIsStart))
             {
-                drawLoopDragMarker(g, mcolor, hotzone::LOOP_END, ms->segmentEnd[le]);
+                float endT = (le < 0) ? 0.f : ms->segmentEnd[le];
+                drawLoopDragMarker(g, mcolor, hotzone::LOOP_END, endT);
             }
 
             // loop marker when dragged
@@ -1146,11 +1210,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // Draw the loop region fill
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-
-            float pxs = tpx(ms->segmentStart[ls]);
-            float pxe = tpx(ms->segmentEnd[le]);
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
+            float pxs =
+                (ls >= ms->n_activeSegments) ? tpx(ms->totalDuration) : tpx(ms->segmentStart[ls]);
+            float pxe = (le < 0) ? tpx(0.f) : tpx(ms->segmentEnd[le]);
 
             if (!(pxs > drawArea.getRight() || pxe < drawArea.getX()))
             {
@@ -1474,11 +1539,18 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // draw the loop region borders
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
 
             float pxs = tpx(ms->segmentStart[ls]);
             float pxe = tpx(ms->segmentEnd[le]);
+
+            // one-past-end sentinel: loop start is pinned at the current envelope end
+            if (ls >= ms->n_activeSegments)
+            {
+                pxs = tpx(ms->segmentEnd[ms->n_activeSegments - 1]);
+            }
 
             if (!(pxs > drawArea.getRight() || pxe < drawArea.getX()))
             {
@@ -1620,8 +1692,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             };
 
             const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
-            const bool is2Dcp = ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
-                                ms->segments[h.associatedSegment].type == type::BROWNIAN;
+            const bool is2Dcp =
+                ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
+                ms->segments[h.associatedSegment].type == type::BROWNIAN ||
+                (ms->segments[h.associatedSegment].type >= MSEGStorage::segment::RATCHET_1 &&
+                 ms->segments[h.associatedSegment].type <= MSEGStorage::segment::RATCHET_8);
             const bool readoutHasTwoRows = h.zoneSubType != hotzone::SEGMENT_CONTROL ||
                                            (h.zoneSubType == hotzone::SEGMENT_CONTROL && is2Dcp);
 
@@ -1953,8 +2028,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         auto drawArea = getDrawArea();
+        const auto inDrawArea =
+            (drawArea.contains(event.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
+                                                       : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
 
-        if (drawArea.contains(where))
+        if (inDrawArea)
         {
             auto tf = pxToTime();
             auto pv = pxToVal();
@@ -2184,11 +2262,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 if (fabs(ms->segmentStart[i] - t) < tEpsilon)
                 {
+                    // Use the gesture's OWN nearby value here, not the
+                    // existing curve's stale value. This snap should only
+                    // align the TIME to an existing node boundary so
+                    // leftIdx/segsAfter compute cleanly - it must never
+                    // resurrect the old value the user is actively drawing over.
+                    float gestureValue =
+                        isEnd ? freehandSamples.back().second : freehandSamples.front().second;
+
                     if (isEnd)
-                        freehandSamples.push_back({ms->segmentStart[i], ms->segments[i].v0});
+                        freehandSamples.push_back({ms->segmentStart[i], gestureValue});
                     else
                         freehandSamples.insert(freehandSamples.begin(),
-                                               {ms->segmentStart[i], ms->segments[i].v0});
+                                               {ms->segmentStart[i], gestureValue});
                     return ms->segmentStart[i];
                 }
             }
@@ -2199,19 +2285,167 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         gestureStart = snapToNearestNode(gestureStart);
         gestureEnd = snapToNearestNode(gestureEnd, true);
 
+        if (gestureStart > 0.f && gestureStart <= tEpsilon)
+        {
+            gestureStart = 0.f;
+        }
+
+        if (gestureEnd < ms->totalDuration && gestureEnd >= ms->totalDuration - tEpsilon)
+        {
+            gestureEnd = ms->totalDuration;
+        }
+
         float totalTimeSpan = gestureEnd - gestureStart;
 
-        // Save loop marker times before any modifications
-        float loopStartTime = (ms->loop_start >= 0 && ms->loop_start < ms->n_activeSegments)
-                                  ? ms->segmentStart[ms->loop_start]
-                                  : -1.f;
-        float loopEndTime = (ms->loop_end >= 0 && ms->loop_end < ms->n_activeSegments)
-                                ? ms->segmentStart[ms->loop_end]
-                                : -1.f;
+        // --- 0. Save loop marker time positions up front ---
+        //
+        // We save *time* positions now, and at the very end - once the segment
+        // array is in its final state - we look up which segment starts at that time.
+        // This is immune to however many segments got shuffled, merged, or split in between.
+        //
+        // For this to work when a loop marker's time falls inside the
+        // gesture region, we need to guarantee a node survives at exactly
+        // that time (otherwise the final lookup has nothing exact to find).
+        // That's what the pinned-time sub-range fitting below does.
+        bool hasLoopStart = ms->loop_start != MSEGStorage::kLoopPointUnset;
+        bool hasLoopEnd = ms->loop_end != MSEGStorage::kLoopPointUnset;
+
+        float loopStartTime = hasLoopStart ? ms->segmentStart[ms->loop_start] : 0.f;
+        // loop_end indexes the LAST segment included in the loop (inclusive),
+        // not a segment that starts at the loop-end marker. Its marker time
+        // is therefore that segment's END, not its start - when loop_start
+        // and loop_end reference the same single-segment loop, segmentStart
+        // would (wrongly) give the same value as loopStartTime.
+        float loopEndTime = hasLoopEnd ? ms->segmentEnd[ms->loop_end] : 0.f;
+
+        bool preserveLoopStart = hasLoopStart && (loopStartTime > gestureStart + tEpsilon) &&
+                                 (loopStartTime < gestureEnd - tEpsilon);
+        bool preserveLoopEnd = hasLoopEnd && (loopEndTime > gestureStart + tEpsilon) &&
+                               (loopEndTime < gestureEnd - tEpsilon);
+
+        // Pinned times: gestureStart, any interior loop marker(s), gestureEnd.
+        // Deduped with tEpsilon tolerance - this is what makes loop_start ==
+        // loop_end (same node) fall out for free: both collapse to a single
+        // pinned time instead of creating a degenerate zero-length sub-range.
+        std::vector<float> pinnedTimes = {gestureStart};
+
+        if (preserveLoopStart)
+        {
+            pinnedTimes.push_back(loopStartTime);
+        }
+
+        if (preserveLoopEnd)
+        {
+            pinnedTimes.push_back(loopEndTime);
+        }
+
+        pinnedTimes.push_back(gestureEnd);
+
+        std::sort(pinnedTimes.begin(), pinnedTimes.end());
+        pinnedTimes.erase(std::unique(pinnedTimes.begin(), pinnedTimes.end(),
+                                      [&](float a, float b) { return fabs(a - b) < tEpsilon; }),
+                          pinnedTimes.end());
+
+        // Make sure every pinned time actually has a sample sitting exactly on
+        // it, so each sub-range fit below starts/ends precisely there. Where
+        // one doesn't exist yet (a loop marker time the freehand stroke just
+        // passed over), synthesize one via linear interpolation against the
+        // raw gesture samples - it only needs to anchor the split, not be a
+        // perfect representation of the stroke at that instant.
+        //
+        // IMPORTANT: interpAt must read from a snapshot taken before this
+        // loop starts appending new samples, not the live freehandSamples
+        // array. freehandSamples is only re-sorted once, AFTER this whole
+        // loop finishes - so once the first pinned sample gets appended
+        // (out of chronological order, at the back of the vector), a
+        // second interpAt() call against the live array sees a corrupted
+        // "back()" and can return a value from entirely the wrong part of
+        // the stroke.
+        const std::vector<std::pair<float, float>> sortedStrokeSamples = freehandSamples;
+
+        auto interpAt = [&](float t) -> float {
+            if (t <= sortedStrokeSamples.front().first)
+                return sortedStrokeSamples.front().second;
+            if (t >= sortedStrokeSamples.back().first)
+                return sortedStrokeSamples.back().second;
+
+            for (size_t i = 1; i < sortedStrokeSamples.size(); ++i)
+            {
+                if (sortedStrokeSamples[i].first >= t)
+                {
+                    float t0 = sortedStrokeSamples[i - 1].first, t1 = sortedStrokeSamples[i].first;
+                    float v0 = sortedStrokeSamples[i - 1].second,
+                          v1 = sortedStrokeSamples[i].second;
+                    float a = (t1 > t0) ? (t - t0) / (t1 - t0) : 0.f;
+                    return v0 + a * (v1 - v0);
+                }
+            }
+
+            return sortedStrokeSamples.back().second;
+        };
+
+        for (float t : pinnedTimes)
+        {
+            bool exists = std::any_of(freehandSamples.begin(), freehandSamples.end(),
+                                      [&](auto &s) { return fabs(s.first - t) < 1e-5f; });
+
+            if (!exists)
+            {
+                freehandSamples.push_back({t, interpAt(t)});
+            }
+        }
+
+        std::sort(freehandSamples.begin(), freehandSamples.end(),
+                  [](const auto &a, const auto &b) { return a.first < b.first; });
+
+        // Sub-ranges between consecutive pinned times, as index ranges into
+        // freehandSamples (inclusive on both ends - shared boundary sample).
+        struct SubRange
+        {
+            size_t beginIdx, endIdx;
+        };
+
+        std::vector<SubRange> subRanges;
+
+        for (size_t p = 0; p + 1 < pinnedTimes.size(); ++p)
+        {
+            float tA = pinnedTimes[p], tB = pinnedTimes[p + 1];
+            size_t iA = 0, iB = freehandSamples.size() - 1;
+            bool foundA = false, foundB = false;
+
+            for (size_t i = 0; i < freehandSamples.size(); ++i)
+            {
+                if (!foundA && fabs(freehandSamples[i].first - tA) < 1e-5f)
+                {
+                    iA = i;
+                    foundA = true;
+                }
+
+                if (fabs(freehandSamples[i].first - tB) < 1e-5f)
+                {
+                    iB = i;
+                    foundB = true;
+                }
+            }
+
+            if (foundA && foundB && iB > iA)
+            {
+                subRanges.push_back({iA, iB});
+            }
+        }
 
         // --- 1. Split at gesture boundaries ---
         for (float t : {gestureStart, gestureEnd})
         {
+            // Nothing to split at the very start/end of the MSEG - those are
+            // terminal boundaries, not points inside a segment, and there's
+            // already a natural boundary there (segment 0 always starts at
+            // 0, and the last segment always ends at totalDuration).
+            if (t <= tEpsilon || t >= ms->totalDuration - tEpsilon)
+            {
+                continue;
+            }
+
             int seg = Surge::MSEG::timeToSegment(ms, t);
 
             if (seg >= 0 && fabs(t - ms->segmentStart[seg]) > tEpsilon &&
@@ -2269,16 +2503,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                     ms->n_activeSegments--;
 
-                    if (ms->loop_start > i)
-                    {
-                        ms->loop_start--;
-                    }
-
-                    if (ms->loop_end > i)
-                    {
-                        ms->loop_end--;
-                    }
-
                     Surge::MSEG::rebuildCache(ms);
 
                     deleted = true;
@@ -2289,7 +2513,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         // --- 3. Run RDP on each sub-range between consecutive pinned times
-        //        collecting all fitted segments into one vector ---
+        //
+        //        ...while collecting all fitted segments into one vector.
+        //        Fitting each pinned interval independently (rather than the whole
+        //        gesture in one call) is what guarantees a segment boundary lands
+        //        exactly on a loop marker time: RDP always terminates a segment at
+        //        samples.front()/back() of whatever span it's given, so handing it
+        //        one span per pinned interval forces the split there.
         std::vector<MSEGStorage::segment> fitted;
 
         // Count how many segments currently span the gesture region
@@ -2310,11 +2540,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         float epsilon = std::max(0.05f, gestureValueRange * 0.05f); // 5% of gesture value range
 
+        auto fitAllSubRanges = [&](float eps, std::vector<MSEGStorage::segment> &out) {
+            out.clear();
+
+            for (auto &sr : subRanges)
+            {
+                std::span<const std::pair<float, float>> sub(freehandSamples.data() + sr.beginIdx,
+                                                             sr.endIdx - sr.beginIdx + 1);
+
+                Surge::MSEG::freehandRDP(sub, eps, totalTimeSpan, out);
+            }
+        };
+
         for (int iter = 0; iter < 16; ++iter)
         {
-            fitted.clear();
-
-            Surge::MSEG::freehandRDP(freehandSamples, epsilon, totalTimeSpan, fitted);
+            fitAllSubRanges(epsilon, fitted);
 
             if ((int)fitted.size() <= budget)
             {
@@ -2337,7 +2577,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 float epMid = (epLo2 + epHi2) * 0.5f;
                 std::vector<MSEGStorage::segment> candidate;
 
-                Surge::MSEG::freehandRDP(freehandSamples, epMid, totalTimeSpan, candidate);
+                fitAllSubRanges(epMid, candidate);
 
                 if ((float)candidate.size() / totalTimeSpan <= 16.f || epMid >= 0.1f)
                 {
@@ -2350,7 +2590,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         // --- 4. Write fitted segments directly into ms->segments[] ---
-        int leftIdx = Surge::MSEG::timeToSegment(ms, gestureStart + tEpsilon);
+        int leftIdxRaw = Surge::MSEG::timeToSegment(ms, gestureStart + tEpsilon);
+        int leftIdx = leftIdxRaw;
 
         if (leftIdx < 0)
         {
@@ -2367,7 +2608,52 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (newTotal > max_msegs)
         {
             newCount = max_msegs - leftIdx - segsAfter;
-            fitted.resize(newCount);
+            newCount = std::max(1, newCount);
+
+            if (newCount < (int)fitted.size())
+            {
+                // Collapse the excess into the last kept segment instead of
+                // just resizing it away. A plain resize() silently drops
+                // whatever time span those trailing segments covered, which
+                // shifts every segment after the gesture region - including
+                // the whole point of step 5 below, which relies on segments
+                // outside the gesture region never having moved in absolute
+                // time. Losing fidelity here is fine (this is already a
+                // last-resort budget cap); losing time span is not.
+                float droppedDuration = 0.f;
+
+                for (int i = newCount; i < (int)fitted.size(); ++i)
+                {
+                    droppedDuration += fitted[i].duration;
+                }
+
+                fitted.resize(newCount);
+                fitted.back().duration += droppedDuration;
+            }
+        }
+
+        // Defensive: guarantee the fitted segments' total duration exactly
+        // matches the gesture region span, regardless of any float
+        // accumulation or fitting edge case. Everything after the gesture
+        // region - and the loop marker relocation in step 5 - depends on
+        // this being exact. If it drifts even slightly, a marker time
+        // outside the gesture region can miss the lookup below and fall
+        // back to a nearest-match that isn't actually close.
+        if (!fitted.empty())
+        {
+            float fittedDurationSum = 0.f;
+
+            for (auto &seg : fitted)
+            {
+                fittedDurationSum += seg.duration;
+            }
+
+            float durationError = totalTimeSpan - fittedDurationSum;
+
+            if (fabs(durationError) > 1e-6f)
+            {
+                fitted.back().duration += durationError;
+            }
         }
 
         // Shift segments after gesture region
@@ -2387,23 +2673,139 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // Fix right boundary v0
         if (leftIdx + newCount < ms->n_activeSegments)
         {
+            std::cout << "commitFreehandGesture BOUNDARY-V0: took INNER branch, writing segments["
+                      << (leftIdx + newCount) << "].v0=" << freehandSamples.back().second
+                      << std::endl;
             ms->segments[leftIdx + newCount].v0 = freehandSamples.back().second;
         }
-
-        // --- 5. Remap loop markers by saved time positions ---
-        int indexDelta = newCount - 1;
-
-        if (ms->loop_start >= leftIdx + 1)
+        else if (ms->endpointMode != MSEGStorage::EndpointMode::LOCKED)
         {
-            ms->loop_start += indexDelta;
+            // The gesture reached the very end of the MSEG - there's no
+            // "next segment" for the last fitted segment's end value to
+            // come from. That value instead lives in the one-past-the-end
+            // slot that rebuildCache() reads as nv1 for the final segment,
+            // and nothing else in this function ever touches it, so it was
+            // silently left stale.
+            std::cout
+                << "commitFreehandGesture BOUNDARY-V0: took TERMINAL branch, writing segments["
+                << ms->n_activeSegments << "].v0=" << freehandSamples.back().second << std::endl;
+            ms->segments[ms->n_activeSegments - 1].nv1 = freehandSamples.back().second;
+        }
+        else
+        {
+            // Endpoints are linked: rebuildCache() unconditionally mirrors
+            // nv1 of the last segment from segments[0].v0, so segments[0].v0
+            // is the only real source of truth for both ends. Writing the
+            // terminal slot here would just be ignored. To make the
+            // gesture's actual drawn ending value "stick" under linking, we
+            // have to drive it through segments[0].v0 instead - which also
+            // correctly moves the start node to match, since that's what
+            // linking means.
+            std::cout << "commitFreehandGesture BOUNDARY-V0: took LOCKED-TERMINAL branch, writing "
+                         "segments[0].v0="
+                      << freehandSamples.back().second << std::endl;
+            ms->segments[0].v0 = freehandSamples.back().second;
         }
 
-        if (ms->loop_end >= leftIdx + 1)
-        {
-            ms->loop_end += indexDelta;
-        }
-
+        // Cache needs to be fresh before we can look up segments by time below.
         Surge::MSEG::rebuildCache(ms);
+
+        // --- 5. Relocate loop markers by their saved time positions ---
+        //
+        // Loop markers outside of the gesture region never moved in absolute time,
+        // so this finds them exactly. Markers inside the gesture region were pinned above,
+        // so a segment boundary is guaranteed to exist at their saved time too.
+        //
+        // loop_start and loop_end need DIFFERENT lookups: loop_start is the
+        // index of the segment that STARTS the loop, but loop_end is the
+        // index of the segment that ENDS the loop (the last segment
+        // included in it) - so we search segmentStart[] for one and
+        // segmentEnd[] for the other.
+        auto findSegmentIndexByStart = [&](float t) -> int {
+            // Closest match within tolerance, not first match - a dense fit
+            // can pack multiple segment boundaries within tEpsilon of each
+            // other, and the pin only guarantees an exact node exists at t,
+            // not that it's the only candidate within tolerance.
+            int best = -1;
+            float bestDist = std::numeric_limits<float>::max();
+
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentStart[i] - t);
+
+                if (d < tEpsilon && d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            if (best >= 0)
+            {
+                return best;
+            }
+
+            // Shouldn't happen given the pinning guarantee above, but fall
+            // back to the nearest segment start rather than leaving the
+            // marker on a stale/meaningless index.
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentStart[i] - t);
+
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            return best;
+        };
+
+        auto findSegmentIndexByEnd = [&](float t) -> int {
+            int best = -1;
+            float bestDist = std::numeric_limits<float>::max();
+
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentEnd[i] - t);
+
+                if (d < tEpsilon && d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            if (best >= 0)
+            {
+                return best;
+            }
+
+            for (int i = 0; i < ms->n_activeSegments; ++i)
+            {
+                float d = fabs(ms->segmentEnd[i] - t);
+
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = i;
+                }
+            }
+
+            return best;
+        };
+
+        if (hasLoopStart)
+        {
+            ms->loop_start = findSegmentIndexByStart(loopStartTime);
+        }
+
+        if (hasLoopEnd)
+        {
+            ms->loop_end = findSegmentIndexByEnd(loopEndTime);
+        }
+
         pushToUndo();
         modelChanged();
         repaint();
@@ -2523,9 +2925,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             reset = true;
 
-            if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
+            switch (h.zoneSubType)
+            {
+            case hotzone::SEGMENT_CONTROL:
             {
                 auto nextCursor = juce::MouseCursor::NormalCursor;
+
                 switch (h.segmentDirection)
                 {
                 case hotzone::VERTICAL_ONLY:
@@ -2540,11 +2945,22 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }
 
                 setMouseCursor(nextCursor);
-            }
 
-            if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                break;
+            }
+            case hotzone::SEGMENT_ENDPOINT:
             {
                 setMouseCursor(juce::MouseCursor::UpDownLeftRightResizeCursor);
+                break;
+            }
+            case hotzone::LOOP_START:
+            case hotzone::LOOP_END:
+            {
+                setMouseCursor(juce::MouseCursor::LeftRightResizeCursor);
+                break;
+            }
+            default:
+                break;
             }
         }
 
@@ -2951,8 +3367,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         using type = MSEGStorage::segment::Type;
 
-        const bool is2Dcp =
-            ms->segments[i].type == type::QUAD_BEZIER || ms->segments[i].type == type::BROWNIAN;
+        const bool is2Dcp = ms->segments[i].type == type::QUAD_BEZIER ||
+                            ms->segments[i].type == type::BROWNIAN ||
+                            (ms->segments[i].type >= MSEGStorage::segment::RATCHET_1 &&
+                             ms->segments[i].type <= MSEGStorage::segment::RATCHET_8);
 
         float *propValue = nullptr;
         std::string propName;
@@ -3066,6 +3484,61 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         contextMenu.addSeparator();
 
+        auto typeTo = [this, &contextMenu, t, tts](std::string n, MSEGStorage::segment::Type type) {
+            contextMenu.addItem(
+                n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
+                    // ADJUST HERE
+                    Surge::MSEG::changeTypeAt(this->ms, t, type);
+
+                    for (auto &h : hotzones)
+                    {
+                        if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
+                            h.type == hotzone::MOUSABLE_NODE &&
+                            h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                        {
+                            this->ms->segments[h.associatedSegment].type = type;
+                        }
+                    }
+
+                    pushToUndo();
+                    modelChanged();
+                });
+        };
+
+        typeTo("Hold", type::HOLD);
+        typeTo("Linear", type::LINEAR);
+        typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
+        typeTo("Bezier", type::QUAD_BEZIER);
+
+        contextMenu.addSeparator();
+
+        typeTo("Sine", type::SINE);
+        typeTo("Triangle", type::TRIANGLE);
+        typeTo("Sawtooth", type::SAWTOOTH);
+        typeTo("Square", type::SQUARE);
+
+        contextMenu.addSeparator();
+
+        for (int i = 0; i < 8; i++)
+        {
+            typeTo(fmt::format("Ratchet {:d}", i + 1), static_cast<type>(type::RATCHET_1 + i));
+        }
+
+        contextMenu.addSeparator();
+
+        typeTo("Bump", type::BUMP);
+        typeTo("Stairs", type::STAIRS);
+        typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
+        typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
+
+        contextMenu.addColumnBreak();
+
+        auto ecomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("", hurl);
+
+        contextMenu.addCustomItem(-1, std::move(ecomp), nullptr, ecomp->getTitle());
+
+        contextMenu.addSeparator();
+
         const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
         contextMenu.addItem(
@@ -3075,8 +3548,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode), true, false,
             [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::value, iw.toInt()); });
 
-        const bool is2Dcp =
-            ms->segments[tts].type == type::QUAD_BEZIER || ms->segments[tts].type == type::BROWNIAN;
+        const bool is2Dcp = ms->segments[tts].type == type::QUAD_BEZIER ||
+                            ms->segments[tts].type == type::BROWNIAN ||
+                            (ms->segments[tts].type >= MSEGStorage::segment::RATCHET_1 &&
+                             ms->segments[tts].type <= MSEGStorage::segment::RATCHET_8);
 
         if (ms->segments[tts].type != type::HOLD)
         {
@@ -3198,14 +3673,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             actionsMenu.addSeparator();
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), isActive, false, [this]() {
-                Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
+                Surge::MSEG::scaleDurations(this->ms, 2.0, max_msegs);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), isActive, false, [this]() {
-                Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
+                Surge::MSEG::scaleDurations(this->ms, 0.5, max_msegs);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
@@ -3411,49 +3886,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             contextMenu.addSubMenu("Settings", settingsMenu);
 
-            contextMenu.addSeparator();
-
-            auto typeTo = [this, &contextMenu, t, tts](std::string n,
-                                                       MSEGStorage::segment::Type type) {
-                contextMenu.addItem(
-                    n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
-                        // ADJUST HERE
-                        Surge::MSEG::changeTypeAt(this->ms, t, type);
-
-                        for (auto &h : hotzones)
-                        {
-                            if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
-                                h.type == hotzone::MOUSABLE_NODE &&
-                                h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
-                            {
-                                this->ms->segments[h.associatedSegment].type = type;
-                            }
-                        }
-
-                        pushToUndo();
-                        modelChanged();
-                    });
-            };
-
-            typeTo("Hold", type::HOLD);
-            typeTo("Linear", type::LINEAR);
-            typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
-            typeTo("Bezier", type::QUAD_BEZIER);
-
-            contextMenu.addSeparator();
-
-            typeTo("Sine", type::SINE);
-            typeTo("Triangle", type::TRIANGLE);
-            typeTo("Sawtooth", type::SAWTOOTH);
-            typeTo("Square", type::SQUARE);
-
-            contextMenu.addSeparator();
-
-            typeTo("Bump", type::BUMP);
-            typeTo("Stairs", type::STAIRS);
-            typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
-            typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
-
             contextMenu.showMenuAsync(sge->popupMenuOptions());
         }
     }
@@ -3483,7 +3915,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         repaint();
     }
 
-    static constexpr int longestMSEG = 128;
     static constexpr int longestSmallZoom = 32;
 
     void applyZoomPanConstraints(int activeSegment = -1, bool specialEndpoint = false)
@@ -3502,8 +3933,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             auto bd = std::max(ms->totalDuration, 1.f);
             auto longest = bd * 2;
-            if (longest > longestMSEG)
-                longest = longestMSEG;
+            if (longest > max_msegs)
+                longest = max_msegs;
             if (longest < longestSmallZoom)
                 longest = longestSmallZoom;
             if (ms->axisWidth > longest)

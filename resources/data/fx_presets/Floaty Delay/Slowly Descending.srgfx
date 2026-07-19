@@ -1,0 +1,16 @@
+<single-fx streaming_version="30">
+  <snapshot name="Slowly Descending"
+     type="30"
+     p0="-1.73699"
+     p1="0.996177"
+     p2="0.973214"
+     p3="20"
+     p4="0.5"
+     p5="0"
+     p6="0.640944"
+     p7="0.105"
+     p8="0.375"
+     p9="-32.1429"
+     p10="0.198979"
+  />
+</single-fx>

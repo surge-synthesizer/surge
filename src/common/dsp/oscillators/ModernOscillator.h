@@ -49,6 +49,7 @@ class ModernOscillator : public Oscillator
     {
         mo_subone = 1U << 10,
         mo_subskipsync = 1U << 11,
+        mo_subdowntwo = 1U << 12,
     };
 
     static constexpr int sigbuf_len = 6;
@@ -65,18 +66,24 @@ class ModernOscillator : public Oscillator
         }
     }
 
-    virtual void init(float pitch, bool is_display = false, bool nonzero_init_drift = true);
-    virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
-    virtual void init_ctrltypes();
-    virtual void init_default_values();
+    virtual void init(float pitch, bool is_display = false,
+                      bool nonzero_init_drift = true) override;
+    virtual void init_ctrltypes(int scene, int oscnum) override { init_ctrltypes(); };
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
-                               float FMdepth = 0.f);
+                               float FMdepth = 0.f) override;
 
     template <mo_multitypes mtype, bool subOctave, bool FM>
-    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
+    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f,
+                      bool sawActive = true, bool pulseActive = true, bool thirdActive = true,
+                      bool needSaw = true);
+
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
     lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
-        subdpbase, subdpsbase, detune, pitchlag, fmdepth;
+        subdpbase, subdspbase, detune, pitchlag, fmdepth;
 
     // character filter
     Surge::Oscillator::CharacterFilter<double> charFilt;

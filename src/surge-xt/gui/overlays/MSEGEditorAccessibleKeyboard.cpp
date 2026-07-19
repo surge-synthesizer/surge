@@ -45,6 +45,7 @@ constexpr int kTypein2DChooser = -1;
 
 // matches MSEGCanvas::TimeEdit
 constexpr int kTimeEditShift = 1;
+constexpr int kTimeEditDraw = 2;
 
 // the CP hotzone existence condition from MSEGCanvas::recalcHotZones
 constexpr float kMinCPDuration = 0.01f;
@@ -144,7 +145,8 @@ bool MSEGAccessibleKeyboardHandler::controlPointUsable(int seg) const
 bool MSEGAccessibleKeyboardHandler::controlPointIs2D(int seg) const
 {
     auto t = ms->segments[seg].type;
-    return t == MSEGStorage::segment::QUAD_BEZIER || t == MSEGStorage::segment::BROWNIAN;
+    return t == MSEGStorage::segment::QUAD_BEZIER || t == MSEGStorage::segment::BROWNIAN ||
+           (t >= MSEGStorage::segment::RATCHET_1 && t <= MSEGStorage::segment::RATCHET_8);
 }
 
 std::pair<float, float> MSEGAccessibleKeyboardHandler::cursorPosition() const
@@ -166,37 +168,48 @@ float MSEGAccessibleKeyboardHandler::unipolarFactor() const
 
 float MSEGAccessibleKeyboardHandler::xStep(const juce::ModifierKeys &mods) const
 {
-    float b = ms->hSnap > 0 ? ms->hSnap : ms->hSnapDefault;
-    if (b <= 0)
-        b = 0.05f;
-    if (mods.isShiftDown())
-        b *= 0.25f;
     if (mods.isCommandDown())
-        b *= 4.f;
-    return b;
+    {
+        float b = ms->hSnap > 0 ? ms->hSnap : ms->hSnapDefault;
+        if (b <= 0)
+            b = 0.05f;
+        return b;
+    }
+    return mods.isShiftDown() ? 0.01f : 0.05f;
 }
 
 float MSEGAccessibleKeyboardHandler::yStep(const juce::ModifierKeys &mods) const
 {
-    float b = ms->vSnap > 0 ? ms->vSnap : ms->vSnapDefault;
-    if (b <= 0)
-        b = 0.025f;
-    b *= unipolarFactor();
-    if (mods.isShiftDown())
-        b *= 0.25f;
     if (mods.isCommandDown())
-        b *= 4.f;
-    return b;
+    {
+        float b = ms->vSnap > 0 ? ms->vSnap : ms->vSnapDefault;
+        if (b <= 0)
+            b = 0.025f;
+        return b * unipolarFactor();
+    }
+    // fixed steps, without the unipolar factor, so the announced value always
+    // changes by exactly the step
+    return mods.isShiftDown() ? 0.01f : 0.05f;
 }
 
+// time moves only quantize with Ctrl held, which engages the horizontal snap
+// division whether or not the snap checkbox is on
 float MSEGAccessibleKeyboardHandler::xSnapFor(const juce::ModifierKeys &mods) const
 {
-    return mods.isShiftDown() ? 0.f : ms->hSnap;
+    if (!mods.isCommandDown())
+        return 0.f;
+    float b = ms->hSnap > 0 ? ms->hSnap : ms->hSnapDefault;
+    return std::max(b, 0.f);
 }
 
+// value moves only quantize with Ctrl held, which engages the vertical snap
+// division whether or not the snap checkbox is on
 float MSEGAccessibleKeyboardHandler::ySnapFor(const juce::ModifierKeys &mods) const
 {
-    return mods.isShiftDown() ? 0.f : ms->vSnap * unipolarFactor();
+    if (!mods.isCommandDown())
+        return 0.f;
+    float b = ms->vSnap > 0 ? ms->vSnap : ms->vSnapDefault;
+    return std::max(b, 0.f) * unipolarFactor();
 }
 
 float MSEGAccessibleKeyboardHandler::curveValueAt(float t) const
@@ -350,9 +363,20 @@ void MSEGAccessibleKeyboardHandler::nudgeNodeY(int node, float dy, float snapRes
     }
 }
 
+// adjustDurationInternal snaps relative to dragDuration, a mouse-drag
+// accumulator the mouse path stashes on mouseDown; refresh it so keyboard
+// snap moves are relative to the node's actual time
+void MSEGAccessibleKeyboardHandler::refreshSnapDragState()
+{
+    for (int i = 0; i < ms->n_activeSegments; ++i)
+        ms->segments[i].dragDuration = ms->segments[i].duration;
+}
+
 void MSEGAccessibleKeyboardHandler::nudgeNodeX(int node, float dx, float snap, bool announceResult)
 {
     auto N = ms->n_activeSegments;
+
+    refreshSnapDragState();
 
     if (node <= 0)
     {
@@ -375,7 +399,7 @@ void MSEGAccessibleKeyboardHandler::nudgeNodeX(int node, float dx, float snap, b
     }
     else
     {
-        // per the accessibility spec, Draw movement mode nudges like Single
+        // Draw mode never reaches here; processCursorKey refuses time moves
         if (cb.getTimeEditMode && cb.getTimeEditMode() == kTimeEditShift)
             Surge::MSEG::adjustDurationShiftingSubsequent(ms, node - 1, dx, snap, max_msegs);
         else
@@ -399,7 +423,7 @@ void MSEGAccessibleKeyboardHandler::nudgeNodeX(int node, float dx, float snap, b
     }
 }
 
-void MSEGAccessibleKeyboardHandler::nudgeControlPoint(int seg, float dx, float dy)
+void MSEGAccessibleKeyboardHandler::nudgeControlPoint(int seg, float dx, float dy, float ySnapRes)
 {
     auto &s = ms->segments[seg];
 
@@ -433,7 +457,7 @@ void MSEGAccessibleKeyboardHandler::nudgeControlPoint(int seg, float dx, float d
     if (dy != 0)
     {
         float before = s.cpv;
-        s.cpv = std::clamp(s.cpv + dy, -1.f, 1.f);
+        s.cpv = quantizeValue(std::clamp(s.cpv + dy, -1.f, 1.f), ySnapRes);
         Surge::MSEG::constrainControlPointAt(ms, seg);
 
         inFlightEdit = true;
@@ -694,6 +718,8 @@ bool MSEGAccessibleKeyboardHandler::groupNudgeX(float dx, float snap)
     auto sel = cb.getSelection ? cb.getSelection() : std::vector<int>();
     auto N = ms->n_activeSegments;
 
+    refreshSnapDragState();
+
     std::sort(sel.begin(), sel.end());
     if (dx > 0)
         std::reverse(sel.begin(), sel.end());
@@ -751,7 +777,7 @@ bool MSEGAccessibleKeyboardHandler::groupNudgeX(float dx, float snap)
     return changed;
 }
 
-bool MSEGAccessibleKeyboardHandler::groupNudgeCP(float dx, float dy)
+bool MSEGAccessibleKeyboardHandler::groupNudgeCP(float dx, float dy, float ySnapRes)
 {
     auto sel = cb.getSelection ? cb.getSelection() : std::vector<int>();
     auto N = ms->n_activeSegments;
@@ -772,7 +798,7 @@ bool MSEGAccessibleKeyboardHandler::groupNudgeCP(float dx, float dy)
         if (dx != 0)
             s.cpduration += dx / std::max(s.duration, 0.001f);
         if (dy != 0)
-            s.cpv = std::clamp(s.cpv + dy, -1.f, 1.f);
+            s.cpv = quantizeValue(std::clamp(s.cpv + dy, -1.f, 1.f), ySnapRes);
         Surge::MSEG::constrainControlPointAt(ms, i);
 
         if (std::fabs(s.cpduration - beforeX) > 1e-7 || std::fabs(s.cpv - beforeY) > 1e-7)
@@ -932,7 +958,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             {
                 if (cb.prepareForUndo)
                     cb.prepareForUndo();
-                if (groupNudgeCP(dx, 0.f) && cb.pushToUndo)
+                if (groupNudgeCP(dx, 0.f, 0.f) && cb.pushToUndo)
                     cb.pushToUndo();
                 return true;
             }
@@ -949,9 +975,18 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (cb.prepareForUndo)
                 cb.prepareForUndo();
             auto before = ms->segments[seg].cpduration;
-            nudgeControlPoint(seg, dx, 0.f);
+            nudgeControlPoint(seg, dx, 0.f, 0.f);
             if (std::fabs(ms->segments[seg].cpduration - before) > 1e-7 && cb.pushToUndo)
                 cb.pushToUndo();
+            return true;
+        }
+
+        // Draw mode disables node time movement for the mouse (timeConstraint
+        // is a no-op), so match it here; control points above stay movable
+        if (cb.getTimeEditMode && cb.getTimeEditMode() == kTimeEditDraw)
+        {
+            if (cb.announce)
+                cb.announce("Horizontal movement is disabled while Draw is on");
             return true;
         }
 
@@ -983,7 +1018,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             {
                 if (cb.prepareForUndo)
                     cb.prepareForUndo();
-                if (groupNudgeCP(0.f, dy) && cb.pushToUndo)
+                if (groupNudgeCP(0.f, dy, ySnapFor(mods)) && cb.pushToUndo)
                     cb.pushToUndo();
                 return true;
             }
@@ -1000,7 +1035,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (cb.prepareForUndo)
                 cb.prepareForUndo();
             auto before = ms->segments[seg].cpv;
-            nudgeControlPoint(seg, 0.f, dy);
+            nudgeControlPoint(seg, 0.f, dy, ySnapFor(mods));
             if (std::fabs(ms->segments[seg].cpv - before) > 1e-7 && cb.pushToUndo)
                 cb.pushToUndo();
             return true;

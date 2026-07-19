@@ -101,8 +101,8 @@ static MSEGStorage makeRamp4()
         ms.segments[i].nv1 = (i + 1) * 0.25f;
     }
 
-    ms.loop_start = -1;
-    ms.loop_end = -1;
+    ms.loop_start = MSEGStorage::kLoopPointUnset;
+    ms.loop_end = MSEGStorage::kLoopPointUnset;
 
     resetCP(&ms);
     Surge::MSEG::rebuildCache(&ms);
@@ -566,6 +566,48 @@ TEST_CASE("Zero Size Loops", "[mseg]")
             }
             if (c.phase > 1.25)
                 REQUIRE(c.v == 0);
+        }
+    }
+
+    SECTION("Hold At First Node - loop_start Unset, loop_end At Point 0")
+    {
+        // loop_start = kLoopPointUnset, loop_end = -1.
+        // durationLoopStartToLoopEnd = 0, and the zero-length hold branch in
+        // timeToSegment requires both fields != kLoopPointUnset so it doesn't
+        // fire — falling through to the divide-by-durationLoopStartToLoopEnd
+        // path. This is a robustness / no-crash / no-NaN test.
+        MSEGStorage ms;
+        ms.n_activeSegments = 3;
+        ms.loopMode = MSEGStorage::LoopMode::LOOP;
+        ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+        ms.segments[0].duration = 0.25;
+        ms.segments[0].type = MSEGStorage::segment::LINEAR;
+        ms.segments[0].v0 = 0.5f;
+
+        ms.segments[1].duration = 0.25;
+        ms.segments[1].type = MSEGStorage::segment::LINEAR;
+        ms.segments[1].v0 = 0.75f;
+
+        ms.segments[2].duration = 0.25;
+        ms.segments[2].type = MSEGStorage::segment::LINEAR;
+        ms.segments[2].v0 = 1.0f;
+        ms.segments[2].nv1 = 0.0f;
+
+        ms.loop_start = MSEGStorage::kLoopPointUnset;
+        ms.loop_end = -1; // point 0
+
+        resetCP(&ms);
+        Surge::MSEG::rebuildCache(&ms);
+
+        auto runOne = runMSEG(&ms, 0.025, 3);
+        for (auto c : runOne)
+        {
+            // No NaN, no inf, no OOB-induced garbage value
+            INFO("phase=" << c.phase << " v=" << c.v);
+            REQUIRE(std::isfinite(c.v));
+            REQUIRE(c.v >= -1.0f);
+            REQUIRE(c.v <= 1.0f);
         }
     }
 }
