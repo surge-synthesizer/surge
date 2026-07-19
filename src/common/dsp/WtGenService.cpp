@@ -103,66 +103,6 @@ void WtGenService::ensureStarted()
     std::call_once(startFlag, [this]() { thread = std::thread([this]() { runThread(); }); });
 }
 
-uint64_t WtGenService::previewCacheKey(const std::string &script, int resolution, int frameCount,
-                                       uint64_t snapshotsVersion)
-{
-    // FNV-1a hash over the script bytes, then mix in the scalar inputs.
-    // See: https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1a_hash
-    uint64_t h = 1469598103934665603ull; // offset basis
-    constexpr uint64_t prime = 1099511628211ull;
-    for (unsigned char c : script)
-    {
-        h ^= c;
-        h *= prime;
-    }
-    auto mix = [&h](uint64_t v) {
-        for (int b = 0; b < 8; ++b)
-        {
-            h ^= (v & 0xffu);
-            h *= prime;
-            v >>= 8;
-        }
-    };
-    mix((uint32_t)resolution);
-    mix((uint32_t)frameCount);
-    mix(snapshotsVersion);
-    return h ? h : 1; // never 0, that marks an empty cache slot
-}
-
-bool WtGenService::tryGetCachedPreview(int scene, int osc, uint64_t key,
-                                       std::vector<std::vector<float>> &outFrames,
-                                       int &outFrameCount)
-{
-    if (key == 0)
-    {
-        return false;
-    }
-    std::lock_guard<std::mutex> g(previewCacheMutex);
-    const auto &e = previewCache[denseIdx(scene, osc)];
-    if (e.key != key)
-    {
-        return false;
-    }
-    outFrames = e.frames; // copy out, caller owns its snapshot
-    outFrameCount = e.frameCount;
-
-    return true;
-}
-
-void WtGenService::storePreview(int scene, int osc, uint64_t key,
-                                const std::vector<std::vector<float>> &frames, int frameCount)
-{
-    if (key == 0 || frames.empty())
-    {
-        return;
-    }
-    std::lock_guard<std::mutex> g(previewCacheMutex);
-    auto &e = previewCache[denseIdx(scene, osc)];
-    e.frames = frames; // copy: the response still owns its frames for the poller to move out
-    e.frameCount = frameCount;
-    e.key = key;
-}
-
 std::future<WtGenJobResponse> WtGenService::submit(WtGenJobRequest request, bool front)
 {
     ensureStarted();
@@ -292,16 +232,6 @@ void WtGenService::runThread()
                     resp.exportOut = std::make_unique<Wavetable>();
                     resp.exportOut->BuildWT(gen.samples.get(), gen.header,
                                             gen.header.flags & wtf_is_sample);
-                }
-
-                if (req.mode == WtGenMode::Preview ||
-                    (req.mode == WtGenMode::Generate && req.generateTarget))
-                {
-                    // File the frames in the per-osc cache so a later overlay refresh for this osc
-                    // reuses them.
-                    const uint64_t key = previewCacheKey(req.script, req.resolution, req.frameCount,
-                                                         req.snapshot ? req.snapshot->version : 0);
-                    storePreview(req.scene, req.osc, key, resp.frames, resp.frameCount);
                 }
             }
         }

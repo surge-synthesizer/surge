@@ -49,6 +49,7 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
+#include <array>
 #include <vector>
 #include <thread>
 #include <atomic>
@@ -371,6 +372,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     struct PendingWtGenJob
     {
         std::future<Surge::WavetableScript::WtGenJobResponse> future;
+        Surge::WavetableScript::WtGenInputs inputs; // submit-time inputs, cached with the frames
         int scene{0}, osc{0}, currentId{-1};
 
         // How the poll tail activates the finished generate. A drop can land on a non-Wavetable
@@ -381,6 +383,21 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void submitWtGenJob(int scene, int osc, int currentId, bool retypeToWavetable);
     void pollWtGenJobs();
     void idleWtGenService();
+
+    // Message-thread-only cache of the newest preview filmstrip per (scene, osc), filled by the
+    // response pollers (the overlay's pollGenJobs and the drop/menu tail; OSC generates complete
+    // on the OSC thread and don't fill it). A hit requires every generation input to match, so
+    // there is no invalidation: changed inputs miss and regenerate.
+    struct WtPreviewCacheEntry
+    {
+        Surge::WavetableScript::WtGenInputs inputs;
+        std::vector<std::vector<float>> frames; // empty == vacant
+    };
+    std::array<WtPreviewCacheEntry, n_scenes * n_oscs> wtPreviewCache;
+    void storeWtPreview(int scene, int osc, Surge::WavetableScript::WtGenInputs &&inputs,
+                        std::vector<std::vector<float>> &&frames);
+    const std::vector<std::vector<float>> *
+    findWtPreview(int scene, int osc, const Surge::WavetableScript::WtGenInputs &inputs) const;
 
     std::string tuningToHtml();
     void tuningChanged();

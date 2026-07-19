@@ -391,6 +391,10 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply,
     void stepGenSpinner();
     Surge::WavetableScript::WtGenJobRequest makeGenRequest(bool generate);
     std::future<Surge::WavetableScript::WtGenJobResponse> previewFut, generateFut;
+
+    // Submit-time inputs for each outstanding job, filed into the editor's preview cache with the
+    // finished frames. Overwritten with the future on each submit, so newest wins.
+    Surge::WavetableScript::WtGenInputs previewInputs, generateInputs;
     bool awaitingGenerate{false};
     void adjustCurrentFrame(int value);
     void setCurrentFrame(int value);

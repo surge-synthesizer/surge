@@ -3018,6 +3018,7 @@ void SurgeGUIEditor::submitWtGenJob(int scene, int osc, int currentId, bool rety
     // A newer drop/menu (or overlay Generate) for this osc supersedes this one if it is still
     // pending, so the worker can drop the stale one before running it.
     req.supersedable = true;
+    auto inputs = WS::WtGenInputs::of(req);
     auto fut = synth->storage.wtGenService->submit(std::move(req));
 
     // Update WT id and name early so the OWD menu updates before WT script generation finishes.
@@ -3030,11 +3031,38 @@ void SurgeGUIEditor::submitWtGenJob(int scene, int osc, int currentId, bool rety
 
     PendingWtGenJob pending;
     pending.future = std::move(fut);
+    pending.inputs = std::move(inputs);
     pending.scene = scene;
     pending.osc = osc;
     pending.currentId = currentId;
     pending.retypeToWavetable = retypeToWavetable;
     pendingWtGenJobs.push_back(std::move(pending));
+}
+
+void SurgeGUIEditor::storeWtPreview(int scene, int osc,
+                                    Surge::WavetableScript::WtGenInputs &&inputs,
+                                    std::vector<std::vector<float>> &&frames)
+{
+    // Empty frames mark a vacant entry, so only file a produced set.
+    if (frames.empty())
+    {
+        return;
+    }
+    auto &e = wtPreviewCache[scene * n_oscs + osc];
+    e.inputs = std::move(inputs);
+    e.frames = std::move(frames);
+}
+
+const std::vector<std::vector<float>> *
+SurgeGUIEditor::findWtPreview(int scene, int osc,
+                              const Surge::WavetableScript::WtGenInputs &inputs) const
+{
+    const auto &e = wtPreviewCache[scene * n_oscs + osc];
+    if (e.frames.empty() || !(e.inputs == inputs))
+    {
+        return nullptr;
+    }
+    return &e.frames;
 }
 
 void SurgeGUIEditor::idleWtGenService()
@@ -3085,6 +3113,14 @@ void SurgeGUIEditor::pollWtGenJobs()
 
         auto r = it->future.get();
         auto *oscdata = &synth->storage.getPatch().scene[it->scene].osc[it->osc];
+
+        // Cache the filmstrip under its submit-time inputs so opening the overlay for this osc
+        // reuses it. Frames are unused in the rest of the tail, so hand them over.
+        if (r.ok)
+        {
+            storeWtPreview(it->scene, it->osc, std::move(it->inputs), std::move(r.frames));
+        }
+
         if (r.published)
         {
             oscdata->wavetable_display_name = r.wtName;

@@ -87,6 +87,28 @@ struct WtGenJobRequest
     WtGenJobRequest &operator=(const WtGenJobRequest &) = delete;
 };
 
+// The inputs that determine a generation's output: requests with equal inputs produce
+// identical frames. Lets a consumer compare submit-time inputs against current ones to
+// decide whether already-produced frames are reusable.
+struct WtGenInputs
+{
+    std::string script;
+    int resolution{0}, frameCount{0};
+    uint64_t snapshotsVersion{0};
+
+    static WtGenInputs of(const WtGenJobRequest &req)
+    {
+        return {req.script, req.resolution, req.frameCount,
+                req.snapshot ? req.snapshot->version : 0};
+    }
+
+    bool operator==(const WtGenInputs &o) const
+    {
+        return resolution == o.resolution && frameCount == o.frameCount &&
+               snapshotsVersion == o.snapshotsVersion && script == o.script;
+    }
+};
+
 // Outputs from one generation. Written by the worker, then read by the submitter through the
 // future once it is ready (the future's shared state is the sole synchronization: the caller
 // cannot observe these fields before the worker has finished writing them). Move-only.
@@ -217,24 +239,9 @@ class WtGenService
     bool isBusy(int scene, int osc) const;
     bool isGeneratingToOscillator(int scene, int osc) const;
 
-    // Content signature of a generation's inputs: equal inputs hash to equal keys, so a cached
-    // frame set is reused when the caller's current inputs produce the same key. Never returns 0
-    // (0 marks an empty cache slot).
-    static uint64_t previewCacheKey(const std::string &script, int resolution, int frameCount,
-                                    uint64_t snapshotsVersion);
-
-    // Per-osc preview cache lookup (message thread).
-    bool tryGetCachedPreview(int scene, int osc, uint64_t key,
-                             std::vector<std::vector<float>> &outFrames, int &outFrameCount);
-
   private:
     void ensureStarted();
     void runThread();
-
-    // Worker-side: file a produced filmstrip under its content key (copies frames under the
-    // cache mutex).
-    void storePreview(int scene, int osc, uint64_t key,
-                      const std::vector<std::vector<float>> &frames, int frameCount);
 
     static int denseIdx(int scene, int osc);
 
@@ -255,19 +262,6 @@ class WtGenService
         WtGenStatus::Ticket ticket;
     };
     std::deque<QueuedJob> queue;
-
-    // Per-osc preview frame cache (denseIdx). Written by the worker after a successful
-    // Preview / live-osc Generate, read by the overlay on refresh. Validity is purely by key match,
-    // so no explicit invalidation is needed: a change to script/res/frames/snapshots yields a
-    // different key and misses. Bounded to n_scenes*n_oscs entries, each overwritten on regen.
-    struct PreviewCacheEntry
-    {
-        std::vector<std::vector<float>> frames;
-        int frameCount{0};
-        uint64_t key{0}; // 0 == empty
-    };
-    std::array<PreviewCacheEntry, n_scenes * n_oscs> previewCache;
-    std::mutex previewCacheMutex;
 
     std::mutex queueLock;
     std::condition_variable queueCV;

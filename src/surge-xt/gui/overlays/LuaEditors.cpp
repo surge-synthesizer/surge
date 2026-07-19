@@ -4111,24 +4111,20 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     namespace WS = Surge::WavetableScript;
 
-    // Build the Preview request first, then derive the cache key from its inputs
+    // Build the Preview request first and derive the cache inputs from it: the snapshot
+    // version must come from the captured bundle, not an unlocked oscdata read.
     auto req = makeGenRequest(false);
-    auto key = WS::WtGenService::previewCacheKey(req.script, req.resolution, req.frameCount,
-                                                 req.snapshot ? req.snapshot->version : 0);
+    auto inputs = WS::WtGenInputs::of(req);
 
     // Reuse cached frames when this osc's inputs are unchanged.
+    if (const auto *hit = editor->findWtPreview(scene, osc_id, inputs))
     {
-        std::vector<std::vector<float>> cached;
-        int cachedCount = 0;
-        if (storage->wtGenService->tryGetCachedPreview(scene, osc_id, key, cached, cachedCount))
-        {
-            previewFut = {};
-            awaitingGenerate = false;
-            rendererComponent->frameCache = std::move(cached);
-            rendererComponent->frameCount = cachedCount;
-            rendererComponent->repaint();
-            return;
-        }
+        previewFut = {};
+        awaitingGenerate = false;
+        rendererComponent->frameCache = *hit; // copy: the cache keeps its own
+        rendererComponent->frameCount = (int)hit->size();
+        rendererComponent->repaint();
+        return;
     }
 
     // Cache miss, but a live-osc generate for this osc is already running, so wait for it rather
@@ -4145,6 +4141,7 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     // Submit the Preview we already built; timerCallback fills frameCache on completion.
     awaitingGenerate = false;
+    previewInputs = std::move(inputs);
     previewFut = storage->wtGenService->submit(std::move(req));
     startTimerHz(30);
     stepGenSpinner();
@@ -4168,7 +4165,9 @@ void WavetableScriptEditor::generateWavetable()
 {
     applyCodeToOsc();
     lastFrames = -1;
-    generateFut = storage->wtGenService->submit(makeGenRequest(true));
+    auto req = makeGenRequest(true);
+    generateInputs = Surge::WavetableScript::WtGenInputs::of(req);
+    generateFut = storage->wtGenService->submit(std::move(req));
     startTimerHz(30);
     stepGenSpinner();
 }
@@ -4217,6 +4216,8 @@ void WavetableScriptEditor::pollGenJobs()
         // empty frames, so it is a silent no-op.
         if (r.ok)
         {
+            auto framesCopy = r.frames;
+            editor->storeWtPreview(scene, osc_id, std::move(previewInputs), std::move(framesCopy));
             rendererComponent->frameCache = std::move(r.frames);
             rendererComponent->frameCount = r.frameCount;
             rendererComponent->repaint();
@@ -4230,6 +4231,14 @@ void WavetableScriptEditor::pollGenJobs()
     if (futureReady(generateFut))
     {
         auto r = generateFut.get();
+
+        // The frames are valid for their submit-time inputs even if the publish was skipped, so
+        // cache them regardless of published.
+        if (r.ok)
+        {
+            auto framesCopy = r.frames;
+            editor->storeWtPreview(scene, osc_id, std::move(generateInputs), std::move(framesCopy));
+        }
 
         // Reuse a published Generate's frames for the preview, unless a newer Preview is pending.
         // Skip unpublished results so a mid-generate osc swap can't paint stale frames.
@@ -4272,9 +4281,8 @@ void WavetableScriptEditor::timerCallback()
     pollGenJobs();
 
     // An external generate for this osc just finished: re-render (forcing past the unchanged-input
-    // guard) to pick its frames up from the cache. The cache is keyed on
-    // script+res+frames+snapshot, so if the script was edited while it ran, the lookup misses and
-    // the re-render falls through to a fresh Preview of the current content.
+    // guard) to pick its frames up from the cache. Any miss (inputs edited meanwhile, or
+    // SurgeGUIEditor::pollWtGenJobs hasn't stored yet this tick) self-heals as one fresh Preview.
     if (awaitingGenerate && !storage->wtGenService->isGeneratingToOscillator(scene, osc_id))
     {
         awaitingGenerate = false;
