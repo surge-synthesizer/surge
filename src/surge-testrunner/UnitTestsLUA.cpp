@@ -1300,7 +1300,7 @@ end
     }
 }
 
-TEST_CASE("WtGenService Round-Trip", "[wts]")
+TEST_CASE("WtGenService", "[wts]")
 {
     namespace WS = Surge::WavetableScript;
 
@@ -1329,41 +1329,75 @@ end
     const int resolution = WS::resolutionForResBase(osc.wavetable_script_res_base);
     const int nframes = osc.wavetable_script_nframes;
 
-    SECTION("Live Generate matches the direct evaluator and publishes")
-    {
-        // Direct reference: the same evaluator code the worker drives, run inline.
+    // Direct reference: the same evaluator code the worker drives, run inline.
+    auto computeDirectFrames = [&]() {
         std::vector<std::vector<float>> directFrames;
+        auto la = std::make_unique<WS::LuaWTEvaluator>();
+        la->setStorage(nullptr);
+        la->setScript(script);
+        la->setResolution(resolution);
+        la->setFrameCount(nframes);
+        la->setSnapshotBundle(WS::SnapshotBundle::build(osc));
+        la->forceInvalidate();
+        for (int f = 0; f < nframes; ++f)
         {
-            auto la = std::make_unique<WS::LuaWTEvaluator>();
-            la->setStorage(nullptr);
-            la->setScript(script);
-            la->setResolution(resolution);
-            la->setFrameCount(nframes);
-            la->setSnapshotBundle(WS::SnapshotBundle::build(osc));
-            la->forceInvalidate();
-            for (int f = 0; f < nframes; ++f)
+            auto fr = la->getFrame(f);
+            REQUIRE(fr.has_value());
+            directFrames.push_back(*fr);
+        }
+        return directFrames;
+    };
+
+    // The frames the worker carries back equal the direct run (same code, same inputs).
+    auto requireFramesMatch = [](const std::vector<std::vector<float>> &frames,
+                                 const std::vector<std::vector<float>> &ref) {
+        REQUIRE(frames.size() == ref.size());
+        for (size_t f = 0; f < ref.size(); ++f)
+        {
+            REQUIRE(frames[f].size() == ref[f].size());
+            for (size_t i = 0; i < ref[f].size(); ++i)
             {
-                auto fr = la->getFrame(f);
-                REQUIRE(fr.has_value());
-                directFrames.push_back(*fr);
+                REQUIRE(frames[f][i] == Approx(ref[f][i]));
             }
         }
+    };
+
+    SECTION("Preview matches the direct evaluator and leaves the oscillator untouched")
+    {
+        auto directFrames = computeDirectFrames();
+
+        const bool builtBefore = osc.wt.everBuilt;
+        const int nTablesBefore = osc.wt.n_tables;
+
+        WS::WtGenJobRequest preq;
+        preq.mode = WS::WtGenMode::Preview;
+        preq.scene = 0;
+        preq.osc = 0;
+        preq.script = script;
+        preq.resolution = resolution;
+        preq.frameCount = nframes;
+        preq.snapshot = WS::SnapshotBundle::current(&storage, osc);
+
+        auto r = storage.wtGenService->submitBlocking(std::move(preq));
+
+        REQUIRE(r.ok);
+        REQUIRE_FALSE(r.published);
+        REQUIRE_FALSE(r.exportOut);
+        requireFramesMatch(r.frames, directFrames);
+        REQUIRE(osc.wt.everBuilt == builtBefore);
+        REQUIRE(osc.wt.n_tables == nTablesBefore);
+    }
+
+    SECTION("Live Generate matches the direct evaluator and publishes")
+    {
+        auto directFrames = computeDirectFrames();
 
         auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
 
         REQUIRE(r.ok);
         REQUIRE(r.published);
-
-        // The filmstrip the worker carries back equals the direct run (same code, same inputs).
-        REQUIRE(r.frames.size() == directFrames.size());
-        for (size_t f = 0; f < directFrames.size(); ++f)
-        {
-            REQUIRE(r.frames[f].size() == directFrames[f].size());
-            for (size_t i = 0; i < directFrames[f].size(); ++i)
-            {
-                REQUIRE(r.frames[f][i] == Approx(directFrames[f][i]));
-            }
-        }
+        REQUIRE(r.wtName == "RoundTrip");
+        requireFramesMatch(r.frames, directFrames);
 
         REQUIRE(osc.wt.everBuilt);
         REQUIRE(osc.wt.n_tables == nframes);
@@ -1392,7 +1426,7 @@ end
         REQUIRE(r.exportOut->everBuilt); // built into the response-owned wavetable
         REQUIRE(r.exportOut->n_tables == nframes);
 
-        // Export should not mutate the live oscillator
+        // Export should not mutate the live oscillator.
         REQUIRE(osc.wt.everBuilt == builtBefore);
         REQUIRE(osc.wt.n_tables == nTablesBefore);
     }
@@ -1423,6 +1457,45 @@ end
         REQUIRE(rGood.published);
         REQUIRE(osc.wt.everBuilt);
         REQUIRE(osc.wt.n_tables == nframes);
+    }
+
+    SECTION("A queued wavetable load invalidates an in-flight Generate")
+    {
+        // A queued wavetable load replaces this osc's wt (perform_queued_wtloads
+        // bumps the token under the mutex before loading), so a Generate captured before the
+        // load must skip its publish - the user's selection wins.
+        auto capturedReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
+
+        osc.wt.queue_id = 0;
+        storage.perform_queued_wtloads();
+        REQUIRE(osc.wt.everBuilt);
+        const int loadedTables = osc.wt.n_tables;
+
+        auto rCaptured = storage.wtGenService->submitBlocking(std::move(capturedReq));
+
+        REQUIRE(rCaptured.ok);
+        REQUIRE_FALSE(rCaptured.published);
+        REQUIRE(osc.wt.n_tables == loadedTables);
+    }
+
+    SECTION("A failing generate() fails the job and leaves the oscillator untouched")
+    {
+        const bool builtBefore = osc.wt.everBuilt;
+        const int nTablesBefore = osc.wt.n_tables;
+
+        osc.wavetable_script = R"FN(
+function generate(wt)
+    error("boom")
+end
+        )FN";
+
+        auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+
+        REQUIRE_FALSE(r.ok);
+        REQUIRE_FALSE(r.published);
+        REQUIRE_FALSE(r.error.empty());
+        REQUIRE(osc.wt.everBuilt == builtBefore);
+        REQUIRE(osc.wt.n_tables == nTablesBefore);
     }
 }
 
