@@ -124,7 +124,7 @@ struct LuaWTEvaluator
     // generating. Lua-free and instance-free, so load sites can parse on the caller thread and
     // then submit a Generate to the WtGenService instead of blocking on synchronous generation.
     // Returns false on a parse error. If errorOut is non-null the error text is written there for
-    // the caller to surface (eg. OSC->sendError, off the message thread), otherwise it is
+    // the caller to surface (e.g. OSC->sendError, off the message thread), otherwise it is
     // reported directly via storage->reportError (message-thread callers).
     static bool loadWtscriptMetadata(const fs::path &filename, SurgeStorage *storage,
                                      OscillatorStorage *oscdata, std::string *errorOut = nullptr);

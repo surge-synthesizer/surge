@@ -721,15 +721,11 @@ namespace Surge
 {
 namespace WavetableScript
 {
-// Immutable, refcount-shared copy of an oscillator's wtSnapshots, built copy-on-mutate
-// Defined in WavetableScriptEvaluator.h, only referenced here through a shared_ptr so a
-// forward declaration is enough.
+// Defined in WavetableScriptEvaluator.h / WtGenService.h; referenced here only through
+// shared_ptr / unique_ptr, so forward declarations are enough.
 struct SnapshotBundle;
-
-// Persistent background wavetable-script generation worker (WtGenService.h). Held here by
-// unique_ptr; ~SurgeStorage joins it. Declared after _patch / waveTableDataMutex below so it
-// destructs first.
 class WtGenService;
+
 } // namespace WavetableScript
 } // namespace Surge
 
@@ -1776,7 +1772,7 @@ class alignas(16) SurgeStorage
     std::array<std::atomic<uint64_t>, n_scenes * n_oscs> wtGenPublishToken{};
 
     // Background wavetable-script generation worker. Declared after _patch and
-    // waveTableDataMutex so ~SurgeStorage destructs (and joins) it before them
+    // waveTableDataMutex so ~SurgeStorage destructs (and joins) it before them.
     std::unique_ptr<Surge::WavetableScript::WtGenService> wtGenService;
 
     std::recursive_mutex modRoutingMutex;

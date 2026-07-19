@@ -88,6 +88,7 @@
 #include "sst/plugininfra/strnatcmp.h"
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 
+#include <chrono>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -2998,13 +2999,12 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
 void SurgeGUIEditor::submitWtGenJob(int scene, int osc, int currentId, bool retypeToWavetable)
 {
     namespace WS = Surge::WavetableScript;
-    auto job = WS::makeLiveGenerateJob(&synth->storage, scene, osc);
+    auto req = WS::makeLiveGenerateRequest(&synth->storage, scene, osc);
 
-    // Poll-based drop/menu generate: a newer drop/menu (or overlay Generate) for this osc
-    // supersedes this one if it is still pending, so the worker can drop the stale one before
-    // running it.
-    job->supersedable = true;
-    synth->storage.wtGenService->submit(job);
+    // A newer drop/menu (or overlay Generate) for this osc supersedes this one if it is still
+    // pending, so the worker can drop the stale one before running it.
+    req.supersedable = true;
+    auto fut = synth->storage.wtGenService->submit(std::move(req));
 
     // Update WT id and name early so the OWD menu updates before WT script generation finishes.
     if (!retypeToWavetable && currentId >= 0 && currentId < (int)synth->storage.wt_list.size())
@@ -3015,7 +3015,7 @@ void SurgeGUIEditor::submitWtGenJob(int scene, int osc, int currentId, bool rety
     }
 
     PendingWtGenJob pending;
-    pending.job = std::move(job);
+    pending.future = std::move(fut);
     pending.scene = scene;
     pending.osc = osc;
     pending.currentId = currentId;
@@ -3033,8 +3033,7 @@ void SurgeGUIEditor::idleWtGenService()
         pendingWtGenJobs.clear();
     }
 
-    // Run pending background wavetable-generate tails (drop/menu load) regardless of pause state,
-    // so the wavetable activates as soon as the worker finishes.
+    // Run pending background wavetable-generate tails (drop/menu load).
     pollWtGenJobs();
 
     // Oscillator Waveform Display spinner.
@@ -3057,56 +3056,51 @@ void SurgeGUIEditor::pollWtGenJobs()
         return;
     }
 
-    namespace WS = Surge::WavetableScript;
     for (auto it = pendingWtGenJobs.begin(); it != pendingWtGenJobs.end();)
     {
-        auto st = it->job->status.load(std::memory_order_acquire);
-        if (st == WS::WtGenJob::Status::Complete)
+        if (!it->future.valid())
         {
-            auto *oscdata = &synth->storage.getPatch().scene[it->scene].osc[it->osc];
-            if (it->job->published)
+            it = pendingWtGenJobs.erase(it);
+            continue;
+        }
+        if (it->future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+        {
+            ++it;
+            continue;
+        }
+
+        auto r = it->future.get();
+        auto *oscdata = &synth->storage.getPatch().scene[it->scene].osc[it->osc];
+        if (r.published)
+        {
+            oscdata->wavetable_display_name = r.wtName;
+            oscdata->wt.current_id = it->currentId;
+            if (it->retypeToWavetable)
             {
-                oscdata->wavetable_display_name = it->job->wtName;
-                oscdata->wt.current_id = it->currentId;
-                if (it->retypeToWavetable)
+                // Drop: activate the wavetable oscillator type (also refreshes OWD/editor)
+                oscdata->queue_type = ot_wavetable;
+            }
+            else
+            {
+                // Menu: type is already wavetable, just refresh
+                oscdata->wt.refresh_display = true;
+                oscdata->wt.force_refresh_display = true;
+                if (auto ol =
+                        getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR))
                 {
-                    // Drop: activate the wavetable oscillator type (also refreshes OWD/editor)
-                    oscdata->queue_type = ot_wavetable;
-                }
-                else
-                {
-                    // Menu: type is already wavetable, just refresh
-                    oscdata->wt.refresh_display = true;
-                    oscdata->wt.force_refresh_display = true;
-                    if (auto ol =
-                            getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR))
+                    if (ol->scene == it->scene && ol->osc_id == it->osc)
                     {
-                        if (ol->scene == it->scene && ol->osc_id == it->osc)
-                        {
-                            ol->refreshPreview();
-                        }
+                        ol->refreshPreview();
                     }
                 }
             }
+        }
 
-            if (!it->job->error.empty())
-            {
-                synth->storage.reportError(it->job->error, "Wavetable Script Error");
-            }
-            it = pendingWtGenJobs.erase(it);
-        }
-        else if (st == WS::WtGenJob::Status::Failed)
+        if (!r.error.empty())
         {
-            if (!it->job->error.empty())
-            {
-                synth->storage.reportError(it->job->error, "Wavetable Script Error");
-            }
-            it = pendingWtGenJobs.erase(it);
+            synth->storage.reportError(r.error, "Wavetable Script Error");
         }
-        else
-        {
-            ++it;
-        }
+        it = pendingWtGenJobs.erase(it);
     }
 }
 
@@ -7000,24 +6994,24 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                           : (exportFormat == VCVRACK) ? 4
                                                       : oscdata.wavetable_script_res_base;
 
-            auto job = std::make_shared<WS::WtGenJob>();
-            job->scene = current_scene;
-            job->osc = current_osc[current_scene];
-            job->mode = WS::WtGenJob::Mode::Generate;
-            job->generateTarget = nullptr;
-            job->script = oscdata.wavetable_script;
-            job->resolution = WS::resolutionForResBase(resBase);
-            job->frameCount = oscdata.wavetable_script_nframes;
-            job->snapshot = WS::SnapshotBundle::current(&this->synth->storage, oscdata);
+            WS::WtGenJobRequest req;
+            req.scene = current_scene;
+            req.osc = current_osc[current_scene];
+            req.mode = WS::WtGenMode::Generate;
+            req.generateTarget = nullptr;
+            req.script = oscdata.wavetable_script;
+            req.resolution = WS::resolutionForResBase(resBase);
+            req.frameCount = oscdata.wavetable_script_nframes;
+            req.snapshot = WS::SnapshotBundle::current(&this->synth->storage, oscdata);
 
-            // Export is block-waiting on the message thread, the job inserts before pending jobs.
-            this->synth->storage.wtGenService->submitBlocking(job);
+            // Export blocks the message thread, the job inserts before pending jobs.
+            auto r = this->synth->storage.wtGenService->submitBlocking(std::move(req));
 
-            if (job->status.load(std::memory_order_acquire) != WS::WtGenJob::Status::Complete)
+            if (!r.ok || !r.exportOut)
             {
-                if (!job->error.empty())
+                if (!r.error.empty())
                 {
-                    this->synth->storage.reportError(job->error, "Export Error");
+                    this->synth->storage.reportError(r.error, "Export Error");
                 }
             }
             else
@@ -7025,7 +7019,8 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                 std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
                 if (exportFormat == WT)
                 {
-                    if (!this->synth->storage.export_wt_wt_portable(fsp, &job->exportOut, metadata))
+                    if (!this->synth->storage.export_wt_wt_portable(fsp, r.exportOut.get(),
+                                                                    metadata))
                     {
                         this->synth->storage.reportError(
                             "Unable to save the wavetable to " + fsp.u8string(), "Export Error");
@@ -7034,7 +7029,7 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                 else
                 {
                     bool exportForSerum = (exportFormat == SERUM);
-                    this->synth->storage.export_wt_wav_portable(fsp, &job->exportOut, metadata,
+                    this->synth->storage.export_wt_wav_portable(fsp, r.exportOut.get(), metadata,
                                                                 exportForSerum);
                 }
             }
@@ -7085,8 +7080,8 @@ void SurgeGUIEditor::loadWavetableScript()
 void SurgeGUIEditor::loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
                                          OscillatorStorage *oscdata)
 {
-    // Generate/refresh the SAME oscillator we parse into. makeLiveGenerateJob + the poll tail act
-    // on (scene,osc), so derive those from the passed oscdata.
+    // Generate/refresh the SAME oscillator we parse into. makeLiveGenerateRequest + the poll tail
+    // act on (scene,osc), so derive those from the passed oscdata.
     int scene = -1, osc = -1;
     for (int s = 0; s < n_scenes && scene < 0; ++s)
     {
@@ -7115,7 +7110,7 @@ void SurgeGUIEditor::loadWavetableScript(int id, const fs::path &location, Surge
     // The script identity just changed, so clear this osc's editor state.
     synth->storage.getPatch().dawExtraState.editor.clearWTSEStateInScene(scene, osc);
 
-    // Defer generation to the worker, the poll tail sets current_id + refresh flags once the
+    // Defer generation to the worker; the poll tail sets current_id + refresh flags once the
     // generate lands.
     submitWtGenJob(scene, osc, id, /*retypeToWavetable*/ false);
 

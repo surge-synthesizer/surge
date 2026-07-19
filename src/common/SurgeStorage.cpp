@@ -1463,9 +1463,9 @@ void SurgeStorage::perform_queued_wtloads()
             // audio thread; catch here so a bad load can't terminate the process.
             try
             {
-                // A queued wavetable load replaces this osc's live wt so invalidate any
-                // in-progress WT script for it. Bump wtGenPublishToken under waveTableDataMutex
-                // (before the load) so the worker skips its stale publish.
+                // A queued wavetable load replaces this osc's live wt, so bump wtGenPublishToken
+                // first and any in-progress WT script generate skips its stale publish. The bump
+                // takes its own lock scope because load_wt takes waveTableDataMutex internally.
                 if (patch.scene[sc].osc[o].wt.queue_id != -1 ||
                     patch.scene[sc].osc[o].wt.queue_filename[0])
                 {

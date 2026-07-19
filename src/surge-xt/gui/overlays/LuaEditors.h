@@ -34,18 +34,13 @@
 #include "SkinSupport.h"
 #include "SurgeStorage.h"
 #include "WavetableScriptEvaluator.h"
+#include "WtGenService.h"
 
 #include "util/LuaTokeniserSurge.h"
 
-class SurgeGUIEditor;
+#include <future>
 
-namespace Surge
-{
-namespace WavetableScript
-{
-struct WtGenJob;
-}
-} // namespace Surge
+class SurgeGUIEditor;
 
 namespace Surge
 {
@@ -394,8 +389,8 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply,
     void timerCallback() override;
     void pollGenJobs();
     void stepGenSpinner();
-    std::shared_ptr<Surge::WavetableScript::WtGenJob> makeGenJob(bool generate);
-    std::shared_ptr<Surge::WavetableScript::WtGenJob> previewJob, generateJob;
+    Surge::WavetableScript::WtGenJobRequest makeGenRequest(bool generate);
+    std::future<Surge::WavetableScript::WtGenJobResponse> previewFut, generateFut;
     bool awaitingGenerate{false};
     void adjustCurrentFrame(int value);
     void setCurrentFrame(int value);

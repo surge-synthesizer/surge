@@ -4868,9 +4868,9 @@ void SurgePatch::captureWavetableSnapshot(int scene, int srcOsc, int dstOsc, int
     storage->waveTableDataMutex.lock();
 
     {
-        // Nested lock, waveTableDataMutex OUTER / wtSnapshotMutex INNER the one site that must nest
-        // the two. Copy reads the live wt (guarded by waveTableDataMutex) and writes the snapshot
-        // (guarded by wtSnapshotMutex) as a single op, so the regions can't be separated
+        // Nested lock, waveTableDataMutex OUTER / wtSnapshotMutex INNER - the one site that must
+        // nest the two. Copy reads the live wt (guarded by waveTableDataMutex) and writes the
+        // snapshot (guarded by wtSnapshotMutex) as a single op, so the regions can't be separated.
         std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
         if (!snap)
         {

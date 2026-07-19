@@ -1349,20 +1349,19 @@ end
             }
         }
 
-        auto job = WS::makeLiveGenerateJob(&storage, 0, 0);
-        storage.wtGenService->submitBlocking(job);
+        auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
 
-        REQUIRE(job->status.load(std::memory_order_acquire) == WS::WtGenJob::Status::Complete);
-        REQUIRE(job->published);
+        REQUIRE(r.ok);
+        REQUIRE(r.published);
 
         // The filmstrip the worker carries back equals the direct run (same code, same inputs).
-        REQUIRE(job->frames.size() == directFrames.size());
+        REQUIRE(r.frames.size() == directFrames.size());
         for (size_t f = 0; f < directFrames.size(); ++f)
         {
-            REQUIRE(job->frames[f].size() == directFrames[f].size());
+            REQUIRE(r.frames[f].size() == directFrames[f].size());
             for (size_t i = 0; i < directFrames[f].size(); ++i)
             {
-                REQUIRE(job->frames[f][i] == Approx(directFrames[f][i]));
+                REQUIRE(r.frames[f][i] == Approx(directFrames[f][i]));
             }
         }
 
@@ -1375,22 +1374,23 @@ end
         const bool builtBefore = osc.wt.everBuilt;
         const int nTablesBefore = osc.wt.n_tables;
 
-        auto job = std::make_shared<WS::WtGenJob>();
-        job->scene = 0;
-        job->osc = 0;
-        job->mode = WS::WtGenJob::Mode::Generate;
-        job->generateTarget = nullptr; // nullptr target == export
-        job->script = script;
-        job->resolution = resolution;
-        job->frameCount = nframes;
-        job->snapshot = WS::SnapshotBundle::current(&storage, osc);
+        WS::WtGenJobRequest req;
+        req.scene = 0;
+        req.osc = 0;
+        req.mode = WS::WtGenMode::Generate;
+        req.generateTarget = nullptr; // nullptr target == export
+        req.script = script;
+        req.resolution = resolution;
+        req.frameCount = nframes;
+        req.snapshot = WS::SnapshotBundle::current(&storage, osc);
 
-        storage.wtGenService->submitBlocking(job);
+        auto r = storage.wtGenService->submitBlocking(std::move(req));
 
-        REQUIRE(job->status.load(std::memory_order_acquire) == WS::WtGenJob::Status::Complete);
-        REQUIRE_FALSE(job->published);     // export never publishes
-        REQUIRE(job->exportOut.everBuilt); // built into the job-owned wavetable
-        REQUIRE(job->exportOut.n_tables == nframes);
+        REQUIRE(r.ok);
+        REQUIRE_FALSE(r.published); // export never publishes
+        REQUIRE(r.exportOut);
+        REQUIRE(r.exportOut->everBuilt); // built into the response-owned wavetable
+        REQUIRE(r.exportOut->n_tables == nframes);
 
         // Export should not mutate the live oscillator
         REQUIRE(osc.wt.everBuilt == builtBefore);
@@ -1403,21 +1403,21 @@ end
         const int nTablesBefore = osc.wt.n_tables;
 
         // Force a token mismatch: the worker must skip BuildWT and leave the oscillator untouched.
-        auto stale = WS::makeLiveGenerateJob(&storage, 0, 0);
-        stale->publishToken = storage.wtGenPublishToken[0].load(std::memory_order_relaxed) + 1;
-        storage.wtGenService->submitBlocking(stale);
+        auto staleReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
+        staleReq.publishToken = storage.wtGenPublishToken[0].load(std::memory_order_relaxed) + 1;
+        auto rStale = storage.wtGenService->submitBlocking(std::move(staleReq));
 
-        REQUIRE(stale->status.load(std::memory_order_acquire) == WS::WtGenJob::Status::Complete);
-        REQUIRE_FALSE(stale->published);
+        REQUIRE(rStale.ok);
+        REQUIRE_FALSE(rStale.published);
         REQUIRE(osc.wt.everBuilt == builtBefore);
         REQUIRE(osc.wt.n_tables == nTablesBefore);
 
         // A matching token (the default capture) publishes normally.
-        auto good = WS::makeLiveGenerateJob(&storage, 0, 0);
-        storage.wtGenService->submitBlocking(good);
+        auto rGood =
+            storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
 
-        REQUIRE(good->status.load(std::memory_order_acquire) == WS::WtGenJob::Status::Complete);
-        REQUIRE(good->published);
+        REQUIRE(rGood.ok);
+        REQUIRE(rGood.published);
         REQUIRE(osc.wt.everBuilt);
         REQUIRE(osc.wt.n_tables == nframes);
     }

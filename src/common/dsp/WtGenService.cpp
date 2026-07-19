@@ -28,32 +28,58 @@ namespace Surge
 namespace WavetableScript
 {
 
-std::shared_ptr<WtGenJob> makeLiveGenerateJob(SurgeStorage *storage, int scene, int osc)
+WtGenJobRequest makeLiveGenerateRequest(SurgeStorage *storage, int scene, int osc)
 {
     auto *oscdata = &storage->getPatch().scene[scene].osc[osc];
-    auto job = std::make_shared<WtGenJob>();
-    job->scene = scene;
-    job->osc = osc;
-    job->mode = WtGenJob::Mode::Generate;
-    job->generateTarget = oscdata;
-    job->script = oscdata->wavetable_script;
-    job->resolution = resolutionForResBase(oscdata->wavetable_script_res_base);
-    job->frameCount = oscdata->wavetable_script_nframes;
-    job->snapshot = SnapshotBundle::current(storage, *oscdata);
+    WtGenJobRequest req;
+    req.mode = WtGenMode::Generate;
+    req.scene = scene;
+    req.osc = osc;
+    req.generateTarget = oscdata;
+    req.script = oscdata->wavetable_script;
+    req.resolution = resolutionForResBase(oscdata->wavetable_script_res_base);
+    req.frameCount = oscdata->wavetable_script_nframes;
+    req.snapshot = SnapshotBundle::current(storage, *oscdata);
 
-    // Lock-free capture of the config token, re-checked under waveTableDataMutex at publish.
-    job->publishToken =
+    // Lock-free capture of the publish token, re-checked under waveTableDataMutex at publish.
+    req.publishToken =
         storage->wtGenPublishToken[scene * n_oscs + osc].load(std::memory_order_relaxed);
 
-    return job;
+    return req;
+}
+
+WtGenStatus::Ticket WtGenStatus::begin(WtGenMode mode, int idx, bool supersedable,
+                                       bool liveGenerate)
+{
+    const uint64_t reqId = nextRequestId++;
+    busyCount[idx].fetch_add(1, std::memory_order_relaxed);
+    if (liveGenerate)
+    {
+        generateCount[idx].fetch_add(1, std::memory_order_relaxed);
+    }
+    if (mode == WtGenMode::Preview)
+    {
+        latestPreview[idx].store(reqId, std::memory_order_relaxed);
+    }
+    else if (supersedable)
+    {
+        latestGenerate[idx].store(reqId, std::memory_order_relaxed);
+    }
+
+    Ticket t;
+    t.owner = this;
+    t.denseIdx = idx;
+    t.id = reqId;
+    t.liveGenerate = liveGenerate;
+    return t;
 }
 
 WtGenService::WtGenService(SurgeStorage *s) : storage(s) {}
 
 WtGenService::~WtGenService()
 {
-    // Signal the in-flight generation to bail at the next frame, so join() waits at most
-    // one frame rather than the whole table
+    // Signal the in-progress generation to bail at the next frame, so join() waits at most
+    // one frame rather than the whole table.
     cancelGeneration.store(true, std::memory_order_relaxed);
     {
         std::lock_guard<std::mutex> g(queueLock);
@@ -129,228 +155,192 @@ void WtGenService::storePreview(int scene, int osc, uint64_t key,
     }
     std::lock_guard<std::mutex> g(previewCacheMutex);
     auto &e = previewCache[denseIdx(scene, osc)];
-    e.frames = frames; // copy: the job still owns its frames for the poller to move out
+    e.frames = frames; // copy: the response still owns its frames for the poller to move out
     e.frameCount = frameCount;
     e.key = key;
 }
 
-std::shared_ptr<WtGenJob> WtGenService::submit(std::shared_ptr<WtGenJob> job, bool front)
+std::future<WtGenJobResponse> WtGenService::submit(WtGenJobRequest request, bool front)
 {
     ensureStarted();
-    job->cacheKey = previewCacheKey(job->script, job->resolution, job->frameCount,
-                                    job->snapshot ? job->snapshot->version : 0);
+
+    QueuedJob qj;
+    qj.req = std::move(request);
+    auto fut = qj.promise.get_future(); // obtained before the worker can touch the promise
+
     {
         std::lock_guard<std::mutex> g(queueLock);
-        const int idx = denseIdx(job->scene, job->osc);
-        job->requestId = nextRequestId++;
-        busyCountPerOsc[idx].fetch_add(1, std::memory_order_relaxed);
-
-        if (job->mode == WtGenJob::Mode::Generate && job->generateTarget)
-        {
-            oscGenerateCountPerOsc[idx].fetch_add(1, std::memory_order_relaxed);
-        }
-
-        if (job->mode == WtGenJob::Mode::Preview)
-        {
-            latestPreviewPerOsc[idx] = job->requestId;
-        }
-
-        if (job->mode == WtGenJob::Mode::Generate && job->supersedable)
-        {
-            latestGeneratePerOsc[idx].store(job->requestId, std::memory_order_relaxed);
-        }
+        const int idx = denseIdx(qj.req.scene, qj.req.osc);
+        const bool liveGenerate =
+            (qj.req.mode == WtGenMode::Generate && qj.req.generateTarget != nullptr);
+        qj.ticket = status.begin(qj.req.mode, idx, qj.req.supersedable, liveGenerate);
 
         if (front)
         {
-            queue.push_front(job);
+            queue.push_front(std::move(qj));
         }
         else
         {
-            queue.push_back(job);
+            queue.push_back(std::move(qj));
         }
     }
 
     queueCV.notify_one();
 
-    return job;
+    return fut;
 }
 
-void WtGenService::submitBlocking(const std::shared_ptr<WtGenJob> &job)
+WtGenJobResponse WtGenService::submitBlocking(WtGenJobRequest request)
 {
-    submit(job, /*front*/ true);
-    job->done.get_future().wait();
+    return submit(std::move(request), /*front*/ true).get();
 }
 
-bool WtGenService::isBusy(int scene, int osc) const
-{
-    return busyCountPerOsc[denseIdx(scene, osc)].load(std::memory_order_relaxed) > 0;
-}
+bool WtGenService::isBusy(int scene, int osc) const { return status.isBusy(denseIdx(scene, osc)); }
 
 bool WtGenService::isGeneratingToOscillator(int scene, int osc) const
 {
-    return oscGenerateCountPerOsc[denseIdx(scene, osc)].load(std::memory_order_relaxed) > 0;
+    return status.isGenerating(denseIdx(scene, osc));
 }
 
 void WtGenService::runThread()
 {
     for (;;)
     {
-        std::shared_ptr<WtGenJob> job;
+        std::unique_lock<std::mutex> lk(queueLock);
+        queueCV.wait(lk, [this]() { return !running || !queue.empty(); });
+        if (!running && queue.empty())
         {
-            std::unique_lock<std::mutex> lk(queueLock);
-            queueCV.wait(lk, [this]() { return !running || !queue.empty(); });
-            if (!running && queue.empty())
-            {
-                return;
-            }
-
-            job = std::move(queue.front());
-            queue.pop_front();
-
-            // Drop a superseded pending Preview.
-            if (job->mode == WtGenJob::Mode::Preview)
-            {
-                if (job->requestId < latestPreviewPerOsc[denseIdx(job->scene, job->osc)])
-                {
-                    busyCountPerOsc[denseIdx(job->scene, job->osc)].fetch_sub(
-                        1, std::memory_order_relaxed);
-                    continue; // Drop without running
-                }
-            }
-
-            // Same for a supersedable Generate replaced by a newer same-osc Generate while pending.
-            if (job->mode == WtGenJob::Mode::Generate && job->supersedable)
-            {
-                if (job->requestId < latestGeneratePerOsc[denseIdx(job->scene, job->osc)].load(
-                                         std::memory_order_relaxed))
-                {
-                    busyCountPerOsc[denseIdx(job->scene, job->osc)].fetch_sub(
-                        1, std::memory_order_relaxed);
-                    if (job->generateTarget)
-                    {
-                        oscGenerateCountPerOsc[denseIdx(job->scene, job->osc)].fetch_sub(
-                            1, std::memory_order_relaxed);
-                    }
-                    job->status.store(WtGenJob::Status::Complete, std::memory_order_release);
-                    job->done.set_value();
-                    continue; // Drop without running
-                }
-            }
+            return;
         }
 
-        const int idx = denseIdx(job->scene, job->osc);
-        job->status.store(WtGenJob::Status::Working, std::memory_order_relaxed);
+        QueuedJob qj = std::move(queue.front());
+        queue.pop_front();
 
+        // Evaluate under the lock, then fulfill with the lock released, like the completion path
+        // below.
+        const bool dropped =
+            (qj.req.mode == WtGenMode::Preview && status.previewSuperseded(qj.ticket)) ||
+            (qj.req.mode == WtGenMode::Generate && qj.req.supersedable &&
+             status.generateSuperseded(qj.ticket));
+
+        lk.unlock();
+
+        if (dropped)
+        {
+            // Superseded before it ran: hand back an empty (ok == false) response so a holder of
+            // the future never blocks.
+            qj.promise.set_value({});
+            continue;
+        }
+
+        auto &req = qj.req;
+        const int idx = denseIdx(req.scene, req.osc);
+
+        WtGenJobResponse resp;
         bool ok = false;
         try
         {
-            // Drive the private evaluator entirely from the job. Generation errors land straight
-            // in job->error (first error wins) instead of touching the UI off-thread.
+            // Drive the private evaluator entirely from the request. Generation errors land
+            // straight in resp.error (first error wins) instead of touching the UI off-thread.
             evaluator.setStorage(storage);
-            evaluator.setErrorOut(&job->error);
-            evaluator.setScript(job->script);
-            evaluator.setResolution((size_t)job->resolution);
-            evaluator.setFrameCount((size_t)job->frameCount);
-            evaluator.setSnapshotBundle(job->snapshot);
+            evaluator.setErrorOut(&resp.error);
+            evaluator.setScript(req.script);
+            evaluator.setResolution((size_t)req.resolution);
+            evaluator.setFrameCount((size_t)req.frameCount);
+            evaluator.setSnapshotBundle(req.snapshot);
             evaluator.forceInvalidate();
 
             // Bail the generation at the next frame's pcall on either teardown (cancelGeneration)
             // or mid-generate supersede.
-            auto cancelPred = [this, &job, idx]() {
+            auto cancelPred = [this, &qj]() {
                 return cancelGeneration.load(std::memory_order_relaxed) ||
-                       (job->supersedable &&
-                        job->requestId < latestGeneratePerOsc[idx].load(std::memory_order_relaxed));
+                       (qj.req.supersedable && status.generateSuperseded(qj.ticket));
             };
 
             // One Lua pass yields the preview frames plus (unless previewOnly) the flat BuildWT
             // buffer, owned by gen.samples which frees itself on every path (including a throw).
-            const bool previewOnly = (job->mode == WtGenJob::Mode::Preview);
+            const bool previewOnly = (req.mode == WtGenMode::Preview);
             auto gen = evaluator.populateWavetable(cancelPred, previewOnly);
             ok = gen.ok;
             if (ok)
             {
-                job->frames = std::move(gen.frames);
-                job->wtName = evaluator.getSuggestedWavetableName();
-                if (job->mode == WtGenJob::Mode::Generate && job->generateTarget)
+                resp.frames = std::move(gen.frames);
+                resp.frameCount = (int)resp.frames.size();
+                resp.wtName = evaluator.getSuggestedWavetableName();
+
+                if (req.mode == WtGenMode::Generate && req.generateTarget)
                 {
                     // Live-osc publish: BuildWT into the target under waveTableDataMutex. Only the
-                    // buffers, current_id/queue_type/display name are poller-owned. Re-check
-                    // the config token inside the lock: if the osc was replaced (patch load/undo)
-                    // since submit, skip.
+                    // buffers cross here; current_id/queue_type/display name are poller-owned.
+                    // Re-check the publish token inside the lock: if the osc was replaced since
+                    // submit, skip.
                     std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
                     if (storage->wtGenPublishToken[idx].load(std::memory_order_relaxed) ==
-                        job->publishToken)
+                        req.publishToken)
                     {
-                        job->generateTarget->wt.BuildWT(gen.samples.get(), gen.header,
-                                                        gen.header.flags & wtf_is_sample);
-                        job->published = true;
+                        req.generateTarget->wt.BuildWT(gen.samples.get(), gen.header,
+                                                       gen.header.flags & wtf_is_sample);
+                        resp.published = true;
                     }
                 }
-                else if (job->mode == WtGenJob::Mode::Generate)
+                else if (req.mode == WtGenMode::Generate)
                 {
-                    // Export: build into the job-owned exportOut (no shared state, so no
-                    // mutex and no config guard). The block-waiting submitter writes it to file.
-                    job->exportOut.BuildWT(gen.samples.get(), gen.header,
-                                           gen.header.flags & wtf_is_sample);
+                    // Export: build into the response-owned exportOut (no shared state, so no
+                    // mutex and no token guard). The block-waiting submitter writes it to file.
+                    resp.exportOut = std::make_unique<Wavetable>();
+                    resp.exportOut->BuildWT(gen.samples.get(), gen.header,
+                                            gen.header.flags & wtf_is_sample);
                 }
 
-                if (job->mode == WtGenJob::Mode::Preview ||
-                    (job->mode == WtGenJob::Mode::Generate && job->generateTarget))
+                if (req.mode == WtGenMode::Preview ||
+                    (req.mode == WtGenMode::Generate && req.generateTarget))
                 {
-                    // Preview and live-osc (not export): file the frames in the per-osc
-                    // cache so a later overlay refresh for this osc reuses them.
-                    storePreview(job->scene, job->osc, job->cacheKey, job->frames, job->frameCount);
+                    // File the frames in the per-osc cache so a later overlay refresh for this osc
+                    // reuses them.
+                    const uint64_t key = previewCacheKey(req.script, req.resolution, req.frameCount,
+                                                         req.snapshot ? req.snapshot->version : 0);
+                    storePreview(req.scene, req.osc, key, resp.frames, resp.frameCount);
                 }
             }
         }
         catch (const std::exception &e)
         {
             ok = false;
-            if (job->error.empty())
+            if (resp.error.empty())
             {
-                job->error = std::string("Wavetable generation error: ") + e.what();
+                resp.error = std::string("Wavetable generation error: ") + e.what();
             }
         }
         catch (...)
         {
             ok = false;
-            if (job->error.empty())
+            if (resp.error.empty())
             {
-                job->error = "Unknown error during wavetable generation.";
+                resp.error = "Unknown error during wavetable generation.";
             }
         }
 
-        // A job replaced mid-run is not a failure. Checked here, not in the cancel predicate, so
-        // a genuine failure that is also superseded is cleared.
-        const bool superseded =
-            !ok && job->supersedable &&
-            job->requestId < latestGeneratePerOsc[idx].load(std::memory_order_relaxed);
-
-        // The first error was set into job->error via the error sink. Stop aiming at this job's
-        // string now the run is done. A superseded job is a no-op the newer Generate owns, so drop
-        // any message, otherwise supply a generic one if it failed silently.
         evaluator.setErrorOut(nullptr);
+
+        // A job replaced mid-run is a no-op the newer Generate owns, so drop any message (even a
+        // genuine failure that is also superseded); otherwise supply a generic one if it failed
+        // silently.
+        const bool superseded = !ok && req.supersedable && status.generateSuperseded(qj.ticket);
         if (superseded)
         {
-            job->error.clear();
+            resp.error.clear();
         }
-        else if (!ok && job->error.empty())
+        else if (!ok && resp.error.empty())
         {
-            job->error = "Wavetable script generation failed.";
+            resp.error = "Wavetable script generation failed.";
         }
 
-        // Release-store the status (publishes frames/wtName/published/exportOut to the poller or
-        // block-waiter), then unblock any block-waiter, then drop the active count so the spinner
+        resp.ok = ok;
+
+        // Fulfill the future (publishes frames/wtName/published/exportOut to the poller or
+        // block-waiter). qj's ticket then decrements the counts at end of scope, so the spinner
         // turns off only once the result is ready.
-        job->status.store((ok || superseded) ? WtGenJob::Status::Complete
-                                             : WtGenJob::Status::Failed,
-                          std::memory_order_release);
-        job->done.set_value(); // unblocks submitBlocking (export/OSC); pollers never wait on it
-        busyCountPerOsc[idx].fetch_sub(1, std::memory_order_relaxed);
-        if (job->mode == WtGenJob::Mode::Generate && job->generateTarget)
-        {
-            oscGenerateCountPerOsc[idx].fetch_sub(1, std::memory_order_relaxed);
-        }
+        qj.promise.set_value(std::move(resp));
     }
 }
 

@@ -90,7 +90,7 @@ struct LuaWTEvaluator::Details
     std::shared_ptr<const SnapshotBundle> snapshotBundle{std::make_shared<SnapshotBundle>()};
 
     // Off-thread error sink, aimed at a caller-owned string via setErrorOut. When non-null (the
-    // worker points it at its job's error string) emitError writes there instead of calling
+    // worker points it at its response's error string) emitError writes there instead of calling
     // storage->reportError, which invokes UI error listeners and must not run off the message
     // thread.
     std::string *errorOut{nullptr};
@@ -106,7 +106,6 @@ struct LuaWTEvaluator::Details
     {
         lua_newtable(L); // Outer snapshot table
 
-        // wt.snapshot is built from an injected immutable SnapshotBundle.
         for (int s = 0; s < n_wt_snapshots; ++s)
         {
             lua_newtable(L); // Slot table (empty if not imported)
@@ -520,7 +519,7 @@ LuaWTEvaluator::populateWavetable(const std::function<bool()> &canceled, bool pr
 
     for (size_t i = 0; i < frames; ++i)
     {
-        // Cancellation is checked between each frame's pcall
+        // Cancellation is checked before each frame's pcall
         if (canceled && canceled())
         {
             return {}; // discard partial buffers, ok == false

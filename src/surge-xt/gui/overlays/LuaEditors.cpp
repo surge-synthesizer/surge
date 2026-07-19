@@ -49,6 +49,7 @@
 
 #include "util/LuaTokeniserSurge.h"
 
+#include <chrono>
 #include <fmt/core.h>
 
 namespace Surge
@@ -4110,10 +4111,10 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     namespace WS = Surge::WavetableScript;
 
-    // Build the Preview job first, then derive the cache key from its inputs
-    auto job = makeGenJob(false);
-    auto key = WS::WtGenService::previewCacheKey(job->script, job->resolution, job->frameCount,
-                                                 job->snapshot ? job->snapshot->version : 0);
+    // Build the Preview request first, then derive the cache key from its inputs
+    auto req = makeGenRequest(false);
+    auto key = WS::WtGenService::previewCacheKey(req.script, req.resolution, req.frameCount,
+                                                 req.snapshot ? req.snapshot->version : 0);
 
     // Reuse cached frames when this osc's inputs are unchanged.
     {
@@ -4121,7 +4122,7 @@ void WavetableScriptEditor::rerenderFromUIState()
         int cachedCount = 0;
         if (storage->wtGenService->tryGetCachedPreview(scene, osc_id, key, cached, cachedCount))
         {
-            previewJob.reset();
+            previewFut = {};
             awaitingGenerate = false;
             rendererComponent->frameCache = std::move(cached);
             rendererComponent->frameCount = cachedCount;
@@ -4130,11 +4131,11 @@ void WavetableScriptEditor::rerenderFromUIState()
         }
     }
 
-    // Cache miss, but a live-osc generate for this osc is already generating so wait for it rather
+    // Cache miss, but a live-osc generate for this osc is already running, so wait for it rather
     // than launching a duplicate Preview pass.
     if (storage->wtGenService->isGeneratingToOscillator(scene, osc_id))
     {
-        previewJob.reset();
+        previewFut = {};
         awaitingGenerate = true;
         startTimerHz(30);
         stepGenSpinner();
@@ -4144,7 +4145,7 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     // Submit the Preview we already built; timerCallback fills frameCache on completion.
     awaitingGenerate = false;
-    previewJob = storage->wtGenService->submit(std::move(job));
+    previewFut = storage->wtGenService->submit(std::move(req));
     startTimerHz(30);
     stepGenSpinner();
     rendererComponent->repaint();
@@ -4167,93 +4168,84 @@ void WavetableScriptEditor::generateWavetable()
 {
     applyCodeToOsc();
     lastFrames = -1;
-    generateJob = storage->wtGenService->submit(makeGenJob(true));
+    generateFut = storage->wtGenService->submit(makeGenRequest(true));
     startTimerHz(30);
     stepGenSpinner();
 }
 
-std::shared_ptr<Surge::WavetableScript::WtGenJob> WavetableScriptEditor::makeGenJob(bool generate)
+Surge::WavetableScript::WtGenJobRequest WavetableScriptEditor::makeGenRequest(bool generate)
 {
     namespace WS = Surge::WavetableScript;
-    auto job = std::make_shared<WS::WtGenJob>();
-    job->scene = scene;
-    job->osc = osc_id;
-    job->mode = generate ? WS::WtGenJob::Mode::Generate : WS::WtGenJob::Mode::Preview;
-    job->script = mainDocument->getAllContent().toStdString();
+    WS::WtGenJobRequest req;
+    req.scene = scene;
+    req.osc = osc_id;
+    req.mode = generate ? WS::WtGenMode::Generate : WS::WtGenMode::Preview;
+    req.script = mainDocument->getAllContent().toStdString();
 
     auto resi = controlArea->resolutionN->getIntValue();
-    job->resolution = WS::resolutionForResBase(resi);
-    job->frameCount = controlArea->framesN->getIntValue();
+    req.resolution = WS::resolutionForResBase(resi);
+    req.frameCount = controlArea->framesN->getIntValue();
 
     // Immutable snapshot copy captured on the message thread (under wtSnapshotMutex).
-    job->snapshot = WS::SnapshotBundle::current(storage, *osc);
+    req.snapshot = WS::SnapshotBundle::current(storage, *osc);
 
     if (generate)
     {
-        job->generateTarget = osc;
-        job->publishToken =
+        req.generateTarget = osc;
+        req.publishToken =
             storage->wtGenPublishToken[scene * n_oscs + osc_id].load(std::memory_order_relaxed);
-        job->supersedable = true;
+        req.supersedable = true;
     }
 
-    return job;
+    return req;
+}
+
+static bool futureReady(const std::future<Surge::WavetableScript::WtGenJobResponse> &f)
+{
+    return f.valid() && f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
 void WavetableScriptEditor::pollGenJobs()
 {
-    namespace WS = Surge::WavetableScript;
-
-    if (previewJob)
+    if (futureReady(previewFut))
     {
-        auto st = previewJob->status.load(std::memory_order_acquire);
-        if (st == WS::WtGenJob::Status::Complete || st == WS::WtGenJob::Status::Failed)
-        {
-            if (st == WS::WtGenJob::Status::Complete)
-            {
-                rendererComponent->frameCache = std::move(previewJob->frames);
-                rendererComponent->frameCount = previewJob->frameCount;
-                rendererComponent->repaint();
-            }
+        auto r = previewFut.get();
 
-            auto err = previewJob->error;
-            previewJob.reset();
-            if (!err.empty())
-            {
-                storage->reportError(err, "Wavetable Script Error");
-            }
+        // A completed Preview carries fresh frames; a dropped (superseded) one has ok==false and
+        // empty frames, so it is a silent no-op.
+        if (r.ok)
+        {
+            rendererComponent->frameCache = std::move(r.frames);
+            rendererComponent->frameCount = r.frameCount;
+            rendererComponent->repaint();
+        }
+        if (!r.error.empty())
+        {
+            storage->reportError(r.error, "Wavetable Script Error");
         }
     }
 
-    if (generateJob)
+    if (futureReady(generateFut))
     {
-        auto st = generateJob->status.load(std::memory_order_acquire);
-        if (st == WS::WtGenJob::Status::Complete || st == WS::WtGenJob::Status::Failed)
-        {
-            if (st == WS::WtGenJob::Status::Complete)
-            {
-                // Reuse a published Generate's frames for the preview, unless a newer Preview is
-                // pending. Skip unpublished results so a mid-generate osc swap can't paint stale
-                // frames.
-                if (generateJob->published && !previewJob && !generateJob->frames.empty())
-                {
-                    rendererComponent->frameCache = std::move(generateJob->frames);
-                    rendererComponent->frameCount = generateJob->frameCount;
-                    rendererComponent->repaint();
-                }
-                if (generateJob->published)
-                {
-                    osc->wavetable_display_name = generateJob->wtName;
-                    editor->oscWaveform->repaintForceForWT();
-                    editor->repaintFrame();
-                }
-            }
+        auto r = generateFut.get();
 
-            auto err = generateJob->error;
-            generateJob.reset();
-            if (!err.empty())
-            {
-                storage->reportError(err, "Wavetable Script Error");
-            }
+        // Reuse a published Generate's frames for the preview, unless a newer Preview is pending.
+        // Skip unpublished results so a mid-generate osc swap can't paint stale frames.
+        if (r.published && !previewFut.valid() && !r.frames.empty())
+        {
+            rendererComponent->frameCache = std::move(r.frames);
+            rendererComponent->frameCount = r.frameCount;
+            rendererComponent->repaint();
+        }
+        if (r.published)
+        {
+            osc->wavetable_display_name = r.wtName;
+            editor->oscWaveform->repaintForceForWT();
+            editor->repaintFrame();
+        }
+        if (!r.error.empty())
+        {
+            storage->reportError(r.error, "Wavetable Script Error");
         }
     }
 }
@@ -4263,8 +4255,8 @@ void WavetableScriptEditor::stepGenSpinner()
     if (!rendererComponent || !rendererComponent->genSpinner || !skin)
         return;
 
-    // Kick spinner only while a job is actually running for this osc, covers the overlay's own
-    // Preview/Generate and an external generate alike.
+    // Kick spinner only while a job is actually running for this osc. This covers the overlay's
+    // own Preview/Generate and an external generate alike.
     auto &sp = rendererComponent->genSpinner;
     if (sp->isGenerating && sp->isGenerating())
     {
@@ -4289,7 +4281,7 @@ void WavetableScriptEditor::timerCallback()
     }
 
     // This timer only drives job polling, so it can stop as soon as nothing is outstanding.
-    if (previewJob == nullptr && generateJob == nullptr && !awaitingGenerate)
+    if (!previewFut.valid() && !generateFut.valid() && !awaitingGenerate)
     {
         stopTimer();
     }
@@ -4697,10 +4689,10 @@ void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
 
-            // Build into a temp wt first: load_wt takes waveTableDataMutex internally, so we
-            // must NOT hold wtSnapshotMutex around it then swap the finished wt into the snapshot
-            // slot under wtSnapshotMutex, so a concurrent bundle build sees the old or the fully
-            // built snapshot, never a half-built one.
+            // load_wt takes waveTableDataMutex internally, so it must run without wtSnapshotMutex
+            // held. Build into a temp wt, then swap it into the slot under wtSnapshotMutex: a
+            // concurrent bundle build sees the old or the fully built snapshot, never a half-built
+            // one.
             auto tmp = std::make_unique<Wavetable>();
             storage->load_wt(rString, tmp.get(), nullptr);
             const bool built = tmp->everBuilt && tmp->n_tables != 0 && tmp->size != 0;

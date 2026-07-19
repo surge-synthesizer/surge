@@ -966,26 +966,25 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             namespace WS = Surge::WavetableScript;
 
             // Parse on this OSC background thread (Lua-free), then submit a Generate and
-            // block-wait. Collect parse errors into parseErr and sendError them.
+            // block-wait.
             std::string parseErr;
             if (WS::LuaWTEvaluator::loadWtscriptMetadata(synth->storage.wt_list[new_id].path,
                                                          &synth->storage, oscdata, &parseErr))
             {
-                auto job = WS::makeLiveGenerateJob(&synth->storage, scene_num, osc_num - 1);
-                synth->storage.wtGenService->submitBlocking(job);
+                auto r = synth->storage.wtGenService->submitBlocking(
+                    WS::makeLiveGenerateRequest(&synth->storage, scene_num, osc_num - 1));
 
-                auto st = job->status.load(std::memory_order_acquire);
-                if (st == WS::WtGenJob::Status::Complete && job->published)
+                if (r.published)
                 {
-                    oscdata->wavetable_display_name = job->wtName;
+                    oscdata->wavetable_display_name = r.wtName;
                     oscdata->wt.current_id = new_id;
                     oscdata->wt.refresh_display = true;
                     oscdata->wt.force_refresh_display = true;
                     oscdata->wt.refresh_script_editor = true;
                 }
-                else if (st == WS::WtGenJob::Status::Failed && !job->error.empty())
+                else if (!r.error.empty())
                 {
-                    sendError(job->error);
+                    sendError(r.error);
                 }
             }
             else if (!parseErr.empty())
