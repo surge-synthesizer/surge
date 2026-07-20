@@ -72,7 +72,7 @@ struct EvaluatorState
     float tempo;
     double songpos;
 
-    bool retrigger_AEG, retrigger_FEG;
+    bool retrigger_AEG{false}, retrigger_FEG{false};
 
     bool is_display = false;
 

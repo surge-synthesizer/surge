@@ -1402,23 +1402,23 @@ struct Patch
 {
     std::string name;
     fs::path path;
-    uint64_t lastModTime;
-    int category;
-    int order;
-    bool isFavorite;
+    uint64_t lastModTime{0};
+    int category{0};
+    int order{0};
+    bool isFavorite{false};
 };
 
 struct PatchCategory
 {
     std::string name;
-    int order;
+    int order{0};
     std::vector<PatchCategory> children;
-    bool isRoot;
-    bool isFactory;
+    bool isRoot{false};
+    bool isFactory{false};
 
-    int internalid;
-    int numberOfPatchesInCategory;
-    int numberOfPatchesInCategoryAndChildren;
+    int internalid{0};
+    int numberOfPatchesInCategory{0};
+    int numberOfPatchesInCategoryAndChildren{0};
 };
 
 enum surge_copysource
