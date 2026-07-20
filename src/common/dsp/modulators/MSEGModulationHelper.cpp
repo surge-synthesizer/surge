@@ -1104,7 +1104,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
         break;
     }
-    case MSEGStorage::segment::RESERVED:
+    case MSEGStorage::segment::NONE:
         // Should never occur
         break;
     }

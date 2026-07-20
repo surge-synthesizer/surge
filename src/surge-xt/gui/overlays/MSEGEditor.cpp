@@ -42,6 +42,8 @@
 #include <set>
 #include "widgets/MenuCustomComponents.h"
 
+using namespace Surge::GUI;
+
 namespace Surge
 {
 namespace Overlays
@@ -193,6 +195,52 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         setAccessible(true);
         setupAccessibleKeyboard();
     };
+
+    using segType = MSEGStorage::segment::Type;
+
+    struct SegmentTypeMenuEntry
+    {
+        segType type;
+        std::string label;
+    };
+
+    static const std::vector<SegmentTypeMenuEntry> &segmentTypeMenuLayout()
+    {
+        static const std::vector<SegmentTypeMenuEntry> layout = [] {
+            std::vector<SegmentTypeMenuEntry> v;
+
+            v.push_back({segType::HOLD, "Hold"});
+            v.push_back({segType::LINEAR, "Linear"});
+            v.push_back({segType::SCURVE, toOSCase("S-Curve")});
+            v.push_back({segType::QUAD_BEZIER, "Bezier"});
+
+            v.push_back({segType::NONE, ""}); // separator
+
+            v.push_back({segType::SINE, "Sine"});
+            v.push_back({segType::TRIANGLE, "Triangle"});
+            v.push_back({segType::SAWTOOTH, "Sawtooth"});
+            v.push_back({segType::SQUARE, "Square"});
+
+            v.push_back({segType::NONE, ""}); // separator
+
+            for (int i = 0; i < 8; i++)
+            {
+                v.push_back({static_cast<segType>(segType::RATCHET_1 + i),
+                             fmt::format("Ratchet {:d}", i + 1)});
+            }
+
+            v.push_back({segType::NONE, ""}); // separator
+
+            v.push_back({segType::BUMP, "Bump"});
+            v.push_back({segType::STAIRS, "Stairs"});
+            v.push_back({segType::SMOOTH_STAIRS, toOSCase("Smooth Stairs")});
+            v.push_back({segType::BROWNIAN, toOSCase("Brownian Bridge")});
+
+            return v;
+        }();
+
+        return layout;
+    }
 
     enum SegmentProps
     {
@@ -2958,8 +3006,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto where = event.position.toInt();
 
         const auto inDrawArea =
-            (drawArea.contains(event.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
-                                                       : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
+            (drawArea.contains(where) ? MOUSE_DOWN_IN_DRAW_AREA : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
 
         if (inDrawArea == MOUSE_DOWN_IN_DRAW_AREA && event.mods.isShiftDown() &&
             event.mods.isCommandDown() && event.mods.isAltDown())
@@ -2977,10 +3024,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (event.mods.isShiftDown())
         {
             setMouseCursor(juce::MouseCursor::CrosshairCursor);
-            return;
         }
 
-        if (drawArea.contains(where))
+        if (inDrawArea)
         {
             auto ohs = hoveredSegment;
 
@@ -3370,19 +3416,74 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
     }
 
+    void cycleSegmentTypeAt(int direction)
+    {
+        if (hoveredSegment < 0 || hoveredSegment >= ms->n_activeSegments)
+        {
+            return;
+        }
+
+        auto &layout = segmentTypeMenuLayout();
+        auto curType = ms->segments[hoveredSegment].type;
+        int idx = -1;
+
+        for (int i = 0; i < (int)layout.size(); i++)
+        {
+            if (layout[i].type == curType)
+            {
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx < 0)
+        {
+            idx = 0;
+        }
+
+        int n = (int)layout.size();
+        int step = idx;
+
+        do
+        {
+            step = (step + direction + n) % n;
+        } while (layout[step].type == segType::NONE);
+
+        auto t = ms->segmentStart[hoveredSegment];
+
+        Surge::MSEG::changeTypeAt(ms, t, layout[step].type);
+
+        pushToUndo();
+        modelChanged();
+    }
+
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override
     {
         if (wheel.isInertial)
+        {
             return;
-        auto where = event.position.toInt();
-        if (wheel.deltaX == 0 && wheel.deltaY == 0)
-            return;
+        }
 
-        float wheelFac = 1.0;
-#if WINDOWS || LINUX
-        wheelFac = 1.0; // configure speed for other mice
-#endif
+        if (wheel.deltaX == 0 && wheel.deltaY == 0)
+        {
+            return;
+        }
+
+        if (event.mods.isShiftDown())
+        {
+            auto delta = (wheel.isReversed ? -1 : 1) * wheel.deltaY;
+
+            if (delta != 0)
+            {
+                cycleSegmentTypeAt(delta > 0 ? -1 : 1);
+            }
+
+            return;
+        }
+
+        const float wheelFac = 1.0;
+        auto where = event.position.toInt();
 
         if (fabs(wheel.deltaX) > fabs(wheel.deltaY))
         {
@@ -3625,31 +3726,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 });
         };
 
-        typeTo("Hold", type::HOLD);
-        typeTo("Linear", type::LINEAR);
-        typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
-        typeTo("Bezier", type::QUAD_BEZIER);
-
-        contextMenu.addSeparator();
-
-        typeTo("Sine", type::SINE);
-        typeTo("Triangle", type::TRIANGLE);
-        typeTo("Sawtooth", type::SAWTOOTH);
-        typeTo("Square", type::SQUARE);
-
-        contextMenu.addSeparator();
-
-        for (int i = 0; i < 8; i++)
+        for (auto &entry : segmentTypeMenuLayout())
         {
-            typeTo(fmt::format("Ratchet {:d}", i + 1), static_cast<type>(type::RATCHET_1 + i));
+            if (entry.type == type::NONE)
+            {
+                contextMenu.addSeparator();
+                continue;
+            }
+
+            typeTo(entry.label, entry.type);
         }
-
-        contextMenu.addSeparator();
-
-        typeTo("Bump", type::BUMP);
-        typeTo("Stairs", type::STAIRS);
-        typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
-        typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
 
         contextMenu.addColumnBreak();
 
@@ -3705,7 +3791,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 if (node < ms->n_activeSegments && node != ms->loop_start)
                 {
-                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, node]() {
+                    contextMenu.addItem(toOSCase("Set Loop Start"), [this, node]() {
                         Surge::MSEG::setLoopStart(ms, node);
                         pushToUndo();
                         modelChanged();
@@ -3717,7 +3803,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 if (node > 0 && node - 1 != ms->loop_end)
                 {
-                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop End"), [this, node]() {
+                    contextMenu.addItem(toOSCase("Set Loop End"), [this, node]() {
                         Surge::MSEG::setLoopEnd(ms, node - 1);
                         pushToUndo();
                         modelChanged();
@@ -3731,7 +3817,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
                 {
-                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, tts]() {
+                    contextMenu.addItem(toOSCase("Set Loop Start"), [this, tts]() {
                         Surge::MSEG::setLoopStart(ms, tts);
                         pushToUndo();
                         modelChanged();
@@ -3740,7 +3826,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 if (tts >= ms->loop_start - 1 && tts != ms->loop_end)
                 {
-                    contextMenu.addItem(Surge::GUI::toOSCase("Set Loop End"), [this, tts, t]() {
+                    contextMenu.addItem(toOSCase("Set Loop End"), [this, tts, t]() {
                         auto along = t - ms->segmentStart[tts];
 
                         if (ms->segments[tts].duration == 0)
@@ -3792,14 +3878,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), isActive, false, [this]() {
+            actionsMenu.addItem(toOSCase("Double Duration"), isActive, false, [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 2.0, max_msegs);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), isActive, false, [this]() {
+            actionsMenu.addItem(toOSCase("Half Duration"), isActive, false, [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 0.5, max_msegs);
                 pushToUndo();
                 modelChanged();
@@ -3808,13 +3894,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Flip Vertically"), [this]() {
+            actionsMenu.addItem(toOSCase("Flip Vertically"), [this]() {
                 Surge::MSEG::scaleValues(this->ms, -1);
                 pushToUndo();
                 modelChanged();
             });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Flip Horizontally"), [this]() {
+            actionsMenu.addItem(toOSCase("Flip Horizontally"), [this]() {
                 Surge::MSEG::mirrorMSEG(this->ms);
                 pushToUndo();
                 modelChanged();
@@ -3822,21 +3908,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Snap Divisions"), isActive,
-                                false, [this]() {
+            actionsMenu.addItem(toOSCase("Quantize Nodes to Snap Divisions"), isActive, false,
+                                [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
                                     pushToUndo();
                                     modelChanged();
                                 });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Whole Units"), isActive,
-                                false, [this]() {
+            actionsMenu.addItem(toOSCase("Quantize Nodes to Whole Units"), isActive, false,
+                                [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
                                     pushToUndo();
                                     modelChanged();
                                 });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Distribute Nodes Evenly"), [this]() {
+            actionsMenu.addItem(toOSCase("Distribute Nodes Evenly"), [this]() {
                 Surge::MSEG::setAllDurationsTo(this->ms,
                                                ms->totalDuration / this->ms->n_activeSegments);
                 pushToUndo();
@@ -3847,7 +3933,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             auto createMenu = juce::PopupMenu();
 
-            createMenu.addItem(Surge::GUI::toOSCase("Minimal MSEG"), [this]() {
+            createMenu.addItem(toOSCase("Minimal MSEG"), [this]() {
                 Surge::MSEG::clearMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -3858,7 +3944,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             createMenu.addSeparator();
 
-            createMenu.addItem(Surge::GUI::toOSCase("Default Voice MSEG"), [this]() {
+            createMenu.addItem(toOSCase("Default Voice MSEG"), [this]() {
                 Surge::MSEG::createInitVoiceMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -3867,7 +3953,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 modelChanged();
             });
 
-            createMenu.addItem(Surge::GUI::toOSCase("Default Scene MSEG"), [this]() {
+            createMenu.addItem(toOSCase("Default Scene MSEG"), [this]() {
                 Surge::MSEG::createInitSceneMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -3882,30 +3968,28 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             for (int i : stepCounts)
             {
-                createMenu.addItem(Surge::GUI::toOSCase(std::to_string(i) + " Step Sequencer"),
-                                   [this, i]() {
-                                       Surge::MSEG::createStepseqMSEG(this->ms, i);
-                                       this->zoomToFull();
-                                       if (controlregion)
-                                           controlregion->rebuild();
-                                       pushToUndo();
-                                       modelChanged();
-                                   });
+                createMenu.addItem(toOSCase(std::to_string(i) + " Step Sequencer"), [this, i]() {
+                    Surge::MSEG::createStepseqMSEG(this->ms, i);
+                    this->zoomToFull();
+                    if (controlregion)
+                        controlregion->rebuild();
+                    pushToUndo();
+                    modelChanged();
+                });
             }
 
             createMenu.addSeparator();
 
             for (int i : stepCounts)
             {
-                createMenu.addItem(Surge::GUI::toOSCase(std::to_string(i) + " Lines Sine"),
-                                   [this, i] {
-                                       Surge::MSEG::createSinLineMSEG(this->ms, i);
-                                       this->zoomToFull();
-                                       if (controlregion)
-                                           controlregion->rebuild();
-                                       pushToUndo();
-                                       modelChanged();
-                                   });
+                createMenu.addItem(toOSCase(std::to_string(i) + " Lines Sine"), [this, i] {
+                    Surge::MSEG::createSinLineMSEG(this->ms, i);
+                    this->zoomToFull();
+                    if (controlregion)
+                        controlregion->rebuild();
+                    pushToUndo();
+                    modelChanged();
+                });
             }
 
             createMenu.addSeparator();
@@ -3915,7 +3999,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 // we're fine with a max of 32 sawtooth plucks methinks - ED
                 if (i <= 32)
                 {
-                    createMenu.addItem(Surge::GUI::toOSCase(std::to_string(i) + " Sawtooth Plucks"),
+                    createMenu.addItem(toOSCase(std::to_string(i) + " Sawtooth Plucks"),
                                        [this, i]() {
                                            Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
                                            this->zoomToFull();
@@ -3933,8 +4017,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 auto triggerMenu = juce::PopupMenu();
 
-                triggerMenu.addItem(Surge::GUI::toOSCase("Filter EG"), true,
-                                    (ms->segments[tts].retriggerFEG), [this, tts]() {
+                triggerMenu.addItem(toOSCase("Filter EG"), true, (ms->segments[tts].retriggerFEG),
+                                    [this, tts]() {
                                         this->ms->segments[tts].retriggerFEG =
                                             !this->ms->segments[tts].retriggerFEG;
                                         pushToUndo();
@@ -3943,8 +4027,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                             controlregion->refreshNodeControls();
                                     });
 
-                triggerMenu.addItem(Surge::GUI::toOSCase("Amp EG"), true,
-                                    (ms->segments[tts].retriggerAEG), [this, tts]() {
+                triggerMenu.addItem(toOSCase("Amp EG"), true, (ms->segments[tts].retriggerAEG),
+                                    [this, tts]() {
                                         this->ms->segments[tts].retriggerAEG =
                                             !this->ms->segments[tts].retriggerAEG;
                                         pushToUndo();
@@ -3955,7 +4039,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 triggerMenu.addSeparator();
 
-                triggerMenu.addItem(Surge::GUI::toOSCase("Nothing"), [this, tts]() {
+                triggerMenu.addItem(toOSCase("Nothing"), [this, tts]() {
                     this->ms->segments[tts].retriggerFEG = false;
                     this->ms->segments[tts].retriggerAEG = false;
                     pushToUndo();
@@ -3964,7 +4048,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         controlregion->refreshNodeControls();
                 });
 
-                triggerMenu.addItem(Surge::GUI::toOSCase("All"), [this, tts]() {
+                triggerMenu.addItem(toOSCase("All"), [this, tts]() {
                     this->ms->segments[tts].retriggerFEG = true;
                     this->ms->segments[tts].retriggerAEG = true;
                     pushToUndo();
@@ -3979,7 +4063,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto settingsMenu = juce::PopupMenu();
 
             settingsMenu.addItem(
-                Surge::GUI::toOSCase("Link Edge Nodes"), true,
+                toOSCase("Link Edge Nodes"), true,
                 (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED), [this]() {
                     pushToUndo();
                     if (this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
@@ -3996,7 +4080,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             settingsMenu.addSeparator();
 
-            settingsMenu.addItem(Surge::GUI::toOSCase("Use Deform for Segment"), true,
+            settingsMenu.addItem(toOSCase("Use Deform for Segment"), true,
                                  ms->segments[tts].useDeform, [this, tts]() {
                                      this->ms->segments[tts].useDeform =
                                          !this->ms->segments[tts].useDeform;
@@ -4006,7 +4090,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                          controlregion->refreshNodeControls();
                                  });
 
-            settingsMenu.addItem(Surge::GUI::toOSCase("Invert Deform Value"), true,
+            settingsMenu.addItem(toOSCase("Invert Deform Value"), true,
                                  ms->segments[tts].invertDeform, [this, tts]() {
                                      this->ms->segments[tts].invertDeform =
                                          !this->ms->segments[tts].invertDeform;
@@ -4451,8 +4535,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         menuName = "MSEG Loop Mode";
         options.push_back(std::make_pair("Off", 0));
         options.push_back(std::make_pair("Loop", 0.5));
-        options.push_back(
-            std::make_pair(Surge::GUI::toOSCase("Gate (Loop Until Release)").c_str(), 1.0));
+        options.push_back(std::make_pair(toOSCase("Gate (Loop Until Release)").c_str(), 1.0));
         break;
 
     case tag_edit_mode:
@@ -4600,8 +4683,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                 typeinEditor->grabFocus();
             };
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Edit Value: ") + val, true, false,
-                                showTypein);
+            contextMenu.addItem(toOSCase("Edit Value: ") + val, true, false, showTypein);
         }
 
         contextMenu.showMenuAsync(sge->popupMenuOptions(),
@@ -5117,7 +5199,7 @@ void MSEGControlRegion::rebuild()
             juce::Rectangle<int>(xpos + colXOffset + boxW + 1, ypos - 1, colWidth - boxW, rowH);
 
         lbl = std::make_unique<juce::Label>();
-        lbl->setText(Surge::GUI::toOSCase(title), juce::dontSendNotification);
+        lbl->setText(toOSCase(title), juce::dontSendNotification);
         lbl->setFont(editFont);
         lbl->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
         lbl->setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
