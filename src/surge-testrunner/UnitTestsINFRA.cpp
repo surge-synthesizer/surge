@@ -75,9 +75,8 @@ TEST_CASE("Biquad Is SIMD Aligned", "[infra]")
                 pointers.clear();
             }
         }
-        if (pointers.empty())
-            for (auto *d : pointers)
-                delete d;
+        for (auto *d : pointers)
+            delete d;
     }
 }
 
@@ -98,9 +97,8 @@ TEST_CASE("QuadFilterUnit Is SIMD Aligned", "[infra]")
                 pointers.clear();
             }
         }
-        if (pointers.empty())
-            for (auto *d : pointers)
-                delete d;
+        for (auto *d : pointers)
+            delete d;
     }
 
     SECTION("Array of QuadFilterUnits")
