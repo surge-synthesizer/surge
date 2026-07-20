@@ -7,7 +7,7 @@ from threading import Thread
 
 localhost = "127.0.0.1"
 surgeOSCInPort = 53280	#Surge XT default OSC in port
-surgeOSCOutPort = 53281	#Surge XT default OSC out port
+surgeOSCOutPort = 53270	#Surge XT default OSC out port
 
 def loadPatch(patchname):
     msg = obp.OSCMessage("/patch/load", ",s", [patchname])
