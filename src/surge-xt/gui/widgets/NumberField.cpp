@@ -70,6 +70,12 @@ std::string NumberField::valueToDisplay() const
         oss << respt;
     }
     break;
+    case Skin::Parameters::MSEG_NODE_SELECT:
+        if (iValue >= nodeCount)
+            oss << "Multi";
+        else
+            oss << (iValue + 1);
+        break;
     default:
         if (extended)
             return fmt::format("{:.2f}", (float)(iValue / 100.0));
@@ -149,8 +155,24 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
         iMin = 1;
         iMax = 256;
         break;
+    case Skin::Parameters::MSEG_NODE_SELECT:
+        iMin = 0;
+        iMax = nodeCount; // top value == nodeCount reads as "Multi"
+        break;
     }
     bounceToInt();
+}
+
+void NumberField::setNodeCount(int n)
+{
+    nodeCount = std::max(0, n);
+    if (controlMode == Skin::Parameters::MSEG_NODE_SELECT)
+    {
+        iMax = nodeCount;
+        iValue = limit_range(iValue, iMin, iMax);
+        bounceToInt();
+        repaint();
+    }
 }
 
 void NumberField::mouseDown(const juce::MouseEvent &event)

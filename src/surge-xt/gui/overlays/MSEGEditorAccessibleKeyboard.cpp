@@ -120,6 +120,25 @@ float quantizeValue(float v, float snapResolution)
 }
 } // namespace
 
+void MSEGAccessibleKeyboardHandler::setCursorNode(int node, bool announceResult)
+{
+    if (mode == Mode::SELECTION)
+    {
+        // dragging the footer NumberField always collapses to a single node
+        exitSelection();
+    }
+
+    // placeCursorOnNode is the same primitive Tab/Shift+Tab and mouse-driven
+    // focus already use to move the cursor (clamping, rememberedTime, and
+    // cb.repaint are all handled there).
+    placeCursorOnNode(node);
+
+    if (announceResult)
+    {
+        announceCursor();
+    }
+}
+
 int MSEGAccessibleKeyboardHandler::numNodes() const { return ms->n_activeSegments + 1; }
 
 float MSEGAccessibleKeyboardHandler::nodeTime(int i) const
@@ -144,7 +163,7 @@ bool MSEGAccessibleKeyboardHandler::controlPointUsable(int seg) const
 
 bool MSEGAccessibleKeyboardHandler::controlPointIs2D(int seg) const
 {
-    auto t = ms->segments[seg].type;
+    const auto t = ms->segments[seg].type;
     return t == MSEGStorage::segment::QUAD_BEZIER || t == MSEGStorage::segment::BROWNIAN ||
            (t >= MSEGStorage::segment::RATCHET_1 && t <= MSEGStorage::segment::RATCHET_8);
 }
@@ -968,7 +987,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (!controlPointUsable(seg))
             {
                 if (cb.announce)
-                    cb.announce("No control point on this segment");
+                    cb.announce("No control point for this segment type!");
                 return true;
             }
 
@@ -986,7 +1005,8 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
         if (cb.getTimeEditMode && cb.getTimeEditMode() == kTimeEditDraw)
         {
             if (cb.announce)
-                cb.announce("Horizontal movement is disabled while Draw is on");
+                cb.announce(
+                    "Horizontal movement is disabled while Draw movement mode is selected!");
             return true;
         }
 
@@ -1028,7 +1048,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (!controlPointUsable(seg))
             {
                 if (cb.announce)
-                    cb.announce("No control point on this segment");
+                    cb.announce("No control point for this segment type!");
                 return true;
             }
 
@@ -1061,7 +1081,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
 
     if (kc == juce::KeyPress::homeKey || kc == juce::KeyPress::endKey)
     {
-        auto pre = std::string(hasSelection() ? "Selection cleared. " : "");
+        auto pre = std::string(hasSelection() ? "Selection cleared!" : "");
         if (!pre.empty())
             clearSelection();
 
@@ -1089,7 +1109,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             return true;
         }
 
-        auto pre = std::string(hasSelection() ? "Selection cleared. " : "");
+        auto pre = std::string(hasSelection() ? "Selection cleared!" : "");
         if (!pre.empty())
             clearSelection();
 
@@ -1108,7 +1128,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (!controlPointUsable(seg))
             {
                 if (cb.announce)
-                    cb.announce("No control point on this segment");
+                    cb.announce("No control point for this segment type!");
                 return true;
             }
 
@@ -1122,13 +1142,13 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
             {
                 if (cb.announce)
-                    cb.announce("Editing start node value, linked endpoints");
+                    cb.announce("Editing start node value, linked edge nodes");
                 if (cb.showTypein)
                     cb.showTypein(0, kTypeinValue);
             }
             else if (cb.announce)
             {
-                cb.announce("No type-in for the final node, use arrow keys");
+                cb.announce("No type-in for the final node, use arrow keys!");
             }
         }
         else if (cb.showTypein)
@@ -1166,7 +1186,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
         if (hasSelection())
         {
             if (cb.announce)
-                cb.announce("Clear the selection first to add a node");
+                cb.announce("Clear the selection first to add a node!");
             return true;
         }
         addNode(mods.isShiftDown());

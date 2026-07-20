@@ -61,11 +61,12 @@ struct NumberField : public juce::Component,
     }
     float getValue() const override { return value; }
     int getIntValue() const { return iValue; }
-    void setIntValue(int v)
+    void setIntValue(int v, const bool silent = false)
     {
         value = Parameter::intScaledToFloat(v, iMax, iMin);
         bounceToInt();
-        notifyValueChanged();
+        if (!silent)
+            notifyValueChanged();
         repaint();
     }
 
@@ -87,6 +88,13 @@ struct NumberField : public juce::Component,
     void setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n,
                         bool isExtended = false);
     Surge::Skin::Parameters::NumberfieldControlModes getControlMode() const { return controlMode; }
+
+    // MSEG_NODE_SELECT only: how many selectable nodes currently exist in the
+    // MSEG. iMax tracks nodeCount, so the field's top value (iMax) is one past
+    // the last real node index and reads as "Multi" in valueToDisplay. Callers
+    // update this whenever the segment count changes (rebuild, add/delete node).
+    int nodeCount{1};
+    void setNodeCount(int n);
 
     enum MouseMode
     {

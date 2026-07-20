@@ -96,6 +96,12 @@ struct MSEGAccessibleKeyboardHandler
     void announceFocus();
     void announceEditorState();
 
+    // Externally driven cursor placement (e.g. from the "current node"
+    // NumberField in the footer). Exits any active selection, moves the
+    // cursor to node, and optionally announces the move for accessibility
+    // parity with keyboard-driven navigation.
+    void setCursorNode(int node, bool announceResult);
+
     // geometry of the cursor for the canvas's visual highlight
     int numNodes() const;
     float nodeTime(int i) const;
