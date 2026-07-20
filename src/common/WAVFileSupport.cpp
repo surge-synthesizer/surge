@@ -338,6 +338,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
                 if (smplLEN == 0)
                     smplLEN = 2048;
             }
+
+            free(data);
         }
         else
         {
