@@ -902,8 +902,7 @@ struct MSEGStorage
             TRIANGLE,
             HOLD,
             SAWTOOTH,
-            RESERVED, // used to be Spike, but it broke some MSEG model constraints,
-                      // so we ditched it - can add a different curve type later on!
+            NONE, // used to be Spike, but it broke some MSEG model constraints, so we ditched it
             BUMP,
             SMOOTH_STAIRS,
             RATCHET_1,
