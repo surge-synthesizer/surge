@@ -6,7 +6,7 @@ from threading import Thread
 
 ip = "127.0.0.1"
 surgeOSCInPort = 53280	#Surge XT default OSC in port
-surgeOSCOutPort = 53281	#Surge XT default OSC out port
+surgeOSCOutPort = 53270	#Surge XT default OSC out port
 
 def freqNote(freq, vel, noteid):
     msg = obp.OSCMessage("/fnote", ",fff", [freq, vel, noteid])
