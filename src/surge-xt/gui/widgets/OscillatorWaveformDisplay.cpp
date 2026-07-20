@@ -154,11 +154,9 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
 
     customEditorAccOverlay = std::move(ol);
 
-    auto xml1 = juce::parseXML(SurgeXTBinary::wtfile_icon_svg);
-    auto xml2 = juce::parseXML(SurgeXTBinary::wtscript_icon_svg);
+    auto xml1 = juce::parseXML(SurgeXTBinary::wtscript_icon_svg);
 
-    wtFileIcon = juce::Drawable::createFromSVG(*xml1);
-    wtScriptIcon = juce::Drawable::createFromSVG(*xml2);
+    wtScriptIcon = juce::Drawable::createFromSVG(*xml1);
 }
 
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
@@ -560,7 +558,6 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     bool addUserLabel = false;
     int idx = 0;
 
-    wtFileIcon->replaceColour(juce::Colours::white, skin->getColor(Colors::PopupMenu::Text));
     wtScriptIcon->replaceColour(juce::Colours::white, skin->getColor(Colors::PopupMenu::Text));
 
     if (selectedItem >= 0 && selectedItem < storage->wt_list.size() && singleCategory)
@@ -1203,17 +1200,23 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                 selected = true;
             }
 
-            bool isWTS = storage->wt_list[p].path.extension() == ".wtscript";
-            auto item = ItemWithSharedIcon(storage->wt_list[p].name);
+            const bool isWTS = storage->wt_list[p].path.extension() == ".wtscript";
 
-            item.setEnabled(true);
-            item.setTicked(checked);
-            item.setAction(action);
-            item.setSharedDrawable(isWTS ? wtScriptIcon : wtFileIcon);
+            if (isWTS)
+            {
+                auto item = ItemWithSharedIcon(storage->wt_list[p].name);
+                item.setEnabled(true);
+                item.setTicked(checked);
+                item.setAction(action);
+                item.setSharedDrawable(wtScriptIcon);
 
-            // subMenu->addItem(item);
-            subMenu->addCustomItem(p, std::make_unique<ItemWithSharedIconComponent>(item), nullptr,
-                                   storage->wt_list[p].name);
+                subMenu->addCustomItem(p, std::make_unique<ItemWithSharedIconComponent>(item),
+                                       nullptr, storage->wt_list[p].name);
+            }
+            else
+            {
+                subMenu->addItem(storage->wt_list[p].name, true, checked, action);
+            }
 
             sub++;
 
