@@ -120,6 +120,25 @@ float quantizeValue(float v, float snapResolution)
 }
 } // namespace
 
+void MSEGAccessibleKeyboardHandler::setCursorNode(int node, bool announceResult)
+{
+    if (mode == Mode::SELECTION)
+    {
+        // dragging the footer NumberField always collapses to a single node
+        exitSelection();
+    }
+
+    // placeCursorOnNode is the same primitive Tab/Shift+Tab and mouse-driven
+    // focus already use to move the cursor (clamping, rememberedTime, and
+    // cb.repaint are all handled there).
+    placeCursorOnNode(node);
+
+    if (announceResult)
+    {
+        announceCursor();
+    }
+}
+
 int MSEGAccessibleKeyboardHandler::numNodes() const { return ms->n_activeSegments + 1; }
 
 float MSEGAccessibleKeyboardHandler::nodeTime(int i) const
@@ -144,7 +163,7 @@ bool MSEGAccessibleKeyboardHandler::controlPointUsable(int seg) const
 
 bool MSEGAccessibleKeyboardHandler::controlPointIs2D(int seg) const
 {
-    auto t = ms->segments[seg].type;
+    const auto t = ms->segments[seg].type;
     return t == MSEGStorage::segment::QUAD_BEZIER || t == MSEGStorage::segment::BROWNIAN ||
            (t >= MSEGStorage::segment::RATCHET_1 && t <= MSEGStorage::segment::RATCHET_8);
 }

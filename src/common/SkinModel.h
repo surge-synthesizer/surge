@@ -112,7 +112,8 @@ enum NumberfieldControlModes
     MSEG_SNAP_H,
     MSEG_SNAP_V,
     WTSE_RESOLUTION,
-    WTSE_FRAMES
+    WTSE_FRAMES,
+    MSEG_NODE_SELECT
 };
 }
 

@@ -495,15 +495,21 @@ void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
 {
     auto tickWidth = jmin(15.0f, (float)button.getHeight() * 0.75f) * 1.2f;
 
-    drawTickBox(g, button, 2.0f, ((float)button.getHeight() - tickWidth) * 0.5f, tickWidth,
-                tickWidth, button.getToggleState(), button.isEnabled(),
-                shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+    juce::Rectangle<float> tickBounds(2.f, ((float)button.getHeight() - tickWidth) * 0.5f,
+                                      tickWidth, tickWidth);
 
-    g.setColour(button.findColour(ToggleButton::textColourId));
-    g.setFont(skin->fontManager->getLatoAtSize(9));
+    g.setColour(button.findColour(ToggleButton::tickColourId));
 
     if (!button.isEnabled())
         g.setOpacity(0.5f);
+
+    g.drawRoundedRectangle(tickBounds, 4.0f, 1.0f);
+
+    if (button.getToggleState())
+        g.fillRoundedRectangle(tickBounds, 4.0f);
+
+    g.setColour(button.findColour(ToggleButton::textColourId));
+    g.setFont(skin->fontManager->getLatoAtSize(9));
 
     g.drawFittedText(
         button.getButtonText(),
