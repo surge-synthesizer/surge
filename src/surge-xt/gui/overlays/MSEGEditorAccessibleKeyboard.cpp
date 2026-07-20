@@ -987,7 +987,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (!controlPointUsable(seg))
             {
                 if (cb.announce)
-                    cb.announce("No control point on this segment");
+                    cb.announce("No control point for this segment type!");
                 return true;
             }
 
@@ -1005,7 +1005,8 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
         if (cb.getTimeEditMode && cb.getTimeEditMode() == kTimeEditDraw)
         {
             if (cb.announce)
-                cb.announce("Horizontal movement is disabled while Draw is on");
+                cb.announce(
+                    "Horizontal movement is disabled while Draw movement mode is selected!");
             return true;
         }
 
@@ -1047,7 +1048,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (!controlPointUsable(seg))
             {
                 if (cb.announce)
-                    cb.announce("No control point on this segment");
+                    cb.announce("No control point for this segment type!");
                 return true;
             }
 
@@ -1080,7 +1081,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
 
     if (kc == juce::KeyPress::homeKey || kc == juce::KeyPress::endKey)
     {
-        auto pre = std::string(hasSelection() ? "Selection cleared. " : "");
+        auto pre = std::string(hasSelection() ? "Selection cleared!" : "");
         if (!pre.empty())
             clearSelection();
 
@@ -1108,7 +1109,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             return true;
         }
 
-        auto pre = std::string(hasSelection() ? "Selection cleared. " : "");
+        auto pre = std::string(hasSelection() ? "Selection cleared!" : "");
         if (!pre.empty())
             clearSelection();
 
@@ -1127,7 +1128,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (!controlPointUsable(seg))
             {
                 if (cb.announce)
-                    cb.announce("No control point on this segment");
+                    cb.announce("No control point for this segment type!");
                 return true;
             }
 
@@ -1141,13 +1142,13 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
             if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
             {
                 if (cb.announce)
-                    cb.announce("Editing start node value, linked endpoints");
+                    cb.announce("Editing start node value, linked edge nodes");
                 if (cb.showTypein)
                     cb.showTypein(0, kTypeinValue);
             }
             else if (cb.announce)
             {
-                cb.announce("No type-in for the final node, use arrow keys");
+                cb.announce("No type-in for the final node, use arrow keys!");
             }
         }
         else if (cb.showTypein)
@@ -1185,7 +1186,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
         if (hasSelection())
         {
             if (cb.announce)
-                cb.announce("Clear the selection first to add a node");
+                cb.announce("Clear the selection first to add a node!");
             return true;
         }
         addNode(mods.isShiftDown());
