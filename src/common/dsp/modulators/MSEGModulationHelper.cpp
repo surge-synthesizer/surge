@@ -1095,7 +1095,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         if (df < 0.f)
             k += abs(df) * 9.f;
         else if (df > 0.f)
-            k -= df * 2.999999f;
+            k -= df * 2.999f;
 
         // exponential charge formula
         float curve = (1.0f - exp(-k * localFrac)) / (1.0f - exp(-k));
