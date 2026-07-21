@@ -53,6 +53,8 @@ struct XMLMenuPopulator
     virtual void populate();
     virtual void loadSnapshot(int type, TiXmlElement *e, int idx) {}
 
+    void buildPopupMenu(int filterType = -1);
+
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
@@ -100,7 +102,7 @@ struct XMLMenuPopulator
         selectedIdx = idx;
     }
 
-    void jogBy(int dir)
+    virtual void jogBy(int dir)
     {
         if (dir == 0)
             return;
@@ -245,6 +247,8 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void copyChain();
     void pasteChain();
     void saveChain();
+
+    void jogBy(int dir) override;
 
     void loadByIndex(const std::string &name, int index) override;
     void loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p);
