@@ -446,31 +446,27 @@ void PatchStoreDialog::resized()
         int boxW = 17;
         int boxY = checkboxRowY + (checkboxRowH - boxH) / 2;
 
-        auto tuningBox = juce::Rectangle<int>(margin, boxY, boxW, boxH);
-        auto tuningLabel = juce::Rectangle<int>(margin + boxW, checkboxRowY,
-                                                halfW - (margin + boxW + margin), checkboxRowH);
+        auto box1 = juce::Rectangle<int>(margin, boxY, boxW, boxH);
+        auto label1 = juce::Rectangle<int>(margin + boxW, checkboxRowY,
+                                           halfW - (margin + boxW + margin), checkboxRowH);
 
-        auto snapBox = juce::Rectangle<int>(halfW + margin, boxY, boxW, boxH);
-        auto snapLabel = juce::Rectangle<int>(halfW + margin + boxW, checkboxRowY,
-                                              halfW - (margin + boxW + margin), checkboxRowH);
+        auto box2 = juce::Rectangle<int>(halfW + margin, boxY, boxW, boxH);
+        auto label2 = juce::Rectangle<int>(halfW + margin + boxW, checkboxRowY,
+                                           halfW - (margin + boxW + margin), checkboxRowH);
 
-        storeTuningLabel->setVisible(true);
-        storeTuningLabel->setBounds(tuningLabel);
-        storeTuningLabel->setEnabled(showTuning);
-        storeTuningLabel->setAlpha(showTuning ? 1.0f : 0.5f);
-        storeTuningButton->setVisible(true);
-        storeTuningButton->setEnabled(showTuning);
-        storeTuningButton->setAlpha(showTuning ? 1.0f : 0.5f);
-        storeTuningButton->setBounds(tuningBox);
+        storeTuningLabel->setVisible(showTuning);
+        storeTuningLabel->setBounds(label1);
+
+        storeTuningLabel->setVisible(showTuning);
+        storeTuningButton->setVisible(showTuning);
+        storeTuningButton->setBounds(box1);
 
         storeSnapshotsLabel->setVisible(true);
-        storeSnapshotsLabel->setBounds(snapLabel);
-        storeSnapshotsLabel->setEnabled(hasSnapshots);
-        storeSnapshotsLabel->setAlpha(hasSnapshots ? 1.0f : 0.5f);
-        storeSnapshotsButton->setVisible(true);
+        storeSnapshotsLabel->setBounds(showTuning ? label2 : label1);
+        storeSnapshotsLabel->setVisible(hasSnapshots);
+        storeSnapshotsButton->setVisible(hasSnapshots);
         storeSnapshotsButton->setEnabled(hasSnapshots);
-        storeSnapshotsButton->setAlpha(hasSnapshots ? 1.0f : 0.5f);
-        storeSnapshotsButton->setBounds(snapBox);
+        storeSnapshotsButton->setBounds(showTuning ? box2 : box1);
     }
     else
     {
