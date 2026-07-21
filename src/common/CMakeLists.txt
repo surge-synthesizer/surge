@@ -120,6 +120,8 @@ add_library(${PROJECT_NAME}
   dsp/Wavetable.h
   dsp/WavetableScriptEvaluator.cpp
   dsp/WavetableScriptEvaluator.h
+  dsp/WtGenService.cpp
+  dsp/WtGenService.h
   dsp/effects/BBDEnsembleEffect.cpp
   dsp/effects/BBDEnsembleEffect.h
   dsp/effects/BonsaiEffect.cpp

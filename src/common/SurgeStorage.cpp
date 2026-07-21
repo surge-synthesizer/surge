@@ -54,6 +54,7 @@
 #include "MSEGModulationHelper.h"
 // FIXME
 #include "FormulaModulationHelper.h"
+#include "WtGenService.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 
@@ -67,6 +68,8 @@ std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>
 
 SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : otherscene_clients(0)
 {
+    wtGenService = std::make_unique<Surge::WavetableScript::WtGenService>(this);
+
     auto suppliedDataPath = config.suppliedDataPath;
     bool loadWtAndPatch = true;
     loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel &&
@@ -1460,6 +1463,16 @@ void SurgeStorage::perform_queued_wtloads()
             // audio thread; catch here so a bad load can't terminate the process.
             try
             {
+                // A queued wavetable load replaces this osc's live wt, so bump wtGenPublishToken
+                // first and any in-progress WT script generate skips its stale publish. The bump
+                // takes its own lock scope because load_wt takes waveTableDataMutex internally.
+                if (patch.scene[sc].osc[o].wt.queue_id != -1 ||
+                    patch.scene[sc].osc[o].wt.queue_filename[0])
+                {
+                    std::lock_guard<std::mutex> lk(waveTableDataMutex);
+                    wtGenPublishToken[sc * n_oscs + o]++;
+                }
+
                 if (patch.scene[sc].osc[o].wt.queue_id != -1)
                 {
                     if (patch.scene[sc].osc[o].wt.everBuilt)
@@ -2455,19 +2468,23 @@ void SurgeStorage::clipboard_paste(
 
         getPatch().scene[scene].osc[entry].extraConfig = clipboard_extraconfig[0];
 
-        for (int s = 0; s < n_wt_snapshots; ++s)
         {
-            auto &src = clipboard_wtSnapshots[0][s];
-            auto &dst = getPatch().scene[scene].osc[entry].wtSnapshots[s];
-            if (src)
+            std::lock_guard<std::mutex> snapGuard(wtSnapshotMutex);
+            for (int s = 0; s < n_wt_snapshots; ++s)
             {
-                dst = std::make_unique<Wavetable>();
-                dst->Copy(src.get());
+                auto &src = clipboard_wtSnapshots[0][s];
+                auto &dst = getPatch().scene[scene].osc[entry].wtSnapshots[s];
+                if (src)
+                {
+                    dst = std::make_unique<Wavetable>();
+                    dst->Copy(src.get());
+                }
+                else
+                {
+                    dst.reset();
+                }
             }
-            else
-            {
-                dst.reset();
-            }
+            getPatch().scene[scene].osc[entry].wtSnapshotsVersion++;
         }
     }
 
@@ -2498,7 +2515,13 @@ void SurgeStorage::clipboard_paste(
         for (int i = 0; i < n_oscs; i++)
         {
             getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
-            getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
+            {
+                // Pasting replaces this osc's live wt so bump wtGenPublishToken and copy under
+                // waveTableDataMutex so an in-progress WT script skips its stale publish.
+                std::lock_guard<std::mutex> lk(waveTableDataMutex);
+                wtGenPublishToken[scene * n_oscs + i]++;
+                getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
+            }
             getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
             getPatch().scene[scene].osc[i].wavetable_script = clipboard_wavetable_script[i];
             getPatch().scene[scene].osc[i].wavetable_script_res_base =
@@ -2506,19 +2529,23 @@ void SurgeStorage::clipboard_paste(
             getPatch().scene[scene].osc[i].wavetable_script_nframes =
                 clipboard_wavetable_script_nframes[i];
 
-            for (int s = 0; s < n_wt_snapshots; ++s)
             {
-                auto &src = clipboard_wtSnapshots[i][s];
-                auto &dst = getPatch().scene[scene].osc[i].wtSnapshots[s];
-                if (src)
+                std::lock_guard<std::mutex> snapGuard(wtSnapshotMutex);
+                for (int s = 0; s < n_wt_snapshots; ++s)
                 {
-                    dst = std::make_unique<Wavetable>();
-                    dst->Copy(src.get());
+                    auto &src = clipboard_wtSnapshots[i][s];
+                    auto &dst = getPatch().scene[scene].osc[i].wtSnapshots[s];
+                    if (src)
+                    {
+                        dst = std::make_unique<Wavetable>();
+                        dst->Copy(src.get());
+                    }
+                    else
+                    {
+                        dst.reset();
+                    }
                 }
-                else
-                {
-                    dst.reset();
-                }
+                getPatch().scene[scene].osc[i].wtSnapshotsVersion++;
             }
         }
 
@@ -2619,7 +2646,13 @@ void SurgeStorage::clipboard_paste(
         {
             if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
             {
-                getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
+                {
+                    // Pasting replaces this osc's live wt so bump wtGenPublishToken and copy under
+                    // waveTableDataMutex so an in-progress WT script skips its stale publish.
+                    std::lock_guard<std::mutex> lk(waveTableDataMutex);
+                    wtGenPublishToken[scene * n_oscs + entry]++;
+                    getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
+                }
                 getPatch().scene[scene].osc[entry].wavetable_display_name = clipboard_wt_names[0];
                 getPatch().scene[scene].osc[entry].wavetable_script = clipboard_wavetable_script[0];
                 getPatch().scene[scene].osc[entry].wavetable_script_res_base =

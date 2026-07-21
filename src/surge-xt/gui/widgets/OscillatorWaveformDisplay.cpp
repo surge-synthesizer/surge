@@ -27,6 +27,8 @@
 #include "Oscillator.h"
 #include "OscillatorBase.h"
 #include "WavetableOscillator.h"
+#include "WtGenService.h"
+#include "WtGenSpinner.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
@@ -157,6 +159,15 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     auto xml1 = juce::parseXML(SurgeXTBinary::wtscript_icon_svg);
 
     wtScriptIcon = juce::Drawable::createFromSVG(*xml1);
+
+    wtGenSpinner = std::make_unique<WtGenSpinner>();
+
+    wtGenSpinner->isGenerating = [this]() {
+        return storage && storage->wtGenService && oscdata &&
+               uses_wavetabledata(oscdata->type.val.i) &&
+               storage->wtGenService->isGeneratingToOscillator(scene, oscInScene);
+    };
+    addChildComponent(*wtGenSpinner); // hidden until idleWtGen() kicks it
 }
 
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
@@ -462,6 +473,17 @@ void OscillatorWaveformDisplay::resized()
                           .withTrimmedBottom(1)
                           .toFloat();
     customEditorAccOverlay->setBounds(customEditorBox.toNearestInt());
+
+    wtGenSpinner->setBounds(wtl);
+}
+
+void OscillatorWaveformDisplay::idleWtGen()
+{
+    if (wtGenSpinner && skin && wtGenSpinner->isGenerating && wtGenSpinner->isGenerating())
+    {
+        wtGenSpinner->arcColour = skin->getColor(Colors::Osc::Display::Wave);
+        wtGenSpinner->kick();
+    }
 }
 
 void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
@@ -2304,6 +2326,12 @@ void OscillatorWaveformDisplay::showCustomEditor()
         addAndMakeVisible(*customEditor);
         customEditor->resized(); // Resize needs to happen after it has been added to the scene.
                                  // Otherwise bounds will return 0
+
+        if (wtGenSpinner && wtGenSpinner->isVisible())
+        {
+            wtGenSpinner->toFront(false);
+        }
+
         repaint();
 
         customEditorAccOverlay->setTitle("Close Custom Editor");

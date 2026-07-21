@@ -46,11 +46,33 @@ namespace WavetableScript
 static constexpr const char *statetable{"statetable"};
 
 #if HAS_LUA
+
+// Route an evaluation or parse error. When errorOut is non-null (worker/OSC) the message is written
+// there for the poller/caller to surface.
+static void emitError(std::string *errorOut, SurgeStorage *storage, const std::string &err,
+                      const std::string &title)
+{
+    if (errorOut)
+    {
+        // Only keep the first error of a run.
+        if (errorOut->empty())
+        {
+            *errorOut = err;
+        }
+    }
+    else if (storage)
+    {
+        storage->reportError(err, title);
+    }
+    else
+    {
+        std::cerr << err << std::endl;
+    }
+}
+
 struct LuaWTEvaluator::Details
 {
     SurgeStorage *storage{nullptr};
-    int current_scene{0};
-    int current_osc{0};
     std::string script{};
     size_t resolution{2048};
     size_t frameCount{10};
@@ -62,6 +84,17 @@ struct LuaWTEvaluator::Details
     lua_State *L{nullptr};
     int snapshotRef{LUA_NOREF}; // Registry ref for cached wt.snapshot table
 
+    // wt.snapshot is always built from this immutable bundle (never live oscdata). Defaults to an
+    // empty bundle and is never null; the worker/tests inject a frozen bundle via
+    // setSnapshotBundle.
+    std::shared_ptr<const SnapshotBundle> snapshotBundle{std::make_shared<SnapshotBundle>()};
+
+    // Off-thread error sink, aimed at a caller-owned string via setErrorOut. When non-null (the
+    // worker points it at its response's error string) emitError writes there instead of calling
+    // storage->reportError, which invokes UI error listeners and must not run off the message
+    // thread.
+    std::string *errorOut{nullptr};
+
     void invalidate()
     {
         isValid = false;
@@ -72,24 +105,20 @@ struct LuaWTEvaluator::Details
     void pushSnapshotTable()
     {
         lua_newtable(L); // Outer snapshot table
-        if (!storage)
-            return;
 
-        auto &oscdata = storage->getPatch().scene[current_scene].osc[current_osc];
         for (int s = 0; s < n_wt_snapshots; ++s)
         {
             lua_newtable(L); // Slot table (empty if not imported)
-            const auto &snap = oscdata.wtSnapshots[s];
+            const auto &slot = snapshotBundle->slots[s];
 
-            if (snap && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
+            if (slot.nframes > 0 && slot.nsamples > 0)
             {
-                const unsigned int nframes = snap->n_tables;
-                const int nsamples = snap->size;
+                const int nsamples = slot.nsamples;
 
-                for (unsigned int t = 0; t < nframes; ++t)
+                for (unsigned int t = 0; t < slot.nframes; ++t)
                 {
                     lua_newtable(L); // Frame table
-                    const float *tbl = snap->TableF32WeakPointers[0][t];
+                    const float *tbl = slot.data.data() + (size_t)t * nsamples;
                     for (int i = 0; i < nsamples; ++i)
                     {
                         lua_pushnumber(L, tbl[i]); // Push sample value
@@ -226,10 +255,7 @@ struct LuaWTEvaluator::Details
                 err = "Lua error: Value is nil.";
             oss << "Failed to evaluate the generate() function!\n" << err;
 
-            if (storage)
-                storage->reportError(oss.str(), "Wavetable Script Evaluator Error");
-            else
-                std::cerr << oss.str();
+            emitError(errorOut, storage, oss.str(), "Wavetable Script Evaluator Error");
         }
         lua_pop(L, 1); // Error string or pcall result
 
@@ -262,9 +288,8 @@ struct LuaWTEvaluator::Details
                 }
                 else
                 {
-                    if (storage)
-                        storage->reportError("Init function returned a non-table.",
-                                             "Wavetable Script Evaluator Error");
+                    emitError(errorOut, storage, "Init function returned a non-table.",
+                              "Wavetable Script Evaluator Error");
                     makeEmptyState(true);
                 }
             }
@@ -276,10 +301,7 @@ struct LuaWTEvaluator::Details
                 if (!err)
                     err = "Lua error: Value is nil.";
                 oss << "Failed to evaluate init() function!\n" << err;
-                if (storage)
-                    storage->reportError(oss.str(), "Wavetable Script Evaluator Error");
-                else
-                    std::cerr << oss.str();
+                emitError(errorOut, storage, oss.str(), "Wavetable Script Evaluator Error");
                 lua_pop(L, -1);
 
                 makeEmptyState(true);
@@ -327,14 +349,13 @@ struct LuaWTEvaluator::Details
                 L, script, {"init", "generate"}, emsg);
             if (!res)
             {
-                if (storage)
+                std::ostringstream oss;
+                oss << "Unable to determine generate() or init() function!";
+                if (!emsg.empty())
                 {
-                    std::ostringstream oss;
-                    oss << "Unable to determine generate() or init() function!";
-                    if (!emsg.empty())
-                        oss << "\n" << emsg;
-                    storage->reportError(oss.str(), "Wavetable Script Parse Error");
+                    oss << "\n" << emsg;
                 }
+                emitError(errorOut, storage, oss.str(), "Wavetable Script Parse Error");
             }
             lua_pop(L, 2); // remove the 2 functions added in the global state
 
@@ -382,11 +403,18 @@ void LuaWTEvaluator::setStorage(SurgeStorage *s)
 #endif
 }
 
-void LuaWTEvaluator::setOscillatorStorage(int scene, int osc)
+void LuaWTEvaluator::setSnapshotBundle(std::shared_ptr<const SnapshotBundle> bundle)
 {
 #if HAS_LUA
-    details->current_scene = scene;
-    details->current_osc = osc;
+    assert(bundle);
+    details->snapshotBundle = std::move(bundle);
+#endif
+}
+
+void LuaWTEvaluator::setErrorOut(std::string *errorOut)
+{
+#if HAS_LUA
+    details->errorOut = errorOut;
 #endif
 }
 
@@ -415,6 +443,7 @@ void LuaWTEvaluator::setResolution(size_t r)
 void LuaWTEvaluator::setFrameCount(size_t n)
 {
 #if HAS_LUA
+    n = std::clamp<size_t>(n, 1, 256);
     if (n != details->frameCount)
     {
         details->invalidate();
@@ -435,7 +464,7 @@ LuaWTEvaluator::frame_t LuaWTEvaluator::getFrame(size_t frame)
 #if HAS_LUA
     if (!details->makeValid())
         return std::nullopt;
-    if (frame > details->frameCount)
+    if (frame >= details->frameCount)
         return std::nullopt;
     assert(frame < details->frameCache.size());
     if (!details->frameCache[frame].has_value())
@@ -453,11 +482,15 @@ LuaWTEvaluator::frame_t LuaWTEvaluator::getFrame(size_t frame)
 #endif
 }
 
-bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
+LuaWTEvaluator::PopulatedWavetable
+LuaWTEvaluator::populateWavetable(const std::function<bool()> &canceled, bool previewOnly)
 {
+    PopulatedWavetable result;
 #if HAS_LUA
     if (!details->makeValid())
-        return false;
+    {
+        return result; // ok == false
+    }
 
     // Build then cache the wt.snapshot Lua table once for this regen cycle
     struct SnapshotCacheGuard
@@ -470,71 +503,50 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
     auto resolution = details->resolution;
     auto frames = details->frameCount;
 
-    auto wd = new float[frames * resolution];
-    wh.n_samples = resolution;
-    wh.n_tables = frames;
-    wh.flags = 0;
-    *wavdata = wd;
+    // A Preview needs only the per-frame vectors, so skip the multi-MB flat buffer. reset(new ...)
+    // leaves it uninitialized; we fill every sample below rather than pay to zero it.
+    float *wd = nullptr;
+    if (!previewOnly)
+    {
+        result.samples.reset(new float[frames * resolution]);
+        wd = result.samples.get();
+        result.header.n_samples = resolution;
+        result.header.n_tables = frames;
+        result.header.flags = 0;
+    }
+
+    result.frames.assign(frames, {});
 
     for (size_t i = 0; i < frames; ++i)
     {
+        // Cancellation is checked before each frame's pcall
+        if (canceled && canceled())
+        {
+            return {}; // discard partial buffers, ok == false
+        }
+
         auto v = getFrame(i);
         if (v.has_value())
         {
-            memcpy(&(wd[i * resolution]), &((*v)[0]), resolution * sizeof(float));
+            if (wd)
+            {
+                memcpy(&(wd[i * resolution]), &((*v)[0]), resolution * sizeof(float));
+            }
+            result.frames[i] = std::move(*v); // capture after the memcpy read
         }
         else
         {
-            delete[] wd;
-            return false;
+            return {}; // failure: empty result
         }
     }
-    return true;
-#else
-    return false;
+    result.ok = true;
 #endif
-}
-
-void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage *oscdata,
-                                       Wavetable *wt, bool exportMode)
-{
-#if HAS_LUA
-    auto res_base = oscdata->wavetable_script_res_base;
-    auto nframes = oscdata->wavetable_script_nframes;
-    auto script = oscdata->wavetable_script;
-
-    auto respt = 32;
-    for (int i = 1; i < res_base; ++i)
-    {
-        respt *= 2;
-    }
-
-    setStorage(storage);
-    setScript(script);
-    setResolution(respt);
-    setFrameCount(nframes);
-
-    wt_header wh;
-    float *wd = nullptr;
-
-    if (populateWavetable(wh, &wd))
-    {
-        storage->waveTableDataMutex.lock();
-        wt->BuildWT(wd, wh, wh.flags & wtf_is_sample);
-
-        if (!exportMode)
-        {
-            oscdata->wavetable_display_name = getSuggestedWavetableName();
-        }
-        storage->waveTableDataMutex.unlock();
-
-        delete[] wd;
-    }
-#endif
+    return result;
 }
 
 #if HAS_LUA
-static void loadWtscriptSnapshots(const void *compData, size_t blobSize, OscillatorStorage *oscdata)
+static void loadWtscriptSnapshots(const void *compData, size_t blobSize, SurgeStorage *storage,
+                                  OscillatorStorage *oscdata)
 {
     auto decompressedSize = ZSTD_getFrameContentSize(compData, blobSize);
     if (decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN || decompressedSize == ZSTD_CONTENTSIZE_ERROR)
@@ -553,14 +565,14 @@ static void loadWtscriptSnapshots(const void *compData, size_t blobSize, Oscilla
         return;
 
     binn *b = binn_open_ex(decompressed.data(), sz);
-    SurgePatch::readOscSnapshotsFromBinn(b, *oscdata);
+    SurgePatch::readOscSnapshotsFromBinn(b, *oscdata, storage);
     binn_free(b);
 }
 #endif
 
 std::optional<LuaWTEvaluator::WtscriptData>
 LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
-                              OscillatorStorage *oscdata)
+                              OscillatorStorage *oscdata, std::string *errorOut)
 {
 #if HAS_LUA
     namespace mech = sst::basic_blocks::mechanics;
@@ -575,7 +587,7 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     std::ifstream inFile(filename, std::ios::binary | std::ios::ate);
     if (!inFile)
     {
-        storage->reportError("Failed to load XML file.", "Load Error");
+        emitError(errorOut, storage, "Failed to load XML file.", "Load Error");
         return std::nullopt;
     }
     const auto fileSize = static_cast<size_t>(inFile.tellg());
@@ -609,12 +621,13 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
 
         if (xmlSize > bytesAfterHeader || blobSize > bytesAfterHeader - xmlSize)
         {
-            storage->reportError("Wavetable script file is truncated or corrupt!", "Load Error");
+            emitError(errorOut, storage, "Wavetable script file is truncated or corrupt!",
+                      "Load Error");
             return std::nullopt;
         }
 
         const void *compData = fileData.data() + xmlOffset + xmlSize;
-        loadWtscriptSnapshots(compData, blobSize, oscdata);
+        loadWtscriptSnapshots(compData, blobSize, storage, oscdata);
     }
 
     // Parse only the XML portion
@@ -623,42 +636,43 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     doc.Parse(xmlStr.c_str(), nullptr, TIXML_ENCODING_LEGACY);
     if (doc.Error())
     {
-        storage->reportError("Failed to parse wavetable script XML!", "Load Error");
+        emitError(errorOut, storage, "Failed to parse wavetable script XML!", "Load Error");
         return std::nullopt;
     }
 
     auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
     if (!wtscript)
     {
-        storage->reportError("No root wtscript element found!", "Load Error");
+        emitError(errorOut, storage, "No root wtscript element found!", "Load Error");
         return std::nullopt;
     }
 
     auto wavetable_script = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("script"));
     if (!wavetable_script)
     {
-        storage->reportError("No wavetable_script element found!", "Load Error");
+        emitError(errorOut, storage, "No wavetable_script element found!", "Load Error");
         return std::nullopt;
     }
 
     auto b64script = wavetable_script->Attribute("lua");
     if (!b64script || std::strlen(b64script) == 0)
     {
-        storage->reportError("Empty or missing lua attribute in wavetable_script!", "Load Error");
+        emitError(errorOut, storage, "Empty or missing lua attribute in wavetable_script!",
+                  "Load Error");
         return std::nullopt;
     }
 
     int nframes = 0;
     if (wavetable_script->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
     {
-        storage->reportError("Missing or invalid frames attribute!", "Load Error");
+        emitError(errorOut, storage, "Missing or invalid frames attribute!", "Load Error");
         return std::nullopt;
     }
 
     int res_base = 0;
     if (wavetable_script->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
     {
-        storage->reportError("Missing or invalid samples attribute!", "Load Error");
+        emitError(errorOut, storage, "Missing or invalid samples attribute!", "Load Error");
         return std::nullopt;
     }
 
@@ -673,27 +687,31 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
 #endif
 }
 
-void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storage,
-                                  OscillatorStorage *oscdata)
+bool LuaWTEvaluator::loadWtscriptMetadata(const fs::path &filename, SurgeStorage *storage,
+                                          OscillatorStorage *oscdata, std::string *errorOut)
 {
 #if HAS_LUA
-    for (auto &snap : oscdata->wtSnapshots)
     {
-        snap.reset();
+        std::lock_guard<std::mutex> g(storage->wtSnapshotMutex);
+        for (auto &snap : oscdata->wtSnapshots)
+        {
+            snap.reset();
+        }
+        oscdata->wtSnapshotsVersion++;
     }
 
-    auto data = parseWtscript(filename, storage, oscdata);
+    auto data = parseWtscript(filename, storage, oscdata, errorOut);
     if (!data)
     {
-        return;
+        return false;
     }
 
     oscdata->wavetable_script_nframes = data->nframes;
     oscdata->wavetable_script_res_base = data->res_base;
     oscdata->wavetable_script = data->script;
-
-    details->invalidate();
-    generateWavetable(storage, oscdata, &oscdata->wt);
+    return true;
+#else
+    return false;
 #endif
 }
 
@@ -707,16 +725,11 @@ void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStora
         return;
     }
 
-    auto respt = 32;
-    for (int i = 1; i < data->res_base; ++i)
-    {
-        respt *= 2;
-    }
-
     setStorage(storage);
     setScript(data->script);
-    setResolution(respt);
+    setResolution(resolutionForResBase(data->res_base));
     setFrameCount(data->nframes);
+    setSnapshotBundle(SnapshotBundle::build(*oscdata));
 
     oscdata->wavetable_display_name = getSuggestedWavetableName();
 #endif
@@ -730,6 +743,41 @@ std::string LuaWTEvaluator::getSuggestedWavetableName()
 #else
     return "";
 #endif
+}
+
+std::shared_ptr<SnapshotBundle> SnapshotBundle::build(const OscillatorStorage &osc)
+{
+    auto bundle = std::make_shared<SnapshotBundle>();
+    for (int s = 0; s < n_wt_snapshots; ++s)
+    {
+        const auto &snap = osc.wtSnapshots[s];
+        if (snap && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
+        {
+            auto &slot = bundle->slots[s];
+            slot.nframes = snap->n_tables;
+            slot.nsamples = snap->size;
+            slot.data.resize((size_t)slot.nframes * slot.nsamples);
+            for (unsigned int t = 0; t < slot.nframes; ++t)
+            {
+                memcpy(slot.data.data() + (size_t)t * slot.nsamples,
+                       snap->TableF32WeakPointers[0][t], (size_t)slot.nsamples * sizeof(float));
+            }
+        }
+    }
+    return bundle;
+}
+
+std::shared_ptr<const SnapshotBundle> SnapshotBundle::current(SurgeStorage *storage,
+                                                              OscillatorStorage &osc)
+{
+    std::lock_guard<std::mutex> g(storage->wtSnapshotMutex);
+    if (!osc.wtSnapshotBundle || osc.wtSnapshotBundle->version != osc.wtSnapshotsVersion)
+    {
+        auto bundle = build(osc);
+        bundle->version = osc.wtSnapshotsVersion;
+        osc.wtSnapshotBundle = bundle;
+    }
+    return osc.wtSnapshotBundle;
 }
 
 std::string LuaWTEvaluator::defaultWavetableScript()
@@ -773,5 +821,6 @@ function generate(wt)
 end
 )FN";
 }
+
 } // namespace WavetableScript
 } // namespace Surge

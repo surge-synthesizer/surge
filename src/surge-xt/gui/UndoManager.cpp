@@ -955,6 +955,14 @@ struct UndoManagerImpl
             auto g = SelfPushGuard(this);
             auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
 
+            {
+                // This undo/redo replaces the osc's wavetable so invalidate any in-progress WT
+                // script job for it.
+                // Bump under waveTableDataMutex so the worker's re-check sees it.
+                std::lock_guard<std::mutex> lk(synth->storage.waveTableDataMutex);
+                synth->storage.wtGenPublishToken[p->scene * n_oscs + p->oscNum]++;
+            }
+
             if (!p->displayName.empty())
             {
                 os->wavetable_display_name = p->displayName;

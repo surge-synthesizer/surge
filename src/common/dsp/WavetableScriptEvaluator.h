@@ -28,7 +28,11 @@
 #include "Wavetable.h"
 #include "filesystem/import.h"
 
+#include <algorithm>
+#include <array>
+#include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -38,10 +42,39 @@ namespace Surge
 {
 namespace WavetableScript
 {
+
+// The wavetable-script resolution parameter is a 1-based exponent: base 1 -> 32 samples, doubling
+// each step (32 << (base - 1)).
+inline int resolutionForResBase(int resBase) { return 32 << (std::clamp(resBase, 1, 8) - 1); }
+
+// Immutable, refcount-shared snapshot of an oscillator's wtSnapshots. Built copy-on-mutate
+// (only when wtSnapshots actually changes) so a background generator can read a stable copy
+// while the message/OSC thread resets the live snapshots underneath it. "version" is the
+// wtSnapshotsVersion this bundle was built from.
+struct SnapshotBundle
+{
+    struct Slot
+    {
+        unsigned nframes{0};
+        int nsamples{0};
+        std::vector<float> data; // flat, nframes * nsamples; data[t * nsamples + i]
+    };
+    std::array<Slot, n_wt_snapshots> slots;
+    uint64_t version{0};
+
+    // Build a fresh bundle by copying the live wtSnapshots of osc. Does NOT lock, so the caller
+    // must hold storage->wtSnapshotMutex (it reads the snapshot sample data, which mutation sites
+    // write under that mutex).
+    static std::shared_ptr<SnapshotBundle> build(const OscillatorStorage &osc);
+
+    // Return osc.wtSnapshotBundle. Always takes storage->wtSnapshotMutex, rebuilding via build()
+    // when the bundle is missing or its set version is stale.
+    static std::shared_ptr<const SnapshotBundle> current(SurgeStorage *storage,
+                                                         OscillatorStorage &osc);
+};
+
 struct LuaWTEvaluator
 {
-    struct Details;
-    std::unique_ptr<Details> details;
     LuaWTEvaluator();
     ~LuaWTEvaluator();
 
@@ -49,7 +82,16 @@ struct LuaWTEvaluator
                                             Surge::LuaSupport::EnvironmentFeatures::HAS_FFT;
 
     void setStorage(SurgeStorage *);
-    void setOscillatorStorage(int scene, int osc);
+
+    // Inject the immutable snapshot bundle the next generation builds its wt.snapshot Lua table
+    // from, rather than touching live oscdata. This is how the worker reads snapshots safely off
+    // the message thread.
+    void setSnapshotBundle(std::shared_ptr<const SnapshotBundle>);
+
+    // Worker error routing: point generation errors at a caller-owned string. Pass nullptr to route
+    // errors directly.
+    void setErrorOut(std::string *errorOut);
+
     void setScript(const std::string &);
     void setResolution(size_t);
     void setFrameCount(size_t);
@@ -58,17 +100,34 @@ struct LuaWTEvaluator
     using validFrame_t = std::vector<float>;
     using frame_t = std::optional<validFrame_t>;
 
-    /*
-     * Generate all the data required to call BuildWT. The wavdata here is data you
-     * must free with delete[]
-     */
-    bool populateWavetable(wt_header &wh, float **wavdata);
-    void generateWavetable(SurgeStorage *storage, OscillatorStorage *oscdata, Wavetable *wt,
-                           bool exportMode = false);
+    // Product of one generation pass: the owning flat BuildWT buffer (null in previewOnly mode),
+    // its header, and the per-frame preview vectors. On failure/cancellation ok is false and the
+    // buffers are empty.
+    struct PopulatedWavetable
+    {
+        bool ok{false};
+        wt_header header{};
+        std::unique_ptr<float[]> samples;       // flat header.n_tables * header.n_samples
+        std::vector<std::vector<float>> frames; // [frame][sample]
+    };
 
-    void loadWtscript(const fs::path &filename, SurgeStorage *storage, OscillatorStorage *oscdata);
+    // Generate all frames in one Lua pass, returning the result by value (buffer ownership
+    // transfers to the caller). previewOnly skips the flat-buffer alloc/fill; canceled() true stops
+    // at the next frame pcall and returns an empty (ok==false) result.
+    PopulatedWavetable populateWavetable(const std::function<bool()> &canceled = {},
+                                         bool previewOnly = false);
+
     void loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
                                 OscillatorStorage *oscdata);
+
+    // Parse a .wtscript into oscdata (script/res/frames+snapshots+version bump) WITHOUT
+    // generating. Lua-free and instance-free, so load sites can parse on the caller thread and
+    // then submit a Generate to the WtGenService instead of blocking on synchronous generation.
+    // Returns false on a parse error. If errorOut is non-null the error text is written there for
+    // the caller to surface (e.g. OSC->sendError, off the message thread), otherwise it is
+    // reported directly via storage->reportError (message-thread callers).
+    static bool loadWtscriptMetadata(const fs::path &filename, SurgeStorage *storage,
+                                     OscillatorStorage *oscdata, std::string *errorOut = nullptr);
 
     frame_t getFrame(size_t frame);
 
@@ -77,14 +136,20 @@ struct LuaWTEvaluator
     static std::string defaultWavetableScript();
 
   private:
+    struct Details;
+    std::unique_ptr<Details> details;
+
     struct WtscriptData
     {
         std::string script;
         int nframes = 0;
         int res_base = 0;
     };
-    std::optional<WtscriptData> parseWtscript(const fs::path &filename, SurgeStorage *storage,
-                                              OscillatorStorage *oscdata);
+
+    static std::optional<WtscriptData> parseWtscript(const fs::path &filename,
+                                                     SurgeStorage *storage,
+                                                     OscillatorStorage *oscdata,
+                                                     std::string *errorOut = nullptr);
 };
 
 } // namespace WavetableScript

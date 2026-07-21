@@ -33,6 +33,7 @@
 
 #include "FormulaModulationHelper.h"
 #include "WavetableScriptEvaluator.h"
+#include "WtGenService.h"
 #include "LuaSupport.h"
 
 #include "lua/LuaSources.h"
@@ -1181,8 +1182,8 @@ end
 
         auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
         la->setResolution(64);
-        la->setStorage(&storage);
-        la->setOscillatorStorage(0, 0);
+        la->setStorage(nullptr);
+        la->setSnapshotBundle(Surge::WavetableScript::SnapshotBundle::build(osc));
         la->setFrameCount(2);
         la->setScript(s);
 
@@ -1235,8 +1236,9 @@ end
 
         auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
         la->setResolution(64);
-        la->setStorage(&storage);
-        la->setOscillatorStorage(0, 0);
+        la->setStorage(nullptr);
+        la->setSnapshotBundle(
+            Surge::WavetableScript::SnapshotBundle::build(storage.getPatch().scene[0].osc[0]));
         la->setFrameCount(1);
         la->setScript(s);
 
@@ -1295,6 +1297,205 @@ end
             auto r = sin(2 * M_PI * x);
             REQUIRE(r == Approx((*fr)[i]).margin(1e-6));
         }
+    }
+}
+
+TEST_CASE("WtGenService", "[wts]")
+{
+    namespace WS = Surge::WavetableScript;
+
+    SurgeStorage storage;
+    auto &osc = storage.getPatch().scene[0].osc[0];
+
+    const std::string script = R"FN(
+function init(wt)
+    wt.name = "RoundTrip"
+    return wt
+end
+
+function generate(wt)
+    local res = {}
+    for i = 1, wt.sample_count do
+        res[i] = sin(2 * pi * wt.frame * (i - 1) / (wt.sample_count - 1))
+    end
+    return res
+end
+    )FN";
+
+    osc.wavetable_script = script;
+    osc.wavetable_script_res_base = 5; // 512 samples
+    osc.wavetable_script_nframes = 4;
+
+    const int resolution = WS::resolutionForResBase(osc.wavetable_script_res_base);
+    const int nframes = osc.wavetable_script_nframes;
+
+    // Direct reference: the same evaluator code the worker drives, run inline.
+    auto computeDirectFrames = [&]() {
+        std::vector<std::vector<float>> directFrames;
+        auto la = std::make_unique<WS::LuaWTEvaluator>();
+        la->setStorage(nullptr);
+        la->setScript(script);
+        la->setResolution(resolution);
+        la->setFrameCount(nframes);
+        la->setSnapshotBundle(WS::SnapshotBundle::build(osc));
+        la->forceInvalidate();
+        for (int f = 0; f < nframes; ++f)
+        {
+            auto fr = la->getFrame(f);
+            REQUIRE(fr.has_value());
+            directFrames.push_back(*fr);
+        }
+        return directFrames;
+    };
+
+    // The frames the worker carries back equal the direct run (same code, same inputs).
+    auto requireFramesMatch = [](const std::vector<std::vector<float>> &frames,
+                                 const std::vector<std::vector<float>> &ref) {
+        REQUIRE(frames.size() == ref.size());
+        for (size_t f = 0; f < ref.size(); ++f)
+        {
+            REQUIRE(frames[f].size() == ref[f].size());
+            for (size_t i = 0; i < ref[f].size(); ++i)
+            {
+                REQUIRE(frames[f][i] == Approx(ref[f][i]));
+            }
+        }
+    };
+
+    SECTION("Preview matches the direct evaluator and leaves the oscillator untouched")
+    {
+        auto directFrames = computeDirectFrames();
+
+        const bool builtBefore = osc.wt.everBuilt;
+        const int nTablesBefore = osc.wt.n_tables;
+
+        WS::WtGenJobRequest preq;
+        preq.mode = WS::WtGenMode::Preview;
+        preq.scene = 0;
+        preq.osc = 0;
+        preq.script = script;
+        preq.resolution = resolution;
+        preq.frameCount = nframes;
+        preq.snapshot = WS::SnapshotBundle::current(&storage, osc);
+
+        auto r = storage.wtGenService->submitBlocking(std::move(preq));
+
+        REQUIRE(r.ok);
+        REQUIRE_FALSE(r.published);
+        REQUIRE_FALSE(r.exportOut);
+        requireFramesMatch(r.frames, directFrames);
+        REQUIRE(osc.wt.everBuilt == builtBefore);
+        REQUIRE(osc.wt.n_tables == nTablesBefore);
+    }
+
+    SECTION("Live Generate matches the direct evaluator and publishes")
+    {
+        auto directFrames = computeDirectFrames();
+
+        auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+
+        REQUIRE(r.ok);
+        REQUIRE(r.published);
+        REQUIRE(r.wtName == "RoundTrip");
+        requireFramesMatch(r.frames, directFrames);
+
+        REQUIRE(osc.wt.everBuilt);
+        REQUIRE(osc.wt.n_tables == nframes);
+    }
+
+    SECTION("Export builds exportOut")
+    {
+        const bool builtBefore = osc.wt.everBuilt;
+        const int nTablesBefore = osc.wt.n_tables;
+
+        WS::WtGenJobRequest req;
+        req.scene = 0;
+        req.osc = 0;
+        req.mode = WS::WtGenMode::Generate;
+        req.generateTarget = nullptr; // nullptr target == export
+        req.script = script;
+        req.resolution = resolution;
+        req.frameCount = nframes;
+        req.snapshot = WS::SnapshotBundle::current(&storage, osc);
+
+        auto r = storage.wtGenService->submitBlocking(std::move(req));
+
+        REQUIRE(r.ok);
+        REQUIRE_FALSE(r.published); // export never publishes
+        REQUIRE(r.exportOut);
+        REQUIRE(r.exportOut->everBuilt); // built into the response-owned wavetable
+        REQUIRE(r.exportOut->n_tables == nframes);
+
+        // Export should not mutate the live oscillator.
+        REQUIRE(osc.wt.everBuilt == builtBefore);
+        REQUIRE(osc.wt.n_tables == nTablesBefore);
+    }
+
+    SECTION("A stale publish token skips the live publish")
+    {
+        const bool builtBefore = osc.wt.everBuilt;
+        const int nTablesBefore = osc.wt.n_tables;
+
+        // Force a token mismatch: the worker must skip BuildWT and leave the oscillator untouched.
+        auto staleReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
+        {
+            std::lock_guard<std::mutex> g(storage.waveTableDataMutex);
+            staleReq.publishToken = storage.wtGenPublishToken[0] + 1;
+        }
+        auto rStale = storage.wtGenService->submitBlocking(std::move(staleReq));
+
+        REQUIRE(rStale.ok);
+        REQUIRE_FALSE(rStale.published);
+        REQUIRE(osc.wt.everBuilt == builtBefore);
+        REQUIRE(osc.wt.n_tables == nTablesBefore);
+
+        // A matching token (the default capture) publishes normally.
+        auto rGood =
+            storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+
+        REQUIRE(rGood.ok);
+        REQUIRE(rGood.published);
+        REQUIRE(osc.wt.everBuilt);
+        REQUIRE(osc.wt.n_tables == nframes);
+    }
+
+    SECTION("A queued wavetable load invalidates an in-flight Generate")
+    {
+        // A queued wavetable load replaces this osc's wt (perform_queued_wtloads
+        // bumps the token under the mutex before loading), so a Generate captured before the
+        // load must skip its publish - the user's selection wins.
+        auto capturedReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
+
+        osc.wt.queue_id = 0;
+        storage.perform_queued_wtloads();
+        REQUIRE(osc.wt.everBuilt);
+        const int loadedTables = osc.wt.n_tables;
+
+        auto rCaptured = storage.wtGenService->submitBlocking(std::move(capturedReq));
+
+        REQUIRE(rCaptured.ok);
+        REQUIRE_FALSE(rCaptured.published);
+        REQUIRE(osc.wt.n_tables == loadedTables);
+    }
+
+    SECTION("A failing generate() fails the job and leaves the oscillator untouched")
+    {
+        const bool builtBefore = osc.wt.everBuilt;
+        const int nTablesBefore = osc.wt.n_tables;
+
+        osc.wavetable_script = R"FN(
+function generate(wt)
+    error("boom")
+end
+        )FN";
+
+        auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+
+        REQUIRE_FALSE(r.ok);
+        REQUIRE_FALSE(r.published);
+        REQUIRE_FALSE(r.error.empty());
+        REQUIRE(osc.wt.everBuilt == builtBefore);
+        REQUIRE(osc.wt.n_tables == nTablesBefore);
     }
 }
 

@@ -1205,6 +1205,11 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                     storage->waveTableDataMutex.lock();
                     scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
 
+                    // The osc's WT was just replaced by the loaded patch so invalidate any
+                    // in-progress WT script job for it. Bump inside the mutex so the worker's
+                    // re-check sees it.
+                    storage->wtGenPublishToken[sc * n_oscs + osc]++;
+
                     bool hadName{true};
 
                     if (scene[sc].osc[osc].wavetable_display_name.empty())
@@ -1388,8 +1393,15 @@ bool SurgePatch::writeOscSnapshotsToBinn(binn *oscmap, const OscillatorStorage &
     return any;
 }
 
-bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
+bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc,
+                                          SurgeStorage *storage)
 {
+    assert(storage);
+
+    // Snapshot writes (snap->BuildWT/reset below) must exclude the copy-on-mutate
+    // SnapshotBundle rebuild. Take wtSnapshotMutex for the whole rebuild and bump the
+    // version once.
+    std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
     bool any = false;
     for (int slot = 0; slot < n_wt_snapshots; ++slot)
     {
@@ -1465,6 +1477,12 @@ bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
             any = true;
         }
     }
+
+    if (any)
+    {
+        osc.wtSnapshotsVersion++;
+    }
+
     return any;
 }
 
@@ -1635,7 +1653,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
 
             // Rebuild wavetable snapshots from the stored frame lists.
-            if (readOscSnapshotsFromBinn(&obj, scene[sc].osc[osc]))
+            if (readOscSnapshotsFromBinn(&obj, scene[sc].osc[osc], storage))
             {
                 snapshotsStoredInPatch = true;
             }
@@ -3109,10 +3127,20 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     // Clear all snapshots before potentially restoring from arbitrary_block_storage
     snapshotsStoredInPatch = false;
-    for (int sc = 0; sc < n_scenes; sc++)
-        for (int osc = 0; osc < n_oscs; osc++)
-            for (int slot = 0; slot < n_wt_snapshots; slot++)
-                scene[sc].osc[osc].wtSnapshots[slot].reset();
+    {
+        std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
+        for (int sc = 0; sc < n_scenes; sc++)
+        {
+            for (int osc = 0; osc < n_oscs; osc++)
+            {
+                for (int slot = 0; slot < n_wt_snapshots; slot++)
+                {
+                    scene[sc].osc[osc].wtSnapshots[slot].reset();
+                }
+                scene[sc].osc[osc].wtSnapshotsVersion++;
+            }
+        }
+    }
 
     bool userPrefOverrideTempoOnPatchLoad = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::OverrideTempoOnPatchLoad, true);
@@ -4851,11 +4879,18 @@ void SurgePatch::captureWavetableSnapshot(int scene, int srcOsc, int dstOsc, int
 
     storage->waveTableDataMutex.lock();
 
-    if (!snap)
     {
-        snap = std::make_unique<Wavetable>();
+        // Nested lock, waveTableDataMutex OUTER / wtSnapshotMutex INNER - the one site that must
+        // nest the two. Copy reads the live wt (guarded by waveTableDataMutex) and writes the
+        // snapshot (guarded by wtSnapshotMutex) as a single op, so the regions can't be separated.
+        std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
+        if (!snap)
+        {
+            snap = std::make_unique<Wavetable>();
+        }
+        snap->Copy(&src);
+        this->scene[scene].osc[dstOsc].wtSnapshotsVersion++;
     }
-    snap->Copy(&src);
 
     storage->waveTableDataMutex.unlock();
 }

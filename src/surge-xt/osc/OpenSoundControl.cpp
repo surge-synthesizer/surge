@@ -32,6 +32,7 @@
 #include "SurgeSynthProcessor.h"
 #include "SurgeStorage.h"
 #include "WavetableScriptEvaluator.h"
+#include "WtGenService.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -962,15 +963,34 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         if (synth->storage.wt_list[new_id].path.extension() == ".wtscript")
         {
-            if (!evaluator)
-                evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+            namespace WS = Surge::WavetableScript;
 
-            evaluator->loadWtscript(synth->storage.wt_list[new_id].path, &synth->storage, oscdata);
+            // Parse on this OSC background thread (Lua-free), then submit a Generate and
+            // block-wait.
+            std::string parseErr;
+            if (WS::LuaWTEvaluator::loadWtscriptMetadata(synth->storage.wt_list[new_id].path,
+                                                         &synth->storage, oscdata, &parseErr))
+            {
+                auto r = synth->storage.wtGenService->submitBlocking(
+                    WS::makeLiveGenerateRequest(&synth->storage, scene_num, osc_num - 1));
 
-            oscdata->wt.current_id = new_id;
-            oscdata->wt.refresh_display = true;
-            oscdata->wt.force_refresh_display = true;
-            oscdata->wt.refresh_script_editor = true;
+                if (r.published)
+                {
+                    oscdata->wavetable_display_name = r.wtName;
+                    oscdata->wt.current_id = new_id;
+                    oscdata->wt.refresh_display = true;
+                    oscdata->wt.force_refresh_display = true;
+                    oscdata->wt.refresh_script_editor = true;
+                }
+                else if (!r.error.empty())
+                {
+                    sendError(r.error);
+                }
+            }
+            else if (!parseErr.empty())
+            {
+                sendError(parseErr);
+            }
         }
         else
         {
