@@ -178,8 +178,9 @@ struct KeyBindingsListRow : public juce::Component
     void resized() override
     {
         auto r = getLocalBounds().reduced(2);
-        auto a1 = r.withWidth(r.getHeight() * 1.5);
-        auto at = r.withTrimmedLeft(r.getHeight() * 1.5);
+        const auto h = r.getHeight() * 0.7;
+        auto a1 = r.withSizeKeepingCentre(h + 2, h).withX(r.getX() + 4);
+        auto at = r.withTrimmedLeft(r.getHeight());
         auto a2 = at.withTrimmedRight(120);
         auto a3 = at.withTrimmedLeft(at.getWidth() - 120);
 
