@@ -133,8 +133,7 @@ TEST_CASE("All Factory .wtscript Files Validate", "[io]")
         INFO("Loading wtscript " << p.path);
 
         oscdata->wavetable_display_name = "";
-        la->loadWtscriptForTesting(p.path, &surge->storage, oscdata);
-
+        REQUIRE(la->loadWtscriptForTesting(p.path, &surge->storage, oscdata));
         REQUIRE(oscdata->wavetable_display_name != "");
     }
 }

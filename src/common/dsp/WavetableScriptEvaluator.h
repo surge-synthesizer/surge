@@ -117,7 +117,10 @@ struct LuaWTEvaluator
     PopulatedWavetable populateWavetable(const std::function<bool()> &canceled = {},
                                          bool previewOnly = false);
 
-    void loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
+    // Parse and evaluate a .wtscript into oscdata, returning false if either the file or the
+    // script itself failed to parse. Note the script is evaluated but no frames are generated,
+    // so a script that parses but errors inside generate() still returns true.
+    bool loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
                                 OscillatorStorage *oscdata);
 
     // Parse a .wtscript into oscdata (script/res/frames+snapshots+version bump) WITHOUT
