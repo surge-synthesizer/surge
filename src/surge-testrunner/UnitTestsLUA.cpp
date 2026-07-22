@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <memory>
 
 #include "HeadlessUtils.h"
 #include "Player.h"
@@ -469,7 +470,7 @@ TEST_CASE("Basic Formula Evaluation", "[formula]")
 {
     SECTION("Identity Modulator")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
@@ -477,7 +478,7 @@ function process(state)
     state.output = state.phase
     return state
 end)FN");
-        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
+        auto runIt = runFormula(storage.get(), &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(c.fPhase == Approx(c.v));
@@ -486,7 +487,7 @@ end)FN");
 
     SECTION("Sawtooth Modulator")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
@@ -494,7 +495,7 @@ function process(state)
     state.output = 2 * state.phase - 1
     return state
 end)FN");
-        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
+        auto runIt = runFormula(storage.get(), &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(2 * c.fPhase - 1 == Approx(c.v));
@@ -503,7 +504,7 @@ end)FN");
 
     SECTION("Sine Modulator")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
@@ -511,7 +512,7 @@ function process(state)
     state.output = math.sin( state.phase * 3.14159 * 2 )
     return state
 end)FN");
-        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
+        auto runIt = runFormula(storage.get(), &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(std::sin(c.fPhase * 3.14159 * 2) == Approx(c.v));
@@ -520,7 +521,7 @@ end)FN");
 
     SECTION("Test Deform")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
@@ -536,7 +537,7 @@ end)FN");
         {
             float def = id / 10.0;
             float pe = 3 * def + 1;
-            auto runIt = runFormula(&storage, &fs, 0.0321, 5, def);
+            auto runIt = runFormula(storage.get(), &fs, 0.0321, 5, def);
             for (auto c : runIt)
             {
                 auto q = pow(c.fPhase, pe) * 2 - 1;
@@ -547,7 +548,7 @@ end)FN");
 
     SECTION("Vector Output")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
@@ -565,7 +566,7 @@ end)FN");
         for (int id = 0; id <= 10; id++)
         {
             float pe = 0;
-            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0.f);
+            auto runIt = runFormula(storage.get(), &fs, 0.0321, 5, 0.f);
             for (auto c : runIt)
             {
                 auto p = c.fPhase;
@@ -583,7 +584,7 @@ TEST_CASE("Init Functions", "[formula]")
 {
     SECTION("Test Init Function")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function init(state)
@@ -598,7 +599,7 @@ end)FN");
 
         for (int id = 0; id <= 10; id++)
         {
-            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0);
+            auto runIt = runFormula(storage.get(), &fs, 0.0321, 5, 0);
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
@@ -612,7 +613,7 @@ TEST_CASE("Clamping", "[formula]")
 {
     SECTION("Test Clamped Function")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
@@ -622,7 +623,7 @@ end)FN");
 
         for (int id = 0; id <= 10; id++)
         {
-            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0);
+            auto runIt = runFormula(storage.get(), &fs, 0.0321, 5, 0);
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
@@ -633,7 +634,7 @@ end)FN");
     }
     SECTION("Test Clamped Function")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function init(state)
@@ -649,7 +650,7 @@ end)FN");
         int outOfBounds = 0;
         for (int id = 0; id <= 10; id++)
         {
-            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0);
+            auto runIt = runFormula(storage.get(), &fs, 0.0321, 5, 0);
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
@@ -939,14 +940,14 @@ TEST_CASE("Bitops Module", "[formula]")
 {
     SECTION("Bit Operation")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(state)
     state.output = bit.tobit(0xffffffff)
     return state
 end)FN");
-        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
+        auto runIt = runFormula(storage.get(), &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(c.v == -1);
@@ -958,7 +959,7 @@ TEST_CASE("Shared Table", "[formula]")
 {
     SECTION("Shared Table Persists Across Multiple Runs")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
 
         fs.setFormula(R"FN(
@@ -976,9 +977,9 @@ function process(state)
     return state
 end)FN");
 
-        auto firstRun = runFormula(&storage, &fs, 0.0321, 5);
+        auto firstRun = runFormula(storage.get(), &fs, 0.0321, 5);
         REQUIRE(!firstRun.empty());
-        auto secondRun = runFormula(&storage, &fs, 0.0321, 5);
+        auto secondRun = runFormula(storage.get(), &fs, 0.0321, 5);
         REQUIRE(!secondRun.empty());
 
         for (size_t i = 0; i < secondRun.size(); ++i)
@@ -989,9 +990,9 @@ end)FN");
 
     SECTION("Namespaced Shared Tables Do Not Collide")
     {
-        SurgeStorage storage;
-        auto &fs0 = storage.getPatch().formulamods[0][0];
-        auto &fs1 = storage.getPatch().formulamods[0][1];
+        auto storage = std::make_unique<SurgeStorage>();
+        auto &fs0 = storage->getPatch().formulamods[0][0];
+        auto &fs1 = storage->getPatch().formulamods[0][1];
 
         fs0.setFormula(R"FN(
 function init(state)
@@ -1017,13 +1018,13 @@ function process(state)
     state.output = shared[state.lfo_id].val
     return state
 end)FN");
-        auto firstRun = runFormula(&storage, &fs0, 0.0321, 5);
+        auto firstRun = runFormula(storage.get(), &fs0, 0.0321, 5);
         REQUIRE(!firstRun.empty());
         for (auto c : firstRun)
         {
             REQUIRE(c.v == 0.25);
         }
-        auto secondRun = runFormula(&storage, &fs1, 0.0321, 5);
+        auto secondRun = runFormula(storage.get(), &fs1, 0.0321, 5);
         REQUIRE(!secondRun.empty());
         for (auto c : secondRun)
         {
@@ -1033,7 +1034,7 @@ end)FN");
 
     SECTION("Shared Table Is Wiped By requestSharedDataWipe")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
         FormulaModulatorStorage fs;
 
         auto scriptA = R"FN(
@@ -1061,15 +1062,15 @@ function process(state)
     return state
 end)FN";
         fs.setFormula(scriptA);
-        auto firstRun = runFormula(&storage, &fs, 0.0321, 5);
+        auto firstRun = runFormula(storage.get(), &fs, 0.0321, 5);
         REQUIRE(!firstRun.empty());
         for (auto c : firstRun)
         {
             REQUIRE(c.v == 0.25);
         }
         fs.setFormula(scriptB);
-        Surge::Formula::requestSharedDataWipe(&storage);
-        auto secondRun = runFormula(&storage, &fs, 0.0321, 5);
+        Surge::Formula::requestSharedDataWipe(storage.get());
+        auto secondRun = runFormula(storage.get(), &fs, 0.0321, 5);
         REQUIRE(!secondRun.empty());
         for (auto c : secondRun)
         {
@@ -1082,7 +1083,6 @@ TEST_CASE("Wavetable Script", "[wts]")
 {
     SECTION("Just the Sines")
     {
-        SurgeStorage storage;
         const std::string s = R"FN(
 
 function init(wt)
@@ -1129,8 +1129,8 @@ TEST_CASE("Wavetable Script Snapshots", "[wts]")
 {
     SECTION("Script Can Read Snapshot Data")
     {
-        SurgeStorage storage;
-        auto &osc = storage.getPatch().scene[0].osc[0];
+        auto storage = std::make_unique<SurgeStorage>();
+        auto &osc = storage->getPatch().scene[0].osc[0];
 
         // Populate snapshot slot 0 with a known 2-frame, 64-sample ramp
         osc.wtSnapshots[0] = std::make_unique<Wavetable>();
@@ -1208,7 +1208,7 @@ end
 
     SECTION("Empty Snapshot Slot Returns Empty Table")
     {
-        SurgeStorage storage;
+        auto storage = std::make_unique<SurgeStorage>();
 
         // All snapshots disabled by default, script should still run
         const std::string s = R"FN(
@@ -1238,7 +1238,7 @@ end
         la->setResolution(64);
         la->setStorage(nullptr);
         la->setSnapshotBundle(
-            Surge::WavetableScript::SnapshotBundle::build(storage.getPatch().scene[0].osc[0]));
+            Surge::WavetableScript::SnapshotBundle::build(storage->getPatch().scene[0].osc[0]));
         la->setFrameCount(1);
         la->setScript(s);
 
@@ -1256,7 +1256,6 @@ TEST_CASE("PFFFT Wrapper", "[wts]")
 {
     SECTION("Round-Trip FFT")
     {
-        SurgeStorage storage;
         const std::string s = R"FN(
 
 function init(wt)
@@ -1304,8 +1303,8 @@ TEST_CASE("WtGenService", "[wts]")
 {
     namespace WS = Surge::WavetableScript;
 
-    SurgeStorage storage;
-    auto &osc = storage.getPatch().scene[0].osc[0];
+    auto storage = std::make_unique<SurgeStorage>();
+    auto &osc = storage->getPatch().scene[0].osc[0];
 
     const std::string script = R"FN(
 function init(wt)
@@ -1376,9 +1375,9 @@ end
         preq.script = script;
         preq.resolution = resolution;
         preq.frameCount = nframes;
-        preq.snapshot = WS::SnapshotBundle::current(&storage, osc);
+        preq.snapshot = WS::SnapshotBundle::current(storage.get(), osc);
 
-        auto r = storage.wtGenService->submitBlocking(std::move(preq));
+        auto r = storage->wtGenService->submitBlocking(std::move(preq));
 
         REQUIRE(r.ok);
         REQUIRE_FALSE(r.published);
@@ -1392,7 +1391,8 @@ end
     {
         auto directFrames = computeDirectFrames();
 
-        auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+        auto r =
+            storage->wtGenService->submitBlocking(WS::makeLiveGenerateRequest(storage.get(), 0, 0));
 
         REQUIRE(r.ok);
         REQUIRE(r.published);
@@ -1416,9 +1416,9 @@ end
         req.script = script;
         req.resolution = resolution;
         req.frameCount = nframes;
-        req.snapshot = WS::SnapshotBundle::current(&storage, osc);
+        req.snapshot = WS::SnapshotBundle::current(storage.get(), osc);
 
-        auto r = storage.wtGenService->submitBlocking(std::move(req));
+        auto r = storage->wtGenService->submitBlocking(std::move(req));
 
         REQUIRE(r.ok);
         REQUIRE_FALSE(r.published); // export never publishes
@@ -1437,12 +1437,12 @@ end
         const int nTablesBefore = osc.wt.n_tables;
 
         // Force a token mismatch: the worker must skip BuildWT and leave the oscillator untouched.
-        auto staleReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
+        auto staleReq = WS::makeLiveGenerateRequest(storage.get(), 0, 0);
         {
-            std::lock_guard<std::mutex> g(storage.waveTableDataMutex);
-            staleReq.publishToken = storage.wtGenPublishToken[0] + 1;
+            std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
+            staleReq.publishToken = storage->wtGenPublishToken[0] + 1;
         }
-        auto rStale = storage.wtGenService->submitBlocking(std::move(staleReq));
+        auto rStale = storage->wtGenService->submitBlocking(std::move(staleReq));
 
         REQUIRE(rStale.ok);
         REQUIRE_FALSE(rStale.published);
@@ -1451,7 +1451,7 @@ end
 
         // A matching token (the default capture) publishes normally.
         auto rGood =
-            storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+            storage->wtGenService->submitBlocking(WS::makeLiveGenerateRequest(storage.get(), 0, 0));
 
         REQUIRE(rGood.ok);
         REQUIRE(rGood.published);
@@ -1464,14 +1464,14 @@ end
         // A queued wavetable load replaces this osc's wt (perform_queued_wtloads
         // bumps the token under the mutex before loading), so a Generate captured before the
         // load must skip its publish - the user's selection wins.
-        auto capturedReq = WS::makeLiveGenerateRequest(&storage, 0, 0);
+        auto capturedReq = WS::makeLiveGenerateRequest(storage.get(), 0, 0);
 
         osc.wt.queue_id = 0;
-        storage.perform_queued_wtloads();
+        storage->perform_queued_wtloads();
         REQUIRE(osc.wt.everBuilt);
         const int loadedTables = osc.wt.n_tables;
 
-        auto rCaptured = storage.wtGenService->submitBlocking(std::move(capturedReq));
+        auto rCaptured = storage->wtGenService->submitBlocking(std::move(capturedReq));
 
         REQUIRE(rCaptured.ok);
         REQUIRE_FALSE(rCaptured.published);
@@ -1489,7 +1489,8 @@ function generate(wt)
 end
         )FN";
 
-        auto r = storage.wtGenService->submitBlocking(WS::makeLiveGenerateRequest(&storage, 0, 0));
+        auto r =
+            storage->wtGenService->submitBlocking(WS::makeLiveGenerateRequest(storage.get(), 0, 0));
 
         REQUIRE_FALSE(r.ok);
         REQUIRE_FALSE(r.published);
