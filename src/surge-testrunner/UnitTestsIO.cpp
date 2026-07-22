@@ -94,6 +94,11 @@ TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
         {
             continue;
         }
+        // Skip user folder
+        if (!surge->storage.wt_category[p.category].isFactory)
+        {
+            continue;
+        }
         auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
         wt->size = -1;
         wt->n_tables = -1;
@@ -120,11 +125,15 @@ TEST_CASE("All Factory .wtscript Files Validate", "[io]")
         {
             continue;
         }
+        // Skip user folder
+        if (!surge->storage.wt_category[p.category].isFactory)
+        {
+            continue;
+        }
         INFO("Loading wtscript " << p.path);
 
         oscdata->wavetable_display_name = "";
-        la->loadWtscriptForTesting(p.path, &surge->storage, oscdata);
-
+        REQUIRE(la->loadWtscriptForTesting(p.path, &surge->storage, oscdata));
         REQUIRE(oscdata->wavetable_display_name != "");
     }
 }

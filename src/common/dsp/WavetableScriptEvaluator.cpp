@@ -715,14 +715,14 @@ bool LuaWTEvaluator::loadWtscriptMetadata(const fs::path &filename, SurgeStorage
 #endif
 }
 
-void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
+bool LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
                                             OscillatorStorage *oscdata)
 {
 #if HAS_LUA
     auto data = parseWtscript(filename, storage, oscdata);
     if (!data)
     {
-        return;
+        return false;
     }
 
     setStorage(storage);
@@ -731,7 +731,12 @@ void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStora
     setFrameCount(data->nframes);
     setSnapshotBundle(SnapshotBundle::build(*oscdata));
 
-    oscdata->wavetable_display_name = getSuggestedWavetableName();
+    auto parsed = details->makeValid();
+    oscdata->wavetable_display_name = details->wtName;
+
+    return parsed;
+#else
+    return false;
 #endif
 }
 

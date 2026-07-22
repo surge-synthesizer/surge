@@ -44,11 +44,5 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
   JUCE_USE_CURL=0
 )
 
-# Set stack size to 16MB for MSVC Debug builds only to prevent stack overflow in "Basic Formula Evaluation" Lua tests
-if (MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message(STATUS "Increasing stack size for MSVC Debug build to accommodate Formula Evaluation Lua tests")
-  set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /STACK:0x1000000")
-endif()
-
 message(STATUS "Using CatchDiscoverTests on ${PROJECT_NAME}" )
 catch_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${SURGE_SOURCE_DIR})
