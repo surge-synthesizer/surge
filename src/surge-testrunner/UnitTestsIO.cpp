@@ -94,6 +94,11 @@ TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
         {
             continue;
         }
+        // Skip user folder
+        if (!surge->storage.wt_category[p.category].isFactory)
+        {
+            continue;
+        }
         auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
         wt->size = -1;
         wt->n_tables = -1;
@@ -117,6 +122,11 @@ TEST_CASE("All Factory .wtscript Files Validate", "[io]")
     {
         // Skip non .wtscript files
         if (p.path.extension() != ".wtscript")
+        {
+            continue;
+        }
+        // Skip user folder
+        if (!surge->storage.wt_category[p.category].isFactory)
         {
             continue;
         }
