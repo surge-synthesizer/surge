@@ -471,7 +471,7 @@ TEST_CASE("Basic Formula Evaluation", "[formula]")
     SECTION("Identity Modulator")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     -- a bipolar saw
@@ -488,7 +488,7 @@ end)FN");
     SECTION("Sawtooth Modulator")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     -- a bipolar saw
@@ -505,7 +505,7 @@ end)FN");
     SECTION("Sine Modulator")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     -- a bipolar saw
@@ -522,7 +522,7 @@ end)FN");
     SECTION("Test Deform")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     -- a bipolar saw
@@ -549,7 +549,7 @@ end)FN");
     SECTION("Vector Output")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     -- a bipolar saw
@@ -585,7 +585,7 @@ TEST_CASE("Init Functions", "[formula]")
     SECTION("Test Init Function")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function init(state)
    state.av = 0.762
@@ -614,7 +614,7 @@ TEST_CASE("Clamping", "[formula]")
     SECTION("Test Clamped Function")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     state.output = state.phase * 3 - 1.5
@@ -635,7 +635,7 @@ end)FN");
     SECTION("Test Clamped Function")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function init(state)
     state.clamp_output = false
@@ -941,7 +941,7 @@ TEST_CASE("Bitops Module", "[formula]")
     SECTION("Bit Operation")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
         fs.setFormula(R"FN(
 function process(state)
     state.output = bit.tobit(0xffffffff)
@@ -960,7 +960,7 @@ TEST_CASE("Shared Table", "[formula]")
     SECTION("Shared Table Persists Across Multiple Runs")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
 
         fs.setFormula(R"FN(
 function init(state)
@@ -1035,7 +1035,7 @@ end)FN");
     SECTION("Shared Table Is Wiped By requestSharedDataWipe")
     {
         auto storage = std::make_unique<SurgeStorage>();
-        FormulaModulatorStorage fs;
+        auto &fs = storage->getPatch().formulamods[0][0];
 
         auto scriptA = R"FN(
 -- Script A
