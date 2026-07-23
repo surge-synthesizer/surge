@@ -21,6 +21,7 @@
   <special id="step-sequencer" help_url="#step-sequencer"/>
   <special id="mseg-editor" help_url="#multi-segment-envelope-generator"/>
   <special id="formula-editor" help_url="#formula"/>
+  <special id="wts-editor" help_url="#wavetable-script-editor"/>
   <special id="mod-list" help_url="#modulation-list"/>
   <special id="macro-modbutton" help_url="#macros"/>
   <special id="lfo-modbutton" help_url="#lfos"/>
