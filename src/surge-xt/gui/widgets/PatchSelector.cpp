@@ -660,7 +660,10 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Initialize Patch"), [this]() { loadInitPatch(); });
+    Surge::GUI::addMenuItemWithShortcut(
+        contextMenu, Surge::GUI::toOSCase("Initialize Patch"),
+        sge->getShortcutDescription(Surge::GUI::KeyboardActions::INITIALIZE_PATCH),
+        [this]() { loadInitPatch(); });
 
     contextMenu.addItem(Surge::GUI::toOSCase("Set Current Patch as Default"), [this]() {
         Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
