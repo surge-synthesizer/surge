@@ -38,6 +38,23 @@ namespace Surge
 namespace Overlays
 {
 
+enum MSEGControlTags
+{
+    tag_segment_nodeedit_mode = 1231231,
+    tag_segment_movement_mode,
+    tag_vertical_snap,
+    tag_vertical_value,
+    tag_horizontal_snap,
+    tag_horizontal_value,
+    tag_loop_mode,
+    tag_edit_mode,
+    tag_node_select,
+    tag_deform_use,
+    tag_deform_invert,
+    tag_trigger_filter_eg,
+    tag_trigger_amp_eg,
+};
+
 /*
  * The keyboard model for the accessible MSEG editor. A cursor always sits on a
  * node; Tab and Shift+Tab step it along the MSEG, the four arrow keys move the
@@ -72,6 +89,7 @@ struct MSEGAccessibleKeyboardHandler
         std::function<std::vector<int>()> getSelection;
         std::function<void(const std::vector<int> &)> setSelection;
         std::function<void()> repaint;
+        std::function<std::string(int)> toggleOrRotate;
     };
 
     SurgeStorage *storage{nullptr};
@@ -80,6 +98,7 @@ struct MSEGAccessibleKeyboardHandler
     Callbacks cb;
 
     int index{0};
+    int lastN{-1};
     float rememberedTime{0.f};
     Mode mode{Mode::CURSOR};
     // the node selection mode started on; the selection is always the
