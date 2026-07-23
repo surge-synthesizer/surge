@@ -1324,6 +1324,11 @@ void FxMenu::jogBy(int dir)
     }
 
     auto matches = [this, myType](int i) {
+        if (i < 0 || i >= (int)allPresets.size())
+        {
+            return false;
+        }
+
         const auto &p = allPresets[i];
         return !p.isSeparator && !p.isSectionHeader && p.itemType == myType;
     };
@@ -1333,7 +1338,7 @@ void FxMenu::jogBy(int dir)
     // If we don't currently have a valid starting point within this effect's own
     // presets (e.g. nothing loaded yet, or the effect type just changed), jump to
     // the first matching preset instead of jogging from an unrelated position.
-    if (idx < 0 || idx >= (int)allPresets.size() || !matches(idx))
+    if (!matches(idx))
     {
         idx = -1;
 
