@@ -148,6 +148,11 @@ void XMLMenuPopulator::populate()
     scanXMLPresets();
     scanExtraPresets();
 
+    buildPopupMenu(-1);
+}
+
+void XMLMenuPopulator::buildPopupMenu(int filterType)
+{
     struct Tree
     {
         enum
@@ -365,8 +370,42 @@ void XMLMenuPopulator::populate()
 
     for (const auto &p : allPresets)
     {
-        rootTree->addByPath(p, idx);
+        if (filterType >= 0)
+        {
+            // Only keep the leaf preset entries for this specific filtered type, skip
+            // separators/section headers that belong to the outer category browser.
+            if (p.isSeparator || p.isSectionHeader || p.itemType != filterType)
+            {
+                idx++;
+                continue;
+            }
+
+            // Preset paths are rooted at the filtered type's own name (e.g. "Reverb 1").
+            // Strip that leading element so the items land directly at the tree root,
+            // instead of nested one level inside a folder we're not showing.
+            Item stripped = p;
+
+            if (!stripped.pathElements.empty())
+            {
+                stripped.pathElements.erase(stripped.pathElements.begin());
+            }
+
+            rootTree->addByPath(stripped, idx);
+        }
+        else
+        {
+            rootTree->addByPath(p, idx);
+        }
+
         idx++;
+    }
+
+    if (filterType >= 0)
+    {
+        // Pretend the root is already one level inside the filtered type's folder, so the
+        // "FACTORY PRESETS" / "USER PRESETS" headers and column break behave exactly as
+        // they do when this same content is shown nested inside that folder's submenu.
+        rootTree->depth = 1;
     }
 
     rootTree->updateFacUserFlag();
@@ -805,7 +844,26 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     // Are there any user presets?
     storage->fxUserPreset->doPresetRescan(storage);
 
-    XMLMenuPopulator::populate();
+    allPresets.clear();
+    scanXMLPresets();
+    scanExtraPresets();
+
+    // When invoked from the dropdown below the FX grid (rather than a right-click on
+    // the grid itself), and an effect is actually loaded in the currently selected slot,
+    // skip straight to that effect's own preset submenu instead of showing the full FX
+    // category browser. This matches the prev/next jog buttons and preset name label
+    // right below the dropdown, which are scoped to the loaded effect.
+    // If no effect is loaded there's no preset list to jump to, so fall back to the
+    // full category browser in that case.
+
+    int showPresetsOnlyFor = -1;
+
+    if (!isCalledInEffectChooser && fx->type.val.i != fxt_off)
+    {
+        showPresetsOnlyFor = fx->type.val.i;
+    }
+
+    buildPopupMenu(showPresetsOnlyFor);
 
     auto cfxid = -1;
     auto cfxtype = 0;
@@ -857,7 +915,10 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
             that->repaint();
         });
 
-    menu.addSeparator();
+    if (showPresetsOnlyFor == -1)
+    {
+        menu.addSeparator();
+    }
 
     menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false,
                  [this, cfxid, that = juce::Component::SafePointer(sge->effectChooser.get())]() {
@@ -871,11 +932,14 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
                      repaint();
                  });
 
-    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfxc)), true, false,
-                 [this, sge, cur_fx]() { sge->enqueueFXChainClear(fxSlotToChain(cur_fx)); });
+    if (showPresetsOnlyFor == -1)
+    {
+        menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfxc)), true, false,
+                     [this, sge, cur_fx]() { sge->enqueueFXChainClear(fxSlotToChain(cur_fx)); });
 
-    menu.addItem(Surge::GUI::toOSCase("Clear All FX Chains"), true, false,
-                 [this, sge]() { sge->enqueueFXChainClear(-1); });
+        menu.addItem(Surge::GUI::toOSCase("Clear All FX Chains"), true, false,
+                     [this, sge]() { sge->enqueueFXChainClear(-1); });
+    }
 
     menu.addSeparator();
 
@@ -884,8 +948,11 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
         menu.addItem(Surge::GUI::toOSCase("Save FX Preset As..."), [this]() { this->saveFX(); });
     }
 
-    menu.addItem(Surge::GUI::toOSCase("Save FX Chain Preset As..."),
-                 [this]() { this->saveChain(); });
+    if (showPresetsOnlyFor == -1)
+    {
+        menu.addItem(Surge::GUI::toOSCase("Save FX Chain Preset As..."),
+                     [this]() { this->saveChain(); });
+    }
 
     menu.addSeparator();
 
@@ -899,19 +966,22 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
         });
     }
 
-    menu.addItem(Surge::GUI::toOSCase("Copy FX Chain"), [this]() { this->copyChain(); });
-
-    if (Surge::FxClipboard::isChainPasteAvailable(fxChainClipboard))
+    if (showPresetsOnlyFor == -1)
     {
-        menu.addItem(Surge::GUI::toOSCase("Paste FX Chain"), [this]() {
-            this->pasteChain();
-            this->storage->getPatch().isDirty = true;
-        });
+        menu.addItem(Surge::GUI::toOSCase("Copy FX Chain"), [this]() { this->copyChain(); });
+
+        if (Surge::FxClipboard::isChainPasteAvailable(fxChainClipboard))
+        {
+            menu.addItem(Surge::GUI::toOSCase("Paste FX Chain"), [this]() {
+                this->pasteChain();
+                this->storage->getPatch().isDirty = true;
+            });
+        }
     }
 
     menu.addSeparator();
 
-    if (sge)
+    if (sge && showPresetsOnlyFor == -1)
     {
         storage->fxChainUserPreset->doPresetRescan(storage);
         const auto &chainPresets = storage->fxChainUserPreset->getPresets();
@@ -1237,6 +1307,82 @@ void FxMenu::loadByIndex(const std::string &name, int index)
         sge->enqueueAccessibleAnnouncement(announce);
     }
     repaint();
+}
+
+void FxMenu::jogBy(int dir)
+{
+    if (dir == 0 || allPresets.empty())
+    {
+        return;
+    }
+
+    auto myType = fx->type.val.i;
+
+    if (myType == fxt_off)
+    {
+        return;
+    }
+
+    auto matches = [this, myType](int i) {
+        if (i < 0 || i >= (int)allPresets.size())
+        {
+            return false;
+        }
+
+        const auto &p = allPresets[i];
+        return !p.isSeparator && !p.isSectionHeader && p.itemType == myType;
+    };
+
+    auto idx = selectedIdx;
+
+    // If we don't currently have a valid starting point within this effect's own
+    // presets (e.g. nothing loaded yet, or the effect type just changed), jump to
+    // the first matching preset instead of jogging from an unrelated position.
+    if (!matches(idx))
+    {
+        idx = -1;
+
+        for (int i = 0; i < (int)allPresets.size(); ++i)
+        {
+            if (matches(i))
+            {
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx < 0)
+        {
+            return; // no presets at all for this effect type
+        }
+
+        loadByIndex(allPresets[idx].name, idx);
+        return;
+    }
+
+    auto startIdx = idx;
+
+    do
+    {
+        idx += dir;
+
+        if (idx < 0)
+        {
+            idx = (int)allPresets.size() - 1;
+        }
+
+        if (idx >= (int)allPresets.size())
+        {
+            idx = 0;
+        }
+
+        if (idx == startIdx)
+        {
+            return; // wrapped all the way around - only one preset for this effect type
+        }
+    } while (!matches(idx));
+
+    loadByIndex(allPresets[idx].name, idx);
 }
 
 void FxMenu::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel)
