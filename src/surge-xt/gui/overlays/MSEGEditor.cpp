@@ -84,37 +84,25 @@ struct MSEGControlRegion : public juce::Component,
         : juce::Component("MSEG Settings")
     {
         setSkin(skin, b);
+
         this->ms = ms;
         this->eds = eds;
         this->lfodata = lfos;
         this->canvas = c;
         this->storage = storage;
         this->sge = sge;
+
         setAccessible(true);
         setTitle("MSEG Settings");
         setDescription("MSEG Settings");
+        setWantsKeyboardFocus(true);
+
         // Accessibility grouping only. A keyboardFocusContainer here would wall the
         // widgets off from the overlay's tab order while the region itself never
         // takes focus, leaving them unreachable by tab.
         setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
-        rebuild();
-    };
 
-    enum ControlTags
-    {
-        tag_segment_nodeedit_mode = 1231231, // Just to push outside any ID range
-        tag_segment_movement_mode,
-        tag_vertical_snap,
-        tag_vertical_value,
-        tag_horizontal_snap,
-        tag_horizontal_value,
-        tag_loop_mode,
-        tag_edit_mode,
-        tag_node_select,
-        tag_deform_use,
-        tag_deform_invert,
-        tag_trigger_filter_eg,
-        tag_trigger_amp_eg,
+        rebuild();
     };
 
     std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
@@ -171,6 +159,8 @@ struct MSEGControlRegion : public juce::Component,
     LFOStorage *lfodata = nullptr;
     SurgeStorage *storage = nullptr;
     SurgeGUIEditor *sge = nullptr;
+
+    bool keyPressed(const juce::KeyPress &key) override;
 };
 
 struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComponent
@@ -4355,6 +4345,116 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (controlregion)
                 controlregion->refreshNodeControls();
         };
+        cbk.toggleOrRotate = [this](int tag) -> std::string {
+            if (!controlregion)
+                return "";
+
+            bool toggleState = false;
+
+            switch (tag)
+            {
+            case tag_segment_movement_mode:
+            {
+                int m = (timeEditMode + 1) % 3;
+
+                timeEditMode = (TimeEdit)m;
+                eds->timeEditMode = m;
+                controlregion->movementMode->setValue(float(m) / 2.f);
+
+                recalcHotZones(juce::Point<int>(0, 0));
+
+                controlregion->repaint();
+                repaint();
+
+                return controlregion->movementMode->accessibleCellLabels[m];
+            }
+            case tag_edit_mode:
+            {
+                int m = ms->editMode;
+                const auto editMode = (MSEGStorage::EditMode)!m;
+
+                prepareForUndo();
+                pushToUndo();
+
+                Surge::MSEG::modifyEditMode(this->ms, editMode);
+
+                controlregion->editMode->setValue(!m);
+
+                // zoom to fit
+                ms->axisStart = 0.f;
+                ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
+
+                modelChanged(0, false);
+
+                repaint();
+                controlregion->repaint();
+
+                return controlregion->editMode->accessibleCellLabels[m];
+            }
+            case tag_loop_mode:
+            {
+                prepareForUndo();
+                pushToUndo();
+
+                if (ms->loopMode == MSEGStorage::LoopMode::ONESHOT)
+                    ms->loopMode = MSEGStorage::LoopMode::LOOP;
+                else if (ms->loopMode == MSEGStorage::LoopMode::LOOP)
+                    ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+                else
+                    ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+
+                const auto m = (float)ms->loopMode - 1.f;
+                controlregion->loopMode->setValue(m / 2.f);
+
+                modelChanged();
+
+                repaint();
+                controlregion->repaint();
+
+                return controlregion->loopMode->accessibleCellLabels[(int)m];
+            }
+            case tag_deform_use:
+            {
+                toggleState = !controlregion->deformUseButton->getToggleState();
+                controlregion->deformUseButton->setToggleState(toggleState,
+                                                               juce::dontSendNotification);
+                controlregion->toggleButtonClicked(tag);
+                controlregion->repaint();
+                break;
+            }
+            case tag_deform_invert:
+            {
+                toggleState = !controlregion->deformInvertButton->getToggleState();
+                controlregion->deformInvertButton->setToggleState(toggleState,
+                                                                  juce::dontSendNotification);
+                controlregion->toggleButtonClicked(tag);
+                controlregion->repaint();
+                break;
+            }
+            case tag_trigger_filter_eg:
+            {
+                toggleState = !controlregion->triggerFilterButton->getToggleState();
+                controlregion->triggerFilterButton->setToggleState(toggleState,
+                                                                   juce::dontSendNotification);
+                controlregion->toggleButtonClicked(tag);
+                controlregion->repaint();
+                break;
+            }
+            case tag_trigger_amp_eg:
+            {
+                toggleState = !controlregion->triggerAmpButton->getToggleState();
+                controlregion->triggerAmpButton->setToggleState(toggleState,
+                                                                juce::dontSendNotification);
+                controlregion->toggleButtonClicked(tag);
+                controlregion->repaint();
+                break;
+            }
+            break;
+            }
+
+            // multibuttons return early so this is fine for toggles
+            return toggleState ? "enabled" : "disabled";
+        };
     }
 
     bool keyPressed(const juce::KeyPress &key) override
@@ -4397,6 +4497,18 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }));
     }
 };
+
+bool MSEGControlRegion::keyPressed(const juce::KeyPress &key)
+{
+    if (canvas && canvas->kbdHandler)
+    {
+        if (hasKeyboardFocus(false))
+        {
+            return canvas->kbdHandler->processKey(key);
+        }
+    }
+    return false;
+}
 
 void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
 {

@@ -501,7 +501,7 @@ void MSEGAccessibleKeyboardHandler::addNode(bool append)
     if (N >= max_msegs)
     {
         if (cb.announce)
-            cb.announce(fmt::format("Maximum {} segments reached", max_msegs));
+            cb.announce("Maximum number of segments reached!");
         return;
     }
 
@@ -518,6 +518,8 @@ void MSEGAccessibleKeyboardHandler::addNode(bool append)
         if (step <= 0)
             step = 0.125f;
 
+        clearSelection();
+
         if (cb.prepareForUndo)
             cb.prepareForUndo();
         Surge::MSEG::extendTo(ms, ms->totalDuration + step, ms->segments[N - 1].nv1);
@@ -530,6 +532,7 @@ void MSEGAccessibleKeyboardHandler::addNode(bool append)
         inFlightEdit = false;
 
         placeCursorOnNode(numNodes() - 1);
+
         if (cb.announce)
             cb.announce("Added " + nodeAnnouncement(index));
     }
@@ -547,6 +550,8 @@ void MSEGAccessibleKeyboardHandler::addNode(bool append)
 
         auto t = ms->segmentStart[seg] + s.duration * 0.5f;
 
+        clearSelection();
+
         if (cb.prepareForUndo)
             cb.prepareForUndo();
         Surge::MSEG::splitSegment(ms, t, curveValueAt(t));
@@ -559,6 +564,7 @@ void MSEGAccessibleKeyboardHandler::addNode(bool append)
         inFlightEdit = false;
 
         placeCursorOnNode(seg + 1);
+
         if (cb.announce)
             cb.announce("Added " + nodeAnnouncement(index));
     }
@@ -588,6 +594,8 @@ void MSEGAccessibleKeyboardHandler::deleteNode(bool removeSegment)
     }
 
     auto t = nodeTime(index);
+
+    clearSelection();
 
     if (cb.prepareForUndo)
         cb.prepareForUndo();
@@ -901,22 +909,27 @@ void MSEGAccessibleKeyboardHandler::revalidateCursor(bool announceIfMoved)
     auto N = ms->n_activeSegments;
     auto oldIndex = index;
 
-    if (index > N)
+    if (index > N || N != lastN)
     {
         // resolve to the node nearest where the cursor last was in time
         int best = 0;
         float bestDist = std::numeric_limits<float>::max();
+
         for (int i = 0; i <= N; ++i)
         {
             auto d = std::fabs(nodeTime(i) - rememberedTime);
+
             if (d < bestDist)
             {
                 bestDist = d;
                 best = i;
             }
         }
+
         index = best;
     }
+
+    lastN = N;
 
     if (cb.getSelection && cb.setSelection)
     {
@@ -1181,7 +1194,7 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
         return true;
     }
 
-    if (c == 'a')
+    if (c == 'n')
     {
         if (hasSelection())
         {
@@ -1208,6 +1221,59 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
     if (c == 'i')
     {
         announceEditorState();
+        return true;
+    }
+
+    if (c == 'm')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Movement mode set to: " + cb.toggleOrRotate(tag_segment_movement_mode));
+        return true;
+    }
+
+    if (c == 't')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Edit mode set to: " + cb.toggleOrRotate(tag_edit_mode));
+        return true;
+    }
+
+    if (c == 'l')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Loop mode set to: " + cb.toggleOrRotate(tag_loop_mode));
+        return true;
+    }
+
+    if (c == 'd')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Use deform is " + cb.toggleOrRotate(tag_deform_use) +
+                        " for current selection.");
+        return true;
+    }
+
+    if (c == 'v')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Invert deform is " + cb.toggleOrRotate(tag_deform_invert) +
+                        " for current selection.");
+        return true;
+    }
+
+    if (c == 'f')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Trigger Filter EG is " + cb.toggleOrRotate(tag_trigger_filter_eg) +
+                        " for current selection.");
+        return true;
+    }
+
+    if (c == 'a')
+    {
+        if (cb.toggleOrRotate)
+            cb.announce("Trigger Amp EG is " + cb.toggleOrRotate(tag_trigger_amp_eg) +
+                        " for current selection.");
         return true;
     }
 
