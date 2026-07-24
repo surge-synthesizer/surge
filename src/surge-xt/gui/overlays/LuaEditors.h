@@ -336,6 +336,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
     void updateDebuggerIfNeeded();
 
+    std::vector<juce::Component *> getGroupNavigationComponents() override;
+
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<SurgeCodeEditorComponent> preludeDisplay;
     std::unique_ptr<FormulaControlArea> controlArea;
@@ -385,6 +387,8 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply,
     void applyCodeToOsc();
 
     void rerenderFromUIState();
+
+    std::vector<juce::Component *> getGroupNavigationComponents() override;
 
     void timerCallback() override;
     void pollGenJobs();

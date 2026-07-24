@@ -1060,8 +1060,43 @@ void SurgeCodeEditorComponent::mouseDrag(const juce::MouseEvent &event)
     repaint();
 }
 
+// Hand the control group focus keys to the overlay wrapper, which owns that navigation,
+// before the code editor takes them as text input.
+static bool handleControlGroupFocusKey(juce::Component *from, const juce::KeyPress &key)
+{
+    auto *container = from->findParentComponentOfClass<CodeEditorContainerWithApply>();
+    auto *wrapper = from->findParentComponentOfClass<OverlayWrapper>();
+
+    if (!container || !wrapper)
+    {
+        return false;
+    }
+
+    auto *sge = container->editor;
+
+    if (!sge || !sge->keyMapManager || !sge->getUseKeyboardShortcuts())
+    {
+        return false;
+    }
+
+    auto action = sge->keyMapManager->matches(key);
+
+    if (!action.has_value() || (*action != Surge::GUI::FOCUS_NEXT_CONTROL_GROUP &&
+                                *action != Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP))
+    {
+        return false;
+    }
+
+    return wrapper->keyPressed(key);
+}
+
 bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
 {
+    if (handleControlGroupFocusKey(this, key))
+    {
+        return true;
+    }
+
     // Prelude find
     if (search != nullptr && key.getModifiers().isCommandDown() && key.isKeyCode('F'))
     {
@@ -2559,6 +2594,22 @@ struct FormulaControlArea : public juce::Component,
         }
     }
 
+    // Set the button text and its accessible name, notifying the screen reader ourselves
+    // since setTitle() does not.
+    void updateShowButtonText(bool isOpen)
+    {
+        const auto title = isOpen ? "Hide Debugger" : "Show Debugger";
+
+        showS->setLabels({isOpen ? "Hide" : "Show"});
+        showS->setTitle(title);
+        showS->setDescription(title);
+
+        if (auto *h = showS->getAccessibilityHandler())
+        {
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+        }
+    }
+
     void rebuild()
     {
         int labelHeight = 12;
@@ -2591,7 +2642,10 @@ struct FormulaControlArea : public juce::Component,
             codeS->setDraggable(true);
             codeS->setValue(overlay->getEditState().codeOrPrelude);
             codeS->setSkin(skin, associatedBitmapStore);
+            codeS->setAccessibleCellLabels({"Editor", "Prelude"});
+            codeS->setExplicitFocusOrder(10);
             addAndMakeVisible(*codeS);
+            codeS->setupAccessibility();
 
             btnWidth = 60;
 
@@ -2610,6 +2664,7 @@ struct FormulaControlArea : public juce::Component,
             applyS->setDraggable(true);
             applyS->setSkin(skin, associatedBitmapStore);
             applyS->setEnabled(false);
+            applyS->setExplicitFocusOrder(20);
             addAndMakeVisible(*applyS);
         }
 
@@ -2624,7 +2679,8 @@ struct FormulaControlArea : public juce::Component,
             int bpos = getWidth() - 10 - btnWidth;
             int ypos = 1 + labelHeight + margin;
 
-            auto ma = [&](const std::string &label, const std::string title, tags tag) {
+            auto ma = [&](const std::string &label, const std::string title, tags tag,
+                          int focusOrder) {
                 auto res = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
                 auto btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
 
@@ -2641,21 +2697,22 @@ struct FormulaControlArea : public juce::Component,
                 res->setDraggable(false);
                 res->setSkin(skin, associatedBitmapStore);
                 res->setValue(0);
+                res->setExplicitFocusOrder(focusOrder);
                 return res;
             };
 
             auto isOpen = overlay->debugPanel->isOpen;
             showS = ma(isOpen ? "Hide" : "Show", isOpen ? "Hide Debugger" : "Show Debugger",
-                       tag_debugger_show);
+                       tag_debugger_show, 30);
             addAndMakeVisible(*showS);
             bpos -= btnWidth + margin;
 
-            stepS = ma("Step", "Step Debugger", tag_debugger_step);
+            stepS = ma("Step", "Step Debugger", tag_debugger_step, 50);
             stepS->setVisible(isOpen);
             addChildComponent(*stepS);
             bpos -= btnWidth + margin;
 
-            initS = ma("Init", "Init Debugger", tag_debugger_init);
+            initS = ma("Init", "Init Debugger", tag_debugger_init, 40);
             initS->setVisible(isOpen);
             addChildComponent(*initS);
             bpos -= btnWidth + margin;
@@ -2727,19 +2784,21 @@ struct FormulaControlArea : public juce::Component,
             if (overlay->debugPanel->isOpen)
             {
                 overlay->debugPanel->setOpen(false);
-                showS->setLabels({"Show"});
+                updateShowButtonText(false);
                 stepS->setVisible(false);
                 initS->setVisible(false);
             }
             else
             {
                 overlay->debugPanel->setOpen(true);
-                showS->setLabels({"Hide"});
+                updateShowButtonText(true);
                 stepS->setVisible(true);
                 initS->setVisible(true);
+                overlay->debugPanel->initializeLfoDebugger();
             }
             repaint();
         }
+        break;
         case tag_debugger_init:
             overlay->debugPanel->initializeLfoDebugger();
             break;
@@ -2920,8 +2979,6 @@ void FormulaModulatorEditor::resized()
 
 void FormulaModulatorEditor::showModulatorCode()
 {
-    const bool keepFocus = hasKeyboardFocus(true);
-
     search->hide();
     gotoLine->hide();
     preludeDisplay->setVisible(false);
@@ -2929,17 +2986,10 @@ void FormulaModulatorEditor::showModulatorCode()
     search->setEditor(*mainEditor);
     gotoLine->setEditor(*mainEditor);
     getEditState().codeOrPrelude = 0;
-
-    if (keepFocus)
-    {
-        Surge::GUI::grabKeyboardFocusIfAllowed(mainEditor.get());
-    }
 }
 
 void FormulaModulatorEditor::showPreludeCode()
 {
-    const bool keepFocus = hasKeyboardFocus(true);
-
     search->hide();
     gotoLine->hide();
     preludeDisplay->setVisible(true);
@@ -2947,11 +2997,13 @@ void FormulaModulatorEditor::showPreludeCode()
     search->setEditor(*preludeDisplay);
     gotoLine->setEditor(*preludeDisplay);
     getEditState().codeOrPrelude = 1;
+}
 
-    if (keepFocus)
-    {
-        Surge::GUI::grabKeyboardFocusIfAllowed(preludeDisplay.get());
-    }
+std::vector<juce::Component *> FormulaModulatorEditor::getGroupNavigationComponents()
+{
+    auto *code = mainEditor->isVisible() ? mainEditor.get() : preludeDisplay.get();
+
+    return {code, controlArea.get()};
 }
 
 void FormulaModulatorEditor::updateDebuggerIfNeeded()
@@ -3434,8 +3486,10 @@ struct WavetableScriptControlArea : public juce::Component,
             codeS->setDraggable(true);
             codeS->setValue(overlay->getEditState().codeOrPrelude);
             codeS->setSkin(skin, associatedBitmapStore);
+            codeS->setAccessibleCellLabels({"Editor", "Prelude"});
             codeS->setExplicitFocusOrder(20);
             addAndMakeVisible(*codeS);
+            codeS->setupAccessibility();
 
             renderModeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             xpos += btnWidth + 7;
@@ -3454,7 +3508,7 @@ struct WavetableScriptControlArea : public juce::Component,
             renderModeS->setValue(overlay->rendererComponent->mode);
             renderModeS->setSkin(skin, associatedBitmapStore);
             renderModeS->setAccessible(false);
-            renderModeS->setExplicitFocusOrder(30);
+            renderModeS->setWantsKeyboardFocus(false);
             addAndMakeVisible(*renderModeS);
 
             applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3474,7 +3528,7 @@ struct WavetableScriptControlArea : public juce::Component,
             applyS->setDraggable(true);
             applyS->setSkin(skin, associatedBitmapStore);
             applyS->setEnabled(false);
-            applyS->setExplicitFocusOrder(40);
+            applyS->setExplicitFocusOrder(30);
             addAndMakeVisible(*applyS);
 
             auto images = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD,
@@ -3501,8 +3555,7 @@ struct WavetableScriptControlArea : public juce::Component,
             currentFrameN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
             currentFrameN->setHoverTextColour(
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
-            renderModeS->setAccessible(false);
-            currentFrameN->setExplicitFocusOrder(50);
+            currentFrameN->setWantsKeyboardFocus(false);
             addAndMakeVisible(*currentFrameN);
 
             framesL = newL("Frames");
@@ -3533,7 +3586,7 @@ struct WavetableScriptControlArea : public juce::Component,
                 }
                 return false;
             };
-            framesN->setExplicitFocusOrder(60);
+            framesN->setExplicitFocusOrder(40);
             addAndMakeVisible(*framesN);
 
             resolutionL = newL("Samples");
@@ -3557,7 +3610,7 @@ struct WavetableScriptControlArea : public juce::Component,
             resolutionN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
             resolutionN->setHoverTextColour(
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
-            resolutionN->setExplicitFocusOrder(70);
+            resolutionN->setExplicitFocusOrder(50);
             addAndMakeVisible(*resolutionN);
 
             generateS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3576,7 +3629,7 @@ struct WavetableScriptControlArea : public juce::Component,
             generateS->setDraggable(false);
             generateS->setSkin(skin, associatedBitmapStore);
             generateS->setEnabled(true);
-            generateS->setExplicitFocusOrder(80);
+            generateS->setExplicitFocusOrder(60);
             addAndMakeVisible(*generateS);
         }
     }
@@ -4049,8 +4102,6 @@ void WavetableScriptEditor::resized()
 
 void WavetableScriptEditor::showModulatorCode()
 {
-    const bool keepFocus = hasKeyboardFocus(true);
-
     search->hide();
     gotoLine->hide();
     preludeDisplay->setVisible(false);
@@ -4058,17 +4109,10 @@ void WavetableScriptEditor::showModulatorCode()
     search->setEditor(*mainEditor);
     gotoLine->setEditor(*mainEditor);
     getEditState().codeOrPrelude = 0;
-
-    if (keepFocus)
-    {
-        Surge::GUI::grabKeyboardFocusIfAllowed(mainEditor.get());
-    }
 }
 
 void WavetableScriptEditor::showPreludeCode()
 {
-    const bool keepFocus = hasKeyboardFocus(true);
-
     search->hide();
     gotoLine->hide();
     preludeDisplay->setVisible(true);
@@ -4076,11 +4120,13 @@ void WavetableScriptEditor::showPreludeCode()
     search->setEditor(*preludeDisplay);
     gotoLine->setEditor(*preludeDisplay);
     getEditState().codeOrPrelude = 1;
+}
 
-    if (keepFocus)
-    {
-        Surge::GUI::grabKeyboardFocusIfAllowed(preludeDisplay.get());
-    }
+std::vector<juce::Component *> WavetableScriptEditor::getGroupNavigationComponents()
+{
+    auto *code = mainEditor->isVisible() ? mainEditor.get() : preludeDisplay.get();
+
+    return {code, controlArea.get()};
 }
 
 void WavetableScriptEditor::rerenderFromUIState()

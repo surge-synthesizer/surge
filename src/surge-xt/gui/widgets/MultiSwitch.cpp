@@ -321,33 +321,58 @@ bool MultiSwitch::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
-    bool doit =
-        action != Increase || action != Decrease || (rows * columns == 1 && action == Return);
+    const auto cells = rows * columns;
 
-    if (!doit)
-        return false;
-
-    int dir = 1;
-    if (action == Decrease)
-    {
-        dir = -1;
-    }
-
-    auto iv = limit_range(getIntegerValue() + dir, 0, rows * columns - 1);
-
-    if (rows * columns == 1)
+    // Press a one cell switch on any of the edit keys.
+    if (cells == 1)
     {
         setValue(0);
+        notifyValueChangedWithBeginEnd();
+        repaint();
+
+        return true;
     }
-    else
+
+    auto iv = getIntegerValue();
+
+    switch (action)
     {
-        _DBGCOUT << "Setting integer value to " << iv << " " << 1.f * iv / (rows * columns - 1)
-                 << std::endl;
-        setValue(1.f * iv / (rows * columns - 1));
+    case Increase: // Up
+        iv = limit_range(iv + 1, 0, cells - 1);
+        break;
+    case Decrease: // Down
+        iv = limit_range(iv - 1, 0, cells - 1);
+        break;
+    case ToMax: // Home
+        iv = 0;
+        break;
+    case ToMin: // End
+        iv = cells - 1;
+        break;
+    case Return:
+    {
+        // Select the cell focus is on, or step to the next option, wrapping at the end.
+        auto focused = -1;
+
+        for (int i = 0; i < (int)selectionComponents.size(); ++i)
+        {
+            if (selectionComponents[i]->hasKeyboardFocus(false))
+            {
+                focused = i;
+            }
+        }
+
+        iv = (focused >= 0 && focused != iv) ? focused : (iv + 1) % cells;
     }
-    notifyBeginEdit();
-    notifyValueChanged();
-    notifyEndEdit();
+    break;
+    default:
+        return false;
+    }
+
+    // _DBGCOUT << "Setting integer value to " << iv << " " << 1.f * iv / (cells - 1) << std::endl;
+
+    setValue(1.f * iv / (cells - 1));
+    notifyValueChangedWithBeginEnd();
     repaint();
 
     return true;
