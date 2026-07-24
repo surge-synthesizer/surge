@@ -42,6 +42,7 @@ struct timedata
 {
     double ppqPos, tempo;
     int timeSigNumerator = 4, timeSigDenominator = 4;
+    bool isPlaying = false, isRecording = false;
 };
 
 struct parametermeta
