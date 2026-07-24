@@ -55,6 +55,8 @@ class ModulationEditor : public OverlayComponent,
     void paint(juce::Graphics &g) override;
     void resized() override;
 
+    std::vector<juce::Component *> getGroupNavigationComponents() override;
+
     struct SelfModulationGuard
     {
         SelfModulationGuard(ModulationEditor *ed) : moded(ed) { moded->selfModulation = true; }
