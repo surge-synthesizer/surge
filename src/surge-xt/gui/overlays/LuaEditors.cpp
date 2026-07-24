@@ -2594,17 +2594,6 @@ struct FormulaControlArea : public juce::Component,
         }
     }
 
-    static constexpr int debugBtnWidth = 60, debugBtnMargin = 2;
-
-    // The debugger row is anchored to the right edge, so Show/Hide moves inward to make
-    // room for Init and Step when the debugger is open.
-    int debuggerRowStart() const
-    {
-        int shown = overlay->debugPanel->isOpen ? 3 : 1;
-
-        return getWidth() - 10 - (shown * debugBtnWidth) - ((shown - 1) * debugBtnMargin);
-    }
-
     // Set the button text and its accessible name, notifying the screen reader ourselves
     // since setTitle() does not.
     void updateShowButtonText(bool isOpen)
@@ -2618,19 +2607,6 @@ struct FormulaControlArea : public juce::Component,
         if (auto *h = showS->getAccessibilityHandler())
         {
             h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
-        }
-    }
-
-    // Place the debugger buttons on open and close, which rebuild() does not cover since
-    // the control area bounds stay the same.
-    void positionDebuggerRow()
-    {
-        int bpos = debuggerRowStart();
-
-        for (auto *b : {showS.get(), initS.get(), stepS.get()})
-        {
-            b->setTopLeftPosition(bpos, b->getY());
-            bpos += debugBtnWidth + debugBtnMargin;
         }
     }
 
@@ -2692,20 +2668,21 @@ struct FormulaControlArea : public juce::Component,
             addAndMakeVisible(*applyS);
         }
 
-        // Debugger controls, reading Show/Hide, Init, Step from left to right
+        // Debugger Controls from the left
         {
             debugL = newL("Debugger");
             debugL->setBounds(getWidth() - 24 - 100, 1, 100, labelHeight);
             debugL->setJustificationType(juce::Justification::centredRight);
             addAndMakeVisible(*debugL);
 
-            int bpos = debuggerRowStart();
+            int btnWidth = 60;
+            int bpos = getWidth() - 10 - btnWidth;
             int ypos = 1 + labelHeight + margin;
 
             auto ma = [&](const std::string &label, const std::string title, tags tag,
                           int focusOrder) {
                 auto res = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-                auto btnrect = juce::Rectangle<int>(bpos, ypos - 1, debugBtnWidth, buttonHeight);
+                auto btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
 
                 res->setBounds(btnrect);
                 res->setStorage(overlay->storage);
@@ -2728,16 +2705,17 @@ struct FormulaControlArea : public juce::Component,
             showS = ma(isOpen ? "Hide" : "Show", isOpen ? "Hide Debugger" : "Show Debugger",
                        tag_debugger_show, 30);
             addAndMakeVisible(*showS);
-            bpos += debugBtnWidth + debugBtnMargin;
-
-            initS = ma("Init", "Init Debugger", tag_debugger_init, 40);
-            initS->setVisible(isOpen);
-            addChildComponent(*initS);
-            bpos += debugBtnWidth + debugBtnMargin;
+            bpos -= btnWidth + margin;
 
             stepS = ma("Step", "Step Debugger", tag_debugger_step, 50);
             stepS->setVisible(isOpen);
             addChildComponent(*stepS);
+            bpos -= btnWidth + margin;
+
+            initS = ma("Init", "Init Debugger", tag_debugger_init, 40);
+            initS->setVisible(isOpen);
+            addChildComponent(*initS);
+            bpos -= btnWidth + margin;
         }
     }
 
@@ -2818,7 +2796,6 @@ struct FormulaControlArea : public juce::Component,
                 initS->setVisible(true);
                 overlay->debugPanel->initializeLfoDebugger();
             }
-            positionDebuggerRow();
             repaint();
         }
         break;
