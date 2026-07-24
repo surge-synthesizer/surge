@@ -701,3 +701,113 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
 
     return path_to_string(fname);
 }
+
+// Writes a single wavetable frame as a mono 32-bit float WAV.
+static bool write_single_frame_wav(const fs::path &fname, Wavetable *wt, int frame)
+{
+    std::filebuf wfp;
+
+    if (!wfp.open(fname, std::ios::binary | std::ios::out))
+    {
+        return false;
+    }
+
+    auto w4i = [&wfp](unsigned int v) {
+        unsigned char fi[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            fi[i] = (unsigned char)(v & 255);
+            v = v / 256;
+        }
+        wfp.sputn(reinterpret_cast<char *>(fi), sizeof(fi));
+    };
+
+    auto w2i = [&wfp](unsigned int v) {
+        unsigned char fi[2];
+        for (int i = 0; i < 2; ++i)
+        {
+            fi[i] = (unsigned char)(v & 255);
+            v = v / 256;
+        }
+        wfp.sputn(reinterpret_cast<char *>(fi), sizeof(fi));
+    };
+
+    const unsigned int audioFormat = 3; // IEEE float
+    const unsigned int bitsPerSample = 32;
+    const unsigned int sampleRate = 44100;
+    const unsigned int nChannels = 1;
+    const unsigned int bytesPerSample = bitsPerSample / 8;
+
+    unsigned int tableSize = nChannels * bytesPerSample * wt->size;
+    unsigned int dataSize = 4 +                // 'WAVE'
+                            4 + 4 + 16 +       // fmt chunk (id + size + 16 bytes)
+                            4 + 4 + 8 +        // srge chunk (id + size + 8 bytes)
+                            4 + 4 + tableSize; // data chunk (id + size + data)
+
+    wfp.sputn("RIFF", 4);
+    w4i(dataSize);
+    wfp.sputn("WAVE", 4);
+
+    wfp.sputn("fmt ", 4);
+    w4i(16);
+    w2i(audioFormat);
+    w2i(nChannels);
+    w4i(sampleRate);
+    w4i(sampleRate * nChannels * bytesPerSample); // byte rate
+    w2i(nChannels * bytesPerSample);              // block align
+    w2i(bitsPerSample);
+
+    // Single-cycle marker so the frame reimports as one cycle of wt->size samples.
+    wfp.sputn("srge", 4);
+    w4i(8);
+    w4i(1); // version
+    w4i(wt->size);
+
+    wfp.sputn("data", 4);
+    w4i(tableSize);
+    wfp.sputn(reinterpret_cast<char *>(wt->TableF32WeakPointers[0][frame]),
+              wt->size * bytesPerSample);
+
+    return true;
+}
+
+std::string SurgeStorage::export_wt_wav_frames_portable(const fs::path &parentDir,
+                                                        const std::string &baseName, Wavetable *wt)
+{
+    // Land each export in its own guaranteed-empty subfolder, appending a number if the name is
+    // taken, so frames from different exports never mix.
+    fs::path dir = parentDir / (baseName + "_frames");
+    int fnum = 1;
+
+    while (fs::exists(dir))
+    {
+        dir = parentDir / (baseName + "_frames_" + std::to_string(fnum));
+        fnum++;
+    }
+
+    std::error_code ec;
+    fs::create_directories(dir, ec);
+
+    if (ec)
+    {
+        reportError("Unable to create export folder " + dir.u8string() + "!", "Export Error");
+        return "";
+    }
+
+    for (int i = 0; i < wt->n_tables; ++i)
+    {
+        char idx[8];
+        snprintf(idx, sizeof(idx), "%03d", i + 1);
+
+        auto fname = dir / (baseName + "_" + idx + ".wav");
+
+        if (!write_single_frame_wav(fname, wt, i))
+        {
+            reportError("Unable to write wavetable frame to " + fname.u8string() + "!",
+                        "Export Error");
+            return "";
+        }
+    }
+
+    return path_to_string(dir);
+}

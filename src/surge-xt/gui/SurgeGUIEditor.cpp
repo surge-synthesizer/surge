@@ -7016,30 +7016,44 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
         defaultFilename = defaultFilename.replace_extension(".wav");
     }
 
+    auto chooserFlags =
+        juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles;
+
+    // WAV_FRAMES writes a unique subfolder of files, not the picked path so nothing to overwrite.
+    if (exportFormat != WAV_FRAMES)
+    {
+        chooserFlags |= juce::FileBrowserComponent::warnAboutOverwriting;
+    }
+
     fileChooser = std::make_unique<juce::FileChooser>(
         "Export Wavetable", juce::File(defaultFilename.u8string().c_str()));
-    fileChooser->launchAsync(
-        juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
-            juce::FileBrowserComponent::warnAboutOverwriting,
-        [this, &oscdata, exportFormat](const juce::FileChooser &c) {
-            auto result = c.getResults();
-            if (result.isEmpty() || result.size() > 1)
-            {
-                return;
-            }
+    fileChooser->launchAsync(chooserFlags, [this, &oscdata,
+                                            exportFormat](const juce::FileChooser &c) {
+        auto result = c.getResults();
+        if (result.isEmpty() || result.size() > 1)
+        {
+            return;
+        }
 
-            auto fsp = fs::path{result[0].getFullPathName().toStdString()};
-            if (exportFormat != WT && fsp.extension() != ".wav")
-            {
-                fsp.replace_extension(".wav");
-            }
-            else if (exportFormat == WT && fsp.extension() != ".wt")
-            {
-                fsp.replace_extension(".wt");
-            }
+        auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+        if (exportFormat != WT && fsp.extension() != ".wav")
+        {
+            fsp.replace_extension(".wav");
+        }
+        else if (exportFormat == WT && fsp.extension() != ".wt")
+        {
+            fsp.replace_extension(".wt");
+        }
 
-            namespace WS = Surge::WavetableScript;
+        namespace WS = Surge::WavetableScript;
 
+        // Scripted wavetables render through the generator, others export the live wavetable.
+        Wavetable *exportWt = &oscdata.wt;
+        WS::WtGenJobResponse r;
+        bool okToWrite = true;
+
+        if (!oscdata.wavetable_script.empty())
+        {
             int resBase = (exportFormat == SERUM)     ? 7
                           : (exportFormat == VCVRACK) ? 4
                                                       : oscdata.wavetable_script_res_base;
@@ -7055,7 +7069,7 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
             req.snapshot = WS::SnapshotBundle::current(&this->synth->storage, oscdata);
 
             // Export blocks the message thread, the job inserts before pending jobs.
-            auto r = this->synth->storage.wtGenService->submitBlocking(std::move(req));
+            r = this->synth->storage.wtGenService->submitBlocking(std::move(req));
 
             if (!r.ok || !r.exportOut)
             {
@@ -7063,28 +7077,46 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                 {
                     this->synth->storage.reportError(r.error, "Export Error");
                 }
+                okToWrite = false;
             }
             else
             {
-                std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
-                if (exportFormat == WT)
+                exportWt = r.exportOut.get();
+            }
+        }
+
+        if (okToWrite)
+        {
+            std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
+            if (exportFormat == WT)
+            {
+                if (!this->synth->storage.export_wt_wt_portable(fsp, exportWt, metadata))
                 {
-                    if (!this->synth->storage.export_wt_wt_portable(fsp, r.exportOut.get(),
-                                                                    metadata))
-                    {
-                        this->synth->storage.reportError(
-                            "Unable to save the wavetable to " + fsp.u8string(), "Export Error");
-                    }
-                }
-                else
-                {
-                    bool exportForSerum = (exportFormat == SERUM);
-                    this->synth->storage.export_wt_wav_portable(fsp, r.exportOut.get(), metadata,
-                                                                exportForSerum);
+                    this->synth->storage.reportError(
+                        "Unable to save the wavetable to " + fsp.u8string(), "Export Error");
                 }
             }
-            this->synth->storage.refresh_wtlist();
-        });
+            else if (exportFormat == WAV_FRAMES)
+            {
+                auto baseName = juce::File::createLegalFileName(juce::String(fsp.stem().u8string()))
+                                    .trim()
+                                    .toStdString();
+                if (baseName.empty())
+                {
+                    baseName = "Wavetable";
+                }
+                this->synth->storage.export_wt_wav_frames_portable(fsp.parent_path(), baseName,
+                                                                   exportWt);
+            }
+            else
+            {
+                bool exportForSerum = (exportFormat == SERUM);
+                this->synth->storage.export_wt_wav_portable(fsp, exportWt, metadata,
+                                                            exportForSerum);
+            }
+        }
+        this->synth->storage.refresh_wtlist();
+    });
 }
 
 void SurgeGUIEditor::loadWavetableScript()

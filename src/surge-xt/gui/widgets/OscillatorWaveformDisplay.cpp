@@ -757,6 +757,9 @@ void OscillatorWaveformDisplay::createWTExportMenu(juce::PopupMenu &contextMenu)
     exportMenu.addItem(Surge::GUI::toOSCase("Export as .wt..."), [this]() {
         this->sge->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WT);
     });
+    exportMenu.addItem(Surge::GUI::toOSCase("Export frames as .wav..."), [this]() {
+        this->sge->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WAV_FRAMES);
+    });
 
     if (!oscdata->wavetable_script.empty())
     {
