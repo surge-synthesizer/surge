@@ -3508,7 +3508,7 @@ struct WavetableScriptControlArea : public juce::Component,
             renderModeS->setValue(overlay->rendererComponent->mode);
             renderModeS->setSkin(skin, associatedBitmapStore);
             renderModeS->setAccessible(false);
-            renderModeS->setExplicitFocusOrder(30);
+            renderModeS->setWantsKeyboardFocus(false);
             addAndMakeVisible(*renderModeS);
 
             applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3528,7 +3528,7 @@ struct WavetableScriptControlArea : public juce::Component,
             applyS->setDraggable(true);
             applyS->setSkin(skin, associatedBitmapStore);
             applyS->setEnabled(false);
-            applyS->setExplicitFocusOrder(40);
+            applyS->setExplicitFocusOrder(30);
             addAndMakeVisible(*applyS);
 
             auto images = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD,
@@ -3586,7 +3586,7 @@ struct WavetableScriptControlArea : public juce::Component,
                 }
                 return false;
             };
-            framesN->setExplicitFocusOrder(60);
+            framesN->setExplicitFocusOrder(40);
             addAndMakeVisible(*framesN);
 
             resolutionL = newL("Samples");
@@ -3610,7 +3610,7 @@ struct WavetableScriptControlArea : public juce::Component,
             resolutionN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
             resolutionN->setHoverTextColour(
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
-            resolutionN->setExplicitFocusOrder(70);
+            resolutionN->setExplicitFocusOrder(50);
             addAndMakeVisible(*resolutionN);
 
             generateS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3629,7 +3629,7 @@ struct WavetableScriptControlArea : public juce::Component,
             generateS->setDraggable(false);
             generateS->setSkin(skin, associatedBitmapStore);
             generateS->setEnabled(true);
-            generateS->setExplicitFocusOrder(80);
+            generateS->setExplicitFocusOrder(60);
             addAndMakeVisible(*generateS);
         }
     }
