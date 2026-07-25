@@ -821,7 +821,7 @@ void SurgeSynthProcessor::processBlockPlayhead()
         surge->time_data.timeSigNumerator = 4;
         surge->time_data.timeSigDenominator = 4;
 
-        // Formula modulator flags only, in standalone the transports are always set running.
+        // Formula modulator only, in standalone the transport is always set running.
         surge->time_data.isPlaying = (wrapperType == wrapperType_Standalone);
 
         surge->resetStateFromTimeData();
