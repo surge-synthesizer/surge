@@ -2300,6 +2300,7 @@ struct ExpandingFormulaDebugger : public juce::Component,
             formulastate.deform = localcopy[lfodata->deform.param_id_in_scene].f;
             formulastate.tempo = storage->temposyncratio * 120.0;
             formulastate.songpos = storage->songpos;
+            formulastate.isPlaying = storage->isPlaying;
 
             Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
                                                     editor->storage->getPatch(), editor->scene);
