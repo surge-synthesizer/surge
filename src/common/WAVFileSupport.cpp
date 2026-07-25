@@ -556,25 +556,6 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
     return true;
 }
 
-std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
-                                                 const std::string &metadata)
-{
-    auto path = userDataPath / "Wavetables" / "Exported";
-    fs::create_directories(path);
-
-    auto fnamePre = fbase + ".wav";
-    auto fname = path / (fbase + ".wav");
-    int fnum = 1;
-
-    while (fs::exists(fname))
-    {
-        fname = path / (fbase + "_" + std::to_string(fnum) + ".wav");
-        fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
-        fnum++;
-    }
-    return export_wt_wav_portable(fname, wt, metadata);
-}
-
 std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetable *wt,
                                                  const std::string &metadata, bool exportForSerum)
 {
@@ -768,24 +749,36 @@ static bool write_single_frame_wav(const fs::path &fname, Wavetable *wt, int fra
     wfp.sputn(reinterpret_cast<char *>(wt->TableF32WeakPointers[0][frame]),
               wt->size * bytesPerSample);
 
-    return true;
+    return wfp.pubsync() == 0;
 }
 
 std::string SurgeStorage::export_wt_wav_frames_portable(const fs::path &parentDir,
                                                         const std::string &baseName, Wavetable *wt)
 {
-    // Land each export in its own guaranteed-empty subfolder, appending a number if the name is
-    // taken, so frames from different exports never mix.
-    fs::path dir = parentDir / (baseName + "_frames");
-    int fnum = 1;
+    // Land each export in its own guaranteed-empty subfolder, inserting a number if the folder
+    // already exists so frames from different exports never mix. The frame files reuse the same
+    // numbered name.
+    std::string folderName = baseName;
+    std::error_code ec;
 
-    while (fs::exists(dir))
+    // string_to_path (fs::u8path) keeps unicode names intact.
+    fs::path dir = parentDir / string_to_path(folderName + " - Frames");
+    int fnum = 2;
+
+    // Non-throwing exists() so a filesystem error can't escape the FileChooser callback.
+    while (fs::exists(dir, ec))
     {
-        dir = parentDir / (baseName + "_frames_" + std::to_string(fnum));
+        if (fnum > 99)
+        {
+            reportError("Unable to find a free export folder for " + baseName + "!",
+                        "Export Error");
+            return "";
+        }
+        folderName = baseName + " " + std::to_string(fnum);
+        dir = parentDir / string_to_path(folderName + " - Frames");
         fnum++;
     }
 
-    std::error_code ec;
     fs::create_directories(dir, ec);
 
     if (ec)
@@ -799,7 +792,7 @@ std::string SurgeStorage::export_wt_wav_frames_portable(const fs::path &parentDi
         char idx[8];
         snprintf(idx, sizeof(idx), "%03d", i + 1);
 
-        auto fname = dir / (baseName + "_" + idx + ".wav");
+        auto fname = dir / string_to_path(folderName + " " + idx + ".wav");
 
         if (!write_single_frame_wav(fname, wt, i))
         {

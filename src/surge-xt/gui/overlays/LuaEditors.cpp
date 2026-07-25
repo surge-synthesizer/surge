@@ -4460,7 +4460,7 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
         menu.addItem(Surge::GUI::toOSCase("Export as .wt..."), [this]() {
             this->editor->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WT);
         });
-        menu.addItem(Surge::GUI::toOSCase("Export frames as .wav..."), [this]() {
+        menu.addItem(Surge::GUI::toOSCase("Export Frames as .wav..."), [this]() {
             this->editor->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WAV_FRAMES);
         });
         menu.addSeparator();
