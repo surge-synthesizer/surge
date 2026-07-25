@@ -71,7 +71,7 @@ struct EvaluatorState
     float rate, amp, phase, deform;
     float tempo;
     double songpos;
-    bool isPlaying{false}, isRecording{false};
+    bool isPlaying{false};
 
     bool retrigger_AEG{false}, retrigger_FEG{false};
 

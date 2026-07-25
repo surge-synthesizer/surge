@@ -792,7 +792,6 @@ void SurgeSynthProcessor::processBlockPlayhead()
         playhead->getCurrentPosition(cp);
         surge->time_data.tempo = cp.bpm;
         surge->time_data.isPlaying = cp.isPlaying;
-        surge->time_data.isRecording = cp.isRecording;
 
         // isRecording should always imply isPlaying but better safe than sorry
         if (cp.isPlaying || cp.isRecording)
@@ -824,7 +823,6 @@ void SurgeSynthProcessor::processBlockPlayhead()
 
         // Formula modulator flags only, in standalone the transports are always set running.
         surge->time_data.isPlaying = (wrapperType == wrapperType_Standalone);
-        surge->time_data.isRecording = (wrapperType == wrapperType_Standalone);
 
         surge->resetStateFromTimeData();
     }

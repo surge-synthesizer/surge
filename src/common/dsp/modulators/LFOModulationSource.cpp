@@ -484,7 +484,6 @@ void LFOModulationSource::attackFrom(float start)
         formulastate.tempo = storage->temposyncratio * 120.0;
         formulastate.songpos = storage->songpos;
         formulastate.isPlaying = storage->isPlaying;
-        formulastate.isRecording = storage->isRecording;
 
         formulastate.isVoice = isVoice;
 
@@ -1214,7 +1213,6 @@ void LFOModulationSource::process_block()
         formulastate.tempo = storage->temposyncratio * 120.0;
         formulastate.songpos = storage->songpos;
         formulastate.isPlaying = storage->isPlaying;
-        formulastate.isRecording = storage->isRecording;
 
         formulastate.isVoice = isVoice;
 

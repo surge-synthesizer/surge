@@ -4323,7 +4323,6 @@ void SurgeSynthesizer::resetStateFromTimeData()
         time_data.timeSigDenominator = 4;
     storage.songpos = time_data.ppqPos;
     storage.isPlaying = time_data.isPlaying;
-    storage.isRecording = time_data.isRecording;
     if (time_data.tempo > 0)
     {
         storage.temposyncratio = time_data.tempo / 120.f;
