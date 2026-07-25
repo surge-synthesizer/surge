@@ -529,6 +529,11 @@ juce::Component *MultiSwitch::getCurrentAccessibleSelectionComponent()
 
 void MultiSwitch::updateAccessibleStateOnUserValueChange()
 {
+    // Move the focus highlight onto the cell we just selected. JUCE only reports focus
+    // entering and leaving the switch, not moving between our own cells, so without this
+    // the highlight stays on whichever cell tab first landed on.
+    updateFocusHover();
+
     if (isAlwaysAccessibleMomentary())
         return;
 

@@ -664,7 +664,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 
     py::array_t<float> getOutput()
     {
-        return py::array_t<float>({2, BLOCK_SIZE}, {2 * sizeof(float), sizeof(float)},
+        return py::array_t<float>({2, BLOCK_SIZE}, {BLOCK_SIZE * sizeof(float), sizeof(float)},
                                   (const float *)(&output[0][0]));
     }
 

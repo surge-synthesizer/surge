@@ -2300,6 +2300,7 @@ struct ExpandingFormulaDebugger : public juce::Component,
             formulastate.deform = localcopy[lfodata->deform.param_id_in_scene].f;
             formulastate.tempo = storage->temposyncratio * 120.0;
             formulastate.songpos = storage->songpos;
+            formulastate.isPlaying = storage->isPlaying;
 
             Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
                                                     editor->storage->getPatch(), editor->scene);
@@ -2584,6 +2585,12 @@ struct FormulaControlArea : public juce::Component,
         setTitle("Controls");
         setDescription("Controls");
         setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
     }
 
     void resized() override
@@ -3418,6 +3425,12 @@ struct WavetableScriptControlArea : public juce::Component,
         setTitle("Controls");
         setDescription("Controls");
         setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
     }
 
     void resized() override

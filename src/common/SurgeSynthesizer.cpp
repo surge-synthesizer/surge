@@ -1587,7 +1587,9 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                             doNotifyEndedNote = false;
                             playVoice(scene, activateVoiceChannel, activateVoiceKey,
                                       priorNoteVel /* not velocity! */,
-                                      channelState[activateVoiceChannel].keyState[k].lastdetune,
+                                      channelState[activateVoiceChannel]
+                                          .keyState[activateVoiceKey]
+                                          .lastdetune,
                                       v->host_note_id, v->originating_host_key,
                                       v->originating_host_channel);
                             doNotifyEndedNote = true;
@@ -4322,6 +4324,7 @@ void SurgeSynthesizer::resetStateFromTimeData()
     if (time_data.timeSigDenominator < 1)
         time_data.timeSigDenominator = 4;
     storage.songpos = time_data.ppqPos;
+    storage.isPlaying = time_data.isPlaying;
     if (time_data.tempo > 0)
     {
         storage.temposyncratio = time_data.tempo / 120.f;

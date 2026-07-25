@@ -276,6 +276,7 @@ end
 
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
+            addb("is_playing", s.isPlaying);
             addn("pb_range_up", s.pbrange_up);
             addn("pb_range_dn", s.pbrange_dn);
             addn("mpe_bendrange", s.mpebendrange);
@@ -650,6 +651,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("phase", phaseFracPart);
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
+    addb("is_playing", s->isPlaying);
 
     addn("pb", s->pitchbend);
     addn("pb_range_up", s->pbrange_up);
@@ -876,27 +878,27 @@ enum showFilter
 bool isUserDefined(std::string str)
 {
     // clang-format off
-    static constexpr std::array<std::string_view, 59> keywords = {
-        "amplitude",     "attack",        "block_size",
-        "cc_breath",     "cc_expr",       "cc_mw",
-        "cc_sus",        "chan_at",       "channel",
-        "clamp_output",  "cycle",         "decay",
-        "deform",        "delay",         "highest_key",
-        "hold",          "intphase",      "is_rendering_to_ui",
-        "is_voice",      "key",           "labels",
-        "latest_key",    "lfo_id",        "lowest_key",
-        "macros",        "mpe_bend",      "mpe_bendrange",
-        "mpe_enabled",   "mpe_pressure",  "mpe_timbre",
-        "output",        "pb",            "pb_range_dn",
-        "pb_range_up",   "phase",         "play_mode",
-        "poly_at",       "poly_limit",    "rate",
-        "rel_velocity",  "release",       "released",
-        "retrigger_AEG", "retrigger_FEG", "samplerate",
-        "scene_mode",    "songpos",       "split_point",
-        "startphase",    "sustain",       "tempo",
-        "tuned_key",     "use_amplitude", "use_envelope",
-        "use_rate",      "velocity",      "voice_count",
-        "voice_id",      "subscriptions"};
+    static constexpr std::array<std::string_view, 60> keywords = {
+        "amplitude",          "attack",        "block_size",
+        "cc_breath",          "cc_expr",       "cc_mw",
+        "cc_sus",             "chan_at",       "channel",
+        "clamp_output",       "cycle",         "decay",
+        "deform",             "delay",         "highest_key",
+        "hold",               "intphase",      "is_playing",
+        "is_rendering_to_ui", "is_voice",      "key",
+        "labels",             "latest_key",    "lfo_id",
+        "lowest_key",         "macros",        "mpe_bend",
+        "mpe_bendrange",      "mpe_enabled",   "mpe_pressure",
+        "mpe_timbre",         "output",        "pb",
+        "pb_range_dn",        "pb_range_up",   "phase",
+        "play_mode",          "poly_at",       "poly_limit",
+        "rate",               "rel_velocity",  "release",
+        "released",           "retrigger_AEG", "retrigger_FEG",
+        "samplerate",         "scene_mode",    "songpos",
+        "split_point",        "startphase",    "sustain",
+        "tempo",              "tuned_key",     "use_amplitude",
+        "use_envelope",       "use_rate",      "velocity",
+        "voice_count",        "voice_id",      "subscriptions"};
     // clang-format on
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();

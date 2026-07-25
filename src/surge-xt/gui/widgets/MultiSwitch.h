@@ -101,13 +101,35 @@ struct MultiSwitch : public juce::Component,
     void startHover(const juce::Point<float> &) override;
     void endHover() override;
 
-    void focusGained(juce::Component::FocusChangeType cause) override
+    void focusGained(juce::Component::FocusChangeType cause) override { updateFocusHover(); }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { updateFocusHover(); }
+
+    // Keyboard focus lands on a cell, not on us, so track the cells too. Without this the
+    // switch unhighlights the moment focus moves into one of its own cells.
+    void focusOfChildComponentChanged(juce::Component::FocusChangeType cause) override
     {
-        // fixme - probably use the location of the current element
-        startHover(valueToCoordinate(getValue()));
+        updateFocusHover();
     }
 
-    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
+    void updateFocusHover()
+    {
+        // While the pointer is here it owns the highlight
+        if (isMouseOverOrDragging(true))
+        {
+            return;
+        }
+
+        if (hasKeyboardFocus(true))
+        {
+            // fixme - probably use the location of the current element
+            startHover(valueToCoordinate(getValue()));
+        }
+        else
+        {
+            endHover();
+        }
+    }
 
     bool keyPressed(const juce::KeyPress &key) override;
     Surge::GUI::WheelAccumulationHelper wheelHelper;

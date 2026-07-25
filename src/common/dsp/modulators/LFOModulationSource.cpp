@@ -483,6 +483,7 @@ void LFOModulationSource::attackFrom(float start)
         formulastate.deform = localcopy[ideform].f;
         formulastate.tempo = storage->temposyncratio * 120.0;
         formulastate.songpos = storage->songpos;
+        formulastate.isPlaying = storage->isPlaying;
 
         formulastate.isVoice = isVoice;
 
@@ -1211,6 +1212,7 @@ void LFOModulationSource::process_block()
         formulastate.deform = localcopy[ideform].f;
         formulastate.tempo = storage->temposyncratio * 120.0;
         formulastate.songpos = storage->songpos;
+        formulastate.isPlaying = storage->isPlaying;
 
         formulastate.isVoice = isVoice;
 

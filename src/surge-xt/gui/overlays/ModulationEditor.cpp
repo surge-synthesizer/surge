@@ -90,6 +90,7 @@ struct ModulationSideControls : public juce::Component,
             }
             w->setTag(tag);
             w->setLabels(l);
+            w->setAccessibleCellLabels(l);
             w->setEnabled(en);
             w->addListener(this);
             w->setAccessible(true);
@@ -122,16 +123,19 @@ struct ModulationSideControls : public juce::Component,
             auto fs = editor->synth->storage.getPatch()
                           .dawExtraState.editor.modulationEditorState.filterString;
             filterW->setLabels({fs});
+            filterW->setTitle("Filter By: " + fs);
+            filterW->setDescription("Filter By: " + fs);
         }
 
         addL = makeL("Add Modulation");
-        addSourceW = makeW({"Select Source"}, tag_add_source, true, "Select Source");
-        addTargetW = makeW({"Select Target"}, tag_add_target, false, "Select Target");
+        addSourceW = makeW({"Select Source"}, tag_add_source, true, "Add Modulation Source");
+        addTargetW = makeW({"Select Target"}, tag_add_target, false, "Add Modulation Target");
 
         dispL = makeL("Value Display");
         dispW = makeW({"None", "Depths", "Values and Depths", "Values, Depths and Ranges"},
                       tag_value_disp, true, "Value Displays", true);
         dispW->setAccessible(false);
+        dispW->setWantsKeyboardFocus(false);
 
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
                                                        Storage::ModListValueDisplay, 3);
@@ -161,6 +165,7 @@ struct ModulationSideControls : public juce::Component,
         sortL->setBounds(b);
         b = b.translated(0, h);
         sortW->setBounds(b);
+        sortW->setupAccessibility();
         b = b.translated(0, h * 1.5 + m);
 
         filterL->setBounds(b);
@@ -1212,6 +1217,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                     filterL->setText("Filter By Source",
                                      juce::NotificationType::dontSendNotification);
                     filterW->setLabels({s});
+                    filterW->setTitle("Filter By Source: " + s);
+                    filterW->setDescription("Filter By Source: " + s);
                 });
 
             men.addColumnBreak();
@@ -1223,6 +1230,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                     filterL->setText("Filter By Target",
                                      juce::NotificationType::dontSendNotification);
                     filterW->setLabels({t});
+                    filterW->setTitle("Filter By Target: " + t);
+                    filterW->setDescription("Filter By Target: " + t);
                 });
 
             men.addColumnBreak();
@@ -1241,6 +1250,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                     filterL->setText("Filter By Target Section",
                                      juce::NotificationType::dontSendNotification);
                     filterW->setLabels({lab});
+                    filterW->setTitle("Filter By Target Section: " + lab);
+                    filterW->setDescription("Filter By Target Section: " + lab);
                 });
             }
 
@@ -1261,6 +1272,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                     filterL->setText("Filter By Target Scene",
                                      juce::NotificationType::dontSendNotification);
                     filterW->setLabels({lab});
+                    filterW->setTitle("Filter By Target Scene: " + lab);
+                    filterW->setDescription("Filter By Target Scene: " + lab);
                 });
             }
 
@@ -1270,6 +1283,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 editor->modContents->clearFilters();
                 filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
                 filterW->setLabels({"-"});
+                filterW->setTitle("Filter By: None");
+                filterW->setDescription("Filter By: None");
             });
 
             men.addSeparator();
@@ -1430,6 +1445,8 @@ void ModulationSideControls::showAddSourceMenu()
                             add_ms_idx = i;
                             add_ms_sc = sc;
                             addSourceW->setLabels({subn});
+                            addSourceW->setTitle("Add Modulation Source: " + subn);
+                            addSourceW->setDescription("Add Modulation Source: " + subn);
                             addTargetW->setEnabled(true);
                             addTargetW->setLabels({"Select Target"});
                             dest_id = -1;
@@ -1451,6 +1468,8 @@ void ModulationSideControls::showAddSourceMenu()
                         add_ms_idx = 0;
                         add_ms_sc = sc;
                         addSourceW->setLabels({sn});
+                        addSourceW->setTitle("Add Modulation Source: " + sn);
+                        addSourceW->setDescription("Add Modulation Source: " + sn);
                         addTargetW->setEnabled(true);
                         addTargetW->setLabels({"Select Target"});
                         dest_id = -1;
@@ -1701,6 +1720,8 @@ void ModulationSideControls::doAdd()
                                          Surge::GUI::UndoManager::UNDO);
     synth->setModDepth01(dest_id, add_ms, add_ms_sc, add_ms_idx, 0.01);
     addSourceW->setLabels({"Select Source"});
+    addSourceW->setTitle("Add Modulation Source");
+    addSourceW->setDescription("Add Modulation Source");
     addTargetW->setLabels({"Select Target"});
     addTargetW->setEnabled(false);
     Surge::GUI::grabKeyboardFocusIfAllowed(addSourceW.get());
@@ -1715,6 +1736,8 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
     viewport = std::make_unique<juce::Viewport>();
     viewport->setViewedComponent(modContents.get(), false);
     viewport->setAccessible(true);
+    viewport->setTitle("Modulation List");
+    viewport->setDescription("Modulation List");
 
     addAndMakeVisible(*viewport);
 
@@ -1754,6 +1777,11 @@ void ModulationEditor::resized()
     modContents->setViewportWidth(w - sideW);
     // modContents->setSize(vpr.getWidth() - viewport->getScrollBarThickness() - 1, 10);
     modContents->rebuildFrom(synth);
+}
+
+std::vector<juce::Component *> ModulationEditor::getGroupNavigationComponents()
+{
+    return {sideControls.get(), viewport.get()};
 }
 
 ModulationEditor::~ModulationEditor()

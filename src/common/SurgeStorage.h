@@ -1620,6 +1620,7 @@ class alignas(16) SurgeStorage
     float temposyncratio, temposyncratio_inv; // 1.f is 120 BPM
     float unstreamedTempo{120.f};             // this one is in actual BPM
     double songpos;
+    bool isPlaying{false}; // host transport state
     void init_tables();
     float nyquist_pitch;
     int last_key[2]; // TODO: FIX SCENE ASSUMPTION
