@@ -332,15 +332,16 @@ void Wavetable::MipMapWT()
                             hrfilter[a] * this->TableF32WeakPointers[l - 1][s][(
                                               ((i << 1) + a - filter_id_of) & (psize - 1))];
                     }
-                    int ival = 0;
+                    int64_t ival = 0;
                     for (int a = 0; a < filter_size; a++)
                     {
-                        ival += HRFilterI16[a] *
+                        ival += static_cast<int64_t>(HRFilterI16[a]) *
                                 this->TableI16WeakPointers[l - 1][s]
                                                           [(((i << 1) + a - 31) & (psize - 1)) +
                                                            FIRoffsetI16];
                     }
-                    this->TableI16WeakPointers[l][s][i + FIRoffsetI16] = ival >> 16;
+                    this->TableI16WeakPointers[l][s][i + FIRoffsetI16] =
+                        static_cast<short>(std::clamp<int64_t>(ival >> 16, -32768, 32767));
                 }
             }
             // float2i16_block(this->TableF32WeakPointers[l][s],this->TableI16WeakPointers[l][s],lsize);
