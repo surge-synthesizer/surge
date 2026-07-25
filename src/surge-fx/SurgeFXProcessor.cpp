@@ -54,7 +54,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
 
-    effectNum = fxt_off;
+    effectNum = fxt_delay;
 
     fxstorage = &(storage->getPatch().fx[0]);
     audio_thread_surge_effect.reset();
@@ -211,7 +211,7 @@ void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
 
     setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
 
-    if (effectNum == fxt_off)
+    if (!hasLoadedFxType.load())
     {
         resetFxType(fxt_delay, true);
     }
@@ -748,6 +748,11 @@ void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
     output_position = -1;
     effectNum = type;
     fxstorage->type.val.i = effectNum;
+
+    if (type != fxt_off)
+    {
+        hasLoadedFxType.store(true);
+    }
 
     for (int i = 0; i < n_fx_params; ++i)
         fxstorage->p[i].set_type(ct_none);
