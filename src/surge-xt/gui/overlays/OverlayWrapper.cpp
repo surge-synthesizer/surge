@@ -28,6 +28,7 @@
 #include "widgets/MainFrame.h"
 #include "SurgeJUCELookAndFeel.h"
 #include "SurgeGUIUtils.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -819,6 +820,11 @@ bool OverlayWrapper::keyPressed(const juce::KeyPress &key)
 OverlayComponent *OverlayWrapper::getPrimaryChildAsOverlayComponent()
 {
     return dynamic_cast<OverlayComponent *>(primaryChild.get());
+}
+
+std::unique_ptr<juce::ComponentTraverser> OverlayWrapper::createKeyboardFocusTraverser()
+{
+    return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
 }
 
 void OverlayWrapper::onSkinChanged()

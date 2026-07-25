@@ -2586,6 +2586,12 @@ struct FormulaControlArea : public juce::Component,
         setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
     }
 
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
     void resized() override
     {
         if (skin)
@@ -3418,6 +3424,12 @@ struct WavetableScriptControlArea : public juce::Component,
         setTitle("Controls");
         setDescription("Controls");
         setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
     }
 
     void resized() override

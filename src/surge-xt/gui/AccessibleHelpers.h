@@ -619,6 +619,114 @@ struct HasAccessibleSubComponentForFocus
     virtual juce::Component *getCurrentAccessibleSelectionComponent() = 0;
 };
 
+/*
+ * Stock JUCE tab ordering, except that a widget owning accessible sub components
+ * (e.g. a MultiSwitch and its per cell overlay buttons) is a single tab stop on its
+ * current selection instead of the owner followed by every one of its cells. This is
+ * what MainFrame's GlobalKeyboardTraverser gives the main UI. Any component which calls
+ * setFocusContainerType(keyboardFocusContainer) should hand this out from
+ * createKeyboardFocusTraverser(), otherwise JUCE gives you a tab stop for the owner and
+ * one more for each of its cells.
+ */
+struct SelectionCollapsingKeyboardFocusTraverser : public juce::KeyboardFocusTraverser
+{
+    // The stop that stands in for c, if c owns one. Null when c owns no sub components,
+    // or owns them but hasn't built them yet (a MultiSwitch without setupAccessibility).
+    static juce::Component *selectionOf(juce::Component *c)
+    {
+        if (auto sub = dynamic_cast<HasAccessibleSubComponentForFocus *>(c))
+        {
+            return sub->getCurrentAccessibleSelectionComponent();
+        }
+
+        return nullptr;
+    }
+
+    // Map any component onto the stop which represents it, so traversal still works when
+    // focus sits on an owner (control group navigation grabs those directly) or on a cell
+    // which is no longer the selected one.
+    static juce::Component *collapse(juce::Component *c)
+    {
+        if (!c)
+        {
+            return nullptr;
+        }
+
+        if (auto sel = selectionOf(c))
+        {
+            return sel;
+        }
+
+        // A sub component is represented by its owner's selection. An owner which returns
+        // itself delegates to nothing, so leave its children alone.
+        if (auto parent = c->getParentComponent())
+        {
+            auto sel = selectionOf(parent);
+
+            if (sel && sel != parent)
+            {
+                return sel;
+            }
+        }
+
+        return c;
+    }
+
+    std::vector<juce::Component *> getAllComponents(juce::Component *parentComponent) override
+    {
+        auto components = juce::KeyboardFocusTraverser::getAllComponents(parentComponent);
+
+        // An owner steps aside for its selection, and so do that owner's other cells.
+        components.erase(std::remove_if(components.begin(), components.end(),
+                                        [](auto c) { return collapse(c) != c; }),
+                         components.end());
+
+        return components;
+    }
+
+    juce::Component *getNextComponent(juce::Component *current) override
+    {
+        return step(current, +1);
+    }
+
+    juce::Component *getPreviousComponent(juce::Component *current) override
+    {
+        return step(current, -1);
+    }
+
+    juce::Component *step(juce::Component *current, int dir)
+    {
+        if (!current)
+        {
+            return nullptr;
+        }
+
+        auto container = current->findKeyboardFocusContainer();
+
+        if (!container)
+        {
+            return nullptr;
+        }
+
+        auto components = getAllComponents(container);
+        auto pos = std::find(components.begin(), components.end(), collapse(current));
+
+        // Off the ends, or focus somewhere we don't represent: JUCE wraps to the first or
+        // last stop of the container for us.
+        if (pos == components.end())
+        {
+            return nullptr;
+        }
+
+        if (dir > 0)
+        {
+            return (std::next(pos) == components.end()) ? nullptr : *std::next(pos);
+        }
+
+        return (pos == components.begin()) ? nullptr : *std::prev(pos);
+    }
+};
+
 } // namespace Widgets
 } // namespace Surge
 
