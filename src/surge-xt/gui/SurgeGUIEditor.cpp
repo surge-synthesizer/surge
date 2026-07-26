@@ -4074,7 +4074,8 @@ void SurgeGUIEditor::alertBox(const std::string &title, const std::string &promp
     alert->setDescription(title);
     alert->setWindowTitle(title);
 
-    addAndMakeVisibleWithTracking(frame.get(), *alert);
+    // Added hidden and shown at the end, so it grabs focus onto a fully configured dialog.
+    addComponentWithTracking(frame.get(), *alert);
 
     alert->setLabel(prompt);
 
@@ -6019,7 +6020,8 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     fmt::format("You have used a keyboard shortcut to load another patch,\n"
                                 "which will discard any changes made so far.\n\n"
                                 "Do you want to proceed?"),
-                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
+                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress,
+                    [this, action]() {
                         closeOverlay(SAVE_PATCH);
 
                         auto insideCategory = Surge::Storage::getUserDefaultValue(
@@ -6027,7 +6029,8 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
                         loadPatchWithDirtyCheck(action == KeyboardActions::NEXT_PATCH, false,
                                                 insideCategory);
-                    });
+                    },
+                    STOP_ASKING);
             }
             case KeyboardActions::PREV_CATEGORY:
             case KeyboardActions::NEXT_CATEGORY:
@@ -6037,11 +6040,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     fmt::format("You have used a keyboard shortcut to select another category,\n"
                                 "which will discard any changes made so far.\n\n"
                                 "Do you want to proceed?"),
-                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
+                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress,
+                    [this, action]() {
                         closeOverlay(SAVE_PATCH);
 
                         loadPatchWithDirtyCheck(action == KeyboardActions::NEXT_CATEGORY, true);
-                    });
+                    },
+                    STOP_ASKING);
             }
 
             // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
@@ -6864,12 +6869,13 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
 
 bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     const ::std::string &title, const std::string &msg, Surge::Storage::DefaultKey dontAskAgainKey,
-    std::function<void()> okCallback, std::string ynMessage, AskAgainStates askAgainDef)
+    std::function<void()> okCallback, DontAskAgainMeans dontAskAgainMeans, std::string ynMessage,
+    AskAgainStates askAgainDef)
 {
     auto bypassed =
         Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, askAgainDef);
 
-    if (bypassed == NEVER)
+    if (bypassed == NEVER && dontAskAgainMeans == REMEMBER_ANSWER)
     {
         return false;
     }
@@ -6884,7 +6890,7 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     alert->setSkin(currentSkin, bitmapStore);
     alert->setDescription(title);
     alert->setWindowTitle(title);
-    addAndMakeVisibleWithTracking(frame.get(), *alert);
+    addComponentWithTracking(frame.get(), *alert);
     alert->setLabel(msg);
     alert->addDontAskAgainButtonAndSetText(ynMessage);
     alert->setOkCancelButtonTexts("OK", "Cancel");
@@ -6895,10 +6901,12 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
         }
         okCallback();
     };
-    alert->onCancelForToggleState = [this, dontAskAgainKey](bool dontAskAgain) {
+    alert->onCancelForToggleState = [this, dontAskAgainKey, dontAskAgainMeans](bool dontAskAgain) {
         if (dontAskAgain)
         {
-            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey, NEVER);
+            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
+                                                   (dontAskAgainMeans == STOP_ASKING) ? ALWAYS
+                                                                                      : NEVER);
         }
     };
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
@@ -6922,7 +6930,7 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
 
                 synth->jogPatchOrCategory(increment, isCategory, insideCategory);
             },
-            "Don't ask me again", ALWAYS);
+            STOP_ASKING, "Don't ask me again", ALWAYS);
     }
     else
     {

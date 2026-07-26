@@ -968,6 +968,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         NEVER = 100
     };
 
+    // What ticking "Don't ask me again" records: REMEMBER_ANSWER stores the button pressed,
+    // STOP_ASKING runs the action unprompted from then on whichever button was pressed.
+    enum DontAskAgainMeans
+    {
+        REMEMBER_ANSWER,
+        STOP_ASKING
+    };
+
     // sometimes we need to return focus to a specific component after an Alert dialog is dismissed
     // currently used by KeyBindingsOverlay
     juce::Component::SafePointer<juce::Component> componentToFocusAfterAlertDismissal{nullptr};
@@ -976,6 +984,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,
                                            Surge::Storage::DefaultKey dontAskAgainKey,
                                            std::function<void()> okCallback,
+                                           DontAskAgainMeans dontAskAgainMeans = REMEMBER_ANSWER,
                                            std::string ynMessage = "Don't ask me again",
                                            AskAgainStates askAgainDefault = DUNNO);
 
