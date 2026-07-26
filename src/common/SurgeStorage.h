@@ -577,7 +577,7 @@ const int lt_num_deforms[n_lfo_types] = {
     3, // lt_envelope
     2, // lt_stepseq
     0, // lt_mseg
-    3, // lt_formula
+    0, // lt_formula
 };
 
 // Special path tokens.
