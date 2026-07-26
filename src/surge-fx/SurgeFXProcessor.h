@@ -355,6 +355,16 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     sst::filters::HalfRate::HalfRateFilter halfbandIN{6, true};
 
+    juce::AudioProcessorParameter *getHostParameterForFxSlot(int i)
+    {
+        if (i < 0 || i >= n_fx_params || !getParamEnabled(i))
+        {
+            return nullptr;
+        }
+
+        return fxParams[i];
+    }
+
   private:
     template <typename T, typename F> struct FXAudioParameter : public T
     {

@@ -374,6 +374,10 @@ class SurgeFXParamDisplay : public juce::Component
         overlayEditor->onReturnKey = [this]() { processOverlay(); };
         addChildComponent(*overlayEditor);
     }
+
+    std::string getGroup() { return group; };
+    std::string getName() { return name; };
+
     virtual void setGroup(std::string grp)
     {
         group = grp;
