@@ -57,8 +57,10 @@ Alert::Alert(uint16_t extraH)
 {
     extraHeight = extraH;
     setAccessible(true);
-    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
-    setWantsKeyboardFocus(true);
+
+    // Keep Tab inside the dialog. Focus goes to a child, never the container itself.
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    setWantsKeyboardFocus(false);
 
     labelComponent = std::make_unique<MultiLineSkinLabel>();
     labelComponent->setTitle("Message");
@@ -137,7 +139,15 @@ void Alert::resized()
 
     if (dontAskAgainButton)
     {
-        dontAskAgainButton->setBounds(buttonRow.translated(10, 0));
+        auto checkbox = buttonRow.translated(10, 0);
+        auto tickWidth = juce::roundToInt(juce::jmin(15.f, btnHeight * 0.75f) * 1.2f);
+        auto textWidth = skin ? SST_STRING_WIDTH_INT(skin->fontManager->getLatoAtSize(9),
+                                                     dontAskAgainButton->getButtonText())
+                              : 0;
+        auto width =
+            juce::jmin(tickWidth + 12 + textWidth, okButton->getX() - checkbox.getX() - margin);
+
+        dontAskAgainButton->setBounds(checkbox.withWidth(width));
     }
 }
 
@@ -152,37 +162,45 @@ void Alert::onSkinChanged()
 
 void Alert::buttonClicked(juce::Button *button)
 {
+    // A callback can raise a second alert, which destroys us mid-callback, so hide first, copy the
+    // callback onto the stack and touch no members after invoking it.
+    const bool isOk = (button == okButton.get());
+    const bool isCancel = (button == cancelButton.get());
+
+    if (!isOk && !isCancel)
+    {
+        return;
+    }
+
+    setVisible(false);
+
     if (!dontAskAgainButton)
     {
-        if (button == okButton.get() && onOk)
+        auto cb = isOk ? onOk : onCancel;
+
+        if (cb)
         {
-            onOk();
-        }
-        else if (button == cancelButton.get() && onCancel)
-        {
-            onCancel();
+            cb();
         }
     }
     else
     {
-        if (button == okButton.get() && onOkForToggleState)
+        auto cb = isOk ? onOkForToggleState : onCancelForToggleState;
+        const bool dontAskAgain = dontAskAgainButton->getToggleState();
+
+        if (cb)
         {
-            onOkForToggleState(dontAskAgainButton->getToggleState());
-        }
-        else if (button == cancelButton.get() && onCancelForToggleState)
-        {
-            onCancelForToggleState(dontAskAgainButton->getToggleState());
+            cb(dontAskAgain);
         }
     }
-
-    setVisible(false);
 }
 
 void Alert::visibilityChanged()
 {
     if (isVisible())
     {
-        Surge::GUI::grabKeyboardFocusIfAllowed(this);
+        // Focus the message so a screen reader announces the prompt on open.
+        Surge::GUI::grabKeyboardFocusIfAllowed(labelComponent.get());
     }
 }
 
