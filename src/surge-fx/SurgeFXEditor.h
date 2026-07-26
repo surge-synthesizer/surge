@@ -123,10 +123,27 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     int defaultPresetIndexForCurrentType() const { return currentPresets.empty() ? -1 : 0; }
 
+    std::vector<juce::Component *> accessibleOrderWeakRefs;
+    std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
+
   private:
     struct AccSlider : public juce::Slider
     {
         AccSlider() { setWantsKeyboardFocus(true); }
+
+        void mouseDown(const juce::MouseEvent &e) override
+        {
+            if (e.mods.isPopupMenu() && onPopupMenu)
+            {
+                onPopupMenu();
+                return;
+            }
+
+            juce::Slider::mouseDown(e);
+        }
+
+        std::function<void()> onPopupMenu;
+
         juce::String getTextFromValue(double v) override
         {
             // std::cout << "GTFV " << v << std::endl;
@@ -136,19 +153,26 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
         }
 
         juce::String tv;
+
         void setTextValue(juce::String s)
         {
             tv = s;
+
             if (auto *handler = getAccessibilityHandler())
             {
                 handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
             }
         }
+
         bool keyPressed(const juce::KeyPress &key) override
         {
             float amt = 0.05;
+
             if (key.getModifiers().isShiftDown())
+            {
                 amt = 0.01;
+            }
+
             if (key.getKeyCode() == juce::KeyPress::upKey)
             {
                 setValue(std::clamp(getValue() + amt, 0., 1.),
@@ -193,6 +217,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void resetLabels();
 
     juce::PopupMenu makeOSCMenu();
+    juce::PopupMenu modifyHostMenu(juce::PopupMenu menu, const int idx);
 
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
     std::unique_ptr<juce::Label> fxNameLabel;
@@ -214,17 +239,12 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
         void timerCallback() override;
         SurgefxAudioProcessorEditor *ed;
     };
+
     void idle();
+
     std::unique_ptr<IdleTimer> idleTimer;
     bool priorValid{true};
 
-  public:
-    std::vector<juce::Component *> accessibleOrderWeakRefs;
-
-  public:
-    std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
-
-  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessorEditor)
 };
 

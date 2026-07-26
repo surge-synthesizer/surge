@@ -354,6 +354,22 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
         };
 
+        fxParamSliders[i].onPopupMenu = [this, i]() {
+            if (auto *param = processor.getHostParameterForFxSlot(i))
+            {
+                if (auto *hostContext = getHostContext())
+                {
+                    if (auto menuInfo = hostContext->getContextMenuForParameter(param))
+                    {
+                        auto menu = menuInfo->getEquivalentPopupMenu();
+
+                        menu = modifyHostMenu(menu, i);
+                        menu.showMenuAsync(juce::PopupMenu::Options{});
+                    }
+                }
+            }
+        };
+
         fxParamSliders[i].onDragStart = [i, this]() {
             this->processor.setUserEditingFXParam(i, true);
         };
@@ -469,6 +485,59 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 25);
+}
+
+juce::PopupMenu SurgefxAudioProcessorEditor::modifyHostMenu(juce::PopupMenu menu, const int idx)
+{
+    auto newMenu = juce::PopupMenu();
+
+    newMenu.addSectionHeader(
+        fmt::format("{} {}", fxParamDisplay[idx].getGroup(), fxParamDisplay[idx].getName()));
+
+    newMenu.addSeparator();
+
+    // make things look a bit nicer for our friends from Image-Line
+    if (juce::PluginHostType().isFruityLoops())
+    {
+        auto it = juce::PopupMenu::MenuItemIterator(menu);
+
+        while (it.next())
+        {
+            auto txt = it.getItem().text;
+
+            if (txt.startsWithChar('-'))
+            {
+                it.getItem().isSectionHeader = true;
+                it.getItem().text = txt.fromFirstOccurrenceOf("-", false, false);
+            }
+
+            newMenu.addItem(it.getItem());
+        }
+    }
+
+    // we really don't need that parameter name repeated in Reaper...
+    if (juce::PluginHostType().isReaper())
+    {
+        auto it = juce::PopupMenu::MenuItemIterator(menu);
+
+        while (it.next())
+        {
+            auto txt = it.getItem().text;
+            bool include = true;
+
+            if (txt.startsWithChar('[') && txt.endsWithChar(']'))
+            {
+                include = it.next();
+            }
+
+            if (include)
+            {
+                newMenu.addItem(it.getItem());
+            }
+        }
+    }
+
+    return newMenu;
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()

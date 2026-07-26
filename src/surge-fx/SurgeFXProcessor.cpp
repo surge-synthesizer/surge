@@ -840,7 +840,7 @@ void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
         updateJuceParamsFromStorage();
     }
 
-    updateHostDisplay();
+    updateHostDisplay(juce::AudioProcessorListener::ChangeDetails{}.withParameterInfoChanged(true));
     resettingFx = false;
 }
 
