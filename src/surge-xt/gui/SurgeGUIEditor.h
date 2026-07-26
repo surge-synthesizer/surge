@@ -620,7 +620,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         WAV,
         WT,
         SERUM,
-        VCVRACK
+        VCVRACK,
+        WAV_FRAMES
     };
     void exportWavetableAs(WTExportFormat exportFormat);
     void loadWavetableScript();

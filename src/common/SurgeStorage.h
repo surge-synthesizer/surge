@@ -1681,10 +1681,10 @@ class alignas(16) SurgeStorage
     bool load_wt_wt(std::string filename, Wavetable *wt, std::string &metadata);
     bool load_wt_wt_mem(const char *data, const size_t dataSize, Wavetable *wt);
     bool load_wt_wav_portable(std::string filename, Wavetable *wt, std::string &metadata);
-    std::string export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
-                                       const std::string &metadata);
     std::string export_wt_wav_portable(const fs::path &fpath, Wavetable *wt,
                                        const std::string &metadata, bool exportForSerum = false);
+    std::string export_wt_wav_frames_portable(const fs::path &parentDir,
+                                              const std::string &baseName, Wavetable *wt);
     bool export_wt_wt_portable(const fs::path &fpath, Wavetable *wt, const std::string &metadata);
 
     std::string make_wt_metadata(OscillatorStorage *);
