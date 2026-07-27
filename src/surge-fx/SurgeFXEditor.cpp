@@ -337,7 +337,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
         fxParamSliders[i].addMouseListener(this, false);
-
         fxParamSliders[i].onValueChange = [i, this]() {
             const bool forceInteger = juce::ModifierKeys::getCurrentModifiers().isCtrlDown();
 
@@ -353,33 +352,19 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             fxParamDisplay[i].setDisplay(processor.getParamValue(i));
             fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
         };
-
         fxParamSliders[i].onPopupMenu = [this, i]() {
-            if (auto *param = processor.getHostParameterForFxSlot(i))
+            if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Knob))
             {
-                if (auto *hostContext = getHostContext())
-                {
-                    if (auto menuInfo = hostContext->getContextMenuForParameter(param))
-                    {
-                        auto menu = menuInfo->getEquivalentPopupMenu();
-
-                        menu = modifyHostMenu(menu, i);
-                        menu.showMenuAsync(juce::PopupMenu::Options{});
-                    }
-                }
+                showHostContextMenuFor(param);
             }
         };
-
         fxParamSliders[i].onDragStart = [i, this]() {
             this->processor.setUserEditingFXParam(i, true);
         };
-
         fxParamSliders[i].onDragEnd = [i, this]() {
             this->processor.setUserEditingFXParam(i, false);
         };
-
         fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
-
         addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
 
         fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
@@ -395,7 +380,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
         };
-
+        fxTempoSync[i].onPopupMenu = [this, i]() {
+            if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::TempoSync))
+            {
+                showHostContextMenuFor(param);
+            }
+        };
         fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " Tempo Sync");
         addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
@@ -413,6 +403,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->resetLabels();
             this->processor.setUserEditingParamFeature(i, false);
         };
+        fxDeactivated[i].onPopupMenu = [this, i]() {
+            if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Deactivated))
+            {
+                showHostContextMenuFor(param);
+            }
+        };
         fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
         addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
 
@@ -428,6 +424,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             fxParamDisplay[i].setDisplay(
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
+        };
+        fxExtended[i].onPopupMenu = [this, i]() {
+            if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Extended))
+            {
+                showHostContextMenuFor(param);
+            }
         };
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
         addAndMakeVisibleRecordOrder(&(fxExtended[i]));
@@ -445,11 +447,17 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
         };
-
+        fxAbsoluted[i].onPopupMenu = [this, i]() {
+            if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Absolute))
+            {
+                showHostContextMenuFor(param);
+            }
+        };
         fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absolute");
         addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
         processor.prepareParametersAbsentAudio();
+
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
         fxParamDisplay[i].setDisplay(processor.getParamValue(i));
@@ -457,7 +465,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamDisplay[i].onOverlayEntered = [i, this](const std::string &s) {
             processor.setParameterByString(i, s);
         };
-
         addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
 
@@ -493,12 +500,15 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     idleTimer->startTimer(1000 / 25);
 }
 
-juce::PopupMenu SurgefxAudioProcessorEditor::modifyHostMenu(juce::PopupMenu menu, const int idx)
+juce::PopupMenu SurgefxAudioProcessorEditor::modifyHostMenu(juce::PopupMenu menu,
+                                                            juce::AudioProcessorParameter *param)
 {
     auto newMenu = juce::PopupMenu();
 
-    newMenu.addSectionHeader(
-        fmt::format("{} {}", fxParamDisplay[idx].getGroup(), fxParamDisplay[idx].getName()));
+    const auto kind = processor.paramKindForIndex[param->getParameterIndex()];
+    const auto slot = processor.paramSlotForIndex[param->getParameterIndex()];
+
+    newMenu.addSectionHeader(processor.getMutableName(kind, slot));
 
     newMenu.addSeparator();
 
@@ -1196,6 +1206,23 @@ void SurgefxAudioProcessorEditor::showLogoMenu()
     };
 
     p.showMenuAsync(o, closeAction);
+}
+
+void SurgefxAudioProcessorEditor::showHostContextMenuFor(juce::AudioProcessorParameter *param)
+{
+    if (param)
+    {
+        if (auto *hostContext = getHostContext())
+        {
+            if (auto menuInfo = hostContext->getContextMenuForParameter(param))
+            {
+                auto menu = menuInfo->getEquivalentPopupMenu();
+
+                menu = modifyHostMenu(menu, param);
+                menu.showMenuAsync(juce::PopupMenu::Options{});
+            }
+        }
+    }
 }
 
 juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()

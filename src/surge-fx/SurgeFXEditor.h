@@ -59,6 +59,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     void makeMenu();
     void showMenu();
+    void showHostContextMenuFor(juce::AudioProcessorParameter *param);
     void showLogoMenu();
     void toggleLatencyMode();
     void changeOSCInputPort();
@@ -257,7 +258,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void resetLabels();
 
     juce::PopupMenu makeOSCMenu();
-    juce::PopupMenu modifyHostMenu(juce::PopupMenu menu, const int idx);
+    juce::PopupMenu modifyHostMenu(juce::PopupMenu menu, juce::AudioProcessorParameter *param);
 
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
     std::unique_ptr<juce::Label> fxNameLabel;
