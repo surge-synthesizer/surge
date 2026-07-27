@@ -545,7 +545,7 @@ class SurgeFXParamDisplay : public juce::Component
   private:
     std::string group = "Uninit";
     std::string name = "Uninit";
-    std::string display = "SoftwareError";
+    std::string display = "Software Error!";
     bool appearsDeactivated = false;
     std::unique_ptr<juce::TextEditor> overlayEditor;
 };
@@ -561,6 +561,18 @@ class SurgeParamOptionSwitch : public juce::ToggleButton
     }
 
     std::unique_ptr<juce::Drawable> onImg, offImg;
+    std::function<void()> onPopupMenu;
+
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        if (e.mods.isPopupMenu())
+        {
+            if (onPopupMenu)
+                onPopupMenu();
+            return;
+        }
+        juce::ToggleButton::mouseDown(e);
+    }
 
   protected:
     virtual void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,

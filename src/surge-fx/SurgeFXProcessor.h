@@ -39,6 +39,18 @@
 #include <execinfo.h>
 #endif
 
+namespace SurgeFX
+{
+enum ParamKind
+{
+    Knob,
+    TempoSync,
+    Extended,
+    Absolute,
+    Deactivated
+};
+}
+
 //==============================================================================
 /**
  */
@@ -85,15 +97,6 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         kExtended = 1U << 1U,
         kAbsolute = 1U << 2U,
         kDeactivated = 1U << 3U
-    };
-
-    enum class ParamKind
-    {
-        Knob,
-        TempoSync,
-        Extended,
-        Absolute,
-        Deactivated
     };
 
     // Message from OSC input to the audio thread
@@ -242,10 +245,10 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
             return;
         }
 
-        auto kind = paramKindForIndex[parameterIndex];
-        auto slot = paramSlotForIndex[parameterIndex];
+        const auto kind = paramKindForIndex[parameterIndex];
+        const auto slot = paramSlotForIndex[parameterIndex];
 
-        if (kind == ParamKind::Knob)
+        if (kind == SurgeFX::ParamKind::Knob)
         {
             if (!isUserEditing[slot])
             {
@@ -262,19 +265,19 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
         switch (kind)
         {
-        case ParamKind::TempoSync:
+        case SurgeFX::ParamKind::TempoSync:
             setFXParamTempoSync(slot, b);
             setFXStorageTempoSync(slot, b);
             break;
-        case ParamKind::Extended:
+        case SurgeFX::ParamKind::Extended:
             setFXParamExtended(slot, b);
             setFXStorageExtended(slot, b);
             break;
-        case ParamKind::Absolute:
+        case SurgeFX::ParamKind::Absolute:
             setFXParamAbsolute(slot, b);
             setFXStorageAbsolute(slot, b);
             break;
-        case ParamKind::Deactivated:
+        case SurgeFX::ParamKind::Deactivated:
             setFXParamDeactivated(slot, b);
             setFXStorageDeactivated(slot, b);
             break;
@@ -418,14 +421,48 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     sst::filters::HalfRate::HalfRateFilter halfbandIN{6, true};
 
-    juce::AudioProcessorParameter *getHostParameterForFxSlot(int i)
+    juce::AudioProcessorParameter *
+    getHostParameterFor(int i, SurgeFX::ParamKind kind = SurgeFX::ParamKind::Knob)
     {
-        if (i < 0 || i >= n_fx_params || !getParamEnabled(i))
+        if (i < 0 || i >= n_fx_params)
         {
             return nullptr;
         }
 
-        return fxParams[i];
+        switch (kind)
+        {
+        case SurgeFX::ParamKind::Knob:
+            return getParamEnabled(i) ? fxParams[i] : nullptr;
+        case SurgeFX::ParamKind::TempoSync:
+            return canTempoSync(i) ? fxTempoSyncParams[i] : nullptr;
+        case SurgeFX::ParamKind::Extended:
+            return canExtend(i) ? fxExtendedParams[i] : nullptr;
+        case SurgeFX::ParamKind::Absolute:
+            return canAbsolute(i) ? fxAbsolutedParams[i] : nullptr;
+        case SurgeFX::ParamKind::Deactivated:
+            return canDeactitvate(i) ? fxDeactivatedParams[i] : nullptr;
+        default:
+            return nullptr;
+        }
+    }
+
+    std::string getMutableName(SurgeFX::ParamKind kind, int idx) const
+    {
+        switch (kind)
+        {
+        case SurgeFX::ParamKind::Knob:
+            return fxParams[idx]->mutableName.toStdString();
+        case SurgeFX::ParamKind::TempoSync:
+            return fxTempoSyncParams[idx]->mutableName.toStdString();
+        case SurgeFX::ParamKind::Extended:
+            return fxExtendedParams[idx]->mutableName.toStdString();
+        case SurgeFX::ParamKind::Absolute:
+            return fxAbsolutedParams[idx]->mutableName.toStdString();
+        case SurgeFX::ParamKind::Deactivated:
+            return fxDeactivatedParams[idx]->mutableName.toStdString();
+        default:
+            return "";
+        }
     }
 
   private:
@@ -473,9 +510,6 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     bool_param_t *fxAbsolutedParams[n_fx_params];
     bool_param_t *fxDeactivatedParams[n_fx_params];
     int_param_t *fxType;
-
-    ParamKind paramKindForIndex[totalHostParams];
-    int paramSlotForIndex[totalHostParams]; // meaningless for fxType's own entry
 
     std::atomic<int> paramFeatures[n_fx_params];
     std::atomic<bool> changedParams[n_fx_params + 1];
@@ -526,6 +560,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void setParameterByString(int i, const std::string &s);
     float getParameterValueForString(int i, const std::string &s);
     bool canSetParameterByString(int i);
+
+    SurgeFX::ParamKind paramKindForIndex[totalHostParams];
+    int paramSlotForIndex[totalHostParams]; // meaningless for fxType's own entry
 
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessor)

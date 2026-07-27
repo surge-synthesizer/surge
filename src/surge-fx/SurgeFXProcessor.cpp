@@ -80,11 +80,11 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
             return getParameterValueForString(i, s.toStdString());
         };
         fxBaseParams[nextBaseSlot] = fxParams[i];
-        paramKindForIndex[fxParams[i]->getParameterIndex()] = ParamKind::Knob;
+        paramKindForIndex[fxParams[i]->getParameterIndex()] = SurgeFX::ParamKind::Knob;
         paramSlotForIndex[fxParams[i]->getParameterIndex()] = i;
         ++nextBaseSlot;
 
-        auto addToggle = [&](bool_param_t *&dest, const char *tag, ParamKind kind) {
+        auto addToggle = [&](bool_param_t *&dest, const char *tag, SurgeFX::ParamKind kind) {
             auto id = fmt::format("fx_{}_{:d}", tag, i);
             dest = new bool_param_t(juce::ParameterID(id, 1), nm, false);
             dest->getTextHandler = [](float f, int len) -> juce::String {
@@ -103,10 +103,10 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         int feat = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
         paramFeatures[i] = feat;
 
-        addToggle(fxTempoSyncParams[i], "temposync", ParamKind::TempoSync);
-        addToggle(fxExtendedParams[i], "extended", ParamKind::Extended);
-        addToggle(fxAbsolutedParams[i], "absoluted", ParamKind::Absolute);
-        addToggle(fxDeactivatedParams[i], "deactivated", ParamKind::Deactivated);
+        addToggle(fxTempoSyncParams[i], "temposync", SurgeFX::ParamKind::TempoSync);
+        addToggle(fxExtendedParams[i], "extended", SurgeFX::ParamKind::Extended);
+        addToggle(fxAbsolutedParams[i], "absoluted", SurgeFX::ParamKind::Absolute);
+        addToggle(fxDeactivatedParams[i], "deactivated", SurgeFX::ParamKind::Deactivated);
 
         *(fxTempoSyncParams[i]) = (bool)(feat & kTempoSync);
         *(fxExtendedParams[i]) = (bool)(feat & kExtended);
@@ -134,7 +134,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     fxBaseParams[nextBaseSlot] = fxType;
 
     // reuse; handled separately below
-    paramKindForIndex[fxType->getParameterIndex()] = ParamKind::Knob;
+    paramKindForIndex[fxType->getParameterIndex()] = SurgeFX::ParamKind::Knob;
     paramSlotForIndex[fxType->getParameterIndex()] = n_fx_params; // sentinel
 
     for (int i = 0; i < totalHostParams; ++i)
@@ -866,9 +866,7 @@ void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
 {
     reorderSurgeParams();
 
-    /*
-    ** TempoSync etc settings may linger so whack them all to false again
-    */
+    // tempo sync etc settings may linger so whack them all to false again
     for (int i = 0; i < n_fx_params; ++i)
         paramFeatureOntoParam(&(fxstorage->p[i]), 0);
 
