@@ -3736,7 +3736,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         auto ecomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("", hurl);
 
-        contextMenu.addCustomItem(-1, std::move(ecomp), nullptr, ecomp->getTitle());
+        contextMenu.addCustomItem(-1, std::move(ecomp), nullptr, "");
 
         contextMenu.addSeparator();
 
