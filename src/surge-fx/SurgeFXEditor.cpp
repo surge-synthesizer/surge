@@ -461,6 +461,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
 
+    logoButton = std::make_unique<LogoButton>();
+    logoButton->logo = juce::Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlack_svg,
+                                                           BinaryData::SurgeLogoOnlyBlack_svgSize);
+    logoButton->onClick = [this]() { showLogoMenu(); };
+    addAndMakeVisibleRecordOrder(logoButton.get());
+
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26));
     fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
@@ -957,6 +963,9 @@ void SurgefxAudioProcessorEditor::resized()
     const float pickerGap = 18 * z;
     const float totalPickerW = getWidth() - 2.f * sideMargin - pickerGap;
     const float halfW = totalPickerW * 0.5f;
+    const float footer = 40.f * z;
+    const float padding = 4.f * z;
+    const float logoSide = footer - (padding * 2.f);
 
     picker->setBounds(
         juce::Rectangle<float>(sideMargin, pickerY, halfW, pickerH).toNearestIntEdges());
@@ -1012,6 +1021,10 @@ void SurgefxAudioProcessorEditor::resized()
                                        rowHeight - 5.f * z};
         fxParamDisplay[i].setBounds(dispPos.toNearestIntEdges());
     }
+
+    logoButton->setBounds(
+        juce::Rectangle<float>(3.f * z, getHeight() - footer + padding, logoSide, logoSide)
+            .toNearestIntEdges());
 
     juce::Rectangle<float> titleRect{34.f * z, getHeight() - (40.f * z), 350.f * z, 40.f * z};
 
@@ -1111,14 +1124,19 @@ void SurgefxAudioProcessorEditor::showMenu()
         }
     }
 
-    p.addSeparator();
+    auto o = juce::PopupMenu::Options()
+                 .withTargetComponent(picker.get())
+                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
 
-    auto sm = juce::PopupMenu();
-    sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
-               [this]() { toggleLatencyMode(); });
+    p.showMenuAsync(o);
+}
+
+void SurgefxAudioProcessorEditor::showLogoMenu()
+{
+    auto p = juce::PopupMenu();
     auto oscm = makeOSCMenu();
-    sm.addSubMenu("OSC", oscm);
-    p.addSubMenu("Options", sm);
+
+    p.addSubMenu("OSC", oscm);
 
     std::vector<int> zoomTos = {{75, 100, 125, 150, 200}};
     std::string lab;
@@ -1160,11 +1178,24 @@ void SurgefxAudioProcessorEditor::showMenu()
         p.addSubMenu("Zoom", zm);
     }
 
-    auto o = juce::PopupMenu::Options()
-                 .withTargetComponent(picker.get())
-                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
+    p.addSeparator();
 
-    p.showMenuAsync(o);
+    p.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
+              [this]() { toggleLatencyMode(); });
+
+    logoButton->menuOpen = true;
+    logoButton->repaint();
+
+    auto o = juce::PopupMenu::Options()
+                 .withTargetComponent(logoButton.get())
+                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::upwards);
+
+    auto closeAction = [this](int) {
+        logoButton->menuOpen = false;
+        logoButton->repaint();
+    };
+
+    p.showMenuAsync(o, closeAction);
 }
 
 juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()

@@ -59,6 +59,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     void makeMenu();
     void showMenu();
+    void showLogoMenu();
     void toggleLatencyMode();
     void changeOSCInputPort();
 
@@ -201,6 +202,45 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
             return false;
         }
     };
+
+    struct LogoButton : public juce::Component
+    {
+        std::function<void()> onClick;
+
+        void paint(juce::Graphics &g) override
+        {
+            if (!logo)
+            {
+                return;
+            }
+
+            logo->drawWithin(g, getLocalBounds().toFloat(),
+                             juce::RectanglePlacement::xMid | juce::RectanglePlacement::yMid, 1.f);
+
+            if (isMouseOver() || menuOpen)
+            {
+                g.setColour(juce::Colours::white.withAlpha(0.25f));
+                g.fillRoundedRectangle(getLocalBounds().reduced(4.f).toFloat(), 2.f);
+            }
+        }
+
+        void mouseEnter(const juce::MouseEvent &) override { repaint(); }
+
+        void mouseExit(const juce::MouseEvent &) override { repaint(); }
+
+        void mouseUp(const juce::MouseEvent &e) override
+        {
+            if (getLocalBounds().contains(e.getPosition()) && onClick)
+            {
+                onClick();
+            }
+        }
+
+        bool menuOpen{false};
+        std::unique_ptr<juce::Drawable> logo;
+    };
+
+    std::unique_ptr<LogoButton> logoButton;
 
     AccSlider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
