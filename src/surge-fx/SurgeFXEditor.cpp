@@ -660,8 +660,11 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
 {
     bool cv[n_fx_params + 1];
     float fv[n_fx_params + 1];
+
     processor.copyChangeValues(cv, fv);
+
     for (int i = 0; i < n_fx_params + 1; ++i)
+    {
         if (cv[i])
         {
             if (i < n_fx_params)
@@ -690,6 +693,40 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
                 }
             }
         }
+
+        bool anyDeactivationChanged{false};
+
+        auto syncToggle = [](SurgeParamOptionSwitch &sw, bool newState) -> bool {
+            const bool old = sw.getToggleState();
+            sw.setToggleState(newState, juce::NotificationType::dontSendNotification);
+            return old != newState;
+        };
+
+        if (i < n_fx_params)
+        {
+            bool displayDirty = false;
+
+            displayDirty |= syncToggle(fxTempoSync[i], processor.getFXStorageTempoSync(i));
+            displayDirty |= syncToggle(fxExtended[i], processor.getFXStorageExtended(i));
+            displayDirty |= syncToggle(fxAbsoluted[i], processor.getFXStorageAbsolute(i));
+
+            if (syncToggle(fxDeactivated[i], processor.getFXStorageDeactivated(i)))
+            {
+                anyDeactivationChanged = true;
+            }
+
+            if (displayDirty)
+            {
+                fxParamDisplay[i].setDisplay(
+                    processor.getParamValueFromFloat(i, fxParamSliders[i].getValue()));
+            }
+        }
+
+        if (anyDeactivationChanged)
+        {
+            resetLabels();
+        }
+    }
 }
 
 void SurgefxAudioProcessorEditor::blastToggleState(int w) {}
