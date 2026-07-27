@@ -40,6 +40,119 @@ namespace Surge
 namespace Overlays
 {
 
+static void escapeToOverlayWrapper(juce::Component *from)
+{
+    if (auto *olw = from->findParentComponentOfClass<OverlayWrapper>())
+    {
+        from->giveAwayKeyboardFocus();
+        Surge::GUI::grabKeyboardFocusIfAllowed(olw);
+    }
+}
+
+// A Viewport does not follow the keyboard, so a tab stop below the fold has to ask.
+static void scrollIntoView(juce::Component *from)
+{
+    auto *vp = from->findParentComponentOfClass<juce::Viewport>();
+
+    if (!vp || !vp->getViewedComponent())
+    {
+        return;
+    }
+
+    auto area = vp->getViewedComponent()->getLocalArea(from, from->getLocalBounds());
+    auto view = vp->getViewArea();
+
+    if (area.getY() < view.getY())
+    {
+        vp->setViewPosition(view.getX(), area.getY());
+    }
+    else if (area.getBottom() > view.getBottom())
+    {
+        vp->setViewPosition(view.getX(), area.getBottom() - view.getHeight());
+    }
+}
+
+struct TuningTextEditor : juce::TextEditor
+{
+    TuningTextEditor(const std::string &lab, const std::string &un = "") : label(lab), unit(un)
+    {
+        setTitle(lab);
+        Surge::Widgets::fixupJuceTextEditorAccessibility(*this);
+    }
+
+    // A tone can hold a ratio rather than cents, so the unit moves with the text.
+    void setAccessibleUnit(const std::string &u) { unit = u; }
+
+    void refreshAccessibleName(bool notify)
+    {
+#if MAC
+        juce::ignoreUnused(notify);
+#else
+        auto val = getText().toStdString();
+
+        setTitle(unit.empty() ? label + ": " + val : label + ": " + val + " " + unit);
+
+        // setTitle() does not announce on its own, and we change it under the reader.
+        if (notify)
+        {
+            if (auto *h = getAccessibilityHandler())
+            {
+                h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            }
+        }
+#endif
+    }
+
+    // focusGained runs before the handler grabs focus, so the reader sees the refreshed name.
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        refreshAccessibleName(false);
+        scrollIntoView(this);
+        juce::TextEditor::focusGained(cause);
+    }
+
+    std::string label, unit;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningTextEditor);
+};
+
+struct TuningControlGroup : juce::Component
+{
+    TuningControlGroup(const juce::String &title) : juce::Component(title)
+    {
+        setAccessible(true);
+        setTitle(title);
+        setDescription(title);
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningControlGroup);
+};
+
+struct TuningCodeEditor : juce::CodeEditorComponent
+{
+    TuningCodeEditor(juce::CodeDocument &d, juce::CodeTokeniser *t) : CodeEditorComponent(d, t) {}
+    void handleEscapeKey() override { escapeToOverlayWrapper(this); }
+
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        if (Surge::Widgets::handleControlGroupFocusKey(this, key))
+        {
+            return true;
+        }
+
+        return juce::CodeEditorComponent::keyPressed(key);
+    }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningCodeEditor);
+};
+
 class TuningTableListBoxModel : public juce::TableListBoxModel,
                                 public Surge::GUI::SkinConsumingComponent
 {
@@ -91,12 +204,23 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
     }
 
+    double frequencyForRow(int rowNumber) const
+    {
+        if (storage && storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
+        {
+            return MTS_NoteToFrequency(storage->oddsound_mts_client, rowNumber, 0);
+        }
+
+        return tuning.frequencyForMidiNote(rowNumber);
+    }
+
     struct TuningRowComp : juce::Component
     {
         TuningTableListBoxModel &parent;
         TuningRowComp(TuningTableListBoxModel &m) : parent(m) {}
 
         int rowNumber{0}, columnID{0};
+
         void paint(juce::Graphics &g) override
         {
             namespace clr = Colors::TuningOverlay::FrequencyKeyboard;
@@ -186,19 +310,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
                 }
             }
 
-            auto mn = rowNumber;
-            double fr = 0;
-
-            auto storage = parent.storage;
-            const auto &tuning = parent.tuning;
-            if (storage && storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
-            {
-                fr = MTS_NoteToFrequency(storage->oddsound_mts_client, rowNumber, 0);
-            }
-            else
-            {
-                fr = tuning.frequencyForMidiNote(mn);
-            }
+            auto fr = parent.frequencyForRow(rowNumber);
 
             std::string notenum, notename, display;
 
@@ -225,7 +337,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
             {
             case 1:
             {
-                notenum = std::to_string(mn);
+                notenum = std::to_string(rowNumber);
                 notename = noteInScale % 12 == 0
                                ? fmt::format("C{:d}", rowNumber / 12 - parent.mcoff)
                                : "";
@@ -289,6 +401,28 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
     std::bitset<128> notesOn;
     std::unique_ptr<juce::PopupMenu> rmbMenu;
     juce::TableListBox *table{nullptr};
+};
+
+struct TuningTableListBox : juce::TableListBox
+{
+    TuningTableListBox(const juce::String &name, TuningTableListBoxModel *m)
+        : juce::TableListBox(name, m)
+    {
+        setTitle("Tuning Table");
+        setDescription("Tuning Table");
+
+        // Rows are arrow keys, not tab, so the one stop we own stays put and group
+        // navigation is how you leave
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningTableListBox);
 };
 
 class RadialScaleGraph;
@@ -397,7 +531,7 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         g.addTransform(
             juce::AffineTransform::rotation(angle / 50.0 * 2.0 * juce::MathConstants<double>::pi));
 
-        if (isHovered)
+        if (isHovered || hasKeyboardFocus(false))
         {
             g.setColour(skin->getColor(clr::KnobFillHover));
         }
@@ -441,27 +575,179 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         repaint();
     }
 
+    // The highlight follows focus too, and a plain Component does not repaint when it moves.
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        scrollIntoView(this);
+        repaint();
+    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { repaint(); }
+
+    // Opt in to the keyboard, and to a value the reader can read and write.
+    void setupAccessibility(const std::string &label, std::function<double()> get,
+                            std::function<void(double)> set)
+    {
+        onGetValue = std::move(get);
+        onSetValue = std::move(set);
+
+        setTitle(label);
+        setAccessible(true);
+        setWantsKeyboardFocus(true);
+    }
+
+    void notifyValueChanged()
+    {
+        if (auto *h = getAccessibilityHandler())
+        {
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+        }
+    }
+
+    // A reader driven set lands on the same callbacks as the keys, so it needs the guard.
+    void setValueFromAccessibility(double v)
+    {
+        auto sp = juce::Component::SafePointer(this);
+
+        onSetValue(v);
+
+        if (!sp)
+        {
+            return;
+        }
+
+        repaint();
+        notifyValueChanged();
+    }
+
+    struct KnobValue : public juce::AccessibilityValueInterface
+    {
+        explicit KnobValue(InfiniteKnob *k) : knob(k) {}
+
+        bool isReadOnly() const override { return false; }
+        double getCurrentValue() const override { return knob->onGetValue(); }
+        void setValue(double newValue) override { knob->setValueFromAccessibility(newValue); }
+
+        // The tone beside us can read as a ratio, and there is no range to infer from, so
+        // the unit has to be in the string.
+        juce::String getCurrentValueAsString() const override
+        {
+            return fmt::format("{:.2f} cents", getCurrentValue());
+        }
+
+        void setValueAsString(const juce::String &newValue) override
+        {
+            setValue(newValue.getDoubleValue());
+        }
+
+        // A slider announces changes against the range interface, so unbounded cents have
+        // to invent bounds past any usable scale or go unspoken. The step matches the keys.
+        AccessibleValueRange getRange() const override { return {{-maxCents, maxCents}, 1.0}; }
+
+        static constexpr double maxCents{12000.0};
+
+        InfiniteKnob *knob;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KnobValue);
+    };
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<juce::AccessibilityHandler>(
+            *this, juce::AccessibilityRole::slider, juce::AccessibilityActions(),
+            juce::AccessibilityHandler::Interfaces{std::make_unique<KnobValue>(this)});
+    }
+
+    // These callbacks reach setTuning(), which rebuilds the knobs when the tone count
+    // changes, so check we outlived the edit before touching ourselves again.
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+        if (action == Surge::Widgets::Increase || action == Surge::Widgets::Decrease)
+        {
+            auto delta = (action == Surge::Widgets::Increase ? 1.f : -1.f) *
+                         (mod == Surge::Widgets::Fine ? 0.05f : 1.f);
+            auto sp = juce::Component::SafePointer(this);
+
+            angle += delta;
+            onDragDelta(delta);
+
+            if (!sp)
+            {
+                return true;
+            }
+
+            repaint();
+            notifyValueChanged();
+
+            return true;
+        }
+
+        if (action == Surge::Widgets::ToDefault)
+        {
+            auto sp = juce::Component::SafePointer(this);
+
+            onDoubleClick();
+
+            if (!sp)
+            {
+                return true;
+            }
+
+            angle = 0;
+            repaint();
+            notifyValueChanged();
+
+            return true;
+        }
+
+        return false;
+    }
+
     int lastDrag = 0;
     bool isDragging = false;
     bool isPlaying{false};
     float angle;
     std::function<void(float)> onDragDelta = [](float f) {};
     std::function<void()> onDoubleClick = []() {};
+    std::function<double()> onGetValue = []() { return 0.0; };
+    std::function<void(double)> onSetValue = [](double v) {};
     bool enabled = true;
     SurgeStorage *storage{nullptr};
 };
 
 class RadialScaleGraph : public juce::Component,
                          public juce::TextEditor::Listener,
+                         public juce::KeyListener,
                          public Surge::GUI::SkinConsumingComponent,
                          public Surge::GUI::IComponentTagValue::Listener
 {
   public:
+    bool keyPressed(const juce::KeyPress &key, juce::Component *originating) override
+    {
+        return Surge::Widgets::handleControlGroupFocusKey(originating, key);
+    }
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
     RadialScaleGraph(SurgeStorage *s) : storage(s)
     {
+        // The tones and the graph mode are one group, so tab wraps across the pair and
+        // group navigation is how you leave
+        setAccessible(true);
+        setTitle("Polar Editor");
+        setDescription("Polar Editor");
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+
         toneList = std::make_unique<juce::Viewport>();
         toneInterior = std::make_unique<juce::Component>();
         toneList->setViewedComponent(toneInterior.get(), false);
+        toneList->setTitle("Scale Tones");
+        toneList->setDescription("Scale Tones");
         addAndMakeVisible(*toneList);
 
         radialModeKnob = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -470,7 +756,10 @@ class RadialScaleGraph : public juce::Component,
         radialModeKnob->setRows(1);
         radialModeKnob->setColumns(2);
         radialModeKnob->setTag(78676);
+        radialModeKnob->setTitle("Graph Mode");
+        radialModeKnob->setDescription("Graph Mode");
         radialModeKnob->setLabels({"Radial", "Angular"});
+        radialModeKnob->setAccessibleCellLabels({"Radial", "Angular"});
         radialModeKnob->addListener(this);
         addAndMakeVisible(*radialModeKnob);
 
@@ -481,6 +770,20 @@ class RadialScaleGraph : public juce::Component,
     void setStorage(SurgeStorage *s)
     {
         storage = s;
+
+        // The constructor builds these before the overlay has storage, so tell them now.
+        radialModeKnob->setStorage(s);
+
+        if (hideBtn)
+        {
+            hideBtn->setStorage(s);
+        }
+
+        for (const auto &tk : toneKnobs)
+        {
+            tk->storage = s;
+        }
+
         if (storage)
         {
             displayMode = (DisplayMode)Surge::Storage::getUserDefaultValue(
@@ -548,6 +851,21 @@ class RadialScaleGraph : public juce::Component,
                         onScaleRescaledAbsolute(1200.0);
                         selfEditGuard--;
                     };
+                    tk->setupAccessibility(
+                        "Scale Rescale",
+                        [this]() {
+                            return scale.count > 0 ? scale.tones[scale.count - 1].cents : 0.0;
+                        },
+                        [this](double v) {
+                            if (scale.count <= 0)
+                            {
+                                return;
+                            }
+
+                            selfEditGuard++;
+                            onScaleRescaledAbsolute(v);
+                            selfEditGuard--;
+                        });
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
@@ -562,6 +880,11 @@ class RadialScaleGraph : public juce::Component,
                     hideBtn->setLabels({"Hide"});
                     hideBtn->addListener(this);
 
+                    // Masks the tone values on screen only, and a reader speaks them either way, so
+                    // keep it out of both the tab order and the accessibility tree.
+                    hideBtn->setWantsKeyboardFocus(false);
+                    hideBtn->setAccessible(false);
+
                     hideBtn->setBounds(
                         totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m).reduced(3));
 
@@ -569,7 +892,7 @@ class RadialScaleGraph : public juce::Component,
                 }
                 else
                 {
-                    auto te = std::make_unique<juce::TextEditor>("tone");
+                    auto te = std::make_unique<TuningTextEditor>("Tone " + std::to_string(i));
                     te->setBounds(totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m));
                     te->setJustification((juce::Justification::verticallyCentred));
                     if (skin)
@@ -582,11 +905,13 @@ class RadialScaleGraph : public juce::Component,
                     te->addListener(this);
                     te->setSelectAllWhenFocused(true);
 
-                    te->onEscapeKey = [this]() { giveAwayKeyboardFocus(); };
+                    te->onEscapeKey = [t = te.get()]() { escapeToOverlayWrapper(t); };
+                    te->addKeyListener(this);
                     toneInterior->addAndMakeVisible(*te);
                     toneEditors.push_back(std::move(te));
 
                     auto tk = std::make_unique<InfiniteKnob>();
+                    tk->storage = storage;
 
                     tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
                     tk->onDragDelta = [this, i](float f) {
@@ -608,6 +933,22 @@ class RadialScaleGraph : public juce::Component,
                         selfEditGuard--;
                     };
 
+                    tk->setupAccessibility(
+                        "Tone " + std::to_string(i) + " Adjust",
+                        [this, i]() {
+                            return (i >= 1 && i <= scale.count) ? scale.tones[i - 1].cents : 0.0;
+                        },
+                        [this, i](double v) {
+                            if (i < 1 || i > scale.count)
+                            {
+                                return;
+                            }
+
+                            selfEditGuard++;
+                            onToneChanged(i - 1, v);
+                            selfEditGuard--;
+                        });
+
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
@@ -619,11 +960,18 @@ class RadialScaleGraph : public juce::Component,
         for (int i = 0; i < scale.count; ++i)
         {
             auto td = fmt::format("{:.5f}", scale.tones[i].cents);
-            if (scale.tones[i].type == Tunings::Tone::kToneRatio)
+            auto isRatio = scale.tones[i].type == Tunings::Tone::kToneRatio;
+
+            if (isRatio)
             {
                 td = fmt::format("{:d}/{:d}", scale.tones[i].ratio_n, scale.tones[i].ratio_d);
             }
             toneEditors[i]->setText(td, juce::NotificationType::dontSendNotification);
+            toneEditors[i]->setAccessibleUnit(isRatio ? "" : "cents");
+
+            // Announce only the field the user is in. This loop also runs on every frame of a knob
+            // drag.
+            toneEditors[i]->refreshAccessibleName(toneEditors[i]->hasKeyboardFocus(false));
         }
 
         notesOn.clear();
@@ -736,7 +1084,7 @@ class RadialScaleGraph : public juce::Component,
 
     std::unique_ptr<juce::Viewport> toneList;
     std::unique_ptr<juce::Component> toneInterior;
-    std::vector<std::unique_ptr<juce::TextEditor>> toneEditors;
+    std::vector<std::unique_ptr<TuningTextEditor>> toneEditors;
     std::vector<std::unique_ptr<juce::Label>> toneLabels;
     std::vector<std::unique_ptr<InfiniteKnob>> toneKnobs;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> hideBtn, radialModeKnob;
@@ -745,7 +1093,19 @@ class RadialScaleGraph : public juce::Component,
     {
         auto rmh = 14;
         toneList->setBounds(0, 0, usedForSidebar, getHeight() - rmh - 4);
-        radialModeKnob->setBounds(0, getHeight() - rmh - 2, usedForSidebar - 20, rmh);
+
+        auto knobBounds = juce::Rectangle<int>(0, getHeight() - rmh - 2, usedForSidebar - 20, rmh);
+        auto moved = radialModeKnob->getBounds() != knobBounds;
+
+        radialModeKnob->setBounds(knobBounds);
+
+        // setupAccessibility() replaces the per cell overlays, so a cell holding focus is deleted
+        // under the user. Only pay that when they are missing or have really moved.
+        if (radialModeKnob->selectionComponents.empty() ||
+            (moved && !radialModeKnob->hasKeyboardFocus(true)))
+        {
+            radialModeKnob->setupAccessibility();
+        }
     }
 
     std::vector<bool> notesOn;
@@ -1427,6 +1787,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 {
     IntervalMatrix(TuningOverlay *o) : overlay(o)
     {
+        // The matrix is one stop, so tab stays put and group navigation is how you leave.
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+
         viewport = std::make_unique<juce::Viewport>();
         intervalPainter = std::make_unique<IntervalPainter>(this);
         viewport->setViewedComponent(intervalPainter.get(), false);
@@ -1444,12 +1807,26 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     };
     virtual ~IntervalMatrix() = default;
 
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
+    void setModeLabels(const std::string &what, const std::string &expl)
+    {
+        whatLabel->setText(what, juce::NotificationType::dontSendNotification);
+        explLabel->setText(expl, juce::NotificationType::dontSendNotification);
+
+        // The viewport is the only thing here which takes focus, so it names the region.
+        viewport->setTitle(what);
+        viewport->setDescription(expl);
+    }
+
     void setRotationMode()
     {
-        whatLabel->setText("Scale Rotation Intervals",
-                           juce::NotificationType::dontSendNotification);
-        explLabel->setText("If you shift the scale root to note N, show the interval to note M",
-                           juce::NotificationType::dontSendNotification);
+        setModeLabels("Scale Rotation Intervals",
+                      "If you shift the scale root to note N, show the interval to note M");
         intervalPainter->mode = IntervalMatrix::IntervalPainter::ROTATION;
 
         intervalPainter->setSizeFromTuning();
@@ -1458,9 +1835,8 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
     void setTrueKeyboardMode()
     {
-        whatLabel->setText("True Keyboard Display", juce::NotificationType::dontSendNotification);
-        explLabel->setText("Show intervals between any played keys in realtime",
-                           juce::NotificationType::dontSendNotification);
+        setModeLabels("True Keyboard Display",
+                      "Show intervals between any played keys in realtime");
         intervalPainter->mode = IntervalMatrix::IntervalPainter::TRUE_KEYS;
 
         intervalPainter->setSizeFromTuning();
@@ -1469,10 +1845,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
     void setIntervalMode()
     {
-        whatLabel->setText("Interval Between Notes", juce::NotificationType::dontSendNotification);
-        explLabel->setText(
-            "Given any two notes in the loaded scale, show the interval in cents between them",
-            juce::NotificationType::dontSendNotification);
+        setModeLabels(
+            "Interval Between Notes",
+            "Given any two notes in the loaded scale, show the interval in cents between them");
         intervalPainter->mode = IntervalMatrix::IntervalPainter::INTERV;
 
         intervalPainter->setSizeFromTuning();
@@ -1481,11 +1856,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
     void setIntervalRelativeMode()
     {
-        whatLabel->setText("Interval to Equal Division",
-                           juce::NotificationType::dontSendNotification);
-        explLabel->setText("Given any two notes in the loaded scale, show the distance to the "
-                           "equal division interval",
-                           juce::NotificationType::dontSendNotification);
+        setModeLabels("Interval to Equal Division",
+                      "Given any two notes in the loaded scale, show the distance to the "
+                      "equal division interval");
         intervalPainter->mode = IntervalMatrix::IntervalPainter::DIST;
 
         intervalPainter->setSizeFromTuning();
@@ -2241,60 +2614,108 @@ void RadialScaleGraph::textEditorFocusLost(juce::TextEditor &editor)
 struct SCLKBMDisplay : public juce::Component,
                        Surge::GUI::SkinConsumingComponent,
                        juce::TextEditor::Listener,
+                       juce::KeyListener,
                        juce::CodeDocument::Listener
 {
+    bool keyPressed(const juce::KeyPress &key, juce::Component *originating) override
+    {
+        return Surge::Widgets::handleControlGroupFocusKey(originating, key);
+    }
+
+    // Return submits the generator row you are in, the same as pressing its button.
+    void textEditorReturnKeyPressed(juce::TextEditor &editor) override
+    {
+        if (&editor == evenDivOf.get() || &editor == evenDivInto.get())
+        {
+            edoGo->onClick();
+        }
+        else if (&editor == kbmStart.get() || &editor == kbmConstant.get() ||
+                 &editor == kbmFreq.get())
+        {
+            kbmGo->onClick();
+        }
+    }
+
     SCLKBMDisplay(TuningOverlay *o) : overlay(o)
     {
+        auto newGroup = [](juce::Component &parent, const std::string &title) {
+            auto res = std::make_unique<juce::Component>(title);
+            res->setAccessible(true);
+            res->setTitle(title);
+            res->setDescription(title);
+            res->setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+            parent.addAndMakeVisible(*res);
+            return res;
+        };
+
+        auto newControlGroup = [](juce::Component &parent, const std::string &title) {
+            auto res = std::make_unique<TuningControlGroup>(title);
+            parent.addAndMakeVisible(*res);
+            return res;
+        };
+
+        sclGroup = newGroup(*this, "Scala Scale");
+        kbmGroup = newGroup(*this, "Keyboard Mapping");
+
+        // Tab indents inside a code editor, so these rows need a group stop of their own.
+        sclControls = newControlGroup(*sclGroup, "Scale Generator");
+        kbmControls = newControlGroup(*kbmGroup, "Mapping Generator");
+
         sclDocument = std::make_unique<juce::CodeDocument>();
         sclDocument->addListener(this);
         sclTokeniser = std::make_unique<SCLKBMTokeniser>();
-        scl = std::make_unique<juce::CodeEditorComponent>(*sclDocument, sclTokeniser.get());
+        scl = std::make_unique<TuningCodeEditor>(*sclDocument, sclTokeniser.get());
         scl->setLineNumbersShown(false);
         scl->setScrollbarThickness(8);
-        addAndMakeVisible(*scl);
+        scl->setTitle("Scala Scale");
+        scl->setDescription("Scala Scale");
+        sclGroup->addAndMakeVisible(*scl);
 
         kbmDocument = std::make_unique<juce::CodeDocument>();
         kbmDocument->addListener(this);
         kbmTokeniser = std::make_unique<SCLKBMTokeniser>(false);
 
-        kbm = std::make_unique<juce::CodeEditorComponent>(*kbmDocument, kbmTokeniser.get());
+        kbm = std::make_unique<TuningCodeEditor>(*kbmDocument, kbmTokeniser.get());
         kbm->setLineNumbersShown(false);
         kbm->setScrollbarThickness(8);
-        addAndMakeVisible(*kbm);
+        kbm->setTitle("Keyboard Mapping");
+        kbm->setDescription("Keyboard Mapping");
+        kbmGroup->addAndMakeVisible(*kbm);
 
-        auto teProps = [this](const auto &te) {
-            te->setJustification((juce::Justification::verticallyCentred));
-            // te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
-        };
-
-        auto newL = [this](const std::string &s) {
-            auto res = std::make_unique<juce::Label>(s, s);
-            res->setText(s, juce::dontSendNotification);
-            addAndMakeVisible(*res);
+        auto newTE = [this](juce::Component &parent, const std::string &title,
+                            const std::string &initial, const std::string &unit = "") {
+            auto res = std::make_unique<TuningTextEditor>(title, unit);
+            res->setText(initial, juce::dontSendNotification);
+            res->setJustification((juce::Justification::verticallyCentred));
+            parent.addAndMakeVisible(*res);
+            res->addListener(this);
+            res->addKeyListener(this);
+            res->setSelectAllWhenFocused(true);
+            res->onEscapeKey = [t = res.get()]() { escapeToOverlayWrapper(t); };
             return res;
         };
-        evenDivOfL = newL("Divide");
-        evenDivOf = std::make_unique<juce::TextEditor>();
-        teProps(evenDivOf);
-        evenDivOf->setText("2", juce::dontSendNotification);
-        addAndMakeVisible(*evenDivOf);
-        evenDivOf->addListener(this);
-        evenDivOf->setSelectAllWhenFocused(true);
 
-        evenDivIntoL = newL("into");
-        evenDivInto = std::make_unique<juce::TextEditor>();
-        teProps(evenDivInto);
-        evenDivInto->setText("12", juce::dontSendNotification);
-        addAndMakeVisible(*evenDivInto);
-        evenDivInto->addListener(this);
-        evenDivInto->setSelectAllWhenFocused(true);
+        auto newL = [](juce::Component &parent, const std::string &s) {
+            auto res = std::make_unique<juce::Label>(s, s);
+            res->setText(s, juce::dontSendNotification);
+            parent.addAndMakeVisible(*res);
+            return res;
+        };
 
-        evenDivStepsL = newL("steps");
+        evenDivOfL = newL(*sclControls, "Divide");
+        evenDivOf = newTE(*sclControls, "Divide", "2");
+
+        evenDivIntoL = newL(*sclControls, "into");
+        evenDivInto = newTE(*sclControls, "Into Steps", "12");
+
+        evenDivStepsL = newL(*sclControls, "steps");
 
         edoGo = std::make_unique<Surge::Widgets::SelfDrawButton>("Generate");
         edoGo->setStorage(overlay->storage);
         edoGo->setHeightOfOneImage(13);
         edoGo->setSkin(skin, associatedBitmapStore);
+        edoGo->setTitle("Generate Scale");
+        edoGo->setDescription("Generate Scale");
         edoGo->onClick = [this]() {
             auto txt = evenDivOf->getText();
 
@@ -2332,36 +2753,23 @@ struct SCLKBMDisplay : public juce::Component,
                 overlay->storage->reportError(e.what(), "Tuning Error");
             }
         };
-        addAndMakeVisible(*edoGo);
+        sclControls->addAndMakeVisible(*edoGo);
 
-        kbmStartL = newL("Root:");
-        kbmStart = std::make_unique<juce::TextEditor>();
-        teProps(kbmStart);
-        kbmStart->setText("60", juce::dontSendNotification);
-        addAndMakeVisible(*kbmStart);
-        kbmStart->addListener(this);
-        kbmStart->setSelectAllWhenFocused(true);
+        kbmStartL = newL(*kbmControls, "Root:");
+        kbmStart = newTE(*kbmControls, "Root Note", "60");
 
-        kbmConstantL = newL("Constant:");
-        kbmConstant = std::make_unique<juce::TextEditor>();
-        teProps(kbmConstant);
-        kbmConstant->setText("69", juce::dontSendNotification);
-        addAndMakeVisible(*kbmConstant);
-        kbmConstant->addListener(this);
-        kbmConstant->setSelectAllWhenFocused(true);
+        kbmConstantL = newL(*kbmControls, "Constant:");
+        kbmConstant = newTE(*kbmControls, "Constant Note", "69");
 
-        kbmFreqL = newL("Freq:");
-        kbmFreq = std::make_unique<juce::TextEditor>();
-        teProps(kbmFreq);
-        kbmFreq->setText("440", juce::dontSendNotification);
-        addAndMakeVisible(*kbmFreq);
-        kbmFreq->addListener(this);
-        kbmFreq->setSelectAllWhenFocused(true);
+        kbmFreqL = newL(*kbmControls, "Freq:");
+        kbmFreq = newTE(*kbmControls, "Constant Frequency", "440", "Hz");
 
         kbmGo = std::make_unique<Surge::Widgets::SelfDrawButton>("Generate");
         kbmGo->setStorage(overlay->storage);
         kbmGo->setHeightOfOneImage(13);
         kbmGo->setSkin(skin, associatedBitmapStore);
+        kbmGo->setTitle("Generate Mapping");
+        kbmGo->setDescription("Generate Mapping");
         kbmGo->onClick = [this]() {
             auto start = std::atoi(kbmStart->getText().toRawUTF8());
             auto constant = std::atoi(kbmConstant->getText().toRawUTF8());
@@ -2378,7 +2786,7 @@ struct SCLKBMDisplay : public juce::Component,
                 overlay->storage->reportError(e.what(), "Tuning Error");
             }
         };
-        addAndMakeVisible(*kbmGo);
+        kbmControls->addAndMakeVisible(*kbmGo);
     }
 
     struct SCLKBMTokeniser : public juce::CodeTokeniser
@@ -2514,6 +2922,13 @@ struct SCLKBMDisplay : public juce::Component,
 
     Tunings::Tuning tuning;
 
+    // We are built before the overlay has storage, so tell the buttons once it arrives.
+    void setStorage(SurgeStorage *s)
+    {
+        edoGo->setStorage(s);
+        kbmGo->setStorage(s);
+    }
+
     void setTuning(const Tunings::Tuning &t)
     {
         tuning = t;
@@ -2523,17 +2938,33 @@ struct SCLKBMDisplay : public juce::Component,
         setApplyEnabled(false);
     }
 
+    // Apply commits the documents, so compare them rather than reading the button state.
+    bool hasUnappliedEdits() const
+    {
+        return sclDocument->getAllContent().toStdString() != tuning.scale.rawText ||
+               kbmDocument->getAllContent().toStdString() != tuning.keyboardMapping.rawText;
+    }
+
     void resized() override
     {
         auto w = getWidth();
         auto h = getHeight();
+
+        sclGroup->setBounds(0, 0, w / 2, h);
+        kbmGroup->setBounds(w / 2, 0, w - w / 2, h);
+
         auto b = juce::Rectangle<int>(0, 0, w / 2, h).reduced(3, 3).withTrimmedBottom(20);
 
         scl->setBounds(b);
-        kbm->setBounds(b.translated(w / 2, 0));
+        kbm->setBounds(b);
 
-        auto r = juce::Rectangle<int>(0, h - 21, w, 20);
-        auto s = r.withWidth(w / 2).withTrimmedLeft(2);
+        auto r = juce::Rectangle<int>(0, h - 21, w / 2, 20);
+
+        sclControls->setBounds(r);
+        kbmControls->setBounds(r.withWidth(w - w / 2));
+
+        auto row = r.withZeroOrigin();
+        auto s = row.withTrimmedLeft(2);
 
         auto nxt = [&s](int p) {
             auto q = s.withWidth(p);
@@ -2546,9 +2977,9 @@ struct SCLKBMDisplay : public juce::Component,
         evenDivIntoL->setBounds(nxt(30));
         evenDivInto->setBounds(nxt(40));
         evenDivStepsL->setBounds(nxt(30));
-        edoGo->setBounds(nxt(60));
+        edoGo->setBounds(nxt(50));
 
-        s = r.withTrimmedLeft(w / 2 + 2);
+        s = row.withTrimmedLeft(2);
         kbmStartL->setBounds(nxt(30));
         kbmStart->setBounds(nxt(50));
         kbmConstantL->setBounds(nxt(50));
@@ -2584,11 +3015,11 @@ struct SCLKBMDisplay : public juce::Component,
         namespace clr = Colors::TuningOverlay::SCLKBM;
         g.fillAll(skin->getColor(clr::Background));
         g.setColour(skin->getColor(clr::Editor::Border));
-        g.drawRect(scl->getBounds().expanded(1), 2);
-        g.drawRect(kbm->getBounds().expanded(1), 2);
+        g.drawRect(getLocalArea(scl.get(), scl->getLocalBounds()).expanded(1), 2);
+        g.drawRect(getLocalArea(kbm.get(), kbm->getLocalBounds()).expanded(1), 2);
     }
 
-    void textEditorTextChanged(juce::TextEditor &editor) override { setApplyEnabled(true); }
+    // Only the two documents are what Apply commits, so the generator fields leave it alone.
     void textEditorFocusLost(juce::TextEditor &editor) override
     {
         editor.setHighlightedRegion(juce::Range(-1, -1));
@@ -2654,16 +3085,20 @@ struct SCLKBMDisplay : public juce::Component,
     std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
         [](auto a, auto b) {};
 
-    std::unique_ptr<juce::CodeEditorComponent> scl;
-    std::unique_ptr<juce::CodeEditorComponent> kbm;
+    // One half each: the editor plus its generator row, which is its own group stop.
+    std::unique_ptr<juce::Component> sclGroup, kbmGroup;
+    std::unique_ptr<TuningControlGroup> sclControls, kbmControls;
+
+    std::unique_ptr<TuningCodeEditor> scl;
+    std::unique_ptr<TuningCodeEditor> kbm;
     TuningOverlay *overlay{nullptr};
 
     std::unique_ptr<juce::Label> evenDivOfL, evenDivIntoL, evenDivStepsL;
-    std::unique_ptr<juce::TextEditor> evenDivOf, evenDivInto;
+    std::unique_ptr<TuningTextEditor> evenDivOf, evenDivInto;
     std::unique_ptr<Surge::Widgets::SelfDrawButton> edoGo;
 
     std::unique_ptr<juce::Label> kbmStartL, kbmConstantL, kbmFreqL;
-    std::unique_ptr<juce::TextEditor> kbmStart, kbmConstant, kbmFreq;
+    std::unique_ptr<TuningTextEditor> kbmStart, kbmConstant, kbmFreq;
     std::unique_ptr<Surge::Widgets::SelfDrawButton> kbmGo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SCLKBMDisplay);
@@ -2690,6 +3125,12 @@ struct TuningControlArea : public juce::Component,
         setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
     }
 
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
     void resized() override
     {
         if (skin)
@@ -2707,6 +3148,11 @@ struct TuningControlArea : public juce::Component,
         removeAllChildren();
         auto h = getHeight();
 
+        // Nothing calls showEditor() after a rebuild, so its rules for the mode dependent
+        // controls have to be reapplied here
+        auto editMode =
+            overlay->storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode;
+
         {
             int marginPos = xpos + margin;
             int btnWidth = 280;
@@ -2716,12 +3162,17 @@ struct TuningControlArea : public juce::Component,
             selectL->setBounds(xpos, 1, 100, labelHeight);
             addAndMakeVisible(*selectL);
 
+            auto editModes = std::vector<std::string>{"Scala",    "Polar",    "Interval",
+                                                      "To Equal", "Rotation", "True Keys"};
+
             selectS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
 
             selectS->setBounds(btnrect);
             selectS->setStorage(overlay->storage);
-            selectS->setLabels({"Scala", "Polar", "Interval", "To Equal", "Rotation", "True Keys"});
+            selectS->setTitle("Edit Mode");
+            selectS->setDescription("Edit Mode");
+            selectS->setLabels(editModes);
             selectS->addListener(this);
             selectS->setDraggable(true);
             selectS->setTag(tag_select_tab);
@@ -2730,10 +3181,11 @@ struct TuningControlArea : public juce::Component,
             selectS->setColumns(6);
             selectS->setDraggable(true);
             selectS->setSkin(skin, associatedBitmapStore);
-            selectS->setValue(
-                overlay->storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode /
-                5.f);
+            selectS->setValue(editMode / 5.f);
+            selectS->setAccessibleCellLabels(editModes);
+            selectS->setExplicitFocusOrder(10);
             addAndMakeVisible(*selectS);
+            selectS->setupAccessibility();
             xpos += btnWidth + 10;
         }
 
@@ -2746,12 +3198,14 @@ struct TuningControlArea : public juce::Component,
             actionL->setBounds(xpos, 1, 100, labelHeight);
             addAndMakeVisible(*actionL);
 
-            auto ma = [&](const std::string &l, tags t) {
+            auto ma = [&](const std::string &l, tags t, int focusOrder) {
                 auto res = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
                 auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
 
                 res->setBounds(btnrect);
                 res->setStorage(overlay->storage);
+                res->setTitle(l);
+                res->setDescription(l);
                 res->setLabels({l});
                 res->addListener(this);
                 res->setTag(t);
@@ -2761,25 +3215,41 @@ struct TuningControlArea : public juce::Component,
                 res->setDraggable(false);
                 res->setSkin(skin, associatedBitmapStore);
                 res->setValue(0);
+                res->setExplicitFocusOrder(focusOrder);
                 return res;
             };
 
-            savesclS = ma("Save Scale", tag_save_scl);
+            savesclS = ma("Save Scale", tag_save_scl, 20);
             addAndMakeVisible(*savesclS);
             marginPos += btnWidth + 5;
 
-            exportS = ma("Export HTML", tag_export_html);
+            exportS = ma("Export HTML", tag_export_html, 30);
             addAndMakeVisible(*exportS);
             marginPos += btnWidth + 5;
 
-            libraryS = ma("Tuning Library", tag_open_library);
+            libraryS = ma("Tuning Library", tag_open_library, 40);
             addAndMakeVisible(*libraryS);
             marginPos += btnWidth + 5;
 
-            applyS = ma("Apply", tag_apply_sclkbm);
+            applyS = ma("Apply", tag_apply_sclkbm, 50);
             addAndMakeVisible(*applyS);
-            applyS->setEnabled(false);
+            applyS->setEnabled(applyEnabled);
+            applyS->setVisible(editMode == 0);
             xpos += btnWidth + 5;
+        }
+    }
+
+    // rebuild() destroys applyS, so its enabled state has to live out here.
+    bool applyEnabled{false};
+
+    void setApplyEnabled(bool b)
+    {
+        applyEnabled = b;
+
+        if (applyS)
+        {
+            applyS->setEnabled(b);
+            applyS->repaint();
         }
     }
 
@@ -2806,7 +3276,9 @@ struct TuningControlArea : public juce::Component,
         break;
         case tag_save_scl:
         {
-            if (applyS->isEnabled())
+            auto *sck = overlay->sclKbmDisplay.get();
+
+            if (sck && sck->hasUnappliedEdits())
             {
                 overlay->storage->reportError(
                     "You have unapplied changes in your SCL/KBM. Please apply them before saving!",
@@ -2865,20 +3337,28 @@ struct TuningControlArea : public juce::Component,
         }
         break;
         case tag_apply_sclkbm:
+            applySclKbm();
+            break;
+        }
+    }
+
+    // The documents decide whether there is anything to commit, since re-applying identical text
+    // would push an undo entry for nothing.
+    void applySclKbm()
+    {
+        auto *sck = overlay->sclKbmDisplay.get();
+
+        if (sck && sck->hasUnappliedEdits())
         {
-            if (applyS->isEnabled())
-            {
-                if (overlay->storage && overlay->editor)
-                    overlay->editor->undoManager()->pushTuning(overlay->storage->currentTuning);
-                auto *sck = overlay->sclKbmDisplay.get();
-                sck->onTextChanged(sck->sclDocument->getAllContent().toStdString(),
-                                   sck->kbmDocument->getAllContent().toStdString());
-                applyS->setEnabled(false);
-                applyS->repaint();
-            }
+            // onNewSCLKBM pushes the undo entry, the same as it does for the generators
+            sck->onTextChanged(sck->sclDocument->getAllContent().toStdString(),
+                               sck->kbmDocument->getAllContent().toStdString());
         }
-        break;
-        }
+
+        // A failed parse leaves the documents diverged, so ask again rather than assuming
+        // the commit took. Otherwise the close dialog warns about edits the button says
+        // are already applied.
+        setApplyEnabled(sck && sck->hasUnappliedEdits());
     }
 
     std::unique_ptr<juce::Label> selectL, intervalL, actionL;
@@ -2893,11 +3373,7 @@ struct TuningControlArea : public juce::Component,
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningControlArea);
 };
 
-void SCLKBMDisplay::setApplyEnabled(bool b)
-{
-    overlay->controlArea->applyS->setEnabled(b);
-    overlay->controlArea->applyS->repaint();
-}
+void SCLKBMDisplay::setApplyEnabled(bool b) { overlay->controlArea->setApplyEnabled(b); }
 
 TuningOverlay::TuningOverlay()
 {
@@ -2906,7 +3382,7 @@ TuningOverlay::TuningOverlay()
     tuningKeyboardTableModel = std::make_unique<TuningTableListBoxModel>(this);
     tuningKeyboardTableModel->tuningUpdated(tuning);
     tuningKeyboardTable =
-        std::make_unique<juce::TableListBox>("Tuning", tuningKeyboardTableModel.get());
+        std::make_unique<TuningTableListBox>("Tuning", tuningKeyboardTableModel.get());
     tuningKeyboardTableModel->setTableListBox(tuningKeyboardTable.get());
     tuningKeyboardTableModel->setupDefaultHeaders(tuningKeyboardTable.get());
     addAndMakeVisible(*tuningKeyboardTable);
@@ -2949,6 +3425,7 @@ void TuningOverlay::setStorage(SurgeStorage *s)
     storage = s;
     radialScaleGraph->setStorage(s);
     tuningKeyboardTableModel->setStorage(s);
+    sclKbmDisplay->setStorage(s);
     bool isOddsoundOnAsClient =
         storage->oddsound_mts_active_as_client && storage->oddsound_mts_client;
     setMTSMode(isOddsoundOnAsClient);
@@ -3025,6 +3502,46 @@ void TuningOverlay::showEditor(int which)
     {
         storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode = which;
     }
+}
+
+std::optional<std::pair<std::string, std::string>> TuningOverlay::getPreCloseChickenBoxMessage()
+{
+    if (sclKbmDisplay && sclKbmDisplay->hasUnappliedEdits())
+    {
+        return std::make_pair("Close Tuning Editor",
+                              "Do you really want to close the tuning editor? Any "
+                              "changes that were not applied will be lost!");
+    }
+
+    return std::nullopt;
+}
+
+std::vector<juce::Component *> TuningOverlay::getGroupNavigationComponents()
+{
+    // Left to right: the tuning table, the editor pane, then the controls. Scala mode
+    // splits its pane into scale and the kbm halves. The wrapper drops any group
+    // with nothing focusable in it, so the hidden panes and the control area in MTS mode
+    // take care of themselves.
+    auto *table = tuningKeyboardTable.get();
+
+    if (sclKbmDisplay->isVisible())
+    {
+        // Each editor and its generator row stand alone here. Listing the halves instead
+        // would swallow the rows, since a group is matched by focus anywhere beneath it.
+        return {table,
+                sclKbmDisplay->scl.get(),
+                sclKbmDisplay->sclControls.get(),
+                sclKbmDisplay->kbm.get(),
+                sclKbmDisplay->kbmControls.get(),
+                controlArea.get()};
+    }
+
+    if (radialScaleGraph->isVisible())
+    {
+        return {table, radialScaleGraph.get(), controlArea.get()};
+    }
+
+    return {table, intervalMatrix.get(), controlArea.get()};
 }
 
 void TuningOverlay::onToneChanged(int tone, double newCentsValue)
@@ -3115,12 +3632,15 @@ void TuningOverlay::onNewSCLKBM(const std::string &scl, const std::string &kbm)
     if (!storage)
         return;
 
-    editor->undoManager()->pushTuning(storage->currentTuning);
-
     try
     {
         auto s = Tunings::parseSCLData(scl);
         auto k = Tunings::parseKBMData(kbm);
+
+        // Only once the text parses, so a rejected edit leaves no undo entry for a tuning
+        // that never changed. Still before the retune, since undo restores what we replace.
+        editor->undoManager()->pushTuning(storage->currentTuning);
+
         storage->retuneAndRemapToScaleAndMapping(s, k);
         setTuning(storage->currentTuning);
     }
@@ -3210,7 +3730,6 @@ void TuningOverlay::onSkinChanged()
 
     sclKbmDisplay->setSkin(skin, associatedBitmapStore);
     radialScaleGraph->setSkin(skin, associatedBitmapStore);
-    radialScaleGraph->storage = storage;
 
     intervalMatrix->setSkin(skin, associatedBitmapStore);
 

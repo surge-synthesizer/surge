@@ -1060,39 +1060,9 @@ void SurgeCodeEditorComponent::mouseDrag(const juce::MouseEvent &event)
     repaint();
 }
 
-// Hand the control group focus keys to the overlay wrapper, which owns that navigation,
-// before the code editor takes them as text input.
-static bool handleControlGroupFocusKey(juce::Component *from, const juce::KeyPress &key)
-{
-    auto *container = from->findParentComponentOfClass<CodeEditorContainerWithApply>();
-    auto *wrapper = from->findParentComponentOfClass<OverlayWrapper>();
-
-    if (!container || !wrapper)
-    {
-        return false;
-    }
-
-    auto *sge = container->editor;
-
-    if (!sge || !sge->keyMapManager || !sge->getUseKeyboardShortcuts())
-    {
-        return false;
-    }
-
-    auto action = sge->keyMapManager->matches(key);
-
-    if (!action.has_value() || (*action != Surge::GUI::FOCUS_NEXT_CONTROL_GROUP &&
-                                *action != Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP))
-    {
-        return false;
-    }
-
-    return wrapper->keyPressed(key);
-}
-
 bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
 {
-    if (handleControlGroupFocusKey(this, key))
+    if (Surge::Widgets::handleControlGroupFocusKey(this, key))
     {
         return true;
     }

@@ -49,6 +49,7 @@ namespace Overlays
  */
 
 class TuningTableListBoxModel;
+struct TuningTableListBox;
 class SCLKBMDisplay;
 class RadialScaleGraph;
 struct IntervalMatrix;
@@ -101,8 +102,11 @@ struct TuningOverlay : public OverlayComponent,
         return false;
     }
 
+    std::vector<juce::Component *> getGroupNavigationComponents() override;
+    std::optional<std::pair<std::string, std::string>> getPreCloseChickenBoxMessage() override;
+
     std::unique_ptr<TuningTableListBoxModel> tuningKeyboardTableModel;
-    std::unique_ptr<juce::TableListBox> tuningKeyboardTable;
+    std::unique_ptr<TuningTableListBox> tuningKeyboardTable;
 
     std::unique_ptr<TuningControlArea> controlArea;
 
