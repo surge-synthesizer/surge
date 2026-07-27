@@ -79,6 +79,23 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         FX_PARAM
     };
 
+    enum ParamFeatureFlags
+    {
+        kTempoSync = 1U << 0U,
+        kExtended = 1U << 1U,
+        kAbsolute = 1U << 2U,
+        kDeactivated = 1U << 3U
+    };
+
+    enum class ParamKind
+    {
+        Knob,
+        TempoSync,
+        Extended,
+        Absolute,
+        Deactivated
+    };
+
     // Message from OSC input to the audio thread
     struct oscToAudio
     {
@@ -92,6 +109,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         {
         }
     };
+
     sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
     SurgeFX::FxOSC::FXOpenSoundControl oscHandler;
@@ -153,6 +171,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         else
             v = v & ~kTempoSync;
         paramFeatures[i] = v;
+        if (fxTempoSyncParams[i])
+            *(fxTempoSyncParams[i]) = b;
     }
 
     bool getFXParamTempoSync(int i) { return (paramFeatures[i]) & kTempoSync; }
@@ -168,6 +188,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         else
             v = v & ~kExtended;
         paramFeatures[i] = v;
+        if (fxExtendedParams[i])
+            *(fxExtendedParams[i]) = b;
     }
     bool getFXParamExtended(int i) { return paramFeatures[i] & kExtended; }
     void setFXStorageExtended(int i, bool b)
@@ -185,6 +207,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         else
             v = v & ~kAbsolute;
         paramFeatures[i] = v;
+        if (fxAbsolutedParams[i])
+            *(fxAbsolutedParams[i]) = b;
     }
     bool getFXParamAbsolute(int i) { return paramFeatures[i] & kAbsolute; }
     void setFXStorageAbsolute(int i, bool b) { fxstorage->p[fx_param_remap[i]].absolute = b; }
@@ -199,6 +223,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         else
             v = v & ~kDeactivated;
         paramFeatures[i] = v;
+        if (fxDeactivatedParams[i])
+            *(fxDeactivatedParams[i]) = b;
     }
     bool getFXParamDeactivated(int i) { return paramFeatures[i] & kDeactivated; }
     void setFXStorageDeactivated(int i, bool b) { fxstorage->p[fx_param_remap[i]].deactivated = b; }
@@ -212,15 +238,51 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     virtual void parameterValueChanged(int parameterIndex, float newValue) override
     {
         if (supressParameterUpdates)
-            return;
-
-        if (!isUserEditing[parameterIndex])
         {
-            // this order does matter
-            changedParamsValue[parameterIndex] = newValue;
-            changedParams[parameterIndex] = true;
-            triggerAsyncUpdate();
+            return;
         }
+
+        auto kind = paramKindForIndex[parameterIndex];
+        auto slot = paramSlotForIndex[parameterIndex];
+
+        if (kind == ParamKind::Knob)
+        {
+            if (!isUserEditing[slot])
+            {
+                // this order does matter
+                changedParamsValue[slot] = newValue;
+                changedParams[slot] = true;
+                triggerAsyncUpdate();
+            }
+
+            return;
+        }
+
+        bool b = newValue > 0.5f;
+
+        switch (kind)
+        {
+        case ParamKind::TempoSync:
+            setFXParamTempoSync(slot, b);
+            setFXStorageTempoSync(slot, b);
+            break;
+        case ParamKind::Extended:
+            setFXParamExtended(slot, b);
+            setFXStorageExtended(slot, b);
+            break;
+        case ParamKind::Absolute:
+            setFXParamAbsolute(slot, b);
+            setFXStorageAbsolute(slot, b);
+            break;
+        case ParamKind::Deactivated:
+            setFXParamDeactivated(slot, b);
+            setFXStorageDeactivated(slot, b);
+            break;
+        default:
+            break;
+        }
+
+        triggerAsyncUpdate();
     }
 
     virtual void parameterGestureChanged(int parameterIndex, bool gestureStarting) override {}
@@ -290,6 +352,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     // Information about parameter strings
     bool getParamEnabled(int i) { return fxstorage->p[fx_param_remap[i]].ctrltype != ct_none; }
+
     std::string getParamGroup(int i) { return group_names[i]; }
 
     std::string getParamName(int i)
@@ -394,22 +457,26 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     };
 
     //==============================================================================
-    juce::AudioProcessorParameter *fxBaseParams[2 * n_fx_params + 1];
+    // 1 knob + 4 toggles per slot, + fxType
+    static constexpr int totalHostParams = 5 * n_fx_params + 1;
 
-    // These are just copyes of the pointer from above with the cast done to make the code look
-    // nicer
+    juce::AudioProcessorParameter *fxBaseParams[totalHostParams];
+
+    // These are just copies of the pointer above with the cast done for nicer looking code
     typedef FXAudioParameter<juce::AudioParameterFloat, float> float_param_t;
     typedef FXAudioParameter<juce::AudioParameterInt, int> int_param_t;
+    typedef FXAudioParameter<juce::AudioParameterBool, bool> bool_param_t;
+
     float_param_t *fxParams[n_fx_params];
+    bool_param_t *fxTempoSyncParams[n_fx_params];
+    bool_param_t *fxExtendedParams[n_fx_params];
+    bool_param_t *fxAbsolutedParams[n_fx_params];
+    bool_param_t *fxDeactivatedParams[n_fx_params];
     int_param_t *fxType;
 
-    enum ParamFeatureFlags
-    {
-        kTempoSync = 1U << 0U,
-        kExtended = 1U << 1U,
-        kAbsolute = 1U << 2U,
-        kDeactivated = 1U << 3U
-    };
+    ParamKind paramKindForIndex[totalHostParams];
+    int paramSlotForIndex[totalHostParams]; // meaningless for fxType's own entry
+
     std::atomic<int> paramFeatures[n_fx_params];
     std::atomic<bool> changedParams[n_fx_params + 1];
     std::atomic<float> changedParamsValue[n_fx_params + 1];

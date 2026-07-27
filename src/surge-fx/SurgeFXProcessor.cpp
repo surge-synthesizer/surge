@@ -62,6 +62,8 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     fxstorage->return_level.id = -1;
     setupStorageRanges(&(fxstorage->type), &(fxstorage->p[n_fx_params - 1]));
 
+    int nextBaseSlot = 0;
+
     for (int i = 0; i < n_fx_params; ++i)
     {
         std::string lb, nm;
@@ -77,11 +79,44 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         fxParams[i]->getTextToValue = [this, i](const juce::String &s) -> float {
             return getParameterValueForString(i, s.toStdString());
         };
-        fxBaseParams[i] = fxParams[i];
+        fxBaseParams[nextBaseSlot] = fxParams[i];
+        paramKindForIndex[fxParams[i]->getParameterIndex()] = ParamKind::Knob;
+        paramSlotForIndex[fxParams[i]->getParameterIndex()] = i;
+        ++nextBaseSlot;
+
+        auto addToggle = [&](bool_param_t *&dest, const char *tag, ParamKind kind) {
+            auto id = fmt::format("fx_{}_{:d}", tag, i);
+            dest = new bool_param_t(juce::ParameterID(id, 1), nm, false);
+            dest->getTextHandler = [](float f, int len) -> juce::String {
+                return juce::String(f > 0.5f ? "On" : "Off").substring(0, len);
+            };
+            dest->getTextToValue = [](const juce::String &s) -> float {
+                return s.equalsIgnoreCase("on") ? 1.f : 0.f;
+            };
+            addParameter(dest);
+            fxBaseParams[nextBaseSlot] = dest;
+            paramKindForIndex[dest->getParameterIndex()] = kind;
+            paramSlotForIndex[dest->getParameterIndex()] = i;
+            ++nextBaseSlot;
+        };
+
+        int feat = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
+        paramFeatures[i] = feat;
+
+        addToggle(fxTempoSyncParams[i], "temposync", ParamKind::TempoSync);
+        addToggle(fxExtendedParams[i], "extended", ParamKind::Extended);
+        addToggle(fxAbsolutedParams[i], "absoluted", ParamKind::Absolute);
+        addToggle(fxDeactivatedParams[i], "deactivated", ParamKind::Deactivated);
+
+        *(fxTempoSyncParams[i]) = (bool)(feat & kTempoSync);
+        *(fxExtendedParams[i]) = (bool)(feat & kExtended);
+        *(fxAbsolutedParams[i]) = (bool)(feat & kAbsolute);
+        *(fxDeactivatedParams[i]) = (bool)(feat & kDeactivated);
     }
 
     addParameter(fxType = new int_param_t(juce::ParameterID("fxtype", 1), "FX Type", fxt_delay,
                                           n_fx_types - 1, effectNum));
+
     fxType->getTextHandler = [this](float f, int len) -> juce::String {
         auto i = 1 + (int)round(f * (n_fx_types - 2));
         if (i >= 1 && i < n_fx_types)
@@ -96,28 +131,26 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     };
 
     fxType->getTextToValue = [](const juce::String &s) -> float { return 0; };
-    fxBaseParams[n_fx_params] = fxType;
+    fxBaseParams[nextBaseSlot] = fxType;
 
-    for (int i = 0; i < n_fx_params; ++i)
+    // reuse; handled separately below
+    paramKindForIndex[fxType->getParameterIndex()] = ParamKind::Knob;
+    paramSlotForIndex[fxType->getParameterIndex()] = n_fx_params; // sentinel
+
+    for (int i = 0; i < totalHostParams; ++i)
     {
-        // FIXME - is this even used here?!
-        std::string lb, nm;
-        lb = fmt::format("fx_temposync_{:d}", i);
-        nm = fmt::format("Feature Param {:d}", i);
-
-        paramFeatures[i] = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
+        fxBaseParams[i]->addListener(this);
     }
 
     for (int i = 0; i < n_fx_params + 1; ++i)
     {
-        fxBaseParams[i]->addListener(this);
         changedParams[i] = false;
         isUserEditing[i] = false;
-    }
 
-    for (int i = 0; i < n_fx_params; ++i)
-    {
-        wasParamFeatureChanged[i] = false;
+        if (i < n_fx_params)
+        {
+            wasParamFeatureChanged[i] = false;
+        }
     }
 
     paramChangeListener = []() {};
@@ -251,8 +284,11 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                          juce::MidiBuffer &midiMessages)
 {
     audioRunning = true;
+
     if (resettingFx || !surge_effect)
+    {
         return;
+    }
 
     if (oscCheckStartup)
     {
@@ -264,6 +300,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     float thisBPM = 120.0;
     bool havePlayhead{false};
     auto playhead = getPlayHead();
+
     if (playhead)
     {
         juce::AudioPlayHead::CurrentPositionInfo cp;
@@ -722,7 +759,7 @@ void SurgefxAudioProcessor::reorderSurgeParams()
     {
         if (fxstorage->p[fx_param_remap[i]].ctrltype == ct_none)
         {
-            group_names[i] = "-";
+            group_names[i] = "";
         }
         else
         {
@@ -847,12 +884,26 @@ void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
 void SurgefxAudioProcessor::updateJuceParamsFromStorage()
 {
     SupressGuard sg(&supressParameterUpdates);
+
     for (int i = 0; i < n_fx_params; ++i)
     {
+        const auto paramName = fmt::format("{}{}{}", getParamGroup(i),
+                                           getParamGroup(i).empty() ? "" : " ", getParamName(i));
+
         *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
-        fxParams[i]->mutableName = getParamGroup(i) + " " + getParamName(i);
+        fxParams[i]->mutableName = paramName;
+
+        fxTempoSyncParams[i]->mutableName =
+            canTempoSync(i) ? fmt::format("Tempo Sync {}", paramName) : "-";
+        fxExtendedParams[i]->mutableName = canExtend(i) ? fmt::format("Extend {}", paramName) : "-";
+        fxAbsolutedParams[i]->mutableName =
+            canAbsolute(i) ? fmt::format("Absolute {}", paramName) : "-";
+        fxDeactivatedParams[i]->mutableName =
+            canDeactitvate(i) ? fmt::format("Deactivate {}", paramName) : "-";
+
         paramFeatures[i] = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
     }
+
     *(fxType) = effectNum;
 
     for (int i = 0; i < n_fx_params; ++i)
@@ -860,6 +911,7 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
         changedParamsValue[i] = fxstorage->p[fx_param_remap[i]].get_value_f01();
         changedParams[i] = true;
     }
+
     changedParamsValue[n_fx_params] = effectNum;
     changedParams[n_fx_params] = true;
 
