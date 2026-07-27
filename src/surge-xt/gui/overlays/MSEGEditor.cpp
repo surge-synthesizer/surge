@@ -95,12 +95,10 @@ struct MSEGControlRegion : public juce::Component,
         setAccessible(true);
         setTitle("MSEG Settings");
         setDescription("MSEG Settings");
-        setWantsKeyboardFocus(true);
 
-        // Accessibility grouping only. A keyboardFocusContainer here would wall the
-        // widgets off from the overlay's tab order while the region itself never
-        // takes focus, leaving them unreachable by tab.
-        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+        // Accessibility grouping. Tab cycles and wraps in here instead of escaping to the
+        // canvas. Not a tab stop itself, so entering the group lands on a widget.
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
         rebuild();
     };
@@ -108,6 +106,13 @@ struct MSEGControlRegion : public juce::Component,
     std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
 
     void rebuild();
+
+    // One tab stop per switch, on its selected cell.
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
+    }
+
     void valueChanged(Surge::GUI::IComponentTagValue *p) override;
     int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
                                    const juce::ModifierKeys &button,
@@ -4500,14 +4505,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
 bool MSEGControlRegion::keyPressed(const juce::KeyPress &key)
 {
-    if (canvas && canvas->kbdHandler)
+    if (!canvas || !canvas->kbdHandler || !key.getModifiers().isAltDown())
     {
-        if (hasKeyboardFocus(false))
-        {
-            return canvas->kbdHandler->processKey(key);
-        }
+        return false;
     }
-    return false;
+
+    return canvas->kbdHandler->processKey(key);
 }
 
 void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
@@ -5305,7 +5308,7 @@ void MSEGControlRegion::rebuild()
 
     auto makeToggleRow = [&](std::unique_ptr<juce::ToggleButton> &btn,
                              std::unique_ptr<juce::Label> &lbl, const std::string &title, int tag,
-                             int colXOffset, int colWidth) {
+                             int colXOffset, int colWidth, int focusOrder) {
         auto boxRect = juce::Rectangle<int>(xpos + colXOffset, ypos, boxW + 2, boxH);
         auto labelRect =
             juce::Rectangle<int>(xpos + colXOffset + boxW + 1, ypos - 1, colWidth - boxW, rowH);
@@ -5324,6 +5327,7 @@ void MSEGControlRegion::rebuild()
         btn->setDescription(title);
         btn->setBounds(boxRect);
         btn->setAlwaysOnTop(true);
+        btn->setExplicitFocusOrder(focusOrder);
         btn->onClick = [this, tag]() { this->toggleButtonClicked(tag); };
         addAndMakeVisible(*btn);
     };
@@ -5344,9 +5348,9 @@ void MSEGControlRegion::rebuild()
 
         int useColWidth = 40, invertColWidth = segWidth - useColWidth;
 
-        makeToggleRow(deformUseButton, deformUseLabel, "Use", tag_deform_use, 0, useColWidth);
+        makeToggleRow(deformUseButton, deformUseLabel, "Use", tag_deform_use, 0, useColWidth, 90);
         makeToggleRow(deformInvertButton, deformInvertLabel, "Invert", tag_deform_invert,
-                      useColWidth - 3, invertColWidth);
+                      useColWidth - 3, invertColWidth, 100);
 
         xpos += segWidth;
     }
@@ -5370,9 +5374,9 @@ void MSEGControlRegion::rebuild()
         const int filterColWidth = 44, ampColWidth = segWidth - filterColWidth;
 
         makeToggleRow(triggerFilterButton, triggerFilterLabel, "Filter", tag_trigger_filter_eg, 0,
-                      filterColWidth);
+                      filterColWidth, 110);
         makeToggleRow(triggerAmpButton, triggerAmpLabel, "Amp", tag_trigger_amp_eg,
-                      filterColWidth - 1, ampColWidth);
+                      filterColWidth - 1, ampColWidth, 120);
 
         xpos += segWidth;
     }
