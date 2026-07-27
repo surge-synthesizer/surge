@@ -613,6 +613,18 @@ inline void fixupJuceTextEditorAccessibility(const juce::Component &te)
 #endif
 }
 
+/*
+ * Alt/Opt+. and Alt/Opt+, arrive as ordinary text, so an editor takes them as input and the overlay
+ * wrapper which owns that navigation never sees them. Call this first from keyPressed: the wrapper
+ * ignores anything which is not a control group key.
+ */
+inline bool handleControlGroupFocusKey(juce::Component *from, const juce::KeyPress &key)
+{
+    auto *wrapper = from->findParentComponentOfClass<Surge::Overlays::OverlayWrapper>();
+
+    return wrapper && wrapper->keyPressed(key);
+}
+
 struct HasAccessibleSubComponentForFocus
 {
     virtual ~HasAccessibleSubComponentForFocus() = default;
