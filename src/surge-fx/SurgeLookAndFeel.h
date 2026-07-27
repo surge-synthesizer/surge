@@ -333,17 +333,6 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         g.setColour(findColour(SurgeColourIds::orange));
         g.fillRect(juce::Rectangle<float>(0.f, fH - footer, fW, footer));
 
-        const float padding = 4.f * z;
-        const float logoSide = footer - (padding * 2.f);
-
-        juce::Rectangle<float> logoBound{3.f * z, fH - footer + padding, logoSide, logoSide};
-
-        if (surgeLogo != nullptr)
-        {
-            surgeLogo->drawWithin(
-                g, logoBound, juce::RectanglePlacement::xMid | juce::RectanglePlacement::yMid, 1.f);
-        }
-
         g.setColour(juce::Colours::black);
         g.drawLine(0.f, fH - footer, fW, fH - footer, z);
 
