@@ -544,6 +544,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         synth->processAudioThreadOpsWhenAudioEngineUnavailable();
     }
 
+    void loadPatchWithDirtyCheck(std::function<void()> loadAction);
     void loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory = false);
 
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
@@ -968,12 +969,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         NEVER = 100
     };
 
-    // What ticking "Don't ask me again" records: REMEMBER_ANSWER stores the button pressed,
-    // STOP_ASKING runs the action unprompted from then on whichever button was pressed.
+    // What ticking the checkbox does at each call site: RECORDS_ANSWER stores the button pressed
+    // for reuse, DISABLES_CONFIRMATION switches the prompt off.
     enum DontAskAgainMeans
     {
-        REMEMBER_ANSWER,
-        STOP_ASKING
+        RECORDS_ANSWER,
+        DISABLES_CONFIRMATION
     };
 
     // sometimes we need to return focus to a specific component after an Alert dialog is dismissed
@@ -984,8 +985,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,
                                            Surge::Storage::DefaultKey dontAskAgainKey,
                                            std::function<void()> okCallback,
-                                           DontAskAgainMeans dontAskAgainMeans = REMEMBER_ANSWER,
-                                           std::string ynMessage = "Don't ask me again",
+                                           DontAskAgainMeans dontAskAgainMeans,
+                                           const std::string &ynMessage,
                                            AskAgainStates askAgainDefault = DUNNO);
 
   private:

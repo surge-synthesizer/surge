@@ -120,7 +120,6 @@ enum DefaultKey
     LastPatchPath,
 
     PromptToActivateShortcutsOnAccKeypress,
-    PromptToActivateCategoryAndPatchOnKeypress,
 
     TuningPolarGraphMode,
 

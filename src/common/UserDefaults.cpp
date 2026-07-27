@@ -200,9 +200,6 @@ std::string defaultKeyToString(DefaultKey k)
     case PromptToActivateShortcutsOnAccKeypress:
         r = "promptToActivateShortcutsOnAccKeypress";
         break;
-    case PromptToActivateCategoryAndPatchOnKeypress:
-        r = "promptToActivateCategoryAndPatchOnKeypress";
-        break;
     case PromptToLoadOverDirtyPatch:
         r = "promptToLoadOverDirtyPatch";
         break;

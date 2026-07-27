@@ -6015,38 +6015,18 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case KeyboardActions::PREV_PATCH:
             case KeyboardActions::NEXT_PATCH:
             {
-                return promptForOKCancelWithDontAskAgain(
-                    "Confirm Patch Change",
-                    fmt::format("You have used a keyboard shortcut to load another patch,\n"
-                                "which will discard any changes made so far.\n\n"
-                                "Do you want to proceed?"),
-                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress,
-                    [this, action]() {
-                        closeOverlay(SAVE_PATCH);
+                auto insideCategory = Surge::Storage::getUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
 
-                        auto insideCategory = Surge::Storage::getUserDefaultValue(
-                            &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
-
-                        loadPatchWithDirtyCheck(action == KeyboardActions::NEXT_PATCH, false,
-                                                insideCategory);
-                    },
-                    STOP_ASKING);
+                loadPatchWithDirtyCheck(action == KeyboardActions::NEXT_PATCH, false,
+                                        insideCategory);
+                return true;
             }
             case KeyboardActions::PREV_CATEGORY:
             case KeyboardActions::NEXT_CATEGORY:
             {
-                return promptForOKCancelWithDontAskAgain(
-                    "Confirm Category Change",
-                    fmt::format("You have used a keyboard shortcut to select another category,\n"
-                                "which will discard any changes made so far.\n\n"
-                                "Do you want to proceed?"),
-                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress,
-                    [this, action]() {
-                        closeOverlay(SAVE_PATCH);
-
-                        loadPatchWithDirtyCheck(action == KeyboardActions::NEXT_CATEGORY, true);
-                    },
-                    STOP_ASKING);
+                loadPatchWithDirtyCheck(action == KeyboardActions::NEXT_CATEGORY, true);
+                return true;
             }
 
             // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
@@ -6474,7 +6454,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             "\nWould you like to enable it?\n\n"
             "You can change this option later in the Workflow menu.",
             Surge::Storage::DefaultKey::PromptToActivateShortcutsOnAccKeypress,
-            [this]() { toggleUseKeyboardShortcuts(); });
+            [this]() { toggleUseKeyboardShortcuts(); }, RECORDS_ANSWER, "Don't ask me again");
     }
 
     return false;
@@ -6869,13 +6849,16 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
 
 bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     const ::std::string &title, const std::string &msg, Surge::Storage::DefaultKey dontAskAgainKey,
-    std::function<void()> okCallback, DontAskAgainMeans dontAskAgainMeans, std::string ynMessage,
-    AskAgainStates askAgainDef)
+    std::function<void()> okCallback, DontAskAgainMeans dontAskAgainMeans,
+    const std::string &ynMessage, AskAgainStates askAgainDef)
 {
     auto bypassed =
         Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, askAgainDef);
 
-    if (bypassed == NEVER && dontAskAgainMeans == REMEMBER_ANSWER)
+    // Older defaults files can hold NEVER against a DISABLES_CONFIRMATION key, which would
+    // suppress the action entirely. Only RECORDS_ANSWER honours it, so those fall through and
+    // prompt.
+    if (bypassed == NEVER && dontAskAgainMeans == RECORDS_ANSWER)
     {
         return false;
     }
@@ -6902,11 +6885,10 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
         okCallback();
     };
     alert->onCancelForToggleState = [this, dontAskAgainKey, dontAskAgainMeans](bool dontAskAgain) {
-        if (dontAskAgain)
+        // Cancel must not switch the confirmation off.
+        if (dontAskAgain && dontAskAgainMeans == RECORDS_ANSWER)
         {
-            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
-                                                   (dontAskAgainMeans == STOP_ASKING) ? ALWAYS
-                                                                                      : NEVER);
+            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey, NEVER);
         }
     };
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
@@ -6915,7 +6897,7 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     return false;
 }
 
-void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory)
+void SurgeGUIEditor::loadPatchWithDirtyCheck(std::function<void()> loadAction)
 {
     if (synth->storage.getPatch().isDirty)
     {
@@ -6924,20 +6906,22 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
             fmt::format("The currently loaded patch has unsaved changes.\n"
                         "Loading a new patch will discard any such changes.\n\n"
                         "Do you want to proceed?"),
-            Surge::Storage::PromptToLoadOverDirtyPatch,
-            [this, increment, isCategory, insideCategory]() {
-                closeOverlay(SAVE_PATCH);
-
-                synth->jogPatchOrCategory(increment, isCategory, insideCategory);
-            },
-            STOP_ASKING, "Don't ask me again", ALWAYS);
+            Surge::Storage::PromptToLoadOverDirtyPatch, loadAction, DISABLES_CONFIRMATION,
+            "Don't ask me again", ALWAYS);
     }
     else
     {
+        loadAction();
+    }
+}
+
+void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory)
+{
+    loadPatchWithDirtyCheck([this, increment, isCategory, insideCategory]() {
         closeOverlay(SAVE_PATCH);
 
         synth->jogPatchOrCategory(increment, isCategory, insideCategory);
-    }
+    });
 }
 
 void SurgeGUIEditor::enqueueAccessibleAnnouncement(const std::string &s)

@@ -157,6 +157,7 @@ struct PatchSelector : public juce::Component,
 
     void loadPatch(int id);
     void loadPatch(int id, bool fromFavorites);
+    void loadPatchWithDirtyCheck(int id, bool fromFavorites = false);
     void loadInitPatch();
     int sel_id = 0, enqueue_sel_id = 0;
 

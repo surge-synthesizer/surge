@@ -902,7 +902,7 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
         for (auto idx : favs)
         {
             subMenu.addItem(juce::CharPointer_UTF8(storage->patch_list[idx].name.c_str()),
-                            [this, idx]() { this->loadPatch(idx, true); });
+                            [this, idx]() { this->loadPatchWithDirtyCheck(idx, true); });
         }
 
         subMenu.addSeparator();
@@ -918,7 +918,7 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
         for (auto idx : favs)
         {
             p.addItem(juce::CharPointer_UTF8(storage->patch_list[idx].name.c_str()),
-                      [this, idx]() { this->loadPatch(idx, true); });
+                      [this, idx]() { this->loadPatchWithDirtyCheck(idx, true); });
         }
         p.addSeparator();
         p.addItem(Surge::GUI::toOSCase("Export favorites to..."), [this]() { exportFavorites(); });
@@ -1114,7 +1114,7 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
             bool isFav = storage->patch_list[p].isFavorite;
             auto item = juce::PopupMenu::Item(name).setEnabled(true).setTicked(thisCheck).setAction(
-                [this, p]() { this->loadPatch(p); });
+                [this, p]() { this->loadPatchWithDirtyCheck(p); });
 
             if (thisCheck)
                 item.setID(ID_TO_PRESELECT_MENU_ITEMS);
@@ -1195,6 +1195,20 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 }
 
 void PatchSelector::loadPatch(int id) { loadPatch(id, false); }
+
+void PatchSelector::loadPatchWithDirtyCheck(int id, bool fromFavorites)
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge)
+    {
+        sge->loadPatchWithDirtyCheck([this, id, fromFavorites]() { loadPatch(id, fromFavorites); });
+    }
+    else
+    {
+        loadPatch(id, fromFavorites);
+    }
+}
 
 void PatchSelector::loadPatch(int id, bool fromFavorites)
 {
