@@ -196,6 +196,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         "Surge Synth Team", "Surge XT", true);
     userDataPath = getOverridenUserPath();
 
+    bool isFactoryPortable{false};
+    bool isUserPortable{false};
+
 #if MAC
     if (!hasSuppliedDataPath)
     {
@@ -238,6 +241,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
             {
                 datapath = std::move(portable);
                 founddir = true;
+                isFactoryPortable = true;
             }
 
             cp = cp.parent_path();
@@ -279,10 +283,12 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         if (fs::is_directory(portable))
         {
             userDataPath = std::move(portable);
+            isUserPortable = true;
         }
 
         up = up.parent_path();
     }
+
     if (userDataPath.empty())
     {
         userDataPath = calculateStandardUserDataPath(sxt);
@@ -303,6 +309,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
             if (fs::is_directory(portable))
             {
                 datapath = std::move(portable);
+                isFactoryPortable = true;
             }
 
             cp = cp.parent_path();
@@ -333,6 +340,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         if (fs::is_directory(portable))
         {
             userDataPath = std::move(portable);
+            isUserPortable = true;
         }
 
         cp = cp.parent_path();
@@ -355,6 +363,34 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         }
     }
 #endif
+
+    // Canonicalize now, once, so every downstream consumer (PatchDB path keys,
+    // refreshPatchlistAddDir, userDataPath-derived paths, etc.) sees a stable,
+    // symlink-resolved string regardless of which portable-mode symlink (if any)
+    // or install location was used to find it. This matters in particular because
+    // the patch DB caches patches by raw path string (see
+    // PatchDB::readAllPatchPathsWithIdAndModTime), so two different plugin formats
+    // resolving the same real folder through different symlinks would otherwise
+    // produce different cache keys and force a full patch-library rescan.
+    auto canonicalizeIfPresent = [this](fs::path &p, const bool doIt) {
+        if (p.empty() || !doIt)
+        {
+            return;
+        }
+
+        try
+        {
+            p = fs::weakly_canonical(p);
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            // leave p as-is; downstream is_directory/existence checks will
+            // surface any real problem
+        }
+    };
+
+    canonicalizeIfPresent(datapath, isFactoryPortable);
+    canonicalizeIfPresent(userDataPath, isUserPortable);
 
     initializeUserDataPaths();
 
