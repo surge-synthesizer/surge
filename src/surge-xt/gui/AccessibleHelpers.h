@@ -301,6 +301,25 @@ struct OverlayAsAccessibleButtonWithValue : public OverlayAsAccessibleButton<T>
         void press() { button->onPress(mswitch); }
         void showMenu() { button->onMenuKey(mswitch); }
 
+        // Without this the checked state is always false, so a radio button reports itself as
+        // not selected even when it is.
+        juce::AccessibleState getCurrentState() const override
+        {
+            auto state = AccessibilityHandler::getCurrentState();
+
+            if (button->role == juce::AccessibilityRole::radioButton)
+            {
+                state = state.withCheckable();
+
+                if (button->onGetIsChecked(mswitch))
+                {
+                    state = state.withChecked();
+                }
+            }
+
+            return state;
+        }
+
         T *mswitch;
         OverlayAsAccessibleButtonWithValue<T> *button;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAHV);

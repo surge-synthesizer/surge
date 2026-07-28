@@ -4394,7 +4394,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 repaint();
                 controlregion->repaint();
 
-                return controlregion->editMode->accessibleCellLabels[m];
+                return controlregion->editMode->accessibleCellLabels[!m];
             }
             case tag_loop_mode:
             {

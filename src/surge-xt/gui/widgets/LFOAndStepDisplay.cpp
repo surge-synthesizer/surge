@@ -56,17 +56,47 @@ struct TimeB
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
+// One tab stop for the shape selector, landing on the selected shape, the way MultiSwitch
+// stands in for its cells.
+struct LFOTypeAccContainer : OverlayAsAccessibleContainer, HasAccessibleSubComponentForFocus
+{
+    LFOTypeAccContainer(const std::string &desc, LFOAndStepDisplay *o)
+        : OverlayAsAccessibleContainer(desc), owner(o)
+    {
+    }
+
+    juce::Component *getCurrentAccessibleSelectionComponent() override
+    {
+        if (!owner->lfodata)
+        {
+            return nullptr;
+        }
+
+        auto i = owner->lfodata->shape.val.i;
+
+        if (i < 0 || i >= n_lfo_types)
+        {
+            return nullptr;
+        }
+
+        return owner->typeAccOverlays[i].get();
+    }
+
+    LFOAndStepDisplay *owner;
+};
+
 LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
     : juce::Component(), WidgetBaseMixin<LFOAndStepDisplay>(this), guiEditor(e)
 {
     setTitle("LFO Type And Display");
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+    setWantsKeyboardFocus(false);
 
     memset(paramsFromLastDrawCall, 0, sizeof(paramsFromLastDrawCall));
     memset(settingsFromLastDrawCall, 0, sizeof(settingsFromLastDrawCall));
 
-    typeLayer = std::make_unique<OverlayAsAccessibleContainer>("LFO Type");
+    typeLayer = std::make_unique<LFOTypeAccContainer>("LFO Type", this);
     addAndMakeVisible(*typeLayer);
     for (int i = 0; i < n_lfo_types; ++i)
     {
@@ -74,10 +104,16 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
             this, lt_names[i]);
         q->onPress = [this, i](auto *t) { updateShapeTo(i); };
         q->onReturnKey = [this, i](auto *t) {
-            updateShapeTo(i);
+            // Select the shape focus is on, or step to the next one, wrapping at the end.
+            auto n = (i == lfodata->shape.val.i) ? (i + 1) % n_lfo_types : i;
+
+            updateShapeTo(n);
+            Surge::GUI::grabKeyboardFocusIfAllowed(typeAccOverlays[n].get());
+
             return true;
         };
         q->onGetValue = [this, i](auto *t) { return (i == lfodata->shape.val.i) ? 1 : 0; };
+        q->onGetIsChecked = [this, i](auto *t) { return i == lfodata->shape.val.i; };
         typeLayer->addAndMakeVisible(*q);
         typeAccOverlays[i] = std::move(q);
     }
@@ -2560,24 +2596,6 @@ void LFOAndStepDisplay::setupAccessibility()
 
     stepLayer->setVisible(showStepSliders);
 
-    for (int i = 0; i < n_lfo_types; ++i)
-    {
-        auto t = std::string(lt_names[i]);
-        if (i == lfodata->shape.val.i)
-            t += "  active";
-        auto pt = typeAccOverlays[i]->getTitle();
-        typeAccOverlays[i]->setTitle(t);
-        typeAccOverlays[i]->setDescription(t);
-
-        if (t != pt)
-        {
-            if (auto h = typeAccOverlays[i]->getAccessibilityHandler())
-            {
-                h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
-            }
-        }
-    }
-
     for (const auto &s : stepSliderOverlays)
         if (s)
             s->setVisible(showStepSliders);
@@ -2630,7 +2648,45 @@ bool LFOAndStepDisplay::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
-    return false;
+    auto focused = -1;
+
+    for (int i = 0; i < n_lfo_types; ++i)
+    {
+        if (typeAccOverlays[i] && typeAccOverlays[i]->hasKeyboardFocus(false))
+        {
+            focused = i;
+        }
+    }
+
+    if (focused < 0)
+    {
+        return false;
+    }
+
+    auto n = lfodata->shape.val.i;
+
+    switch (action)
+    {
+    case Increase:
+        n = std::clamp(n + 1, 0, n_lfo_types - 1);
+        break;
+    case Decrease:
+        n = std::clamp(n - 1, 0, n_lfo_types - 1);
+        break;
+    case ToMax:
+        n = 0;
+        break;
+    case ToMin:
+        n = n_lfo_types - 1;
+        break;
+    default:
+        return false;
+    }
+
+    updateShapeTo(n);
+    Surge::GUI::grabKeyboardFocusIfAllowed(typeAccOverlays[n].get());
+
+    return true;
 }
 
 void LFOAndStepDisplay::prepareForEdit()
