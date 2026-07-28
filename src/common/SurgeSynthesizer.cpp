@@ -4640,8 +4640,8 @@ void SurgeSynthesizer::process()
 
         if (masterfade < 0.0001f)
         {
-            releaseScene(0);
-            releaseScene(1);
+            stopSound();
+
             approachingAllSoundOff = false;
         }
     }
