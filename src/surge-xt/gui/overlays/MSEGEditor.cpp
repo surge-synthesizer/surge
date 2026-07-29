@@ -495,7 +495,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                         Surge::MSEG::setLoopStart(ms, seg);
                         modelChanged();
-                        repaint();
                     }
 
                     loopDragTime = t;
@@ -563,7 +562,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                         Surge::MSEG::setLoopEnd(ms, seg);
                         modelChanged();
-                        repaint();
                     }
 
                     loopDragTime = t;
@@ -2203,16 +2201,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         {
                             if (event.mods.isShiftDown() && h.associatedSegment >= 0)
                             {
+                                prepareForUndo();
                                 Surge::MSEG::deleteSegment(ms,
                                                            ms->segmentStart[h.associatedSegment]);
+                                pushToUndo();
                             }
                             else
                             {
+                                prepareForUndo();
                                 Surge::MSEG::unsplitSegment(ms, t);
+                                pushToUndo();
                             }
 
                             modelChanged();
-                            repaint();
 
                             return;
                         }
@@ -2220,10 +2221,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     case hotzone::SEGMENT_CONTROL:
                     {
                         // Reset the control point to half segment duration, middle value
+                        prepareForUndo();
                         Surge::MSEG::resetControlPoint(ms, t);
+                        pushToUndo();
 
                         modelChanged();
-                        repaint();
 
                         return;
                     }
@@ -2239,24 +2241,28 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 if (event.mods.isShiftDown())
                 {
+                    prepareForUndo();
                     Surge::MSEG::deleteSegment(ms, t);
+                    pushToUndo();
                 }
                 else
                 {
+                    prepareForUndo();
                     Surge::MSEG::splitSegment(ms, t, v);
+                    pushToUndo();
                 }
 
-                modelChanged();
-                repaint();
+                modelChanged(-1, false, true, t);
 
                 return;
             }
             else
             {
+                prepareForUndo();
                 Surge::MSEG::extendTo(ms, t, v);
+                pushToUndo();
 
-                modelChanged();
-                repaint();
+                modelChanged(-1, false, true, t);
 
                 return;
             }
@@ -2948,7 +2954,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         pushToUndo();
         modelChanged();
-        repaint();
     }
 
     void showCursorAt(const juce::Point<float> &w) { cursorHideOrigin = w.toInt(); }
@@ -3647,7 +3652,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             pushToUndo();
             modelChanged();
-            repaint();
 
             return true;
         };
@@ -4103,22 +4107,35 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     bool holdOffOnModelChanged{false};
 
-    void modelChanged(int activeSegment = -1, bool specialEndpoint = false, bool rchz = true)
+    void modelChanged(int activeSegment = -1, bool specialEndpoint = false,
+                      bool recalcHotzones = true, float editedAtTime = -1.f)
     {
         if (holdOffOnModelChanged)
+        {
             return;
+        }
 
         Surge::MSEG::rebuildCache(ms);
         applyZoomPanConstraints(activeSegment, specialEndpoint);
-        if (rchz)
-            recalcHotZones(mouseDownOrigin); // FIXME
+
+        if (recalcHotzones)
+        {
+            recalcHotZones(mouseDownOrigin);
+        }
+
+        if (editedAtTime >= 0.f && kbdHandler)
+        {
+            kbdHandler->rememberedTime = editedAtTime;
+        }
 
         if (shouldDirty)
         {
             storage->getPatch().isDirty = true;
             tagForUndo();
         }
+
         this->sge->forceLfoDisplayRepaint();
+
         onModelChanged();
 
         kbdHandler->revalidateCursor(!kbdHandler->inFlightEdit);
@@ -4391,7 +4408,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 modelChanged(0, false);
 
-                repaint();
                 controlregion->repaint();
 
                 return controlregion->editMode->accessibleCellLabels[!m];
@@ -4413,7 +4429,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 modelChanged();
 
-                repaint();
                 controlregion->repaint();
 
                 return controlregion->loopMode->accessibleCellLabels[(int)m];
@@ -4533,7 +4548,6 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
         canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
 
         canvas->modelChanged(0, false);
-        canvas->repaint();
 
         repaint();
         break;
@@ -4545,7 +4559,6 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
         int m = floor((val * 2) + 0.1) + 1;
         ms->loopMode = (MSEGStorage::LoopMode)m;
         canvas->modelChanged();
-        canvas->repaint();
         repaint();
         break;
     }
@@ -4924,7 +4937,6 @@ void MSEGControlRegion::toggleButtonClicked(int tag)
 
     canvas->pushToUndo();
     canvas->modelChanged();
-    canvas->repaint();
 }
 
 void MSEGControlRegion::refreshNodeControls()
