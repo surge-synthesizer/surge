@@ -1319,8 +1319,8 @@ void insertBefore(MSEGStorage *ms, float t)
 
 void extendTo(MSEGStorage *ms, float t, float nv)
 {
-    std::cout << "extendTo ENTRY: n_activeSegments=" << ms->n_activeSegments
-              << " loop_start=" << ms->loop_start << " loop_end=" << ms->loop_end << std::endl;
+    // std::cout << "extendTo ENTRY: n_activeSegments=" << ms->n_activeSegments << " loop_start=" <<
+    // ms->loop_start << " loop_end=" << ms->loop_end << std::endl;
 
     if (ms->editMode == MSEGStorage::LFO)
     {
@@ -1352,8 +1352,8 @@ void extendTo(MSEGStorage *ms, float t, float nv)
         }
     }
 
-    std::cout << "extendTo EXIT:  n_activeSegments=" << ms->n_activeSegments
-              << " loop_start=" << ms->loop_start << " loop_end=" << ms->loop_end << std::endl;
+    // std::cout << "extendTo EXIT:  n_activeSegments=" << ms->n_activeSegments
+    //           << " loop_start=" << ms->loop_start << " loop_end=" << ms->loop_end << std::endl;
 
     auto sn = ms->n_activeSegments - 1;
 
