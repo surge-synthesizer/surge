@@ -2541,6 +2541,9 @@ void SurgeStorage::clipboard_paste(
             getPatch().msegs[scene][i] = clipboard_msegs[i];
             getPatch().formulamods[scene][i] = clipboard_formulae[i];
 
+            auto &des = getPatch().dawExtraState.editor;
+            des.clearCodeEditorState(des.formulaEditState[scene][i].codeEditor);
+
             for (int idx = 0; idx < max_lfo_indices; ++idx)
             {
                 strncpy(getPatch().LFOBankLabel[scene][i][idx], clipboard_modulator_names[i][idx],
@@ -2740,6 +2743,9 @@ void SurgeStorage::clipboard_paste(
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
             {
                 getPatch().formulamods[scene][entry] = clipboard_formulae[0];
+
+                auto &des = getPatch().dawExtraState.editor;
+                des.clearCodeEditorState(des.formulaEditState[scene][entry].codeEditor);
             }
 
             for (int idx = 0; idx < max_lfo_indices; ++idx)

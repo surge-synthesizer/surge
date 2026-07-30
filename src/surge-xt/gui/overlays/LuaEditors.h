@@ -297,11 +297,13 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     bool autoCompleteDeclaration(juce::KeyPress keypress, std::string start, std::string end);
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
 
-    DAWExtraStateStorage::EditorState::CodeEditorState *state;
+    DAWExtraStateStorage::EditorState::CodeEditorState *state{nullptr};
 
     void initState(DAWExtraStateStorage::EditorState::CodeEditorState &state);
     void saveState();
     void loadState();
+    void setCodeAndResetPosition(const juce::String &code);
+    void resetPositionToTop();
 
     virtual void setApplyEnabled(bool) {}
 
