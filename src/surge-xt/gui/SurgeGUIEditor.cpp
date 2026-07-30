@@ -2850,6 +2850,10 @@ void SurgeGUIEditor::setFormulaFromUndo(int scene, int lfoid, const FormulaModul
         refresh_mod();
     }
     synth->storage.getPatch().formulamods[scene][lfoid] = val;
+
+    auto &des = synth->storage.getPatch().dawExtraState.editor;
+    des.clearCodeEditorState(des.formulaEditState[scene][lfoid].codeEditor);
+
     Surge::Formula::requestSharedDataWipe(&(synth->storage));
     synth->refresh_editor = true;
     if (auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR))
@@ -3006,6 +3010,8 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
     {
         return;
     }
+
+    synth->storage.getPatch().dawExtraState.editor.clearWTSEStateInScene(scene, osc);
 
     submitWtGenJob(scene, osc, -1, /*retypeToWavetable*/ true);
 }

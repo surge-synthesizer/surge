@@ -2086,6 +2086,33 @@ void CodeEditorContainerWithApply::saveState()
     }
 }
 
+void CodeEditorContainerWithApply::setCodeAndResetPosition(const juce::String &code)
+{
+    // An unchanged reload (a plain editor refresh, say) shouldn't disturb where the user is
+    if (mainDocument->getAllContent() == code)
+    {
+        return;
+    }
+
+    mainDocument->replaceAllContent(code);
+    resetPositionToTop();
+}
+
+void CodeEditorContainerWithApply::resetPositionToTop()
+{
+    mainEditor->moveCaretTo(juce::CodeDocument::Position(mainEditor->getDocument(), 0), false);
+    mainEditor->scrollToLine(0);
+    mainEditor->scrollToColumn(0);
+
+    if (state)
+    {
+        state->scroll = 0;
+        state->caretPosition = 0;
+        state->selectStart = 0;
+        state->selectEnd = 0;
+    }
+}
+
 void CodeEditorContainerWithApply::loadState()
 {
     // restore code editor
@@ -2909,7 +2936,7 @@ void FormulaModulatorEditor::applyCode()
 
 void FormulaModulatorEditor::forceRefresh()
 {
-    mainDocument->replaceAllContent(formulastorage->formulaString);
+    setCodeAndResetPosition(formulastorage->formulaString);
     setApplyEnabled(false);
     editor->repaintFrame();
 }
@@ -4021,12 +4048,11 @@ void WavetableScriptEditor::reloadCodeFromOscData()
 {
     if (osc->wavetable_script.empty())
     {
-        mainDocument->replaceAllContent(
-            Surge::WavetableScript::LuaWTEvaluator::defaultWavetableScript());
+        setCodeAndResetPosition(Surge::WavetableScript::LuaWTEvaluator::defaultWavetableScript());
     }
     else
     {
-        mainDocument->replaceAllContent(osc->wavetable_script);
+        setCodeAndResetPosition(osc->wavetable_script);
     }
 
     controlArea->resolutionN->setIntValue(osc->wavetable_script_res_base);
