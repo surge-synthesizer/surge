@@ -338,6 +338,15 @@ int NumberField::getChangeMultiplier(const juce::MouseEvent &event)
     return 1;
 }
 
+// Announce the text the field actually displays rather than the raw value as a double.
+template <> struct DiscreteAHStringValue<NumberField>
+{
+    static std::string stringValue(NumberField *comp, double ahValue)
+    {
+        return comp->valueToDisplay();
+    }
+};
+
 std::unique_ptr<juce::AccessibilityHandler> NumberField::createAccessibilityHandler()
 {
     return std::make_unique<DiscreteAH<NumberField>>(this);
