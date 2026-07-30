@@ -132,6 +132,20 @@ struct TuningControlGroup : juce::Component
         return std::make_unique<Surge::Widgets::SelectionCollapsingKeyboardFocusTraverser>();
     }
 
+    std::function<void()> onGenerate{nullptr};
+
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        if (onGenerate && key.getModifiers().isCommandDown() &&
+            key.getKeyCode() == juce::KeyPress::returnKey)
+        {
+            onGenerate();
+            return true;
+        }
+
+        return juce::Component::keyPressed(key);
+    }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningControlGroup);
 };
 
@@ -140,10 +154,19 @@ struct TuningCodeEditor : juce::CodeEditorComponent
     TuningCodeEditor(juce::CodeDocument &d, juce::CodeTokeniser *t) : CodeEditorComponent(d, t) {}
     void handleEscapeKey() override { escapeToOverlayWrapper(this); }
 
+    std::function<void()> onApply{nullptr};
+
     bool keyPressed(const juce::KeyPress &key) override
     {
         if (Surge::Widgets::handleControlGroupFocusKey(this, key))
         {
+            return true;
+        }
+
+        if (onApply && key.getModifiers().isCommandDown() &&
+            key.getKeyCode() == juce::KeyPress::returnKey)
+        {
+            onApply();
             return true;
         }
 
@@ -2669,6 +2692,7 @@ struct SCLKBMDisplay : public juce::Component,
         scl->setScrollbarThickness(8);
         scl->setTitle("Scala Scale");
         scl->setDescription("Scala Scale");
+        scl->onApply = [this]() { applyEdits(); };
         sclGroup->addAndMakeVisible(*scl);
 
         kbmDocument = std::make_unique<juce::CodeDocument>();
@@ -2680,6 +2704,7 @@ struct SCLKBMDisplay : public juce::Component,
         kbm->setScrollbarThickness(8);
         kbm->setTitle("Keyboard Mapping");
         kbm->setDescription("Keyboard Mapping");
+        kbm->onApply = [this]() { applyEdits(); };
         kbmGroup->addAndMakeVisible(*kbm);
 
         auto newTE = [this](juce::Component &parent, const std::string &title,
@@ -2754,6 +2779,7 @@ struct SCLKBMDisplay : public juce::Component,
             }
         };
         sclControls->addAndMakeVisible(*edoGo);
+        sclControls->onGenerate = [this]() { edoGo->onClick(); };
 
         kbmStartL = newL(*kbmControls, "Root:");
         kbmStart = newTE(*kbmControls, "Root Note", "60");
@@ -2787,6 +2813,7 @@ struct SCLKBMDisplay : public juce::Component,
             }
         };
         kbmControls->addAndMakeVisible(*kbmGo);
+        kbmControls->onGenerate = [this]() { kbmGo->onClick(); };
     }
 
     struct SCLKBMTokeniser : public juce::CodeTokeniser
@@ -2929,12 +2956,26 @@ struct SCLKBMDisplay : public juce::Component,
         kbmGo->setStorage(s);
     }
 
+    // Restore the caret, so a retune leaves it where the user was editing.
+    static void replaceKeepingCaret(TuningCodeEditor *ed, juce::CodeDocument *doc,
+                                    const std::string &text)
+    {
+        auto pos = ed->getCaretPos();
+        auto line = pos.getLineNumber();
+        auto col = pos.getIndexInLine();
+
+        doc->replaceAllContent(text);
+
+        // The new text can be shorter, but Position clamps to what the document has.
+        ed->moveCaretTo(juce::CodeDocument::Position(*doc, line, col), false);
+    }
+
     void setTuning(const Tunings::Tuning &t)
     {
         tuning = t;
         sclTokeniser->setScale(t.scale);
-        sclDocument->replaceAllContent(t.scale.rawText);
-        kbmDocument->replaceAllContent(t.keyboardMapping.rawText);
+        replaceKeepingCaret(scl.get(), sclDocument.get(), t.scale.rawText);
+        replaceKeepingCaret(kbm.get(), kbmDocument.get(), t.keyboardMapping.rawText);
         setApplyEnabled(false);
     }
 
@@ -3003,6 +3044,7 @@ struct SCLKBMDisplay : public juce::Component,
     }
 
     void setApplyEnabled(bool b);
+    void applyEdits();
 
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override
     {
@@ -3374,6 +3416,8 @@ struct TuningControlArea : public juce::Component,
 };
 
 void SCLKBMDisplay::setApplyEnabled(bool b) { overlay->controlArea->setApplyEnabled(b); }
+
+void SCLKBMDisplay::applyEdits() { overlay->controlArea->applySclKbm(); }
 
 TuningOverlay::TuningOverlay()
 {
