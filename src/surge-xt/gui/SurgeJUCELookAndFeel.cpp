@@ -504,17 +504,11 @@ void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
 
     if (button.isEnabled() && isHighlighted)
     {
-        const auto focusColor = skin->getColor(Colors::Dialog::Button::BackgroundHover);
-
-        g.setColour(focusColor.withAlpha(0.25f));
-        g.fillRoundedRectangle(tickBounds, rectRadius);
-
-        g.setColour(focusColor);
+        g.setColour(skin->getColor(Colors::Dialog::Button::BackgroundHover).withAlpha(0.25f));
+        g.fillRoundedRectangle(tickBounds.reduced(0.5f), rectRadius);
     }
-    else
-    {
-        g.setColour(button.findColour(ToggleButton::tickColourId));
-    }
+
+    g.setColour(button.findColour(ToggleButton::tickColourId));
 
     if (!button.isEnabled())
         g.setOpacity(0.5f);
