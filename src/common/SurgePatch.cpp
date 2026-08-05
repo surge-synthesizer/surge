@@ -1724,6 +1724,13 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     for (auto &i : fx)
     {
         i.type.val.i = fxt_off;
+
+        // Effects aren't respawned until update_controls() runs after this unstream, so clear the
+        // types. Otherwise the previous effect's ranges and flags clamp the incoming values.
+        for (auto &p : i.p)
+        {
+            p.set_type(ct_none);
+        }
     }
 
     TiXmlElement *patch = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("patch"));
