@@ -1039,8 +1039,8 @@ void SurgeGUIEditor::idle()
         {
             if (synth->vu_peak[0] != vu->getValue())
             {
-                vuInvalid = true;
                 vu->setValue(synth->vu_peak[0]);
+                vuInvalid = true;
             }
 
             if (synth->vu_peak[1] != vu->getValueR())
@@ -1069,11 +1069,11 @@ void SurgeGUIEditor::idle()
                 {
                     vuInvalid = true;
                 }
+            }
 
-                if (vuInvalid)
-                {
-                    vu->repaint();
-                }
+            if (vuInvalid)
+            {
+                vu->repaint();
             }
         }
 
