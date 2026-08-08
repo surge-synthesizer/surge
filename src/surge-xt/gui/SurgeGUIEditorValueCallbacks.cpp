@@ -2109,11 +2109,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         }
                         else if (p->ctrlgroup == cg_LFO)
                         {
-                            if (a >= ms_lfo1 && a <= ms_lfo1 + n_lfos_voice)
+                            if (a >= ms_lfo1 && a < ms_lfo1 + n_lfos_voice)
                             {
                                 prefix = "Voice LFO " + std::to_string(a - ms_lfo1 + 1);
                             }
-                            else if (a >= ms_slfo1 && a <= ms_slfo1 + n_lfos_scene)
+                            else if (a >= ms_slfo1 && a < ms_slfo1 + n_lfos_scene)
                             {
                                 prefix = "Scene LFO " + std::to_string(a - ms_slfo1 + 1);
                             }
