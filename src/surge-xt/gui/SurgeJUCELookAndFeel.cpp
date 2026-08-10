@@ -499,28 +499,45 @@ void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
     juce::Rectangle<float> tickBounds(2.f, ((float)button.getHeight() - tickWidth) * 0.5f,
                                       tickWidth, tickWidth);
 
-    const auto isHighlighted =
-        shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown || button.hasKeyboardFocus(false);
-
-    if (button.isEnabled() && isHighlighted)
+    if (button.hasKeyboardFocus(false))
     {
-        g.setColour(skin->getColor(Colors::Dialog::Button::BackgroundHover).withAlpha(0.25f));
-        g.fillRoundedRectangle(tickBounds.reduced(0.5f), rectRadius);
+        g.setColour(skin->getColor(Colors::Dialog::Button::BackgroundHover));
+    }
+    else
+    {
+        g.setColour(skin->getColor(Colors::Dialog::Button::Text));
     }
 
-    g.setColour(button.findColour(ToggleButton::tickColourId));
-
     if (!button.isEnabled())
+    {
         g.setOpacity(0.5f);
+    }
 
     g.drawRoundedRectangle(tickBounds, rectRadius, 1.0f);
 
-    g.setColour(button.findColour(ToggleButton::tickColourId).withAlpha(0.666f));
+    g.setOpacity(0.f);
 
     if (button.getToggleState())
-        g.fillRoundedRectangle(tickBounds.reduced(2.f), rectRadius * 0.5f);
+    {
+        g.setColour(skin->getColor(Colors::Dialog::Button::Text));
+    }
 
-    g.setColour(button.findColour(ToggleButton::textColourId));
+    if (shouldDrawButtonAsHighlighted)
+    {
+        if (button.getToggleState())
+            g.setColour(skin->getColor(Colors::Dialog::Button::BackgroundPressed));
+        else
+            g.setColour(skin->getColor(Colors::Dialog::Button::BackgroundHover));
+    }
+
+    if (!button.isEnabled())
+    {
+        g.setOpacity(0.5f);
+    }
+
+    g.fillRoundedRectangle(tickBounds.reduced(2.f), rectRadius * 0.5f);
+
+    g.setColour(skin->getColor(Colors::Dialog::Button::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
 
     g.drawFittedText(
