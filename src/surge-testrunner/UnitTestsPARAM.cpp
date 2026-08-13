@@ -26,6 +26,7 @@
 
 #include "HeadlessUtils.h"
 #include "Player.h"
+#include "UnitConversions.h"
 
 #include "catch2/catch_amalgamated.hpp"
 
@@ -71,5 +72,76 @@ TEST_CASE("Param String Inversion", "[param]")
          }
       }
 #endif
+    }
+}
+
+TEST_CASE("Type-in Is Locale Independent", "[param]")
+{
+    // Users type the decimal separator their keyboard and locale give them.
+    // Whichever one it is, the fractional part must survive the parse rather
+    // than being silently truncated. See issue #7574.
+    SECTION("Both Decimal Separators Parse")
+    {
+        for (const auto &l : {"de_DE.UTF-8", "pl_PL.UTF-8", "hr_HR.UTF-8", "C"})
+        {
+            // not every locale is installed on every machine, so skip silently
+            try
+            {
+                std::locale::global(std::locale(l));
+            }
+            catch (const std::runtime_error &)
+            {
+                continue;
+            }
+
+            INFO("locale " << l);
+
+            REQUIRE(clocalestr_to_double("0.5") == Approx(0.5));
+            REQUIRE(clocalestr_to_double("0,5") == Approx(0.5));
+            REQUIRE(clocalestr_to_double("-12.75") == Approx(-12.75));
+            REQUIRE(clocalestr_to_double("-12,75") == Approx(-12.75));
+
+            // trailing units are ignored, as with atof
+            REQUIRE(clocalestr_to_double("3.5 dB") == Approx(3.5));
+
+            bool parsed{true};
+            REQUIRE(clocalestr_to_double("not a number", &parsed) == Approx(0.0));
+            REQUIRE(!parsed);
+
+            clocalestr_to_double("1.25", &parsed);
+            REQUIRE(parsed);
+        }
+
+        std::locale::global(std::locale::classic());
+    }
+
+    SECTION("Parameter Type-In Keeps The Fraction")
+    {
+        for (const auto &l : {"de_DE.UTF-8", "pl_PL.UTF-8", "C"})
+        {
+            try
+            {
+                std::locale::global(std::locale(l));
+            }
+            catch (const std::runtime_error &)
+            {
+                continue;
+            }
+
+            INFO("locale " << l);
+
+            Parameter p;
+            p.set_type(ct_decibel);
+
+            for (const auto &t : {"-6.5", "-6,5"})
+            {
+                INFO("typein " << t);
+                std::string errMsg;
+                REQUIRE(p.set_value_from_string(t, errMsg));
+                REQUIRE(p.val.f == Approx(-6.5f).margin(0.001));
+            }
+        }
+
+        std::locale::global(std::locale::classic());
     }
 }

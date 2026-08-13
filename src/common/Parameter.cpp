@@ -4789,7 +4789,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                     ++strip;
                 }
 
-                ni = (std::atof(strip) * 8) - 1;
+                ni = (clocalestr_to_double(strip) * 8) - 1;
                 factor = 8;
                 offset = 1;
 
@@ -4833,20 +4833,18 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             }
             else if (extend_range)
             {
-                try
+                bool parsed{false};
+                auto sv = clocalestr_to_double(s.c_str(), &parsed);
+
+                if (parsed)
                 {
-                    ni = std::round(std::stof(s) * 100);
+                    ni = std::round(sv * 100);
                     factor = 100;
                 }
-                catch (const std::invalid_argument &)
+                else
                 {
                     // set value of ni out of range on invalid input
                     ni = val_min.i - 1;
-                }
-                catch (const std::out_of_range &)
-                {
-                    // likewise for out of range input
-                    ni = val_min.i - 2;
                 }
             }
         }
@@ -4918,7 +4916,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         return true;
     }
 
-    auto nv = std::atof(s.c_str());
+    auto nv = clocalestr_to_double(s.c_str());
 
     switch (displayType)
     {
@@ -5037,7 +5035,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
             if (std::regex_search(s, m, r))
             {
-                nv = std::atof(m[1].str().c_str()) * .001f;
+                nv = clocalestr_to_double(m[1].str().c_str()) * .001f;
             }
         }
 
@@ -5178,8 +5176,8 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
             if ((slp = strchr(strip, '/')) != nullptr)
             {
-                float num = std::atof(strip);
-                float den = std::atof(slp + 1);
+                float num = clocalestr_to_double(strip);
+                float den = clocalestr_to_double(slp + 1);
 
                 if (den == 0)
                 {
@@ -5192,7 +5190,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             }
             else
             {
-                nv = std::atof(strip);
+                nv = clocalestr_to_double(strip);
             }
 
             if (extend_range)
@@ -5268,7 +5266,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     errMsg = "Input is out of bounds!";
     valid = true;
 
-    float mv = std::atof(s.c_str());
+    float mv = clocalestr_to_double(s.c_str());
 
     switch (displayType)
     {
@@ -5401,7 +5399,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         {
             if (s[0] == 'N' || s[0] == 'C' || s[0] == 'n' || s[0] == 'c')
             {
-                auto mv = (float)std::atof(s.c_str() + 1);
+                auto mv = (float)clocalestr_to_double(s.c_str() + 1);
 
                 if (s[0] == 'C' || s[0] == 'c')
                 {
@@ -5517,7 +5515,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
         auto av = amp_to_db(val.f);
 
-        auto d = (float)std::atof(s.c_str());
+        auto d = (float)clocalestr_to_double(s.c_str());
         auto mv = powf(2.0, (d / 18.0 + av / 18.0)) - val.f;
         auto range = (get_extended(val_max.f) - get_extended(val_min.f));
         auto rmv = mv / range;
@@ -5589,7 +5587,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
         if (absolute)
         {
-            auto dfreq = std::atof(q.c_str());
+            auto dfreq = clocalestr_to_double(q.c_str());
             float bpv = (val.f - 16.0) / 16.0;
             float mul = 69;
             float note = 69 + mul * bpv;
@@ -5624,8 +5622,8 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
             if ((slp = strchr(strip, '/')) != nullptr)
             {
-                float num = std::atof(strip);
-                float den = std::atof(slp + 1);
+                float num = clocalestr_to_double(strip);
+                float den = clocalestr_to_double(slp + 1);
 
                 if (den == 0)
                 {
@@ -5640,7 +5638,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
             }
             else
             {
-                mv = std::atof(strip);
+                mv = clocalestr_to_double(strip);
             }
 
             // Normalized value
@@ -5657,7 +5655,8 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
             return res / 32;
         }
 
-        auto mv = (float)std::atof(q.c_str()) / (get_extended(val_max.f) - get_extended(val_min.f));
+        auto mv = (float)clocalestr_to_double(q.c_str()) /
+                  (get_extended(val_max.f) - get_extended(val_min.f));
 
         if (mv < -1 || mv > 1)
         {
@@ -5669,7 +5668,8 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     default:
     {
         // This works in all the linear cases so we need to handle fewer above than we'd think
-        auto mv = (float)std::atof(s.c_str()) / (get_extended(val_max.f) - get_extended(val_min.f));
+        auto mv = (float)clocalestr_to_double(s.c_str()) /
+                  (get_extended(val_max.f) - get_extended(val_min.f));
 
         if (mv < -1 || mv > 1)
         {
