@@ -494,15 +494,20 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
                         int g = 0;
                         if (pchild->QueryIntAttribute("group", &g) == TIXML_SUCCESS)
                         {
-                            std::string help_url = pchild->Attribute("help_url");
+                            // Attribute returns null for one that isn't present, and
+                            // an entry can carry its group without carrying a URL
+                            const char *hu = pchild->Attribute("help_url");
+                            std::string help_url = hu ? hu : "";
                             if (help_url.size() > 0)
                                 helpURL_controlgroup[g] = help_url;
                         }
                     }
                     else if (strcmp(pchild->Value(), "param") == 0)
                     {
-                        std::string id = pchild->Attribute("id");
-                        std::string help_url = pchild->Attribute("help_url");
+                        const char *idA = pchild->Attribute("id");
+                        const char *huA = pchild->Attribute("help_url");
+                        std::string id = idA ? idA : "";
+                        std::string help_url = huA ? huA : "";
                         int t = 0;
                         if (help_url.size() > 0)
                         {
@@ -519,8 +524,10 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
                     }
                     else if (strcmp(pchild->Value(), "special") == 0)
                     {
-                        std::string id = pchild->Attribute("id");
-                        std::string help_url = pchild->Attribute("help_url");
+                        const char *idA = pchild->Attribute("id");
+                        const char *huA = pchild->Attribute("help_url");
+                        std::string id = idA ? idA : "";
+                        std::string help_url = huA ? huA : "";
                         if (help_url.size() > 0)
                         {
                             helpURL_specials[id] = help_url;
