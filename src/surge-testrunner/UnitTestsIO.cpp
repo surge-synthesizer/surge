@@ -939,8 +939,7 @@ TEST_CASE("XML Direct", "[io]")
         surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
 
         auto &ec = surge->storage.getPatch().scene[0].osc[0].extraConfig;
-        REQUIRE(ec.nData >= 0);
-        REQUIRE(ec.nData <= (int)OscillatorStorage::ExtraConfigurationData::max_config);
+        REQUIRE(ec.nData == (int)OscillatorStorage::ExtraConfigurationData::max_config);
     }
 
     SECTION("extraoscdata with a negative extra_n")
@@ -952,7 +951,40 @@ TEST_CASE("XML Direct", "[io]")
         surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
 
         auto &ec = surge->storage.getPatch().scene[0].osc[0].extraConfig;
-        REQUIRE(ec.nData >= 0);
+        REQUIRE(ec.nData == 0);
+    }
+
+    SECTION("msegs with out of range scene and index")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><msegs>"
+                         "<mseg scene=\"99\" i=\"99\"/><mseg scene=\"-1\" i=\"-1\"/>"
+                         "</msegs></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("an out of range mseg scene or index did not write outside the patch");
+    }
+
+    SECTION("formulae with out of range scene and index")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><formulae>"
+                         "<formula scene=\"99\" i=\"99\"/><formula scene=\"-1\" i=\"-1\"/>"
+                         "</formulae></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("an out of range formula scene or index did not write outside the patch");
+    }
+
+    SECTION("lfo bank labels with out of range indices or no value")
+    {
+        // three indices and the label text all come from the file
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><lfobanklabels>"
+                         "<label scene=\"99\" lfo=\"99\" idx=\"99\" v=\"x\"/>"
+                         "<label scene=\"-1\" lfo=\"-1\" idx=\"-1\" v=\"x\"/>"
+                         "<label scene=\"0\" lfo=\"0\" idx=\"0\"/>"
+                         "</lfobanklabels></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("out of range label indices and a missing value were both discarded");
     }
 
     SECTION("extraoscdata with out of range scene and osc")
