@@ -2778,6 +2778,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 int sos = std::atoi(lkid->Attribute("osc"));
                 int ssc = std::atoi(lkid->Attribute("scene"));
 
+                // These index scene[n_scenes] and osc[n_oscs] and they come
+                // straight out of the file, so a patch naming a scene or
+                // oscillator we don't have would write outside the patch.
+                if (sos < 0 || sos >= n_oscs || ssc < 0 || ssc >= n_scenes)
+                {
+                    continue;
+                }
+
                 if (lkid->Attribute("wavetable_display_name"))
                 {
                     scene[ssc].osc[sos].wavetable_display_name =
@@ -2828,7 +2836,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                 if (lkid->QueryIntAttribute("extra_n", &ti) == TIXML_SUCCESS)
                 {
-                    ec->nData = ti;
+                    // extra_n is the bound for the writes below and it comes from
+                    // the file, so it has to be held inside the array it indexes.
+                    ec->nData = std::max(
+                        0,
+                        std::min(ti, (int)OscillatorStorage::ExtraConfigurationData::max_config));
 
                     for (int qq = 0; qq < ec->nData; ++qq)
                     {

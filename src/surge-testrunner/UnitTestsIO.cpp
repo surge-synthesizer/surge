@@ -926,4 +926,45 @@ TEST_CASE("XML Direct", "[io]")
         surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
         REQUIRE(surge->storage.getPatch().tags.size() == 2);
     }
+
+    SECTION("extraoscdata with an oversized extra_n")
+    {
+        // extra_n is the loop bound for writes into a fixed max_config array and
+        // it arrives from the file, so a patch could ask us to write far past the
+        // end of it. Patches get shared and downloaded, so opening one is enough.
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><extraoscdata>"
+                         "<od osc=\"0\" scene=\"0\" extra_n=\"100000\"/>"
+                         "</extraoscdata></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+
+        auto &ec = surge->storage.getPatch().scene[0].osc[0].extraConfig;
+        REQUIRE(ec.nData >= 0);
+        REQUIRE(ec.nData <= (int)OscillatorStorage::ExtraConfigurationData::max_config);
+    }
+
+    SECTION("extraoscdata with a negative extra_n")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><extraoscdata>"
+                         "<od osc=\"0\" scene=\"0\" extra_n=\"-5\"/>"
+                         "</extraoscdata></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+
+        auto &ec = surge->storage.getPatch().scene[0].osc[0].extraConfig;
+        REQUIRE(ec.nData >= 0);
+    }
+
+    SECTION("extraoscdata with out of range scene and osc")
+    {
+        // scene and osc index fixed arrays of n_scenes and n_oscs, and both come
+        // from the file without being checked against those bounds.
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><extraoscdata>"
+                         "<od osc=\"99\" scene=\"99\" extra_n=\"1\"/>"
+                         "<od osc=\"-1\" scene=\"-1\" extra_n=\"1\"/>"
+                         "</extraoscdata></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("an out of range scene or osc index did not write outside the patch");
+    }
 }
