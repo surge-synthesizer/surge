@@ -1814,8 +1814,16 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
             while (tag)
             {
-                std::string tagName = tag->Attribute("tag");
-                tags.emplace_back(tagName);
+                // Attribute returns null when it isn't there, and patches arrive
+                // from other people, so a <tag/> without one would build a
+                // std::string from nullptr rather than simply having no name.
+                const char *tagName = tag->Attribute("tag");
+
+                if (tagName)
+                {
+                    tags.emplace_back(tagName);
+                }
+
                 tag = TINYXML_SAFE_TO_ELEMENT(tag->NextSiblingElement("tag"));
             }
         }

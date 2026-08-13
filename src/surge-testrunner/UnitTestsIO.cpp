@@ -904,4 +904,26 @@ TEST_CASE("XML Direct", "[io]")
         std::string test{"<patch><parameters/></patch>"};
         surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
     }
+
+    SECTION("Tag without its attribute")
+    {
+        // TiXmlElement::Attribute returns null for an attribute that isn't there,
+        // so a <tag/> carrying no tag built a std::string from nullptr. Patches
+        // come from other people, so this is reachable by opening one.
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><meta><tags><tag/></tags></meta></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        REQUIRE(surge->storage.getPatch().tags.empty());
+    }
+
+    SECTION("Tags mixing named and unnamed")
+    {
+        // one malformed entry shouldn't cost the patch its other tags
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><meta><tags>"
+                         "<tag tag=\"bass\"/><tag/><tag tag=\"lead\"/>"
+                         "</tags></meta></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        REQUIRE(surge->storage.getPatch().tags.size() == 2);
+    }
 }
