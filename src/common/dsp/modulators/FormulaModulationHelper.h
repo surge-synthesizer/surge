@@ -56,7 +56,7 @@ using Surge::LuaSupport::sharedTableName;
 
 struct EvaluatorState
 {
-    bool released;
+    bool released{false};
     char funcName[TXT_SIZE];
     char funcNameInit[TXT_SIZE];
     char stateName[TXT_SIZE];
@@ -80,7 +80,7 @@ struct EvaluatorState
     int lfo_id{0};
 
     // voice features
-    bool isVoice, mpeenabled;
+    bool isVoice{false}, mpeenabled{false};
     int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
     int64_t voiceOrderAtCreate{1L};
     float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0}, tunedkey{0};
