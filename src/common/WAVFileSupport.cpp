@@ -27,6 +27,7 @@
 #include <sstream>
 #include <cerrno>
 #include <cstring>
+#include <algorithm>
 
 #include "filesystem/import.h"
 
@@ -79,7 +80,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         return false;
     }
 
-    if (!four_chars(riff, 'R', 'I', 'F', 'F') && !four_chars(wav, 'W', 'A', 'V', 'E'))
+    // Both of these have to hold. A RIFF container which is not a WAVE - an AVI or a
+    // WebP, say - shares the outer header, and with an && here it walked on into the
+    // chunk loop and could load as a wavetable.
+    if (!four_chars(riff, 'R', 'I', 'F', 'F') || !four_chars(wav, 'W', 'A', 'V', 'E'))
     {
         std::ostringstream oss;
         oss << "'" << fn << "' is not a standard RIFF/WAVE file. Header is: " << riff[0] << riff[1]
@@ -94,6 +98,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
     unsigned short blockAlign{0}, bitsPerSample{0};
 
     // Result of data read
+    bool hasFMT = false;
     bool hasSMPL = false;
     bool hasCLM = false;
     bool hasCUE = false;
@@ -135,6 +140,13 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         std::cout << "\'  sz = " << cs << std::endl;
 #endif
 
+        // cs is a 32 bit quantity read from the file, so a corrupt or hostile chunk can
+        // claim a size we cannot represent as an int. Stop rather than malloc it.
+        if (cs < 0)
+        {
+            break;
+        }
+
         tbr += 8 + cs;
 
         char *data = (char *)malloc(cs);
@@ -147,8 +159,25 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
             break;
         }
 
+        // Each branch below reads a fixed number of bytes out of the chunk, but the size
+        // it was allocated with came from the file. Nothing guarantees the two agree, so
+        // check the chunk is big enough before reading the fields out of it.
         if (four_chars(chunkType, 'f', 'm', 't', ' '))
         {
+            if (cs < 16)
+            {
+                free(data);
+
+                std::ostringstream oss;
+                oss << "'" << fn << "' has a format chunk of only " << cs
+                    << " bytes, which is too short to describe a WAV file.";
+                reportError(oss.str(), uitag);
+
+                return false;
+            }
+
+            hasFMT = true;
+
             char *dp = data;
             audioFormat = pl_short(dp);
             dp += 2; // 1 is PCM; 3 is IEEE Float
@@ -171,8 +200,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
             free(data);
 
             // Do a format check here to bail out
+            // numChannels is part of this check because the data chunk divides by it
             if (!((((audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16)) ||
-                   ((audioFormat == 3 /* IEEE_FLOAT */) && (bitsPerSample == 32)))))
+                   ((audioFormat == 3 /* IEEE_FLOAT */) && (bitsPerSample == 32))) &&
+                  numChannels > 0))
             {
                 std::string formname = "Unknown (" + std::to_string(audioFormat) + ")";
 
@@ -196,7 +227,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         {
             // These all begin '<!>dddd' where d is 2048 it seems
             char *dp = data + 3;
-            if (four_chars(dp, '2', '0', '4', '8'))
+            if (cs >= 7 && four_chars(dp, '2', '0', '4', '8'))
             {
                 // 2048 CLM detected
                 hasCLM = true;
@@ -214,28 +245,41 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         }
         else if (four_chars(chunkType, 's', 'r', 'g', 'e'))
         {
-            hasSRGE = true;
-            char *dp = data;
-            int version = pl_int(dp);
-            dp += 4;
-            srgeLEN = pl_int(dp);
+            if (cs >= 8)
+            {
+                hasSRGE = true;
+                char *dp = data;
+                int version = pl_int(dp);
+                dp += 4;
+                srgeLEN = pl_int(dp);
+            }
             free(data);
         }
         else if (four_chars(chunkType, 's', 'r', 'g', 'o'))
         {
-            hasSRGO = true;
-            char *dp = data;
-            int version = pl_int(dp);
-            dp += 4;
-            srgeLEN = pl_int(dp);
+            if (cs >= 8)
+            {
+                hasSRGO = true;
+                char *dp = data;
+                int version = pl_int(dp);
+                dp += 4;
+                srgeLEN = pl_int(dp);
+            }
             free(data);
         }
         else if (four_chars(chunkType, 'c', 'u', 'e', ' '))
         {
             char *dp = data;
-            int numCues = pl_int(dp);
+            int numCues = cs >= 4 ? pl_int(dp) : 0;
 
             dp += 4;
+
+            // Each cue point is six 32 bit words, and the count is read from the file,
+            // so trust the chunk's own size over the count it declares.
+            const int cuesInChunk = cs >= 4 ? (cs - 4) / 24 : 0;
+
+            if (numCues < 0 || numCues > cuesInChunk)
+                numCues = cuesInChunk;
 
             std::vector<int> chunkStarts;
 
@@ -279,17 +323,16 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         {
             datasz = cs;
 
-            // Both of these divide, and both come from the fmt chunk - or from
-            // nowhere at all if a file has a data chunk without one. The format
-            // check above only runs inside the fmt branch, so it never sees that
-            // case.
-            if (bitsPerSample == 0 || numChannels == 0)
+            // This divides by two values which only the format chunk sets. The format
+            // check runs inside that branch, so a file whose data chunk arrives without
+            // one has never had them validated at all.
+            if (!hasFMT)
             {
                 std::ostringstream oss;
 
-                oss << "'" << fn << "' declares a data chunk we cannot size. The file reports "
-                    << bitsPerSample << " bits per sample across " << numChannels
-                    << " channels, which is not a WAV Surge XT can read.";
+                oss << "'" << fn
+                    << "' has a data chunk but no format chunk to describe it, so it is not a "
+                       "WAV file Surge XT can read.";
                 reportError(oss.str(), uitag);
                 free(data);
 
@@ -302,11 +345,19 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         else if (four_chars(chunkType, 'w', 't', 'm', 'd'))
         {
             datasz = cs;
-            metadata = std::string(data);
+            // data is not null terminated - it is exactly the bytes the chunk declared -
+            // so bound the string by the chunk rather than reading to the first null
+            metadata = std::string(data, std::find(data, data + cs, 0));
             free(data);
         }
         else if (four_chars(chunkType, 's', 'm', 'p', 'l'))
         {
+            if (cs < 36)
+            {
+                free(data);
+                continue;
+            }
+
             char *dp = data;
             unsigned int samplechunk[9];
 
@@ -336,7 +387,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
                 // FIXME
             }
 
-            for (int i = 0; i < nloops && i < 1; ++i)
+            // the loop record which follows the 36 byte header is another six words
+            for (int i = 0; i < nloops && i < 1 && cs >= 60; ++i)
             {
                 unsigned int loopdata[6];
 
@@ -370,6 +422,21 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
 
             free(data);
         }
+    }
+
+    // A WAVE with no format chunk is not a WAV we can read, whether or not it also
+    // carried any data. Say so here rather than falling through to the loop point
+    // diagnostics, which would blame the metadata for a malformed file.
+    if (!hasFMT)
+    {
+        std::ostringstream oss;
+        oss << "'" << fn << "' contains no format chunk, so it is not a readable WAV file.";
+        reportError(oss.str(), uitag);
+
+        if (wavdata)
+            free(wavdata);
+
+        return false;
     }
 
 #if WAV_STDOUT_INFO
