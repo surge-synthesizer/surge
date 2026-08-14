@@ -28,6 +28,7 @@
 #include <string>
 #include <cstring>
 #include <fmt/core.h>
+#include "sst/basic-blocks/mechanics/string-ops.h"
 #include <fmt/format.h>
 
 static float env_phasemulti = 1000 / 44100.f;
@@ -74,38 +75,17 @@ inline std::string float_to_clocalestr(float value)
  */
 inline double clocalestr_to_double(const char *s, bool *parsed)
 {
-    if (parsed)
-    {
-        *parsed = false;
-    }
-
-    if (!s)
-    {
-        return 0.0;
-    }
-
-    std::string t{s};
-    std::replace(t.begin(), t.end(), ',', '.');
-
-    // strtod is LC_NUMERIC-dependent, so parse through a classic-locale stream
-    std::istringstream is{t};
-    is.imbue(std::locale::classic());
-
-    double res{0.0};
-    is >> res;
-
-    if (is.fail())
-    {
-        // match atof, which returns 0 for input that isn't a number
-        return 0.0;
-    }
+    // sst-basic-blocks owns the parsing now; this just adapts the shape the
+    // type-in call sites here expect - a double plus a did-it-parse flag, with
+    // zero for input that isn't a number, which is what std::atof used to give.
+    const auto v = sst::basic_blocks::mechanics::parseNumber(s);
 
     if (parsed)
     {
-        *parsed = true;
+        *parsed = v.has_value();
     }
 
-    return res;
+    return v.value_or(0.0);
 }
 
 inline double clocalestr_to_double(const char *s) { return clocalestr_to_double(s, nullptr); }
