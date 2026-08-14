@@ -83,6 +83,57 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     }
 }
 
+TEST_CASE("WAV with a zero channel count", "[io]")
+{
+    // datasamples = cs * 8 / bitsPerSample / numChannels, and numChannels comes
+    // straight out of the fmt chunk. The format check validates audioFormat and
+    // bitsPerSample but never the channel count, so a file claiming zero channels
+    // reaches an integer divide by zero. WAVs are downloaded, so this is reachable
+    // by importing one.
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto le16 = [](std::ostream &o, uint16_t v) {
+        o.put((char)(v & 0xFF));
+        o.put((char)((v >> 8) & 0xFF));
+    };
+    auto le32 = [](std::ostream &o, uint32_t v) {
+        for (int i = 0; i < 4; ++i)
+            o.put((char)((v >> (8 * i)) & 0xFF));
+    };
+
+    auto f = fs::temp_directory_path() / "surge_wav_zero_channels.wav";
+    {
+        std::ofstream o(f, std::ios::binary);
+        const uint32_t dataBytes = 16;
+        o.write("RIFF", 4);
+        le32(o, 4 + 8 + 16 + 8 + dataBytes);
+        o.write("WAVE", 4);
+
+        o.write("fmt ", 4);
+        le32(o, 16);
+        le16(o, 3);     // IEEE float - passes the format check
+        le16(o, 0);     // numChannels = 0  <-- never validated
+        le32(o, 44100); // sampleRate
+        le32(o, 44100 * 4);
+        le16(o, 4);  // blockAlign
+        le16(o, 32); // bitsPerSample = 32, passes with format 3
+
+        o.write("data", 4);
+        le32(o, dataBytes);
+        for (uint32_t i = 0; i < dataBytes; ++i)
+            o.put(0);
+    }
+
+    auto *wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
+    std::string md;
+    bool loaded{true};
+    REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wav_portable(path_to_string(f), wt, md));
+    // a file we cannot size should be refused, not sized to zero and carried on with
+    REQUIRE(!loaded);
+    fs::remove(f);
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);

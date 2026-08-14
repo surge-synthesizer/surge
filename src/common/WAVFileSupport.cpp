@@ -91,7 +91,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
     // WAV HEADER
     unsigned short audioFormat, numChannels{1};
     unsigned int sampleRate, byteRate;
-    unsigned short blockAlign, bitsPerSample;
+    unsigned short blockAlign{0}, bitsPerSample{0};
 
     // Result of data read
     bool hasSMPL = false;
@@ -278,6 +278,24 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         else if (four_chars(chunkType, 'd', 'a', 't', 'a'))
         {
             datasz = cs;
+
+            // Both of these divide, and both come from the fmt chunk - or from
+            // nowhere at all if a file has a data chunk without one. The format
+            // check above only runs inside the fmt branch, so it never sees that
+            // case.
+            if (bitsPerSample == 0 || numChannels == 0)
+            {
+                std::ostringstream oss;
+
+                oss << "'" << fn << "' declares a data chunk we cannot size. The file reports "
+                    << bitsPerSample << " bits per sample across " << numChannels
+                    << " channels, which is not a WAV Surge XT can read.";
+                reportError(oss.str(), uitag);
+                free(data);
+
+                return false;
+            }
+
             datasamples = cs * 8 / bitsPerSample / numChannels;
             wavdata = data;
         }
