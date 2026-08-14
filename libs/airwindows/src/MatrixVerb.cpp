@@ -69,23 +69,26 @@ MatrixVerb::MatrixVerb(audioMasterCallback audioMaster) :
 	depthG = 0.002146;
 	depthH = 0.002088;
 	//the individual vibrato rates for the delays
-	vibAL = rand()*-2147483647;
-	vibBL = rand()*-2147483647;
-	vibCL = rand()*-2147483647;
-	vibDL = rand()*-2147483647;
-	vibEL = rand()*-2147483647;
-	vibFL = rand()*-2147483647;
-	vibGL = rand()*-2147483647;
-	vibHL = rand()*-2147483647;
+	//rand() * -2147483647 is an int multiply which overflows for any rand()
+	//above 1, and signed overflow is undefined. 2147483649u is -2147483647
+	//as unsigned, so this wraps identically but is defined.
+	vibAL = (int)(rand() * 2147483649u);
+	vibBL = (int)(rand() * 2147483649u);
+	vibCL = (int)(rand() * 2147483649u);
+	vibDL = (int)(rand() * 2147483649u);
+	vibEL = (int)(rand() * 2147483649u);
+	vibFL = (int)(rand() * 2147483649u);
+	vibGL = (int)(rand() * 2147483649u);
+	vibHL = (int)(rand() * 2147483649u);
 	
-	vibAR = rand()*-2147483647;
-	vibBR = rand()*-2147483647;
-	vibCR = rand()*-2147483647;
-	vibDR = rand()*-2147483647;
-	vibER = rand()*-2147483647;
-	vibFR = rand()*-2147483647;
-	vibGR = rand()*-2147483647;
-	vibHR = rand()*-2147483647;
+	vibAR = (int)(rand() * 2147483649u);
+	vibBR = (int)(rand() * 2147483649u);
+	vibCR = (int)(rand() * 2147483649u);
+	vibDR = (int)(rand() * 2147483649u);
+	vibER = (int)(rand() * 2147483649u);
+	vibFR = (int)(rand() * 2147483649u);
+	vibGR = (int)(rand() * 2147483649u);
+	vibHR = (int)(rand() * 2147483649u);
 	
 	
 	A = 1.0;
