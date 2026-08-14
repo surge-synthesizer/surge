@@ -2778,6 +2778,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 int sos = std::atoi(lkid->Attribute("osc"));
                 int ssc = std::atoi(lkid->Attribute("scene"));
 
+                // These index scene[n_scenes] and osc[n_oscs] and they come
+                // straight out of the file, so a patch naming a scene or
+                // oscillator we don't have would write outside the patch.
+                if (!within_range(0, ssc, n_scenes - 1) || !within_range(0, sos, n_oscs - 1))
+                {
+                    continue;
+                }
+
                 if (lkid->Attribute("wavetable_display_name"))
                 {
                     scene[ssc].osc[sos].wavetable_display_name =
@@ -2828,7 +2836,10 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                 if (lkid->QueryIntAttribute("extra_n", &ti) == TIXML_SUCCESS)
                 {
-                    ec->nData = ti;
+                    // extra_n is the bound for the writes below and it comes from
+                    // the file, so it has to be held inside the array it indexes.
+                    ec->nData = limit_range(
+                        ti, 0, (int)OscillatorStorage::ExtraConfigurationData::max_config);
 
                     for (int qq = 0; qq < ec->nData; ++qq)
                     {
@@ -2944,6 +2955,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             mi = v;
         }
 
+        if (!within_range(0, sc, n_scenes - 1) || !within_range(0, mi, n_lfos - 1))
+        {
+            p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("mseg"));
+            continue;
+        }
+
         auto *ms = &(msegs[sc][mi]);
 
         msegFromXMLElement(ms, p, userPrefRestoreMSEGFromPatch);
@@ -2994,6 +3011,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         if (p->QueryIntAttribute("i", &v) == TIXML_SUCCESS)
         {
             mi = v;
+        }
+
+        if (!within_range(0, sc, n_scenes - 1) || !within_range(0, mi, n_lfos - 1))
+        {
+            p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("formula"));
+            continue;
         }
 
         auto *fs = &(formulamods[sc][mi]);
@@ -3098,11 +3121,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             int lfo, idx, scene;
 
+            const char *lv = lb->Attribute("v");
+
             if (lb->QueryIntAttribute("lfo", &lfo) == TIXML_SUCCESS &&
                 lb->QueryIntAttribute("idx", &idx) == TIXML_SUCCESS &&
-                lb->QueryIntAttribute("scene", &scene) == TIXML_SUCCESS)
-                strxcpy(LFOBankLabel[scene][lfo][idx], lb->Attribute("v"),
-                        CUSTOM_CONTROLLER_LABEL_SIZE);
+                lb->QueryIntAttribute("scene", &scene) == TIXML_SUCCESS && lv &&
+                within_range(0, scene, n_scenes - 1) && within_range(0, lfo, n_lfos - 1) &&
+                within_range(0, idx, max_lfo_indices - 1))
+                strxcpy(LFOBankLabel[scene][lfo][idx], lv, CUSTOM_CONTROLLER_LABEL_SIZE);
             lb = TINYXML_SAFE_TO_ELEMENT(lb->NextSibling("label"));
         }
     }
