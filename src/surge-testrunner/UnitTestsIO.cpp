@@ -132,6 +132,71 @@ TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
     }
 }
 
+TEST_CASE("Truncated patches are refused before they are read", "[io]")
+{
+    // patch_header is tag[4] + xmlsize + wtsize[2][3], 32 bytes, but load_patch only
+    // required datasize > 4 before reading all of it - and the reads endian swap in
+    // place, so they write to the caller's buffer too. Patches arrive as .fxp files
+    // and as DAW session state, so every one of these is reachable input.
+    auto build = [](size_t sz, uint32_t xmlsize, uint32_t wt00) {
+        char *b = (char *)malloc(sz);
+
+        memset(b, 0, sz);
+        memcpy(b, "sub3", 4);
+
+        for (int i = 0; i < 4 && (size_t)(4 + i) < sz; ++i)
+            b[4 + i] = (char)((xmlsize >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 4 && (size_t)(8 + i) < sz; ++i)
+            b[8 + i] = (char)((wt00 >> (8 * i)) & 0xFF);
+
+        return b;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    SECTION("a patch shorter than its own header")
+    {
+        char *b = build(8, 0, 0);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, 8, false));
+        free(b);
+    }
+
+    SECTION("a wavetable header sitting exactly at the end")
+    {
+        // xmlsize of 0 leaves dr on end, which the old start-pointer check allowed
+        char *b = build(32, 0, 64);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, 32, false));
+        free(b);
+    }
+
+    SECTION("a wavetable header whose frames are not present")
+    {
+        // BuildWT sizes its copy from the header's own counts, not from wtsize, so a
+        // header claiming 4096 samples reads 16k out of a buffer holding 16 bytes
+        const size_t sz = 32 + 12 + 16;
+        char *b = build(sz, 0, 12 + 16);
+        char *w = b + 32;
+
+        memcpy(w, "vawt", 4);
+
+        uint32_t nsamples = 4096;
+        uint16_t ntables = 1, flags = 0;
+
+        for (int i = 0; i < 4; ++i)
+            w[4 + i] = (char)((nsamples >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 2; ++i)
+            w[8 + i] = (char)((ntables >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 2; ++i)
+            w[10 + i] = (char)((flags >> (8 * i)) & 0xFF);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, (int)sz, false));
+        free(b);
+    }
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
