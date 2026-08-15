@@ -83,6 +83,50 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     }
 }
 
+TEST_CASE("A wavetable of non finite samples loads", "[io]")
+{
+    // float2i15_block converted each sample to int and clamped the result, so a
+    // wavetable carrying a NaN or an infinity converted it to int first, which is
+    // undefined. Wavetables are downloaded, and the bit patterns are trivially
+    // reachable - any four bytes of 0x7F800000 or 0x7FC00000 in the sample data.
+    auto f = fs::temp_directory_path() / "surge_wt_nonfinite.wt";
+    const uint32_t nSamples = 2048;
+    const uint16_t nTables = 1;
+    {
+        std::ofstream o(f, std::ios::binary);
+        o.write("vawt", 4);
+        for (int i = 0; i < 4; ++i)
+            o.put((char)((nSamples >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((nTables >> (8 * i)) & 0xFF));
+        o.put(0);
+        o.put(0); // flags: float samples
+
+        const uint32_t bits[] = {0x7F800000u /* +inf */, 0xFF800000u /* -inf */,
+                                 0x7FC00000u /* NaN */, 0x3F000000u /* 0.5 */};
+
+        for (uint32_t i = 0; i < nSamples; ++i)
+        {
+            uint32_t b = bits[i % 4];
+
+            for (int k = 0; k < 4; ++k)
+                o.put((char)((b >> (8 * k)) & 0xFF));
+        }
+    }
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
+    std::string md;
+    bool loaded{false};
+
+    REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+    REQUIRE(loaded);
+    REQUIRE(wt->size == (int)nSamples);
+    fs::remove(f);
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);

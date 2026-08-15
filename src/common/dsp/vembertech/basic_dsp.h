@@ -41,7 +41,16 @@ inline void float2i15_block(float *f, short *s, int n)
 {
     for (int i = 0; i < n; i++)
     {
-        s[i] = (short)(int)limit_range((int)((float)f[i] * 16384.f), -16384, 16383);
+        // f can be the sample data of a wavetable read off disk, so it can hold a NaN
+        // or an infinity, and converting either of those to int is undefined. The
+        // limit_range cannot help where it was: it ran on the result of the conversion,
+        // so the conversion had already happened. Bound the value while it is still a
+        // float, and say the NaN case explicitly since a NaN compares false against
+        // every bound. For finite values this produces what it always did.
+        const float v = f[i] * 16384.f;
+        const float c = (v != v) ? 0.f : limit_range(v, -16384.f, 16383.f);
+
+        s[i] = (short)(int)c;
     }
 }
 
