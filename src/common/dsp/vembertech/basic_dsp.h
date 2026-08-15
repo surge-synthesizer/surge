@@ -41,9 +41,7 @@ inline void float2i15_block(float *f, short *s, int n)
 {
     for (int i = 0; i < n; i++)
     {
-        const float v = f[i] * 16384.f;
-
-        s[i] = (short)(int)limit_range(v, -16384.f, 16383.f);
+        s[i] = (short)(int)limit_range((int)((float)f[i] * 16384.f), -16384, 16383);
     }
 }
 

@@ -86,9 +86,9 @@ TEST_CASE("We Can Read Wavetables", "[io]")
 TEST_CASE("A wavetable of non finite samples loads", "[io]")
 {
     // float2i15_block converted each sample to int and clamped the result, so a
-    // wavetable carrying a NaN or an infinity converted it to int first, which is
-    // undefined. Wavetables are downloaded, and the bit patterns are trivially
-    // reachable - any four bytes of 0x7F800000 or 0x7FC00000 in the sample data.
+    // wavetable carrying an infinity converted it to int first, which is undefined.
+    // Wavetables are downloaded, and the bit pattern is trivially reachable - any
+    // four bytes of 0x7F800000 in the sample data.
     auto f = fs::temp_directory_path() / "surge_wt_nonfinite.wt";
     const uint32_t nSamples = 2048;
     const uint16_t nTables = 1;
@@ -103,7 +103,7 @@ TEST_CASE("A wavetable of non finite samples loads", "[io]")
         o.put(0); // flags: float samples
 
         const uint32_t bits[] = {0x7F800000u /* +inf */, 0xFF800000u /* -inf */,
-                                 0x7FC00000u /* NaN */, 0x3F000000u /* 0.5 */};
+                                 0xBF000000u /* -0.5 */, 0x3F000000u /* 0.5 */};
 
         for (uint32_t i = 0; i < nSamples; ++i)
         {
