@@ -83,6 +83,39 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     }
 }
 
+TEST_CASE("Arbitrary block storage does not trust its declared size", "[io]")
+{
+    // The decompressed size in a zstd frame header is a claim, not a measurement, and
+    // load_arbitrary_block_storage sized its buffer from it directly. DynArray
+    // constructs its elements, so an absurd claim touches the pages rather than just
+    // reserving them and the process is killed - there is no bad_alloc to catch.
+    // Patches arrive as .fxp files and as DAW session state.
+    auto frameClaiming = [](uint64_t claimed) {
+        std::vector<unsigned char> f{0x28, 0xB5, 0x2F, 0xFD}; // zstd magic
+        f.push_back(0xE0);                                    // single segment, 8 byte size field
+
+        for (int i = 0; i < 8; ++i)
+            f.push_back((unsigned char)((claimed >> (8 * i)) & 0xFF));
+
+        for (unsigned char c : {0x09, 0x00, 0x00}) // one raw block, last, one byte
+            f.push_back(c);
+        f.push_back(0x41);
+
+        return f;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    // ~17.6 TB. The largest block the factory patches produce is about 3.6 MB.
+    auto f = frameClaiming(0x0000100000000000ULL);
+    unsigned int consumed{1};
+
+    REQUIRE_NOTHROW(consumed =
+                        surge->storage.getPatch().load_arbitrary_block_storage(f.data(), f.size()));
+    REQUIRE(consumed == 0);
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
