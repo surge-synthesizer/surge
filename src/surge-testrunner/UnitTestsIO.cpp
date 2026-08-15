@@ -83,6 +83,55 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     }
 }
 
+TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
+{
+    // A .wt header is tag[4], n_samples (uint32), n_tables (uint16), flags (uint16),
+    // packed. BuildWT rejects counts beyond max_wtable_size / max_subtables, but the
+    // buffer is sized from those same counts and allocated before it ever gets there,
+    // so a header claiming the maximum of each asks for hundreds of terabytes.
+    auto writeWt = [](const std::string &name, uint32_t nSamples, uint16_t nTables,
+                      uint16_t flags) {
+        auto p = fs::temp_directory_path() / name;
+        std::ofstream o(p, std::ios::binary);
+
+        o.write("vawt", 4);
+        for (int i = 0; i < 4; ++i)
+            o.put((char)((nSamples >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((nTables >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((flags >> (8 * i)) & 0xFF));
+
+        return p;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
+    std::string md;
+
+    SECTION("a float wavetable claiming the maximum of both counts")
+    {
+        auto f = writeWt("surge_wt_huge_f32.wt", 0x7FFFFFFF, 0x7FFF, 0);
+        bool loaded{true};
+
+        REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+        REQUIRE(!loaded);
+        fs::remove(f);
+    }
+
+    SECTION("the same header on the int16 path")
+    {
+        auto f = writeWt("surge_wt_huge_i16.wt", 0x7FFFFFFF, 0x7FFF, wtf_int16);
+        bool loaded{true};
+
+        REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+        REQUIRE(!loaded);
+        fs::remove(f);
+    }
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
