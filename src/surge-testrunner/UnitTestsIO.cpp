@@ -85,10 +85,7 @@ TEST_CASE("We Can Read Wavetables", "[io]")
 
 TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
 {
-    // A .wt header is tag[4], n_samples (uint32), n_tables (uint16), flags (uint16),
-    // packed. BuildWT rejects counts beyond max_wtable_size / max_subtables, but the
-    // buffer is sized from those same counts and allocated before it ever gets there,
-    // so a header claiming the maximum of each asks for hundreds of terabytes.
+    // the buffer is sized from the header counts, so range check them first
     auto writeWt = [](const std::string &name, uint32_t nSamples, uint16_t nTables,
                       uint16_t flags) {
         auto p = fs::temp_directory_path() / name;
@@ -134,10 +131,7 @@ TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
 
 TEST_CASE("Truncated patches are refused before they are read", "[io]")
 {
-    // patch_header is tag[4] + xmlsize + wtsize[2][3], 32 bytes, but load_patch only
-    // required datasize > 4 before reading all of it - and the reads endian swap in
-    // place, so they write to the caller's buffer too. Patches arrive as .fxp files
-    // and as DAW session state, so every one of these is reachable input.
+    // load_patch read the whole 32 byte header after checking only datasize > 4
     auto build = [](size_t sz, uint32_t xmlsize, uint32_t wt00) {
         char *b = (char *)malloc(sz);
 
@@ -174,8 +168,7 @@ TEST_CASE("Truncated patches are refused before they are read", "[io]")
 
     SECTION("a wavetable header whose frames are not present")
     {
-        // BuildWT sizes its copy from the header's own counts, not from wtsize, so a
-        // header claiming 4096 samples reads 16k out of a buffer holding 16 bytes
+        // BuildWT copies per the header counts, not wtsize: 16k out of 16 bytes
         const size_t sz = 32 + 12 + 16;
         char *b = build(sz, 0, 12 + 16);
         char *w = b + 32;

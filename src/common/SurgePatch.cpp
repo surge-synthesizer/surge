@@ -1179,10 +1179,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
 
     if (!memcmp(ph->tag, "sub3", 4))
     {
-        // Reading the rest of the header needs the rest of the header to be there.
-        // datasize only had to clear four bytes to get this far, and these reads
-        // endian swap in place, so a truncated patch both reads and writes past the
-        // end of the caller's buffer.
+        // the reads below swap in place, so require the whole header first
         if (datasize < (int)sizeof(patch_header))
         {
             return;
@@ -1192,9 +1189,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
 
         char *dr = (char *)data + sizeof(patch_header);
 
-        // xmlsize is a count from the file and dr is stepped forward by it, so bound
-        // it to what the buffer actually holds rather than forming a pointer outside
-        // the allocation.
+        // xmlsize comes from the file; keep dr inside the buffer
         if (ph->xmlsize > (unsigned int)(datasize - (int)sizeof(patch_header)))
         {
             return;
@@ -1210,19 +1205,13 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 ph->wtsize[sc][osc] = mech::endian_read_int32LE(ph->wtsize[sc][osc]);
                 if (ph->wtsize[sc][osc])
                 {
-                    // The header has to fit, not merely begin before the end. dr can
-                    // land exactly on end, which the old "wth > end" let through, and
-                    // the header was read anyway.
+                    // the header has to fit, not merely begin before the end
                     if (dr + sizeof(wt_header) > (char *)end)
                         return;
 
                     wt_header *wth = (wt_header *)dr;
 
-                    // BuildWT sizes the block it copies from the counts inside this
-                    // header rather than from wtsize, so the frames it is about to
-                    // read have to be present as well. It rejects counts beyond
-                    // max_wtable_size / max_subtables, which keeps this product from
-                    // running away.
+                    // BuildWT copies per these counts, not wtsize, so the frames must be here
                     const size_t sampleWidth = (mech::endian_read_int16LE(wth->flags) & wtf_int16)
                                                    ? sizeof(short)
                                                    : sizeof(float);

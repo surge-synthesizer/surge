@@ -1703,12 +1703,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt, std::string &metad
     const auto nTables = mech::endian_read_int16LE(wh.n_tables);
     const auto nSamples = mech::endian_read_int32LE(wh.n_samples);
 
-    // BuildWT applies exactly these bounds, but only after we have allocated a buffer
-    // sized from them, and n_samples is a 32 bit count straight out of the file. A
-    // corrupt or hostile wavetable can therefore ask for hundreds of terabytes and the
-    // allocation below throws std::bad_alloc before the check is ever reached. Nothing
-    // on the way in from load_wt catches it. Reject the header first; the file was going
-    // to be refused anyway, so this only changes how it is refused.
+    // BuildWT applies these same bounds, but only after the buffer is allocated from them
     if (nSamples <= 0 || nSamples > max_wtable_size || (unsigned)nTables > (unsigned)max_subtables)
     {
         reportWavetableNotBuilt();
