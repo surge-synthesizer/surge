@@ -83,6 +83,239 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     }
 }
 
+namespace
+{
+// assembles a RIFF file a chunk at a time, so each case can be malformed on purpose
+struct TestWav
+{
+    std::ostringstream body;
+
+    void tag(const char *c) { body.write(c, 4); }
+    void u16(uint16_t v)
+    {
+        body.put((char)(v & 0xFF));
+        body.put((char)((v >> 8) & 0xFF));
+    }
+    void u32(uint32_t v)
+    {
+        for (int i = 0; i < 4; ++i)
+            body.put((char)((v >> (8 * i)) & 0xFF));
+    }
+
+    // 32 bit IEEE float, which is one of the two formats the loader accepts
+    void fmtChunk(uint16_t channels = 1)
+    {
+        tag("fmt ");
+        u32(16);
+        u16(3);
+        u16(channels);
+        u32(44100);
+        u32(44100 * 4);
+        u16(4);
+        u16(32);
+    }
+
+    // the 2048 sample frame marker, which is what gives the loader a loop length
+    void clmChunk()
+    {
+        tag("clm ");
+        u32(8);
+        body.write("<!>2048", 7);
+        body.put(0);
+    }
+
+    void dataChunk(uint32_t bytes)
+    {
+        tag("data");
+        u32(bytes);
+        for (uint32_t i = 0; i < bytes; ++i)
+            body.put(0);
+    }
+
+    fs::path write(const std::string &name, const char *form = "WAVE")
+    {
+        auto p = fs::temp_directory_path() / name;
+        std::ofstream o(p, std::ios::binary);
+        auto b = body.str();
+
+        o.write("RIFF", 4);
+        for (int i = 0; i < 4; ++i)
+            o.put((char)(((4 + b.size()) >> (8 * i)) & 0xFF));
+        o.write(form, 4);
+        o.write(b.data(), b.size());
+
+        return p;
+    }
+};
+
+struct WavErrorCatcher : SurgeStorage::ErrorListener
+{
+    std::string message;
+    void onSurgeError(const std::string &msg, const std::string &title,
+                      const SurgeStorage::ErrorType &type) override
+    {
+        message = msg;
+    }
+};
+
+bool loadTestWav(const fs::path &p, std::string &md, std::string *error = nullptr)
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    WavErrorCatcher ec;
+    surge->storage.addErrorListener(&ec);
+
+    auto *wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
+    bool loaded{true};
+
+    REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wav_portable(path_to_string(p), wt, md));
+
+    surge->storage.removeErrorListener(&ec);
+
+    if (error)
+        *error = ec.message;
+
+    return loaded;
+}
+} // namespace
+
+TEST_CASE("WAV with a zero channel count", "[io]")
+{
+    // the sample count divides by numChannels, which nothing validated
+    TestWav w;
+    w.fmtChunk(0);
+    w.dataChunk(16);
+
+    std::string md;
+    auto f = w.write("surge_wav_zero_channels.wav");
+
+    // a file we cannot size should be refused, not sized to zero and carried on with
+    REQUIRE(!loadTestWav(f, md));
+    fs::remove(f);
+}
+
+TEST_CASE("Malformed WAV chunks are refused", "[io]")
+{
+    // cases where a chunk's declared size disagrees with what its branch reads
+    std::string md;
+
+    SECTION("a RIFF container which is not a WAVE")
+    {
+        // an AVI shares the outer RIFF header, so only the form type tells them apart
+        TestWav w;
+        w.fmtChunk();
+        w.clmChunk();
+        w.dataChunk(8192);
+
+        auto f = w.write("surge_wav_avi_form.wav", "AVI ");
+        REQUIRE(!loadTestWav(f, md));
+        fs::remove(f);
+    }
+
+    SECTION("a format chunk too short to describe a format")
+    {
+        TestWav w;
+        w.tag("fmt ");
+        w.u32(0);
+
+        auto f = w.write("surge_wav_empty_fmt.wav");
+        REQUIRE(!loadTestWav(f, md));
+        fs::remove(f);
+    }
+
+    // already refused, but the message blamed the wrong thing
+    SECTION("a data chunk with no format chunk to size it")
+    {
+        TestWav w;
+        w.clmChunk();
+        w.dataChunk(8192);
+
+        std::string err;
+        auto f = w.write("surge_wav_no_fmt.wav");
+
+        REQUIRE(!loadTestWav(f, md, &err));
+        REQUIRE_THAT(err, Catch::Matchers::ContainsSubstring("no format chunk"));
+        fs::remove(f);
+    }
+
+    SECTION("a WAVE carrying metadata but no format chunk and no data")
+    {
+        TestWav w;
+        w.clmChunk();
+
+        std::string err;
+        auto f = w.write("surge_wav_only_clm.wav");
+
+        REQUIRE(!loadTestWav(f, md, &err));
+        REQUIRE_THAT(err, Catch::Matchers::ContainsSubstring("no format chunk"));
+        fs::remove(f);
+    }
+
+    // The metadata chunks are optional, so a truncated one should be stepped over and
+    // the rest of the file should still load rather than being rejected outright.
+    SECTION("a cue chunk declaring more cue points than it holds")
+    {
+        TestWav w;
+        w.fmtChunk();
+        w.tag("cue ");
+        w.u32(4);
+        w.u32(0x0FFFFFFF);
+        w.clmChunk();
+        w.dataChunk(8192);
+
+        auto f = w.write("surge_wav_overlarge_cue.wav");
+        REQUIRE(loadTestWav(f, md));
+        fs::remove(f);
+    }
+
+    SECTION("a sample chunk too short to hold its header")
+    {
+        TestWav w;
+        w.fmtChunk();
+        w.tag("smpl");
+        w.u32(4);
+        w.u32(0);
+        w.clmChunk();
+        w.dataChunk(8192);
+
+        auto f = w.write("surge_wav_short_smpl.wav");
+        REQUIRE(loadTestWav(f, md));
+        fs::remove(f);
+    }
+
+    SECTION("a surge chunk too short to hold its length")
+    {
+        TestWav w;
+        w.fmtChunk();
+        w.tag("srge");
+        w.u32(0);
+        w.clmChunk();
+        w.dataChunk(8192);
+
+        auto f = w.write("surge_wav_short_srge.wav");
+        REQUIRE(loadTestWav(f, md));
+        fs::remove(f);
+    }
+
+    SECTION("metadata which is not null terminated")
+    {
+        // the chunk is exactly the bytes it declares, so the string has to stop there
+        TestWav w;
+        w.fmtChunk();
+        w.tag("wtmd");
+        w.u32(8);
+        w.body.write("ABCDEFGH", 8);
+        w.clmChunk();
+        w.dataChunk(8192);
+
+        auto f = w.write("surge_wav_unterminated_wtmd.wav");
+        REQUIRE(loadTestWav(f, md));
+        REQUIRE(md == "ABCDEFGH");
+        fs::remove(f);
+    }
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
