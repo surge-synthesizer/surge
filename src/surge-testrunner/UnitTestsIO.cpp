@@ -85,11 +85,7 @@ TEST_CASE("We Can Read Wavetables", "[io]")
 
 TEST_CASE("Arbitrary block storage does not trust its declared size", "[io]")
 {
-    // The decompressed size in a zstd frame header is a claim, not a measurement, and
-    // load_arbitrary_block_storage sized its buffer from it directly. DynArray
-    // constructs its elements, so an absurd claim touches the pages rather than just
-    // reserving them and the process is killed - there is no bad_alloc to catch.
-    // Patches arrive as .fxp files and as DAW session state.
+    // the zstd header's declared size is a claim, so dont size the buffer from it
     auto frameClaiming = [](uint64_t claimed) {
         std::vector<unsigned char> f{0x28, 0xB5, 0x2F, 0xFD}; // zstd magic
         f.push_back(0xE0);                                    // single segment, 8 byte size field

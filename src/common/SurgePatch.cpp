@@ -1542,12 +1542,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
         // Same for the rest of these "return 0"s.
         return 0;
     }
-    // decompressedSize is what the zstd frame header claims, not anything measured, so
-    // a few bytes of crafted header can ask for terabytes. DynArray constructs its
-    // elements, so the pages are touched rather than merely reserved and the process is
-    // killed outright - there is no bad_alloc to catch. The largest block the factory
-    // content produces is about 3.6 MB, so this ceiling is roughly two orders of
-    // magnitude of headroom over real patches.
+    // cap the declared size; real patches top out around 3.6 MB
     static constexpr std::uint64_t maxArbitraryBlockStorageSize{256 * 1024 * 1024};
 
     if (decompressedSize > maxArbitraryBlockStorageSize)
