@@ -2176,17 +2176,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         t.destination_id = i;
                     }
 
-                    //  Every field here comes from the file and every one of them is used
-                    //  as an array subscript later on, mostly on the audio thread:
-                    //  source_id indexes modsources[] and modsource_doprocess[],
-                    //  source_scene indexes scene[], source_index reaches
-                    //  ModulationSource::get_output(), which bounds it from above but not
-                    //  below, so a negative index reads voutput[-n]; and destination_id
-                    //  indexes globaldata[]. Drop a routing that would land
-                    //  outside any of those rather than storing it for the engine to
-                    //  dereference. Note the destination bound differs by list: a global
-                    //  routing's destination_id is an index into param_ptr, which is larger
-                    //  than globaldata.
+                    //  make sure returned indices are in bounds of sources and targets
+                    //  before applying
                     const int maxDestinationId = (sceneId != 0) ? n_scene_params : n_global_params;
 
                     if (t.source_id <= 0 || t.source_id >= n_modsources || t.source_scene < 0 ||
