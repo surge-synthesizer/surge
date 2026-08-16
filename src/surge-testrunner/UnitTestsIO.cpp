@@ -85,8 +85,7 @@ TEST_CASE("We Can Read Wavetables", "[io]")
 
 namespace
 {
-// Assembles a RIFF file a chunk at a time, so a test can hand the loader exactly the
-// malformed header it means to test rather than needing a binary fixture per case.
+// assembles a RIFF file a chunk at a time, so each case can be malformed on purpose
 struct TestWav
 {
     std::ostringstream body;
@@ -183,11 +182,7 @@ bool loadTestWav(const fs::path &p, std::string &md, std::string *error = nullpt
 
 TEST_CASE("WAV with a zero channel count", "[io]")
 {
-    // datasamples = cs * 8 / bitsPerSample / numChannels, and numChannels comes
-    // straight out of the fmt chunk. The format check validates audioFormat and
-    // bitsPerSample but never the channel count, so a file claiming zero channels
-    // reaches an integer divide by zero. WAVs are downloaded, so this is reachable
-    // by importing one.
+    // the sample count divides by numChannels, which nothing validated
     TestWav w;
     w.fmtChunk(0);
     w.dataChunk(16);
@@ -202,10 +197,7 @@ TEST_CASE("WAV with a zero channel count", "[io]")
 
 TEST_CASE("Malformed WAV chunks are refused", "[io]")
 {
-    // Every branch of the chunk reader pulls a fixed number of bytes out of a chunk
-    // whose size was declared by the file. These are the cases where the two disagree.
-    // All of them read off the end of the allocation before the guards went in, which
-    // an address sanitizer build shows as a heap buffer overflow in pl_int/pl_short.
+    // cases where a chunk's declared size disagrees with what its branch reads
     std::string md;
 
     SECTION("a RIFF container which is not a WAVE")
@@ -232,8 +224,7 @@ TEST_CASE("Malformed WAV chunks are refused", "[io]")
         fs::remove(f);
     }
 
-    // These two were already refused, but the message blamed whatever the missing format
-    // chunk left behind. Name the actual problem instead.
+    // already refused, but the message blamed the wrong thing
     SECTION("a data chunk with no format chunk to size it")
     {
         TestWav w;

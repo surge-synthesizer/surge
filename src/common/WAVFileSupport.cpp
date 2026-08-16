@@ -80,9 +80,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         return false;
     }
 
-    // Both of these have to hold. A RIFF container which is not a WAVE - an AVI or a
-    // WebP, say - shares the outer header, and with an && here it walked on into the
-    // chunk loop and could load as a wavetable.
+    // an AVI shares the outer RIFF header, so check the form type too
     if (!four_chars(riff, 'R', 'I', 'F', 'F') || !four_chars(wav, 'W', 'A', 'V', 'E'))
     {
         std::ostringstream oss;
@@ -140,8 +138,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         std::cout << "\'  sz = " << cs << std::endl;
 #endif
 
-        // cs is a 32 bit quantity read from the file, so a corrupt or hostile chunk can
-        // claim a size we cannot represent as an int. Stop rather than malloc it.
+        // chunk size comes from the file; refuse one we cannot represent as an int
         if (cs < 0)
         {
             break;
@@ -159,9 +156,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
             break;
         }
 
-        // Each branch below reads a fixed number of bytes out of the chunk, but the size
-        // it was allocated with came from the file. Nothing guarantees the two agree, so
-        // check the chunk is big enough before reading the fields out of it.
+        // each branch reads fixed bytes out of a file-declared size; check it fits
         if (four_chars(chunkType, 'f', 'm', 't', ' '))
         {
             if (cs < 16)
@@ -274,8 +269,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
 
             dp += 4;
 
-            // Each cue point is six 32 bit words, and the count is read from the file,
-            // so trust the chunk's own size over the count it declares.
+            // trust the chunk size over the cue count it declares
             const int cuesInChunk = cs >= 4 ? (cs - 4) / 24 : 0;
 
             if (numCues < 0 || numCues > cuesInChunk)
@@ -323,9 +317,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         {
             datasz = cs;
 
-            // This divides by two values which only the format chunk sets. The format
-            // check runs inside that branch, so a file whose data chunk arrives without
-            // one has never had them validated at all.
+            // these divisors are only set by the format chunk, so require one
             if (!hasFMT)
             {
                 std::ostringstream oss;
@@ -345,8 +337,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         else if (four_chars(chunkType, 'w', 't', 'm', 'd'))
         {
             datasz = cs;
-            // data is not null terminated - it is exactly the bytes the chunk declared -
-            // so bound the string by the chunk rather than reading to the first null
+            // not null terminated, so bound the string by the chunk
             metadata = std::string(data, std::find(data, data + cs, 0));
             free(data);
         }
@@ -424,9 +415,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::stri
         }
     }
 
-    // A WAVE with no format chunk is not a WAV we can read, whether or not it also
-    // carried any data. Say so here rather than falling through to the loop point
-    // diagnostics, which would blame the metadata for a malformed file.
+    // name the missing format chunk rather than blaming the loop points
     if (!hasFMT)
     {
         std::ostringstream oss;
