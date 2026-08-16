@@ -85,10 +85,7 @@ TEST_CASE("We Can Read Wavetables", "[io]")
 
 TEST_CASE("A wavetable of non finite samples loads", "[io]")
 {
-    // float2i15_block converted each sample to int and clamped the result, so a
-    // wavetable carrying an infinity converted it to int first, which is undefined.
-    // Wavetables are downloaded, and the bit pattern is trivially reachable - any
-    // four bytes of 0x7F800000 in the sample data.
+    // an infinity in the sample data used to reach the int conversion undefined
     auto f = fs::temp_directory_path() / "surge_wt_nonfinite.wt";
     const uint32_t nSamples = 2048;
     const uint16_t nTables = 1;
