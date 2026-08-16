@@ -3194,7 +3194,9 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
     else
     {
-        if (tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
+        //  The element is optional even in a revision that is supposed to carry it, so
+        //  a patch that simply omits it must not be dereferenced here.
+        if (!tos || tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
         {
             d = 120.0;
         }
