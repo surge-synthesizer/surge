@@ -1486,6 +1486,9 @@ bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc,
     return any;
 }
 
+// the largest arbdata block we will write, and so the largest we will read back
+static constexpr std::uint64_t maxArbitraryBlockStorageSize{256 * 1024 * 1024};
+
 std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
 {
     binn *map = binn_object();
@@ -1520,6 +1523,15 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
     // Now compress it with zstd
     auto size = binn_size(map);
     void *ptr = binn_ptr(map);
+
+    if (static_cast<std::uint64_t>(size) > maxArbitraryBlockStorageSize)
+    {
+        std::cerr << "Arbitrary block storage is " << size
+                  << " bytes, which is beyond what a patch can carry; not writing it." << std::endl;
+        binn_free(map);
+        return {};
+    }
+
     auto compressedSize = ZSTD_compressBound(size);
     std::vector<std::uint8_t> buf(compressedSize);
     compressedSize = ZSTD_compress(buf.data(), compressedSize, ptr, size, 3);
@@ -1542,9 +1554,6 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
         // Same for the rest of these "return 0"s.
         return 0;
     }
-    // cap the declared size; real patches top out around 3.6 MB
-    static constexpr std::uint64_t maxArbitraryBlockStorageSize{256 * 1024 * 1024};
-
     if (decompressedSize > maxArbitraryBlockStorageSize)
     {
         std::cerr << "Arbitrary block storage claims " << decompressedSize
