@@ -2176,7 +2176,26 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         t.destination_id = i;
                     }
 
-                    modlist->push_back(t);
+                    //  make sure returned indices are in bounds of sources and targets
+                    //  before applying
+                    const int maxDestinationId = (sceneId != 0) ? n_scene_params : n_global_params;
+
+                    if (t.source_id <= 0 || t.source_id >= n_modsources || t.source_scene < 0 ||
+                        t.source_scene >= n_scenes || t.source_index < 0 || t.destination_id < 0 ||
+                        t.destination_id >= maxDestinationId)
+                    {
+                        std::ostringstream oss;
+
+                        oss << "Dropped an out of range modulation routing while loading the "
+                            << "patch: source " << t.source_id << ", scene " << t.source_scene
+                            << ", index " << t.source_index << ", destination " << t.destination_id
+                            << ".";
+                        storage->reportError(oss.str(), "Patch Load Error");
+                    }
+                    else
+                    {
+                        modlist->push_back(t);
+                    }
                 }
 
                 mr = TINYXML_SAFE_TO_ELEMENT(mr->NextSibling("modrouting"));
@@ -3194,7 +3213,9 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
     else
     {
-        if (tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
+        //  The element is optional even in a revision that is supposed to carry it, so
+        //  a patch that simply omits it must not be dereferenced here.
+        if (!tos || tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
         {
             d = 120.0;
         }
