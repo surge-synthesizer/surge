@@ -83,6 +83,113 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     }
 }
 
+TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
+{
+    // the buffer is sized from the header counts, so range check them first
+    auto writeWt = [](const std::string &name, uint32_t nSamples, uint16_t nTables,
+                      uint16_t flags) {
+        auto p = fs::temp_directory_path() / name;
+        std::ofstream o(p, std::ios::binary);
+
+        o.write("vawt", 4);
+        for (int i = 0; i < 4; ++i)
+            o.put((char)((nSamples >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((nTables >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((flags >> (8 * i)) & 0xFF));
+
+        return p;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
+    std::string md;
+
+    SECTION("a float wavetable claiming the maximum of both counts")
+    {
+        auto f = writeWt("surge_wt_huge_f32.wt", 0x7FFFFFFF, 0x7FFF, 0);
+        bool loaded{true};
+
+        REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+        REQUIRE(!loaded);
+        fs::remove(f);
+    }
+
+    SECTION("the same header on the int16 path")
+    {
+        auto f = writeWt("surge_wt_huge_i16.wt", 0x7FFFFFFF, 0x7FFF, wtf_int16);
+        bool loaded{true};
+
+        REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+        REQUIRE(!loaded);
+        fs::remove(f);
+    }
+}
+
+TEST_CASE("Truncated patches are refused before they are read", "[io]")
+{
+    // load_patch read the whole 32 byte header after checking only datasize > 4
+    auto build = [](size_t sz, uint32_t xmlsize, uint32_t wt00) {
+        char *b = (char *)malloc(sz);
+
+        memset(b, 0, sz);
+        memcpy(b, "sub3", 4);
+
+        for (int i = 0; i < 4 && (size_t)(4 + i) < sz; ++i)
+            b[4 + i] = (char)((xmlsize >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 4 && (size_t)(8 + i) < sz; ++i)
+            b[8 + i] = (char)((wt00 >> (8 * i)) & 0xFF);
+
+        return b;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    SECTION("a patch shorter than its own header")
+    {
+        char *b = build(8, 0, 0);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, 8, false));
+        free(b);
+    }
+
+    SECTION("a wavetable header sitting exactly at the end")
+    {
+        // xmlsize of 0 leaves dr on end, which the old start-pointer check allowed
+        char *b = build(32, 0, 64);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, 32, false));
+        free(b);
+    }
+
+    SECTION("a wavetable header whose frames are not present")
+    {
+        // BuildWT copies per the header counts, not wtsize: 16k out of 16 bytes
+        const size_t sz = 32 + 12 + 16;
+        char *b = build(sz, 0, 12 + 16);
+        char *w = b + 32;
+
+        memcpy(w, "vawt", 4);
+
+        uint32_t nsamples = 4096;
+        uint16_t ntables = 1, flags = 0;
+
+        for (int i = 0; i < 4; ++i)
+            w[4 + i] = (char)((nsamples >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 2; ++i)
+            w[8 + i] = (char)((ntables >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 2; ++i)
+            w[10 + i] = (char)((flags >> (8 * i)) & 0xFF);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, (int)sz, false));
+        free(b);
+    }
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);

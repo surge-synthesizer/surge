@@ -1176,11 +1176,25 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
     assert(data);
     void *end = (char *)data + datasize;
     patch_header *ph = (patch_header *)data;
-    ph->xmlsize = mech::endian_read_int32LE(ph->xmlsize);
 
     if (!memcmp(ph->tag, "sub3", 4))
     {
+        // the reads below swap in place, so require the whole header first
+        if (datasize < (int)sizeof(patch_header))
+        {
+            return;
+        }
+
+        ph->xmlsize = mech::endian_read_int32LE(ph->xmlsize);
+
         char *dr = (char *)data + sizeof(patch_header);
+
+        // xmlsize comes from the file; keep dr inside the buffer
+        if (ph->xmlsize > (unsigned int)(datasize - (int)sizeof(patch_header)))
+        {
+            return;
+        }
+
         load_xml(dr, ph->xmlsize, preset);
         dr += ph->xmlsize;
 
@@ -1191,8 +1205,20 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 ph->wtsize[sc][osc] = mech::endian_read_int32LE(ph->wtsize[sc][osc]);
                 if (ph->wtsize[sc][osc])
                 {
+                    // the header has to fit, not merely begin before the end
+                    if (dr + sizeof(wt_header) > (char *)end)
+                        return;
+
                     wt_header *wth = (wt_header *)dr;
-                    if (wth > end)
+
+                    // BuildWT copies per these counts, not wtsize, so the frames must be here
+                    const size_t sampleWidth = (mech::endian_read_int16LE(wth->flags) & wtf_int16)
+                                                   ? sizeof(short)
+                                                   : sizeof(float);
+                    const size_t wtBytes = sampleWidth * mech::endian_read_int16LE(wth->n_tables) *
+                                           mech::endian_read_int32LE(wth->n_samples);
+
+                    if (wtBytes > (size_t)((char *)end - dr - sizeof(wt_header)))
                         return;
 
                     scene[sc].osc[osc].wt.queue_id = -1;

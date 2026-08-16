@@ -1683,17 +1683,43 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt, std::string &metad
         return false;
     }
 
+    auto reportWavetableNotBuilt = [this, &wh]() {
+        std::ostringstream oss;
+        oss << "Wavetable could not be built, which means it has too many frames or samples per "
+               "frame.\n"
+            << " You have provided " << wh.n_tables << " frames with " << wh.n_samples
+            << "samples per frame, while the limit is " << max_subtables << " frames and "
+            << max_wtable_size << " samples per frame.\n"
+            << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
+               "potentially volatile state\n."
+            << "It is recommended to restart Surge XT and not load "
+               "the problematic wavetable again.\n\n"
+            << " If you would like, please attach the wavetable which caused this error to a new "
+               "GitHub issue at "
+            << stringRepository;
+        reportError(oss.str(), "Load Error");
+    };
+
+    const auto nTables = mech::endian_read_int16LE(wh.n_tables);
+    const auto nSamples = mech::endian_read_int32LE(wh.n_samples);
+
+    // BuildWT applies these same bounds, but only after the buffer is allocated from them
+    if (nSamples <= 0 || nSamples > max_wtable_size || (unsigned)nTables > (unsigned)max_subtables)
+    {
+        reportWavetableNotBuilt();
+
+        return false;
+    }
+
     size_t ds;
 
     if (mech::endian_read_int16LE(wh.flags) & wtf_int16)
     {
-        ds = sizeof(short) * mech::endian_read_int16LE(wh.n_tables) *
-             mech::endian_read_int32LE(wh.n_samples);
+        ds = sizeof(short) * nTables * nSamples;
     }
     else
     {
-        ds = sizeof(float) * mech::endian_read_int16LE(wh.n_tables) *
-             mech::endian_read_int32LE(wh.n_samples);
+        ds = sizeof(float) * nTables * nSamples;
     }
 
     const std::unique_ptr<char[]> data{new char[ds]};
@@ -1733,20 +1759,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt, std::string &metad
 
     if (!wasBuilt)
     {
-        std::ostringstream oss;
-        oss << "Wavetable could not be built, which means it has too many frames or samples per "
-               "frame.\n"
-            << " You have provided " << wh.n_tables << " frames with " << wh.n_samples
-            << "samples per frame, while the limit is " << max_subtables << " frames and "
-            << max_wtable_size << " samples per frame.\n"
-            << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
-               "potentially volatile state\n."
-            << "It is recommended to restart Surge XT and not load "
-               "the problematic wavetable again.\n\n"
-            << " If you would like, please attach the wavetable which caused this error to a new "
-               "GitHub issue at "
-            << stringRepository;
-        reportError(oss.str(), "Load Error");
+        reportWavetableNotBuilt();
     }
     return wasBuilt;
 }
