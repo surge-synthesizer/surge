@@ -1176,11 +1176,25 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
     assert(data);
     void *end = (char *)data + datasize;
     patch_header *ph = (patch_header *)data;
-    ph->xmlsize = mech::endian_read_int32LE(ph->xmlsize);
 
     if (!memcmp(ph->tag, "sub3", 4))
     {
+        // the reads below swap in place, so require the whole header first
+        if (datasize < (int)sizeof(patch_header))
+        {
+            return;
+        }
+
+        ph->xmlsize = mech::endian_read_int32LE(ph->xmlsize);
+
         char *dr = (char *)data + sizeof(patch_header);
+
+        // xmlsize comes from the file; keep dr inside the buffer
+        if (ph->xmlsize > (unsigned int)(datasize - (int)sizeof(patch_header)))
+        {
+            return;
+        }
+
         load_xml(dr, ph->xmlsize, preset);
         dr += ph->xmlsize;
 
@@ -1191,8 +1205,20 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 ph->wtsize[sc][osc] = mech::endian_read_int32LE(ph->wtsize[sc][osc]);
                 if (ph->wtsize[sc][osc])
                 {
+                    // the header has to fit, not merely begin before the end
+                    if (dr + sizeof(wt_header) > (char *)end)
+                        return;
+
                     wt_header *wth = (wt_header *)dr;
-                    if (wth > end)
+
+                    // BuildWT copies per these counts, not wtsize, so the frames must be here
+                    const size_t sampleWidth = (mech::endian_read_int16LE(wth->flags) & wtf_int16)
+                                                   ? sizeof(short)
+                                                   : sizeof(float);
+                    const size_t wtBytes = sampleWidth * mech::endian_read_int16LE(wth->n_tables) *
+                                           mech::endian_read_int32LE(wth->n_samples);
+
+                    if (wtBytes > (size_t)((char *)end - dr - sizeof(wt_header)))
                         return;
 
                     scene[sc].osc[osc].wt.queue_id = -1;
@@ -2176,7 +2202,26 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         t.destination_id = i;
                     }
 
-                    modlist->push_back(t);
+                    //  make sure returned indices are in bounds of sources and targets
+                    //  before applying
+                    const int maxDestinationId = (sceneId != 0) ? n_scene_params : n_global_params;
+
+                    if (t.source_id <= 0 || t.source_id >= n_modsources || t.source_scene < 0 ||
+                        t.source_scene >= n_scenes || t.source_index < 0 || t.destination_id < 0 ||
+                        t.destination_id >= maxDestinationId)
+                    {
+                        std::ostringstream oss;
+
+                        oss << "Dropped an out of range modulation routing while loading the "
+                            << "patch: source " << t.source_id << ", scene " << t.source_scene
+                            << ", index " << t.source_index << ", destination " << t.destination_id
+                            << ".";
+                        storage->reportError(oss.str(), "Patch Load Error");
+                    }
+                    else
+                    {
+                        modlist->push_back(t);
+                    }
                 }
 
                 mr = TINYXML_SAFE_TO_ELEMENT(mr->NextSibling("modrouting"));
@@ -2778,6 +2823,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 int sos = std::atoi(lkid->Attribute("osc"));
                 int ssc = std::atoi(lkid->Attribute("scene"));
 
+                // These index scene[n_scenes] and osc[n_oscs] and they come
+                // straight out of the file, so a patch naming a scene or
+                // oscillator we don't have would write outside the patch.
+                if (!within_range(0, ssc, n_scenes - 1) || !within_range(0, sos, n_oscs - 1))
+                {
+                    continue;
+                }
+
                 if (lkid->Attribute("wavetable_display_name"))
                 {
                     scene[ssc].osc[sos].wavetable_display_name =
@@ -2828,7 +2881,10 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                 if (lkid->QueryIntAttribute("extra_n", &ti) == TIXML_SUCCESS)
                 {
-                    ec->nData = ti;
+                    // extra_n is the bound for the writes below and it comes from
+                    // the file, so it has to be held inside the array it indexes.
+                    ec->nData = limit_range(
+                        ti, 0, (int)OscillatorStorage::ExtraConfigurationData::max_config);
 
                     for (int qq = 0; qq < ec->nData; ++qq)
                     {
@@ -2944,6 +3000,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             mi = v;
         }
 
+        if (!within_range(0, sc, n_scenes - 1) || !within_range(0, mi, n_lfos - 1))
+        {
+            p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("mseg"));
+            continue;
+        }
+
         auto *ms = &(msegs[sc][mi]);
 
         msegFromXMLElement(ms, p, userPrefRestoreMSEGFromPatch);
@@ -2994,6 +3056,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         if (p->QueryIntAttribute("i", &v) == TIXML_SUCCESS)
         {
             mi = v;
+        }
+
+        if (!within_range(0, sc, n_scenes - 1) || !within_range(0, mi, n_lfos - 1))
+        {
+            p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("formula"));
+            continue;
         }
 
         auto *fs = &(formulamods[sc][mi]);
@@ -3098,11 +3166,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             int lfo, idx, scene;
 
+            const char *lv = lb->Attribute("v");
+
             if (lb->QueryIntAttribute("lfo", &lfo) == TIXML_SUCCESS &&
                 lb->QueryIntAttribute("idx", &idx) == TIXML_SUCCESS &&
-                lb->QueryIntAttribute("scene", &scene) == TIXML_SUCCESS)
-                strxcpy(LFOBankLabel[scene][lfo][idx], lb->Attribute("v"),
-                        CUSTOM_CONTROLLER_LABEL_SIZE);
+                lb->QueryIntAttribute("scene", &scene) == TIXML_SUCCESS && lv &&
+                within_range(0, scene, n_scenes - 1) && within_range(0, lfo, n_lfos - 1) &&
+                within_range(0, idx, max_lfo_indices - 1))
+                strxcpy(LFOBankLabel[scene][lfo][idx], lv, CUSTOM_CONTROLLER_LABEL_SIZE);
             lb = TINYXML_SAFE_TO_ELEMENT(lb->NextSibling("label"));
         }
     }
@@ -3168,7 +3239,9 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
     else
     {
-        if (tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
+        //  The element is optional even in a revision that is supposed to carry it, so
+        //  a patch that simply omits it must not be dereferenced here.
+        if (!tos || tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
         {
             d = 120.0;
         }

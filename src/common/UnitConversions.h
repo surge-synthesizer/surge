@@ -24,8 +24,11 @@
 #include <stdio.h>
 #include <algorithm>
 #include <locale>
+#include <sstream>
+#include <string>
 #include <cstring>
 #include <fmt/core.h>
+#include "sst/basic-blocks/mechanics/string-ops.h"
 #include <fmt/format.h>
 
 static float env_phasemulti = 1000 / 44100.f;
@@ -61,6 +64,35 @@ inline std::string get_notename(int i_value, int i_offset)
 inline std::string float_to_clocalestr(float value)
 {
     return fmt::format(std::locale::classic(), "{:L}", value);
+}
+
+/*
+ * Parse a number a user typed in, independent of the active locale. Accepts
+ * either '.' or ',' as the decimal separator, since what a user types depends
+ * on their keyboard and locale rather than on ours. std::atof follows
+ * LC_NUMERIC, so in a comma-decimal locale it stops at the '.' in "0.5" and
+ * silently yields 0, and in a dot-decimal locale it does the same to "0,5".
+ */
+inline double clocalestr_to_double(const char *s, bool *parsed)
+{
+    // sst-basic-blocks owns the parsing now; this just adapts the shape the
+    // type-in call sites here expect - a double plus a did-it-parse flag, with
+    // zero for input that isn't a number, which is what std::atof used to give.
+    const auto v = sst::basic_blocks::mechanics::parseNumber(s);
+
+    if (parsed)
+    {
+        *parsed = v.has_value();
+    }
+
+    return v.value_or(0.0);
+}
+
+inline double clocalestr_to_double(const char *s) { return clocalestr_to_double(s, nullptr); }
+
+inline double clocalestr_to_double(const std::string &s)
+{
+    return clocalestr_to_double(s.c_str(), nullptr);
 }
 
 #endif // SURGE_SRC_COMMON_UNITCONVERSIONS_H

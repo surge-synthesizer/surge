@@ -55,6 +55,11 @@ endif ()
 
 cmake_host_system_information(RESULT SURGE_BUILD_FQDN QUERY FQDN)
 
+# The FQDN is embedded verbatim into a C string literal in version.cpp.in.
+# Hostnames legitimately contain non-ASCII characters, which MSVC rejects
+# in a narrow literal, so replace anything outside printable ASCII.
+string(REGEX REPLACE "[^ -~]" "_" SURGE_BUILD_FQDN "${SURGE_BUILD_FQDN}")
+
 message(STATUS "Setting up surge version")
 message(STATUS "  git hash is ${GIT_COMMIT_HASH} and branch is ${GIT_BRANCH}")
 message(STATUS "  buildhost is ${SURGE_BUILD_FQDN}")

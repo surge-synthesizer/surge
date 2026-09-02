@@ -313,6 +313,110 @@ TEST_CASE("Malformed WAV chunks are refused", "[io]")
         REQUIRE(loadTestWav(f, md));
         REQUIRE(md == "ABCDEFGH");
         fs::remove(f);
+TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
+{
+    // the buffer is sized from the header counts, so range check them first
+    auto writeWt = [](const std::string &name, uint32_t nSamples, uint16_t nTables,
+                      uint16_t flags) {
+        auto p = fs::temp_directory_path() / name;
+        std::ofstream o(p, std::ios::binary);
+
+        o.write("vawt", 4);
+        for (int i = 0; i < 4; ++i)
+            o.put((char)((nSamples >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((nTables >> (8 * i)) & 0xFF));
+        for (int i = 0; i < 2; ++i)
+            o.put((char)((flags >> (8 * i)) & 0xFF));
+
+        return p;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
+    std::string md;
+
+    SECTION("a float wavetable claiming the maximum of both counts")
+    {
+        auto f = writeWt("surge_wt_huge_f32.wt", 0x7FFFFFFF, 0x7FFF, 0);
+        bool loaded{true};
+
+        REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+        REQUIRE(!loaded);
+        fs::remove(f);
+    }
+
+    SECTION("the same header on the int16 path")
+    {
+        auto f = writeWt("surge_wt_huge_i16.wt", 0x7FFFFFFF, 0x7FFF, wtf_int16);
+        bool loaded{true};
+
+        REQUIRE_NOTHROW(loaded = surge->storage.load_wt_wt(path_to_string(f), wt, md));
+        REQUIRE(!loaded);
+        fs::remove(f);
+    }
+}
+
+TEST_CASE("Truncated patches are refused before they are read", "[io]")
+{
+    // load_patch read the whole 32 byte header after checking only datasize > 4
+    auto build = [](size_t sz, uint32_t xmlsize, uint32_t wt00) {
+        char *b = (char *)malloc(sz);
+
+        memset(b, 0, sz);
+        memcpy(b, "sub3", 4);
+
+        for (int i = 0; i < 4 && (size_t)(4 + i) < sz; ++i)
+            b[4 + i] = (char)((xmlsize >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 4 && (size_t)(8 + i) < sz; ++i)
+            b[8 + i] = (char)((wt00 >> (8 * i)) & 0xFF);
+
+        return b;
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    SECTION("a patch shorter than its own header")
+    {
+        char *b = build(8, 0, 0);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, 8, false));
+        free(b);
+    }
+
+    SECTION("a wavetable header sitting exactly at the end")
+    {
+        // xmlsize of 0 leaves dr on end, which the old start-pointer check allowed
+        char *b = build(32, 0, 64);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, 32, false));
+        free(b);
+    }
+
+    SECTION("a wavetable header whose frames are not present")
+    {
+        // BuildWT copies per the header counts, not wtsize: 16k out of 16 bytes
+        const size_t sz = 32 + 12 + 16;
+        char *b = build(sz, 0, 12 + 16);
+        char *w = b + 32;
+
+        memcpy(w, "vawt", 4);
+
+        uint32_t nsamples = 4096;
+        uint16_t ntables = 1, flags = 0;
+
+        for (int i = 0; i < 4; ++i)
+            w[4 + i] = (char)((nsamples >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 2; ++i)
+            w[8 + i] = (char)((ntables >> (8 * i)) & 0xFF);
+        for (int i = 0; i < 2; ++i)
+            w[10 + i] = (char)((flags >> (8 * i)) & 0xFF);
+
+        REQUIRE_NOTHROW(surge->loadRaw(b, (int)sz, false));
+        free(b);
     }
 }
 
@@ -1158,5 +1262,78 @@ TEST_CASE("XML Direct", "[io]")
                          "</tags></meta></patch>"};
         surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
         REQUIRE(surge->storage.getPatch().tags.size() == 2);
+    }
+
+    SECTION("extraoscdata with an oversized extra_n")
+    {
+        // extra_n is the loop bound for writes into a fixed max_config array and
+        // it arrives from the file, so a patch could ask us to write far past the
+        // end of it. Patches get shared and downloaded, so opening one is enough.
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><extraoscdata>"
+                         "<od osc=\"0\" scene=\"0\" extra_n=\"100000\"/>"
+                         "</extraoscdata></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+
+        auto &ec = surge->storage.getPatch().scene[0].osc[0].extraConfig;
+        REQUIRE(ec.nData == (int)OscillatorStorage::ExtraConfigurationData::max_config);
+    }
+
+    SECTION("extraoscdata with a negative extra_n")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><extraoscdata>"
+                         "<od osc=\"0\" scene=\"0\" extra_n=\"-5\"/>"
+                         "</extraoscdata></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+
+        auto &ec = surge->storage.getPatch().scene[0].osc[0].extraConfig;
+        REQUIRE(ec.nData == 0);
+    }
+
+    SECTION("msegs with out of range scene and index")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><msegs>"
+                         "<mseg scene=\"99\" i=\"99\"/><mseg scene=\"-1\" i=\"-1\"/>"
+                         "</msegs></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("an out of range mseg scene or index did not write outside the patch");
+    }
+
+    SECTION("formulae with out of range scene and index")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><formulae>"
+                         "<formula scene=\"99\" i=\"99\"/><formula scene=\"-1\" i=\"-1\"/>"
+                         "</formulae></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("an out of range formula scene or index did not write outside the patch");
+    }
+
+    SECTION("lfo bank labels with out of range indices or no value")
+    {
+        // three indices and the label text all come from the file
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><lfobanklabels>"
+                         "<label scene=\"99\" lfo=\"99\" idx=\"99\" v=\"x\"/>"
+                         "<label scene=\"-1\" lfo=\"-1\" idx=\"-1\" v=\"x\"/>"
+                         "<label scene=\"0\" lfo=\"0\" idx=\"0\"/>"
+                         "</lfobanklabels></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("out of range label indices and a missing value were both discarded");
+    }
+
+    SECTION("extraoscdata with out of range scene and osc")
+    {
+        // scene and osc index fixed arrays of n_scenes and n_oscs, and both come
+        // from the file without being checked against those bounds.
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/><extraoscdata>"
+                         "<od osc=\"99\" scene=\"99\" extra_n=\"1\"/>"
+                         "<od osc=\"-1\" scene=\"-1\" extra_n=\"1\"/>"
+                         "</extraoscdata></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+        SUCCEED("an out of range scene or osc index did not write outside the patch");
     }
 }

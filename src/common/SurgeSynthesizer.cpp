@@ -1572,9 +1572,12 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                          * velocity here is our release velocity. So grab the prior notes
                          * velocity since it is the best we have at this point.
                          */
-                        auto priorNoteVel =
-                            std::clamp((char)(v->modsources[ms_velocity]->get_output(0) * 128),
-                                       (char)0, (char)127);
+                        // get_output is normalised, so a full velocity note scales to
+                        // exactly 128, which does not fit in a char. Clamping after the
+                        // conversion is too late to help, so clamp while it is still an
+                        // int and narrow the result.
+                        auto priorNoteVel = (char)std::clamp(
+                            (int)(v->modsources[ms_velocity]->get_output(0) * 128), 0, 127);
                         v->uber_release();
 
                         // confirm that no notes are active
