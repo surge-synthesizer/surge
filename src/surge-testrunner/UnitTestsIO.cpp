@@ -313,6 +313,9 @@ TEST_CASE("Malformed WAV chunks are refused", "[io]")
         REQUIRE(loadTestWav(f, md));
         REQUIRE(md == "ABCDEFGH");
         fs::remove(f);
+    }
+}
+
 TEST_CASE("Wavetable headers are range checked before allocating", "[io]")
 {
     // the buffer is sized from the header counts, so range check them first
@@ -489,7 +492,8 @@ TEST_CASE("All Patches Are Loadable", "[io]")
         surge->loadPatch(i);
         ++i;
 
-        // A tiny oddity that the surge state pops up if we have tuning patches in the library so
+        // A tiny oddity that the surge state pops up if we have tuning patches in the
+        // library so
         surge->storage.remapToConcertCKeyboard();
         surge->storage.retuneTo12TETScaleC261Mapping();
     }
