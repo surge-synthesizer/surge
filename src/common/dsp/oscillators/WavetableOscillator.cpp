@@ -130,14 +130,24 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
             if (oscdata->retrigger.val.b || is_display)
             {
                 oscstate[i] = 0.f;
+                state[i] = 0;
             }
             else
             {
-                float drand = storage->rand_01();
-                oscstate[i] = drand;
+                /*
+                ** Start at a random position in the table rather than delaying the first
+                ** step by a random amount, which is what seeding oscstate does and is the
+                ** bug in #7570. Unlike the Classic oscillator this one emits pure steps
+                ** with no DC ramp between them, so firing immediately from a random table
+                ** index puts the voice at the right level with the usual band limiting,
+                ** and there is no integrator state to prime.
+                **
+                ** One draw per voice, as before, so the rest of the random sequence is
+                ** unchanged. convolute masks state against the mipmapped table size.
+                */
+                oscstate[i] = 0.f;
+                state[i] = (int)(storage->rand_01() * oscdata->wt.size) & (oscdata->wt.size - 1);
             }
-
-            state[i] = 0;
         }
 
         last_level[i] = 0.0;

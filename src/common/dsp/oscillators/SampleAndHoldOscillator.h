@@ -66,6 +66,10 @@ class SampleAndHoldOscillator : public AbstractBlitOscillator
     bool first_run;
     float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
         last_level2[MAX_UNISON], pwidth[MAX_UNISON];
+    // Level each voice is holding when it starts, from the phase ::init picked for it. The
+    // shared integrator is seeded from these on the first ::process_block, which is where
+    // the stereo flag first arrives.
+    float start_level[MAX_UNISON];
     float pitch;
     lag<double> FMdepth, l_pw, l_shape, l_smooth, l_sub, l_sync;
     int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;

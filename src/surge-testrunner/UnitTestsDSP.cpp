@@ -703,49 +703,78 @@ TEST_CASE("Reverb1 White Noise Blast", "[dsp]")
 
 TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
 {
+    /*
+    ** An oscillator should start making sound immediately, whether or not retrigger is on.
+    **
+    ** The BLIT oscillators used to seed oscstate with a positive random value when
+    ** retrigger was off, which leaves the buffers empty and the voice silent until the
+    ** first convolute fires. That is a delay of up to a full cycle rather than a random
+    ** start phase: at MIDI 60 it reached 169 oversampled samples for Classic and 337 for
+    ** Wavetable, and it scales with the period, so a bass note could lose several
+    ** milliseconds off the front of its attack.
+    */
+    constexpr int maxOnset{16};
+    constexpr int nTrials{50};
+    constexpr int nBlocks{32}; // enough to cover the old worst case even at MIDI 24
+
     for (const auto &rt : {true, false})
     {
         for (const auto &ot :
              {ot_classic, ot_wavetable, ot_window, ot_sine, ot_twist, ot_shnoise, ot_FM2, ot_FM3})
         {
-            auto surge = Surge::Headless::createSurge(44100, ot == ot_wavetable || ot == ot_window);
-            auto storage = &surge->storage;
-
-            auto oscstorage = &(storage->getPatch().scene[0].osc[0]);
-
-            unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
-
-            oscstorage->retrigger.val.b = rt;
-
-            auto o = spawn_osc(ot, storage, oscstorage, storage->getPatch().scenedata[0],
-                               storage->getPatch().scenedataOrig[0], oscbuffer);
-            o->init_ctrltypes();
-            o->init_default_values();
-            o->init_extra_config();
-
-            o->init(60);
-
-            int itUntilBigger{0};
-            bool continueChecking{true};
-
-            for (int j = 0; j < 10 && continueChecking; ++j)
+            for (const auto &note : {24, 60, 96})
             {
-                o->process_block(60, 0, true, false, 0);
-                for (int i = 0; i < BLOCK_SIZE_OS && continueChecking; ++i)
+                auto surge =
+                    Surge::Headless::createSurge(44100, ot == ot_wavetable || ot == ot_window);
+                auto storage = &surge->storage;
+
+                auto oscstorage = &(storage->getPatch().scene[0].osc[0]);
+
+                unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
+
+                oscstorage->retrigger.val.b = rt;
+
+                auto o = spawn_osc(ot, storage, oscstorage, storage->getPatch().scenedata[0],
+                                   storage->getPatch().scenedataOrig[0], oscbuffer);
+                o->init_ctrltypes();
+                o->init_default_values();
+                o->init_extra_config();
+
+                int worstOnset{0};
+
+                for (int trial = 0; trial < nTrials; ++trial)
                 {
-                    itUntilBigger++;
-                    if (std::fabs(o->output[i]) > 1e-6)
+                    o->init(note);
+
+                    int onset{nBlocks * BLOCK_SIZE_OS}, n{0};
+                    bool found{false};
+
+                    for (int j = 0; j < nBlocks && !found; ++j)
                     {
-                        continueChecking = false;
-                        break;
+                        o->process_block(note, 0, true, false, 0);
+
+                        for (int i = 0; i < BLOCK_SIZE_OS; ++i, ++n)
+                        {
+                            if (std::fabs(o->output[i]) > 1e-6)
+                            {
+                                onset = n;
+                                found = true;
+                                break;
+                            }
+                        }
                     }
+
+                    worstOnset = std::max(worstOnset, onset);
                 }
+
+                o->~Oscillator();
+
+                INFO("Oscillator " << osc_type_names[ot] << " at note " << note
+                                   << " with retrigger " << (rt ? "on" : "off")
+                                   << " has a worst case onset of " << worstOnset
+                                   << " oversampled samples");
+                REQUIRE(worstOnset <= maxOnset);
             }
-            o->~Oscillator();
-            /*std::cout << "Onset Delay for " << osc_type_names[ot] << " with retrig=" << rt << " is
-               "
-                      << (continueChecking ? "Unknown" : std::to_string(itUntilBigger))
-                      << std::endl;*/
         }
     }
 }
