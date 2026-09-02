@@ -736,27 +736,30 @@ juce::PopupMenu SurgeSynthEditor::modifyHostMenu(juce::PopupMenu menu)
     return menu;
 }
 
+bool SurgeSynthEditor::useHostContextMenus() const
+{
+    const auto host = juce::PluginHostType();
+    const auto isUnknownHost = std::strcmp(host.getHostDescription(), "Unknown") == 0;
+
+    return !(host.isDaVinciResolve() || isUnknownHost);
+}
+
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
-    if (sge)
+    if (useHostContextMenus())
     {
-        if (sge->synth->hostProgram.compare("Unknown") == 0)
+        auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+
+        if (auto *c = getHostContext())
         {
-            return juce::PopupMenu();
-        }
-    }
+            if (auto menuInfo = c->getContextMenuForParameterIndex(par))
+            {
+                auto menu = menuInfo->getEquivalentPopupMenu();
 
-    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+                menu = modifyHostMenu(menu);
 
-    if (auto *c = getHostContext())
-    {
-        if (auto menuInfo = c->getContextMenuForParameterIndex(par))
-        {
-            auto menu = menuInfo->getEquivalentPopupMenu();
-
-            menu = modifyHostMenu(menu);
-
-            return menu;
+                return menu;
+            }
         }
     }
 
@@ -765,25 +768,20 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 {
-    if (sge)
+    if (useHostContextMenus())
     {
-        if (sge->synth->hostProgram.compare("Unknown") == 0)
+        auto par = processor.macrosById[macro];
+
+        if (auto *c = getHostContext())
         {
-            return juce::PopupMenu();
-        }
-    }
+            if (auto menuInfo = c->getContextMenuForParameterIndex(par))
+            {
+                auto menu = menuInfo->getEquivalentPopupMenu();
 
-    auto par = processor.macrosById[macro];
+                modifyHostMenu(menu);
 
-    if (auto *c = getHostContext())
-    {
-        if (auto menuInfo = c->getContextMenuForParameterIndex(par))
-        {
-            auto menu = menuInfo->getEquivalentPopupMenu();
-
-            modifyHostMenu(menu);
-
-            return menu;
+                return menu;
+            }
         }
     }
 

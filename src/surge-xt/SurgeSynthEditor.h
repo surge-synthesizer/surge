@@ -116,6 +116,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     juce::PopupMenu hostMenuFor(Parameter *p);
     juce::PopupMenu hostMenuForMacro(int macro);
+    bool useHostContextMenus() const;
 
     friend class SurgeGUIEditor;
 

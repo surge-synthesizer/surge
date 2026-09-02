@@ -500,6 +500,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     idleTimer->startTimer(1000 / 25);
 }
 
+bool SurgefxAudioProcessorEditor::useHostContextMenus() const
+{
+    const auto host = juce::PluginHostType();
+    const auto isUnknownHost = std::strcmp(host.getHostDescription(), "Unknown") == 0;
+
+    return !(host.isDaVinciResolve() || isUnknownHost);
+}
+
 juce::PopupMenu SurgefxAudioProcessorEditor::modifyHostMenu(juce::PopupMenu menu,
                                                             juce::AudioProcessorParameter *param)
 {
@@ -1214,7 +1222,8 @@ void SurgefxAudioProcessorEditor::showHostContextMenuFor(juce::AudioProcessorPar
     {
         if (auto *hostContext = getHostContext())
         {
-            if (auto menuInfo = hostContext->getContextMenuForParameter(param))
+            if (useHostContextMenus();
+                auto menuInfo = hostContext->getContextMenuForParameter(param))
             {
                 auto menu = menuInfo->getEquivalentPopupMenu();
 
