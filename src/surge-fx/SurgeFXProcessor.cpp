@@ -142,6 +142,10 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         fxBaseParams[i]->addListener(this);
     }
 
+    // Force an initial update of the JUCE parameter mutable names and storage values
+    updateJuceParamsFromStorage();
+    updateHostDisplay(juce::AudioProcessorListener::ChangeDetails{}.withParameterInfoChanged(true));
+
     for (int i = 0; i < n_fx_params + 1; ++i)
     {
         changedParams[i] = false;
