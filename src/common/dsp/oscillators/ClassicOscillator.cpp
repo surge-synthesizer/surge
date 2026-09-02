@@ -232,21 +232,103 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
             oscstate[i] = 0.f;
             syncstate[i] = 0.f;
             last_level[i] = 0.f;
+            start_level[i] = 0.f;
+            dc_uni[i] = 0.f;
+            state[i] = 0;
+            pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
+            pwidth2[i] = 2.f * l_pw2.v;
         }
         else
         {
-            double drand = (double)storage->rand_01();
+            /*
+            ** Start the voice at a random point inside the cycle, carrying the state it
+            ** would have had if it had been running, rather than delaying its first impulse
+            ** by a random amount. Seeding oscstate with a positive value and nothing else
+            ** leaves the buffers empty, so the voice is simply silent until the first
+            ** ::convolute fires - a delay of up to a full cycle. See issue #7570.
+            **
+            ** ::convolute walks a four segment cycle whose durations sum to 2 * t, tracking
+            ** the waveform as last_level (the level at the end of the current segment) and
+            ** dc_uni (the slope across it). So: pick a uniform point in the cycle, replay
+            ** that bookkeeping up to the segment holding it, and hand the voice over ready
+            ** for the next ::convolute. State 0 sets the level absolutely rather than
+            ** incrementally, so replaying from a zero level lands on the right answer.
+            */
             double detune = oscdata->p[co_unison_detune].get_extended(localcopy[id_detune].f) *
                             (detune_bias * float(i) + detune_offset);
-            double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
-            oscstate[i] = st;
-            syncstate[i] = st;
-            last_level[i] = 0.f;
+            float t = storage->note_to_pitch_inv_tuningctr(detune);
+
+            float pw = limit_range(l_pw.v, 0.001f, 0.999f);
+            float pw2 = 2.f * l_pw2.v;
+            float wf = l_shape.v;
+            float sub = l_sub.v;
+
+            // These mirror the rate computation at the end of ::convolute
+            float seg[4] = {t * pw * pw2, t * (1.f - pw) * (2.f - pw2), t * pw * (2.f - pw2),
+                            t * (1.f - pw) * pw2};
+            float cycle = seg[0] + seg[1] + seg[2] + seg[3];
+
+            // One draw per voice, as before, so the rest of the random sequence is unchanged
+            float phase = storage->rand_01() * cycle;
+
+            // mech::rcp, not a division, to match how ::convolute computes this
+            float dcu = (1.f + wf) * (1.f - sub) * mech::rcp(t);
+            float level = 0.f, lvl_start = 0.f, acc = 0.f;
+            int s = 0;
+
+            for (int step = 0; step < 4; ++step)
+            {
+                float g;
+
+                switch (s)
+                {
+                case 0:
+                {
+                    float tg =
+                        ((1 + wf) * 0.5f + (1 - pw) * (-wf)) * (1 - sub) + 0.5f * sub * (2.f - pw2);
+                    g = tg - level;
+                    break;
+                }
+                case 1:
+                    g = wf * (1.f - sub) - sub;
+                    break;
+                case 2:
+                    g = 1.f - sub;
+                    break;
+                default:
+                    g = wf * (1.f - sub) + sub;
+                    break;
+                }
+
+                lvl_start = level + g;
+                level = lvl_start - seg[s] * dcu;
+
+                if (acc + seg[s] > phase)
+                {
+                    break;
+                }
+
+                acc += seg[s];
+                s = (s + 1) & 3;
+            }
+
+            float elapsed = phase - acc;
+            float frac = (seg[s] > 0.f) ? (elapsed / seg[s]) : 0.f;
+
+            oscstate[i] = seg[s] - elapsed;
+            syncstate[i] = oscstate[i];
+            last_level[i] = level;
+
+            // The level runs linearly from just after the impulse to last_level
+            start_level[i] = lvl_start + (level - lvl_start) * frac;
+
+            dc_uni[i] = dcu;
+            dcbuffer[bufpos + FIRoffset] += dcu;
+            state[i] = (s + 1) & 3;
+            pwidth[i] = pw;
+            pwidth2[i] = pw2;
         }
 
-        dc_uni[i] = 0.f;
-        state[i] = 0.f;
-        pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
         driftLFO[i].init(nonzero_init_drift);
     }
 }
@@ -614,6 +696,34 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
                                       storage->note_to_pitch_inv(pitch));
     // This must be a real division, reciprocal approximation is not precise enough
     pitchmult = 1.f / pitchmult_inv;
+
+    /*
+    ** ::init chose a start phase for each voice but could not seed the shared integrator,
+    ** because how much level a voice contributes depends on the stereo flag, which only
+    ** arrives here. Do it on the first block, before anything is generated. See issue #7570.
+    */
+    if (first_run)
+    {
+        float sL = 0.f, sR = 0.f;
+
+        for (int u = 0; u < n_unison; u++)
+        {
+            float v = start_level[u] * out_attenuation;
+
+            if (stereo)
+            {
+                sL += v * panL[u];
+                sR += v * panR[u];
+            }
+            else
+            {
+                sL += v;
+            }
+        }
+
+        osc_out = SIMD_MM(set1_ps)(sL);
+        osc_outR = SIMD_MM(set1_ps)(sR);
+    }
 
     int k, l;
 
