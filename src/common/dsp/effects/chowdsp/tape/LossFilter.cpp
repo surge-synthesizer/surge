@@ -50,7 +50,7 @@ void LossFilter::prepare(float sampleRate, int blockSize)
 
     for (int i = 0; i < 2; ++i)
     {
-        filters[i] = std::make_unique<FIRFilter>(order);
+        filters[i] = std::make_unique<FIRFilter>(curOrder);
         filters[i]->reset();
         filters[i]->setCoefs(currentCoefs.data());
     }
