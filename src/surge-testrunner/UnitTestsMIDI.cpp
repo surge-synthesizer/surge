@@ -282,6 +282,7 @@ TEST_CASE("Sustain Pedal And Mono", "[midi]") // #1459
         auto testInSurge = [](auto kernel) {
             auto surge = Surge::Headless::createSurge(44100);
             REQUIRE(surge);
+            surge->storage.monoPedalMode = HOLD_ALL_NOTES;
             surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
             kernel(surge);
         };
@@ -445,7 +446,7 @@ TEST_CASE("Sustain Pedal And Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Note Release With Note Held. This is the one Evil wants changed.");
+            INFO("Note Release With Note Held");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -465,7 +466,7 @@ TEST_CASE("Sustain Pedal And Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Under Note Release With Note Held. This is the one Evil wants changed.");
+            INFO("Under Note Release With Note Held");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -474,10 +475,10 @@ TEST_CASE("Sustain Pedal And Mono", "[midi]") // #1459
             step(surge);
             surge->releaseNote(0, 60, 0);
             step(surge);
-            REQUIRE(solePlayingNote(surge) == 48); // We want a mode where this is 48
+            REQUIRE(solePlayingNote(surge) == 48);
             surge->releaseNote(0, 48, 0);
             step(surge);
-            REQUIRE(solePlayingNote(surge) == 48); // and in that mode this would stay 48
+            REQUIRE(solePlayingNote(surge) == 48);
             surge->channelController(0, 64, 0);
             step(surge);
             REQUIRE(playingNoteCount(surge) == 0);
@@ -502,6 +503,108 @@ TEST_CASE("Sustain Pedal And Mono", "[midi]") // #1459
             step(surge);
             REQUIRE(playingNoteCount(surge) == 0);
         });
+    }
+
+    SECTION("Pedal Is Not A Trill Anchor") // #6620
+    {
+        auto step = [](auto surge) {
+            for (int i = 0; i < 25; ++i)
+                surge->process();
+        };
+        auto testInSurge = [](MonoPedalMode pedalMode, auto kernel) {
+            auto surge = Surge::Headless::createSurge(44100);
+            REQUIRE(surge);
+            surge->storage.monoPedalMode = pedalMode;
+            surge->storage.getPatch().scene[0].polymode.val.i = pm_mono;
+            kernel(surge);
+        };
+
+        // The bug (#6620): a note that is only being sustained by the pedal (its key is
+        // no longer physically down) must not act as an anchor for note-off retriggering.
+        // So after tapping a staccato note while the pedal holds an earlier note, releasing
+        // that staccato note should leave the voice on the staccato note, not jump back to
+        // the pedal-held note. Then lifting the pedal silences everything.
+        SECTION("Staccato After Pedal-Held Note")
+        {
+            testInSurge(RELEASE_IF_OTHERS_HELD, [&](auto surge) {
+                surge->playNote(0, 60, 120, 0);
+                step(surge);
+                surge->channelController(0, 64, 127);
+                step(surge);
+                // Physically release 60; the pedal keeps it sounding.
+                surge->releaseNote(0, 60, 0);
+                step(surge);
+                REQUIRE(solePlayingNote(surge) == 60);
+
+                // Tap a far-away note staccato while the pedal is still down.
+                surge->playNote(0, 67, 120, 0);
+                step(surge);
+                REQUIRE(solePlayingNote(surge) == 67);
+
+                // Releasing it must NOT retrigger 60 - no key is physically held.
+                surge->releaseNote(0, 67, 0);
+                step(surge);
+                REQUIRE(solePlayingNote(surge) == 67);
+
+                // Lifting the pedal now silences everything.
+                surge->channelController(0, 64, 0);
+                step(surge);
+                REQUIRE(playingNoteCount(surge) == 0);
+            });
+        }
+
+        SECTION("Repeated Staccato Taps")
+        {
+            testInSurge(RELEASE_IF_OTHERS_HELD, [&](auto surge) {
+                surge->playNote(0, 60, 120, 0);
+                step(surge);
+                surge->channelController(0, 64, 127);
+                step(surge);
+                surge->releaseNote(0, 60, 0);
+                step(surge);
+
+                for (int n : {64, 72, 55, 67})
+                {
+                    surge->playNote(0, n, 120, 0);
+                    step(surge);
+                    REQUIRE(solePlayingNote(surge) == n);
+                    surge->releaseNote(0, n, 0);
+                    step(surge);
+                    // Stays on the just-released note, never jumps back to 60.
+                    REQUIRE(solePlayingNote(surge) == n);
+                }
+
+                surge->channelController(0, 64, 0);
+                step(surge);
+                REQUIRE(playingNoteCount(surge) == 0);
+            });
+        }
+
+        // Regression guard: a physically-held key IS a valid anchor, so the anchored-trill
+        // behaviour still works when the pedal is down.
+        SECTION("Physically Held Key Still Anchors Trills")
+        {
+            testInSurge(RELEASE_IF_OTHERS_HELD, [&](auto surge) {
+                surge->playNote(0, 60, 120, 0);
+                step(surge);
+                surge->channelController(0, 64, 127);
+                step(surge);
+                // 60 stays physically down the whole time.
+                surge->playNote(0, 67, 120, 0);
+                step(surge);
+                REQUIRE(solePlayingNote(surge) == 67);
+                surge->releaseNote(0, 67, 0);
+                step(surge);
+                // 60 is physically held, so it anchors the trill and retriggers.
+                REQUIRE(solePlayingNote(surge) == 60);
+
+                surge->releaseNote(0, 60, 0);
+                step(surge);
+                surge->channelController(0, 64, 0);
+                step(surge);
+                REQUIRE(playingNoteCount(surge) == 0);
+            });
+        }
     }
 }
 

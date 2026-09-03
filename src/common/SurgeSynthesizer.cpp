@@ -1288,6 +1288,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
     {
         bool sceneNoHold = noHold;
         auto pm = storage.getPatch().scene[sc].polymode.val.i;
+
         if (!sceneNoHold && !mpeEnabled && storage.monoPedalMode == RELEASE_IF_OTHERS_HELD &&
             (pm == pm_mono || pm == pm_mono_fp || pm == pm_mono_st || pm == pm_mono_st_fp))
         {
@@ -1307,10 +1308,20 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
         }
 
         if (sceneNoHold)
+        {
             releaseNotePostHoldCheck(sc, channel, key, velocity, host_noteid);
+        }
         else
-            holdbuffer[sc].push_back(HoldBufferItem{
-                channel, key, channel, key, host_noteid}); // hold pedal is down, add to buffer
+        {
+            // hold pedal is down, add to buffer
+            holdbuffer[sc].push_back(HoldBufferItem{channel, key, channel, key, host_noteid});
+
+            // #6620 on reasoning why
+            if (storage.monoPedalMode == RELEASE_IF_OTHERS_HELD)
+            {
+                channelState[channel].keyState[key].keystate = 0;
+            }
+        }
     }
 }
 
