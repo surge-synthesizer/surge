@@ -516,7 +516,8 @@ void SurgeVoice::switch_toggled()
 
     // scenepbpitch is pitch state but without state.pkey, so that it can be used to add
     // scene pitch/octave, pitch bend and associated modulations to non-keytracked oscillators
-    state.scenepbpitch = pb;
+    state.scenepbpitch = pb + localcopy[pitch_id].f * (scene->pitch.extend_range ? 12.f : 1.f) +
+                         (octaveSize * localcopy[octave_id].i);
     state.pitch = state.pkey + state.scenepbpitch;
 
     modsources[ms_keytrack]->set_output(0, (state.pitch - (float)scene->keytrack_root.val.i) *
@@ -1702,11 +1703,10 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
         {
             // This matches the override in ::process_block
             float ktrkroot = 60;
-            auto usep = noteShiftFromPitchParam((scene->osc[i].keytrack.val.b
-                                                     ? state.getPitch(storage)
-                                                     : ktrkroot + state.scenepbpitch) +
-                                                    octaveSize * scene->osc[i].octave.val.i,
-                                                0);
+            auto usep = noteShiftFromPitchParam(
+                (scene->osc[i].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                    octaveSize * scene->osc[i].octave.val.i,
+                0);
 
             /*
              * This is awfully special case but it's the best solution
