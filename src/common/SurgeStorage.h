@@ -653,6 +653,13 @@ struct MidiKeyState
     char lastdetune;
     int32_t lastNoteIdForKey;
     int64_t voiceOrder;
+    /*
+     * Whether the key is physically down. Deliberately distinct from keystate, which is
+     * NOT cleared when a key is released under a pedal (that is what keeps the note in the
+     * mono fallback pool), and so cannot answer "is this key actually held".
+     */
+    bool keyIsDown;
+    bool sostenutoCaptured;
 };
 
 struct MidiChannelState
@@ -663,6 +670,7 @@ struct MidiChannelState
     int pitchBend;
     bool nrpn_last;
     bool hold;
+    bool sostenuto;
     float pan;
     float pitchBendInSemitones;
     float pressure;

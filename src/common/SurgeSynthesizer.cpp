@@ -494,6 +494,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     }
 
     channelState[channel].keyState[key].keystate = velocity;
+    channelState[channel].keyState[key].keyIsDown = true;
     channelState[channel].keyState[key].lastdetune = detune;
     channelState[channel].keyState[key].lastNoteIdForKey = host_noteid;
 
@@ -506,13 +507,14 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     ** Or: NoteOn / Pedal On / Note Off / Note On / Pedal Off should leave the note ringing
     **
     ** and right now it doesn't
+    **
+    ** The sostenuto pedal lands in the same buffer, so the same fixup applies, only
+    ** keyed off whether this particular key was captured rather than a channel-wide flag.
     */
-    bool noHold = !channelState[channel].hold;
+    bool heldByPedal =
+        isSustainPedalDown(channel) || channelState[channel].keyState[key].sostenutoCaptured;
 
-    if (mpeEnabled)
-        noHold = noHold && !channelState[0].hold;
-
-    if (!noHold)
+    if (heldByPedal)
     {
         for (int sc = 0; sc < n_scenes; ++sc)
         {
@@ -1218,6 +1220,10 @@ void SurgeSynthesizer::chokeNote(int16_t channel, int16_t key, char velocity, in
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_t host_noteid)
 {
     midiNoteEvents++;
+
+    // The key is physically up from here on, whatever the pedals go on to do with the note
+    channelState[channel].keyState[key].keyIsDown = false;
+
     bool foundVoice[n_scenes];
     for (int sc = 0; sc < n_scenes; ++sc)
     {
@@ -1280,15 +1286,30 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
         break;
     }
 
-    bool noHold = !channelState[channel].hold;
-    if (mpeEnabled)
-        noHold = noHold && !channelState[0].hold;
+    bool heldBySustain = isSustainPedalDown(channel);
+    bool heldBySostenuto = channelState[channel].keyState[key].sostenutoCaptured;
 
     for (int sc = 0; sc < n_scenes; ++sc)
     {
-        bool sceneNoHold = noHold;
         auto pm = storage.getPatch().scene[sc].polymode.val.i;
-        if (!sceneNoHold && !mpeEnabled && storage.monoPedalMode == RELEASE_IF_OTHERS_HELD &&
+
+        /*
+         * Latch mode is the degenerate case for pedals: it already holds every note
+         * until the next one arrives, so the sostenuto pedal is a no-op there.
+         * (The sustain pedal's long-standing latch behavior is deliberately unchanged.)
+         */
+        bool sostenutoHolds = heldBySostenuto && pm != pm_latch;
+        bool sceneNoHold = !heldBySustain && !sostenutoHolds;
+
+        /*
+         * RELEASE_IF_OTHERS_HELD exists because the sustain pedal holds notes the player
+         * never individually chose to hold, which makes a mono line sticky. A sostenuto
+         * capture set is chosen explicitly, so that reasoning does not transfer and we
+         * leave a sostenuto-held note alone here - that is what makes the captured note
+         * usable as an anchor the mono voice falls back to.
+         */
+        if (!sceneNoHold && !sostenutoHolds && !mpeEnabled &&
+            storage.monoPedalMode == RELEASE_IF_OTHERS_HELD &&
             (pm == pm_mono || pm == pm_mono_fp || pm == pm_mono_st || pm == pm_mono_st_fp))
         {
             /*
@@ -2216,35 +2237,37 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             channelState[channel].hold = value > 63;
         }
 
-        // OK in single mode, only purge scene 0, but in split or dual purge both, and in chsplit
-        // pick based on channel
-        switch (storage.getPatch().scenemode.val.i)
-        {
-        case sm_single:
-            purgeHoldbuffer(storage.getPatch().scene_active.val.i);
-            break;
-        case sm_split:
-        case sm_dual:
-            purgeHoldbuffer(0);
-            purgeHoldbuffer(1);
-            break;
-        case sm_chsplit:
-            if (mpeEnabled && channel == 0) // a control channel message
-            {
-                purgeHoldbuffer(0);
-                purgeHoldbuffer(1);
-            }
-            else
-            {
-                if (channel < ((int)(storage.getPatch().splitpoint.val.i / 8) + 1))
-                    purgeHoldbuffer(0);
-                else
-                    purgeHoldbuffer(1);
-            }
-            break;
-        }
+        purgeHoldbufferByScenemode(channel);
 
         return;
+    }
+    case 66:
+    {
+        /*
+         * Sostenuto pedal. This captures the set of keys held at the moment the pedal goes
+         * down and sustains only those until it is released; keys played afterwards are
+         * unaffected. Notes that the sustain pedal happens to be holding are deliberately
+         * NOT captured - only actually held keys are - which is what lets the two pedals be
+         * combined for voicing.
+         */
+        bool down = value > 63;
+        bool allChannels = storage.mapChannelToOctave || (mpeEnabled && channel == 0);
+
+        if (allChannels)
+        {
+            for (int c = 0; c < 16; c++)
+            {
+                setSostenutoPedal(c, down);
+            }
+        }
+        else
+        {
+            setSostenutoPedal(channel, down);
+        }
+
+        purgeHoldbufferByScenemode(channel);
+
+        break;
     }
     case 74:
     {
@@ -2496,6 +2519,82 @@ void SurgeSynthesizer::allNotesOff()
 #endif
 }
 
+bool SurgeSynthesizer::isSustainPedalDown(int channel) const
+{
+    if (channelState[channel].hold)
+    {
+        return true;
+    }
+
+    // In MPE the pedal arrives on the global channel and applies to every note
+    if (mpeEnabled && channelState[0].hold)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void SurgeSynthesizer::setSostenutoPedal(int channel, bool down)
+{
+    channelState[channel].sostenuto = down;
+
+    if (!down)
+    {
+        // Lifting the pedal simply drops the whole capture set; purgeHoldbuffer then
+        // releases anything which no longer has any pedal holding it.
+        for (int k = 0; k < 128; k++)
+        {
+            channelState[channel].keyState[k].sostenutoCaptured = false;
+        }
+
+        return;
+    }
+
+    /*
+     * Pressing the pedal captures exactly the keys which are physically down. Note that
+     * keystate cannot be used for this: it is not cleared when a key is released under a
+     * pedal, which is what keeps such a note in the mono fallback pool. Using it here would
+     * make sostenuto adopt every note the sustain pedal happens to be holding.
+     */
+    for (int k = 0; k < 128; k++)
+    {
+        channelState[channel].keyState[k].sostenutoCaptured =
+            channelState[channel].keyState[k].keyIsDown;
+    }
+}
+
+void SurgeSynthesizer::purgeHoldbufferByScenemode(int channel)
+{
+    // OK in single mode, only purge scene 0, but in split or dual purge both, and in chsplit
+    // pick based on channel
+    switch (storage.getPatch().scenemode.val.i)
+    {
+    case sm_single:
+        purgeHoldbuffer(storage.getPatch().scene_active.val.i);
+        break;
+    case sm_split:
+    case sm_dual:
+        purgeHoldbuffer(0);
+        purgeHoldbuffer(1);
+        break;
+    case sm_chsplit:
+        if (mpeEnabled && channel == 0) // a control channel message
+        {
+            purgeHoldbuffer(0);
+            purgeHoldbuffer(1);
+        }
+        else
+        {
+            if (channel < ((int)(storage.getPatch().splitpoint.val.i / 8) + 1))
+                purgeHoldbuffer(0);
+            else
+                purgeHoldbuffer(1);
+        }
+        break;
+    }
+}
+
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
     std::list<HoldBufferItem> retainBuffer;
@@ -2521,7 +2620,16 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
         }
         else
         {
-            if (!channelState[0].hold && !channelState[channel].hold)
+            /*
+             * An entry leaves the buffer once no pedal holds it any more. Sostenuto is
+             * per key rather than per channel, and does not apply in latch mode.
+             */
+            auto polymode = storage.getPatch().scene[scene].polymode.val.i;
+            bool stillHeld =
+                channelState[0].hold || channelState[channel].hold ||
+                (polymode != pm_latch && channelState[channel].keyState[key].sostenutoCaptured);
+
+            if (!stillHeld)
             {
                 releaseNotePostHoldCheck(scene, channel, key, 127, hp.host_noteid);
             }
@@ -2568,12 +2676,15 @@ void SurgeSynthesizer::stopSound()
     for (int i = 0; i < 16; i++)
     {
         channelState[i].hold = false;
+        channelState[i].sostenuto = false;
 
         for (int k = 0; k < 128; k++)
         {
             channelState[i].keyState[k].keystate = 0;
             channelState[i].keyState[k].lastdetune = 0;
             channelState[i].keyState[k].lastNoteIdForKey = -1;
+            channelState[i].keyState[k].keyIsDown = false;
+            channelState[i].keyState[k].sostenutoCaptured = false;
         }
     }
 

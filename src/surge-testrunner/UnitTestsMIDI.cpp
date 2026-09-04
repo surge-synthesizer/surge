@@ -1766,3 +1766,325 @@ TEST_CASE("Two On All Notes Off", "[midi]")
         REQUIRE(!g);
     }
 }
+
+TEST_CASE("Sostenuto Pedal", "[midi]")
+{
+    auto gatedCount = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        int ct = 0;
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate)
+                ct++;
+        }
+        return ct;
+    };
+
+    auto gatedKeys = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        std::vector<int> res;
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate)
+                res.push_back(v->state.key);
+        }
+        std::sort(res.begin(), res.end());
+        return res;
+    };
+
+    auto soleGatedKey = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        int ct = 0, res = -1;
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate)
+            {
+                ct++;
+                res = v->state.key;
+            }
+        }
+        REQUIRE(ct == 1);
+        return res;
+    };
+
+    auto step = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        for (int i = 0; i < 25; ++i)
+            surge->process();
+    };
+
+    auto makeSurge = [](int polymode) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+        surge->storage.getPatch().scene[0].polymode.val.i = polymode;
+        return surge;
+    };
+
+    SECTION("Captured Key Holds Until Pedal Up")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        // the key is up but the sostenuto pedal captured it, so it keeps sounding
+        REQUIRE(gatedCount(surge) == 1);
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Keys Played After Pedal Down Are Not Captured")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127);
+        step(surge);
+
+        // 64 arrives after the capture, so the pedal must not hold it
+        surge->playNote(0, 64, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 64, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60});
+
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60});
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Pedal Pressed With Nothing Held Captures Nothing")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Sostenuto Does Not Capture Sustain Held Notes")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        // 60 is released under the sustain pedal, so its damper is up but the key is not
+        surge->channelController(0, 64, 127);
+        step(surge);
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 1);
+
+        // pressing sostenuto now must not adopt it
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->channelController(0, 64, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Both Pedals Release Independently")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127); // captures 60 only
+        step(surge);
+        surge->playNote(0, 64, 120, 0);
+        step(surge);
+        surge->channelController(0, 64, 127); // sustain now holds 64 as well
+        step(surge);
+
+        surge->releaseNote(0, 60, 0);
+        surge->releaseNote(0, 64, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64});
+
+        // sustain up drops 64, sostenuto still anchors 60
+        surge->channelController(0, 64, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60});
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Re-pressing A Captured Key Leaves No Stuck Note")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        // still held by the pedal, however many voices the re-press left behind
+        REQUIRE(gatedCount(surge) >= 1);
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Latch Mode Ignores The Sostenuto Pedal")
+    {
+        auto surge = makeSurge(pm_latch);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        // latch already holds the note, so nothing should have entered the hold buffer
+        REQUIRE(surge->holdbuffer[0].empty());
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60});
+    }
+
+    SECTION("Sostenuto Works On Every Press Not Just The First")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        for (int cycle = 0; cycle < 3; ++cycle)
+        {
+            INFO("Cycle " << cycle);
+
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->channelController(0, 66, 127);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            REQUIRE(gatedCount(surge) == 1);
+
+            surge->channelController(0, 66, 0);
+            step(surge);
+            REQUIRE(gatedCount(surge) == 0);
+        }
+    }
+
+    SECTION("Releasing Sustain Leaves Sostenuto Captured Notes Held")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        // C2 E2 G2 held, captured by sostenuto, then the keys come up
+        for (auto k : {36, 40, 43})
+        {
+            surge->playNote(0, k, 120, 0);
+            step(surge);
+        }
+        surge->channelController(0, 66, 127);
+        step(surge);
+        for (auto k : {36, 40, 43})
+        {
+            surge->releaseNote(0, k, 0);
+            step(surge);
+        }
+        REQUIRE(gatedKeys(surge) == std::vector<int>{36, 40, 43});
+
+        // now play some other notes under the sustain pedal
+        surge->channelController(0, 64, 127);
+        step(surge);
+        for (auto k : {60, 64})
+        {
+            surge->playNote(0, k, 120, 0);
+            step(surge);
+            surge->releaseNote(0, k, 0);
+            step(surge);
+        }
+        REQUIRE(gatedKeys(surge) == std::vector<int>{36, 40, 43, 60, 64});
+
+        // lifting sustain must drop only what sustain was holding
+        surge->channelController(0, 64, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{36, 40, 43});
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Captured Key Replayed Under Sustain Stays Held By Sostenuto")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        // the same key played again, this time under the sustain pedal
+        surge->channelController(0, 64, 127);
+        step(surge);
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        surge->channelController(0, 64, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) >= 1);
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("Mono Falls Back To The Captured Note In Both Pedal Modes")
+    {
+        for (auto mpm : {HOLD_ALL_NOTES, RELEASE_IF_OTHERS_HELD})
+        {
+            DYNAMIC_SECTION("Mono Pedal Mode " << (int)mpm)
+            {
+                auto surge = makeSurge(pm_mono);
+                surge->storage.monoPedalMode = mpm;
+
+                surge->playNote(0, 60, 120, 0);
+                step(surge);
+                surge->channelController(0, 66, 127);
+                step(surge);
+                surge->releaseNote(0, 60, 0);
+                step(surge);
+                REQUIRE(soleGatedKey(surge) == 60);
+
+                surge->playNote(0, 64, 120, 0);
+                step(surge);
+                REQUIRE(soleGatedKey(surge) == 64);
+
+                // RELEASE_IF_OTHERS_HELD must not defeat the sostenuto anchor
+                surge->releaseNote(0, 64, 0);
+                step(surge);
+                REQUIRE(soleGatedKey(surge) == 60);
+
+                surge->channelController(0, 66, 0);
+                step(surge);
+                REQUIRE(gatedCount(surge) == 0);
+            }
+        }
+    }
+}
