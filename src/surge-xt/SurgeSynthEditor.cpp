@@ -358,6 +358,11 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
  * none of them is physically down it can only ever emit note offs, never note ons. Under that
  * guard it is a no-op when nothing is stale and a release when something is, which makes the
  * VKB self healing regardless of who ate the key up.
+ *
+ * Note that the guard has to ask isKeyCurrentlyDown rather than KeyPress::isCurrentlyDown.
+ * The latter also requires the live modifier flags to match those on the KeyPress, and ours
+ * are bound bare, so merely holding Ctrl, Shift or Alt would make every held note look
+ * released and we would cut it out from under the player.
  */
 void SurgeSynthEditor::resyncVKBHeldKeys()
 {
@@ -368,7 +373,7 @@ void SurgeSynthEditor::resyncVKBHeldKeys()
 
     for (const auto &k : vkbBoundKeys)
     {
-        if (k.isCurrentlyDown())
+        if (juce::KeyPress::isKeyCurrentlyDown(k.getKeyCode()))
         {
             return;
         }
