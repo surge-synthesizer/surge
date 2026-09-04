@@ -308,6 +308,7 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
     if (search != vkbLayouts.end())
     {
         keyboard->clearKeyMappings();
+        vkbBoundKeys.clear();
 
         unsigned int n = 0;
 
@@ -331,14 +332,49 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
             if (i < 128)
             {
                 keyboard->setKeyPressForNote((juce::KeyPress)i, n);
+                vkbBoundKeys.emplace_back((juce::KeyPress)i);
             }
 #else
             keyboard->setKeyPressForNote((juce::KeyPress)i, n);
+            vkbBoundKeys.emplace_back((juce::KeyPress)i);
 #endif
 
             n++;
         }
     }
+}
+
+/*
+ * juce::MidiKeyboardComponent tracks the QWERTY keys it has sent note ons for in a private
+ * bitset which it only reconciles from two places: keyStateChanged, which is event driven,
+ * and focusLost. We deliberately set wantsKeyboardFocus false on the VKB and feed it through
+ * our own KeyListener instead, so focusLost never fires for it and that safety net is gone.
+ *
+ * That means any window which swallows key events - a context menu entering modal state, a
+ * typein taking focus, alt-tabbing away - can eat the key up, leaving the bitset marked down
+ * and the note stuck with no event ever coming to clear it.
+ *
+ * So poll. keyStateChanged rescans every bound key against the real OS key state, and when
+ * none of them is physically down it can only ever emit note offs, never note ons. Under that
+ * guard it is a no-op when nothing is stale and a release when something is, which makes the
+ * VKB self healing regardless of who ate the key up.
+ */
+void SurgeSynthEditor::resyncVKBHeldKeys()
+{
+    if (vkbBoundKeys.empty())
+    {
+        return;
+    }
+
+    for (const auto &k : vkbBoundKeys)
+    {
+        if (k.isCurrentlyDown())
+        {
+            return;
+        }
+    }
+
+    keyboard->keyStateChanged(false);
 }
 
 void SurgeSynthEditor::handleAsyncUpdate() {}
@@ -364,6 +400,8 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 void SurgeSynthEditor::idle()
 {
     sge->idle();
+
+    resyncVKBHeldKeys();
 
     if (processor.surge->refresh_vkb)
     {

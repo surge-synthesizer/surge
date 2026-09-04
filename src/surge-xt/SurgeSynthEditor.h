@@ -81,6 +81,12 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     void setVKBLayout(const std::string layout);
 
+    // The KeyPresses setVKBLayout actually bound onto the VKB, which is a subset of the chosen
+    // layout, since accessible keys and (on Linux) keycodes >= 128 get filtered out. Used by
+    // resyncVKBHeldKeys to know which keys to poll.
+    std::vector<juce::KeyPress> vkbBoundKeys;
+    void resyncVKBHeldKeys();
+
     void reapplySurgeComponentColours();
 
     struct IdleTimer : juce::Timer
