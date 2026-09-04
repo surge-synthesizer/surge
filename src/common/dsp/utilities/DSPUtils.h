@@ -47,5 +47,6 @@ inline float linear_to_amp(float x) { return powf(std::clamp(x, 0.0000000001f, 1
 inline float amp_to_db(float x) { return std::clamp((float)(18.f * log2(x)), -192.f, 96.f); }
 
 inline float db_to_amp(float x) { return std::clamp(powf(2.f, x / 18.f), 0.f, 2.f); }
+inline float db_to_amp_unbound(float x) { return std::max(powf(2.f, x / 18.f), 0.f); }
 
 #endif // SURGE_SRC_COMMON_DSP_UTILITIES_DSPUTILS_H

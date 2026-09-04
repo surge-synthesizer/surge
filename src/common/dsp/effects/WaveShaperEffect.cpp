@@ -81,7 +81,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 {
     mix.set_target_smoothed(clamp01(*pd_float[ws_mix]));
     boost.set_target_smoothed(
-        db_to_amp(fxdata->p[ws_postboost].get_extended(fxdata->p[ws_postboost].val.f)));
+        db_to_amp_unbound(fxdata->p[ws_postboost].get_extended(fxdata->p[ws_postboost].val.f)));
 
     /*
      * OK so what's all this? Well the network of halfbands and so on
@@ -100,7 +100,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     const auto scalef = 3.f, oscalef = 1.f / 3.f, hbfComp = 2.f;
 
     auto x = scalef * fxdata->p[ws_drive].get_extended(fxdata->p[ws_drive].val.f);
-    auto dnv = limit_range(powf(2.f, x / 18.f), 0.f, 8.f);
+    auto dnv = db_to_amp_unbound(x);
     drive.newValue(dnv);
     bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
