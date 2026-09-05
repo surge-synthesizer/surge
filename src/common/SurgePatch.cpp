@@ -1546,6 +1546,20 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
     // Now compress it with zstd
     auto size = binn_size(map);
     void *ptr = binn_ptr(map);
+
+    if (static_cast<std::uint64_t>(size) > maxArbitraryBlockStorageSize)
+    {
+        storage->reportError(
+            fmt::format("This patch carries {} bytes of impulse responses and wavetable "
+                        "snapshots, which is more than the {} MB a patch can hold. The patch "
+                        "will be saved without them, so they will not be there when it is "
+                        "loaded again!",
+                        size, maxArbitraryBlockStorageSize / (1024 * 1024)),
+            "Patch Write Error");
+        binn_free(map);
+        return {};
+    }
+
     auto compressedSize = ZSTD_compressBound(size);
     std::vector<std::uint8_t> buf(compressedSize);
     compressedSize = ZSTD_compress(buf.data(), compressedSize, ptr, size, 3);
@@ -1568,6 +1582,19 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
         // Same for the rest of these "return 0"s.
         return 0;
     }
+
+    if (decompressedSize > maxArbitraryBlockStorageSize)
+    {
+        storage->reportError(
+            fmt::format("This patch claims to carry {} bytes of impulse responses and wavetable "
+                        "snapshots, which is more than the {} MB a patch can hold. This almost "
+                        "definitely means that the patch is corrupted, so as a safety measure "
+                        "they will not be loaded!",
+                        decompressedSize, maxArbitraryBlockStorageSize / (1024 * 1024)),
+            "Load Error");
+        return 0;
+    }
+
     sst::cpputils::DynArray<std::uint8_t> decompressed(decompressedSize);
     decompressedSize = ZSTD_decompress(decompressed.data(), decompressedSize, data, remainder);
     if (ZSTD_isError(decompressedSize))

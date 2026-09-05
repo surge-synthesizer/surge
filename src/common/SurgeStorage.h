@@ -677,6 +677,9 @@ struct MidiChannelState
     float timbre;
 };
 
+// the largest block a patch or wtscript will write, and so the largest we will read back
+constexpr std::uint64_t maxArbitraryBlockStorageSize{256 * 1024 * 1024};
+
 // Arbitrary block storage helpers.
 // Arbitrary block storage can be used to save/load arbitrary blocks from the
 // patch and is available in particular places like the FX storage. An arbitrary block storage is

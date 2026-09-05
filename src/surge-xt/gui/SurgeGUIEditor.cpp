@@ -7315,6 +7315,17 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             const auto freeOscmap = sst::cpputils::make_scope_guard([&] { binn_free(oscmap); });
             bool hasSnapshots = SurgePatch::writeOscSnapshotsToBinn(oscmap, *oscdata);
 
+            if (hasSnapshots &&
+                static_cast<std::uint64_t>(binn_size(oscmap)) > maxArbitraryBlockStorageSize)
+            {
+                storage->reportError(
+                    fmt::format("This wavetable script carries {} bytes of snapshots, which is "
+                                "more than the {} MB a file can hold.",
+                                binn_size(oscmap), maxArbitraryBlockStorageSize / (1024 * 1024)),
+                    "Write Error");
+                return;
+            }
+
             doc.InsertEndChild(wtscript);
 
             // Serialize XML to a string

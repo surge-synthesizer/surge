@@ -178,6 +178,22 @@ bool loadTestWav(const fs::path &p, std::string &md, std::string *error = nullpt
 
     return loaded;
 }
+
+// a zstd frame whose header declares `claimed` bytes while carrying one
+std::vector<unsigned char> zstdFrameClaiming(uint64_t claimed)
+{
+    std::vector<unsigned char> f{0x28, 0xB5, 0x2F, 0xFD}; // zstd magic
+    f.push_back(0xE0);                                    // single segment, 8 byte size field
+
+    for (int i = 0; i < 8; ++i)
+        f.push_back((unsigned char)((claimed >> (8 * i)) & 0xFF));
+
+    for (unsigned char c : {0x09, 0x00, 0x00}) // one raw block, last, one byte
+        f.push_back(c);
+    f.push_back(0x41);
+
+    return f;
+}
 } // namespace
 
 TEST_CASE("WAV with a zero channel count", "[io]")
@@ -423,6 +439,20 @@ TEST_CASE("Truncated patches are refused before they are read", "[io]")
     }
 }
 
+TEST_CASE("Arbitrary block storage does not trust its declared size", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    // ~17.6 TB, against a cap of 256 MB
+    auto f = zstdFrameClaiming(0x0000100000000000ULL);
+    unsigned int consumed{1};
+
+    REQUIRE_NOTHROW(consumed =
+                        surge->storage.getPatch().load_arbitrary_block_storage(f.data(), f.size()));
+    REQUIRE(consumed == 0);
+}
+
 TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
@@ -476,6 +506,57 @@ TEST_CASE("All Factory .wtscript Files Validate", "[io]")
         REQUIRE(la->loadWtscriptForTesting(p.path, &surge->storage, oscdata));
         REQUIRE(oscdata->wavetable_display_name != "");
     }
+}
+
+TEST_CASE("Wavetable script snapshots do not trust their declared size", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100, true);
+    REQUIRE(surge.get());
+
+    // a real factory script, so the snapshot blob is the only suspect part
+    fs::path src;
+    for (const auto &p : surge->storage.wt_list)
+    {
+        if (p.path.extension() == ".wtscript" && surge->storage.wt_category[p.category].isFactory)
+        {
+            src = p.path;
+            break;
+        }
+    }
+    REQUIRE(!src.empty());
+
+    std::ifstream in(src, std::ios::binary | std::ios::ate);
+    REQUIRE(in);
+    std::vector<char> xml(static_cast<std::size_t>(in.tellg()));
+    in.seekg(0);
+    in.read(xml.data(), xml.size());
+    in.close();
+
+    auto blob = zstdFrameClaiming(0x0000100000000000ULL); // ~17.6 TB, against a cap of 256 MB
+    auto f = fs::temp_directory_path() / "surge_wtscript_huge_snapshot.wtscript";
+
+    {
+        std::ofstream o(f, std::ios::binary);
+        o.write("wts1", 4);
+
+        for (auto v : {(uint32_t)xml.size(), (uint32_t)blob.size()})
+            for (int i = 0; i < 4; ++i)
+                o.put((char)((v >> (8 * i)) & 0xFF));
+
+        o.write(xml.data(), xml.size());
+        o.write((const char *)blob.data(), blob.size());
+    }
+
+    auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+    auto oscdata = &(surge->storage.getPatch().scene[0].osc[0]);
+    bool loaded{false};
+
+    // the script still loads, the snapshot blob is the only thing refused
+    REQUIRE_NOTHROW(loaded = la->loadWtscriptForTesting(f, &surge->storage, oscdata));
+    REQUIRE(loaded);
+    REQUIRE(!oscdata->wtSnapshots[0]);
+
+    fs::remove(f);
 }
 #endif
 

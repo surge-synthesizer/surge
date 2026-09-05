@@ -546,11 +546,24 @@ LuaWTEvaluator::populateWavetable(const std::function<bool()> &canceled, bool pr
 
 #if HAS_LUA
 static void loadWtscriptSnapshots(const void *compData, size_t blobSize, SurgeStorage *storage,
-                                  OscillatorStorage *oscdata)
+                                  OscillatorStorage *oscdata, std::string *errorOut)
 {
     auto decompressedSize = ZSTD_getFrameContentSize(compData, blobSize);
     if (decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN || decompressedSize == ZSTD_CONTENTSIZE_ERROR)
         return;
+
+    // the size is a claim in the frame header, not a measurement, so bound it before allocating
+    if (decompressedSize > maxArbitraryBlockStorageSize)
+    {
+        emitError(errorOut, storage,
+                  fmt::format("This wavetable script claims to carry {} bytes of snapshots, which "
+                              "is more than the {} MB a file can hold. This almost definitely "
+                              "means that the file is corrupted, so as a safety measure they will "
+                              "not be loaded!",
+                              decompressedSize, maxArbitraryBlockStorageSize / (1024 * 1024)),
+                  "Load Error");
+        return;
+    }
 
     std::vector<std::uint8_t> decompressed(decompressedSize);
     decompressedSize = ZSTD_decompress(decompressed.data(), decompressedSize, compData, blobSize);
@@ -627,7 +640,7 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
         }
 
         const void *compData = fileData.data() + xmlOffset + xmlSize;
-        loadWtscriptSnapshots(compData, blobSize, storage, oscdata);
+        loadWtscriptSnapshots(compData, blobSize, storage, oscdata, errorOut);
     }
 
     // Parse only the XML portion
