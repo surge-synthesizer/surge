@@ -1703,10 +1703,11 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
         {
             // This matches the override in ::process_block
             float ktrkroot = 60;
-            auto usep = noteShiftFromPitchParam(
-                (scene->osc[i].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                    octaveSize * scene->osc[i].octave.val.i,
-                0);
+            auto usep = noteShiftFromPitchParam((scene->osc[i].keytrack.val.b
+                                                     ? state.getPitch(storage)
+                                                     : ktrkroot + state.scenepbpitch) +
+                                                    octaveSize * scene->osc[i].octave.val.i,
+                                                0);
 
             /*
              * This is awfully special case but it's the best solution
