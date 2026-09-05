@@ -565,6 +565,9 @@ class alignas(16) SurgeSynthesizer
     };
     std::list<HoldBufferItem> holdbuffer[n_scenes];
     void purgeHoldbuffer(int scene);
+    void purgeHoldbufferByScenemode(int channel);
+    bool isSustainPedalDown(int channel) const;
+    void setSostenutoPedal(int channel, bool down);
     void purgeDuplicateHeldVoicesInPolyMode(int scehe, int channel, int key);
     void stopSound();
 
