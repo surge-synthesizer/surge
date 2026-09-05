@@ -31,6 +31,7 @@
 
 #include "UnitTestUtilities.h"
 #include "WavetableScriptEvaluator.h"
+#include "dsp/oscillators/WavetableOscillator.h"
 
 #include <chrono>
 #include <thread>
@@ -1421,4 +1422,345 @@ TEST_CASE("XML Direct", "[io]")
         surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
         SUCCEED("an out of range scene or osc index did not write outside the patch");
     }
+}
+
+namespace
+{
+// A wavetable with entirely distinct, never-zero samples, so a re-slice can be checked for
+// exact content preservation and the trailing-silence trim has nothing to latch on to.
+void buildRampWT(Wavetable *wt, int frames, int frameSize)
+{
+    std::vector<float> data((size_t)frames * frameSize);
+
+    for (size_t i = 0; i < data.size(); ++i)
+    {
+        data[i] = (float)(i + 1) / (float)data.size();
+    }
+
+    wt_header wh;
+
+    memset(&wh, 0, sizeof(wt_header));
+    wh.n_samples = frameSize;
+    wh.n_tables = frames;
+    wh.flags = 0;
+
+    REQUIRE(wt->BuildWT(data.data(), wh, false));
+}
+
+// The ramp above is all positive, which the wavetable oscillator's integrator turns into a
+// long lived offset - no good for asking whether a voice has actually gone quiet. This one
+// is zero mean per frame.
+void buildSineWT(Wavetable *wt, int frames, int frameSize)
+{
+    std::vector<float> data((size_t)frames * frameSize);
+
+    for (int f = 0; f < frames; ++f)
+    {
+        for (int k = 0; k < frameSize; ++k)
+        {
+            data[(size_t)f * frameSize + k] = std::sin(2.0 * M_PI * k / (double)frameSize);
+        }
+    }
+
+    wt_header wh;
+
+    memset(&wh, 0, sizeof(wt_header));
+    wh.n_samples = frameSize;
+    wh.n_tables = frames;
+    wh.flags = 0;
+
+    REQUIRE(wt->BuildWT(data.data(), wh, false));
+}
+} // namespace
+
+TEST_CASE("Wavetables Can Be Resliced At Runtime", "[io]")
+{
+    SECTION("Frame size drives frame count")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        const auto before = wt.FlattenSource();
+        REQUIRE(before.size() == 512);
+
+        REQUIRE(wt.Reslice(32, -1, wt.flags));
+        REQUIRE(wt.size == 32);
+        REQUIRE(wt.n_tables == 16);
+        REQUIRE(wt.SourceFrameCount() == 16);
+
+        // Same samples, just cut up differently
+        REQUIRE(wt.FlattenSource() == before);
+
+        REQUIRE(wt.Reslice(16, -1, wt.flags));
+        REQUIRE(wt.size == 16);
+        REQUIRE(wt.n_tables == 32);
+        REQUIRE(wt.FlattenSource() == before);
+    }
+
+    SECTION("A non-power-of-two frame size rounds down")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        REQUIRE(wt.Reslice(60, -1, wt.flags));
+        REQUIRE(wt.size == 32);
+        REQUIRE(wt.n_tables == 16);
+    }
+
+    SECTION("A frame size below the floor clamps rather than failing")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        REQUIRE(wt.Reslice(2, -1, wt.flags));
+        REQUIRE(wt.size == Wavetable::min_reslice_size);
+    }
+
+    SECTION("Reducing the frame count truncates the tail")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        const auto before = wt.FlattenSource();
+
+        REQUIRE(wt.Reslice(-1, 5, wt.flags));
+        REQUIRE(wt.size == 64);
+        REQUIRE(wt.n_tables == 5);
+
+        const auto after = wt.FlattenSource();
+        REQUIRE(after.size() == 320);
+        REQUIRE(std::equal(after.begin(), after.end(), before.begin()));
+    }
+
+    SECTION("Growing the frame count past the sample budget shrinks the frame size")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        // 20 frames will not fit at 64, nor at 32, but does at 16
+        REQUIRE(wt.Reslice(-1, 20, wt.flags));
+        REQUIRE(wt.size == 16);
+        REQUIRE(wt.n_tables == 20);
+        REQUIRE(wt.FlattenSource().size() == 320);
+    }
+
+    SECTION("A frame count that cannot be reached even at the floor is capped")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        // 512 samples at the 16 sample floor is 32 frames, so 400 is unreachable
+        REQUIRE(wt.Reslice(-1, 400, wt.flags));
+        REQUIRE(wt.size == Wavetable::min_reslice_size);
+        REQUIRE(wt.n_tables == 32);
+    }
+
+    SECTION("Sample mode round trips without accumulating padding")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        const auto before = wt.FlattenSource();
+
+        REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample));
+        REQUIRE(wt.flags & wtf_is_sample);
+        // BuildWT appends three silent frames for a sample
+        REQUIRE(wt.n_tables == 11);
+        // ...which SourceFrameCount and FlattenSource both see through
+        REQUIRE(wt.SourceFrameCount() == 8);
+        REQUIRE(wt.FlattenSource() == before);
+
+        // Toggling sample mode repeatedly must not grow the table each time
+        for (int i = 0; i < 4; ++i)
+        {
+            REQUIRE(wt.Reslice(-1, -1, wt.flags & ~wtf_is_sample));
+            REQUIRE(wt.n_tables == 8);
+            REQUIRE(wt.FlattenSource() == before);
+
+            REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample));
+            REQUIRE(wt.n_tables == 11);
+            REQUIRE(wt.FlattenSource() == before);
+        }
+    }
+
+    SECTION("A sample leaves room for the padding inside max_subtables")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        REQUIRE(wt.Reslice(-1, max_subtables, wt.flags | wtf_is_sample));
+        REQUIRE(wt.n_tables <= max_subtables);
+        REQUIRE(wt.SourceFrameCount() <= max_subtables - 3);
+    }
+
+    SECTION("The encoding flags are cleared, since we rebuild from float")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+        wt.flags |= wtf_int16 | wtf_int16_is_16;
+
+        REQUIRE(wt.Reslice(32, -1, wt.flags));
+        REQUIRE((wt.flags & wtf_int16) == 0);
+        REQUIRE((wt.flags & wtf_int16_is_16) == 0);
+    }
+
+    SECTION("An unbuilt wavetable refuses to reslice")
+    {
+        Wavetable wt;
+        REQUIRE(!wt.Reslice(64, -1, 0));
+    }
+}
+
+TEST_CASE("Queued Wavetable Reslices Run On The Audio Thread", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+    osc->queue_type = ot_wavetable;
+
+    // Let the startup wavetable load settle, so the reslice is the only thing queued
+    for (int i = 0; i < 5; ++i)
+        surge->process();
+
+    auto &wt = osc->wt;
+    REQUIRE(wt.queue_id == -1);
+    REQUIRE(wt.queue_filename.empty());
+
+    buildRampWT(&wt, 8, 64);
+    wt.current_id = 3;
+    osc->wavetable_display_name = "Some Wavetable";
+
+    wt.reslice_size = 32;
+    wt.reslice_frames = -1;
+    wt.reslice_flags = wt.flags | wtf_user_modified;
+    wt.queue_reslice = true;
+
+    surge->storage.perform_queued_wtloads();
+
+    REQUIRE(!wt.queue_reslice);
+    REQUIRE(wt.size == 32);
+    REQUIRE(wt.n_tables == 16);
+
+    // Detached from the wt_list entry, but the name it was loaded under is kept
+    REQUIRE(wt.current_id == -1);
+    REQUIRE(wt.flags & wtf_user_modified);
+    REQUIRE(osc->wavetable_display_name == "Some Wavetable");
+    REQUIRE(wt.refresh_display);
+}
+
+TEST_CASE("A Resliced Wavetable Survives A Patch Round Trip", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+    osc->type.val.i = ot_wavetable;
+
+    // The headless storage has no wavetable library, so stand one entry up by hand. The
+    // patch loader re-attaches a nameless-id wavetable to the list entry its display name
+    // matches, and this is the entry a re-sliced table must NOT be re-attached to.
+    Patch entry;
+    entry.name = "Reslice Test WT";
+    entry.path = "reslice-test.wt";
+    surge->storage.wt_list.push_back(entry);
+
+    osc->wavetable_display_name = entry.name;
+
+    auto &wt = osc->wt;
+    buildRampWT(&wt, 8, 64);
+    REQUIRE(wt.Reslice(32, -1, wt.flags | wtf_is_sample | wtf_loop_sample | wtf_user_modified));
+
+    const auto expected = wt.FlattenSource();
+    const auto expectedTables = wt.n_tables;
+
+    void *data = nullptr;
+    auto sz = surge->storage.getPatch().save_patch(&data);
+    REQUIRE(sz > 0);
+    surge->storage.getPatch().load_patch(data, sz, false);
+
+    auto &rt = surge->storage.getPatch().scene[0].osc[0].wt;
+
+    REQUIRE(rt.size == 32);
+    REQUIRE(rt.n_tables == expectedTables);
+    REQUIRE(rt.flags & wtf_is_sample);
+    REQUIRE(rt.flags & wtf_loop_sample);
+    REQUIRE(rt.flags & wtf_user_modified);
+    // Still detached, so undo restores the edit rather than reloading the original file
+    REQUIRE(rt.current_id == -1);
+
+    // ...whereas without the modified bit the same patch does get re-attached, which is
+    // what the bit exists to suppress
+    rt.flags &= ~wtf_user_modified;
+
+    void *plain = nullptr;
+    auto psz = surge->storage.getPatch().save_patch(&plain);
+    REQUIRE(psz > 0);
+    surge->storage.getPatch().load_patch(plain, psz, false);
+
+    REQUIRE(surge->storage.getPatch().scene[0].osc[0].wt.current_id == 0);
+
+    // The patch blob is int16, so this is a lossy but faithful round trip
+    const auto got = rt.FlattenSource();
+    REQUIRE(got.size() == expected.size());
+
+    for (size_t i = 0; i < got.size(); ++i)
+    {
+        REQUIRE(got[i] == Approx(expected[i]).margin(1e-3));
+    }
+}
+
+TEST_CASE("Looped Samples Keep Sounding", "[dsp]")
+{
+    auto playAndMeasureTail = [](bool loop) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge.get());
+
+        auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+        osc->queue_type = ot_wavetable;
+
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+
+        auto &wt = osc->wt;
+        buildSineWT(&wt, 8, 1024);
+
+        int flags = wt.flags | wtf_is_sample;
+
+        if (loop)
+        {
+            flags |= wtf_loop_sample;
+        }
+
+        REQUIRE(wt.Reslice(-1, -1, flags));
+
+        // A one voice unison seeds sampleloop with 1, so an unlooped sample plays once and
+        // stops. Without pinning it the unison count would be doing the looping for us.
+        osc->p[WavetableOscillator::wt_unison_voices].val.i = 1;
+
+        surge->playNote(0, 60, 127, 0);
+
+        float tail = 0;
+
+        for (int q = 0; q < 200; ++q)
+        {
+            surge->process();
+
+            if (q > 100)
+            {
+                for (int s = 0; s < BLOCK_SIZE; ++s)
+                    tail += fabs(surge->output[0][s]);
+            }
+        }
+
+        return tail;
+    };
+
+    const auto oneShot = playAndMeasureTail(false);
+    const auto looped = playAndMeasureTail(true);
+
+    // Eight frames at 261 Hz is about 1300 samples, so by block 100 an unlooped sample is
+    // long finished and only the DC blocker's decay is left
+    REQUIRE(looped > 1.f);
+    REQUIRE(oneShot < looped * 0.01f);
 }

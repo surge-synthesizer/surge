@@ -28,6 +28,8 @@
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 
 #include <bit>
+#include <algorithm>
+#include <cstring>
 
 namespace mech = sst::basic_blocks::mechanics;
 
@@ -125,6 +127,7 @@ void Wavetable::Copy(Wavetable *wt)
     size = wt->size;
     size_po2 = wt->size_po2;
     flags = wt->flags;
+    data_n_tables = wt->data_n_tables;
     dt = wt->dt;
     n_tables = wt->n_tables;
 
@@ -191,6 +194,7 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     }
 
     int wdata_tables = n_tables;
+    data_n_tables = wdata_tables;
 
     if (AppendSilence)
     {
@@ -280,6 +284,136 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
 
     everBuilt = true;
     return true;
+}
+
+int Wavetable::SourceFrameCount() const
+{
+    if (!everBuilt || size <= 0 || n_tables == 0)
+    {
+        return 0;
+    }
+
+    int nf = (data_n_tables > 0) ? data_n_tables : (int)n_tables;
+    nf = std::min(nf, (int)n_tables);
+
+    if (flags & wtf_is_sample)
+    {
+        // On a sample, trailing silence is padding: either the three frames BuildWT
+        // appends, or however many of those survived a patch round-trip (which rebuilds
+        // with AppendSilence false, so they arrive as ordinary data). Dropping them here
+        // is what keeps a re-slice from growing the table by three frames every time.
+        while (nf > 1)
+        {
+            const float *f = TableF32WeakPointers[0][nf - 1];
+
+            if (!f)
+            {
+                break;
+            }
+
+            bool silent = true;
+
+            for (int i = 0; i < size && silent; ++i)
+            {
+                silent = (f[i] == 0.f);
+            }
+
+            if (!silent)
+            {
+                break;
+            }
+
+            nf--;
+        }
+    }
+
+    return nf;
+}
+
+std::vector<float> Wavetable::FlattenSource() const
+{
+    const int nf = SourceFrameCount();
+
+    if (nf < 1)
+    {
+        return {};
+    }
+
+    std::vector<float> out((size_t)nf * (size_t)size, 0.f);
+
+    for (int j = 0; j < nf; ++j)
+    {
+        if (const float *f = TableF32WeakPointers[0][j])
+        {
+            memcpy(out.data() + (size_t)j * (size_t)size, f, size * sizeof(float));
+        }
+    }
+
+    return out;
+}
+
+bool Wavetable::Reslice(int newSize, int newFrames, int newFlags)
+{
+    if (!everBuilt)
+    {
+        return false;
+    }
+
+    const auto src = FlattenSource();
+
+    if (src.empty())
+    {
+        return false;
+    }
+
+    const bool asSample = (newFlags & wtf_is_sample) != 0;
+    // BuildWT appends three silent frames for a sample, and they have to fit too
+    const int cap = asSample ? (max_subtables - 3) : max_subtables;
+
+    int sz = (newSize > 0) ? newSize : size;
+
+    sz = std::clamp(sz, min_reslice_size, max_wtable_size);
+    // BuildWT derives size_po2 with bit_width and both oscillators mask with size - 1,
+    // so a non-power-of-two frame size is not representable. Round down to one.
+    sz = 1 << (std::bit_width((unsigned int)sz) - 1);
+
+    if (newFrames > 0)
+    {
+        // Frame count is the free variable: shrink the frame size until the requested
+        // count fits in the samples we have, rather than refusing the request.
+        while ((size_t)newFrames * (size_t)sz > src.size() && sz > min_reslice_size)
+        {
+            sz >>= 1;
+        }
+    }
+
+    const int fit = (int)(src.size() / (size_t)sz);
+
+    if (fit < 1)
+    {
+        return false;
+    }
+
+    int frames = (newFrames > 0) ? newFrames : fit;
+
+    // Samples past the last whole frame are truncated, which is the whole point
+    frames = std::min({frames, fit, cap});
+
+    if (frames < 1)
+    {
+        return false;
+    }
+
+    wt_header wh;
+
+    memset(&wh, 0, sizeof(wt_header));
+    wh.n_samples = sz;
+    wh.n_tables = (unsigned short)frames;
+    // We hand BuildWT float data, so the encoding bits from the original load do not
+    // describe it any more. Metadata belongs to the file, not to this table.
+    wh.flags = (unsigned short)(newFlags & ~(wtf_int16 | wtf_int16_is_16 | wtf_has_metadata));
+
+    return BuildWT((void *)src.data(), wh, asSample);
 }
 
 void Wavetable::MipMapWT()

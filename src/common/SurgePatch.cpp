@@ -1254,7 +1254,11 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
 
                     storage->waveTableDataMutex.unlock();
 
-                    if (hadName && scene[sc].osc[osc].wt.current_id < 0)
+                    // A re-sliced table no longer matches the file it was named after, so
+                    // don't re-attach it to that wt_list entry: doing so would make undo
+                    // reload the pristine file and silently discard the edit.
+                    if (hadName && scene[sc].osc[osc].wt.current_id < 0 &&
+                        !(scene[sc].osc[osc].wt.flags & wtf_user_modified))
                     {
                         for (int i = 0;
                              i < storage->wt_list.size() && scene[sc].osc[osc].wt.current_id < 0;

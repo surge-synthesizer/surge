@@ -121,6 +121,8 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void createWTLoadMenu(juce::PopupMenu &contextMenu);
     void createWTExportMenu(juce::PopupMenu &contextMenu);
     void createWTRenameMenu(juce::PopupMenu &contextMenu);
+    void createWTShapeMenu(juce::PopupMenu &contextMenu);
+    void queueWavetableReslice(int newSize, int newFrames, int newFlags);
     void createOpenScriptEditorMenu(juce::PopupMenu &contextMenu);
     void refreshWavetablesMenu(juce::PopupMenu &contextMenu);
 

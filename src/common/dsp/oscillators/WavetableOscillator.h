@@ -91,6 +91,11 @@ class WavetableOscillator : public AbstractBlitOscillator
     int FMdelay;
     int nointerp;
     float FMmul_inv;
+    // Play count for sample-mode playback, counted down each time the sample wraps. It is
+    // seeded from the unison voice count, which for samples has always doubled as "play the
+    // sample this many times"; at this value or above it stops counting down and the sample
+    // loops forever, which is what wtf_loop_sample pins it to.
+    static constexpr int infinite_sampleloop = 7;
     int sampleloop;
 
     pdata *unmodulatedLocalcopy;

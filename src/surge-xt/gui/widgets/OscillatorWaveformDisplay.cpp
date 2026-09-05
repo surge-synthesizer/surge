@@ -728,17 +728,109 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             createOpenScriptEditorMenu(contextMenu);
 #endif
 
-            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "INFO");
-
-            // These are enabled simply so they show up in the screen reader
-            contextMenu.addItem(
-                Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
-                true, false, nullptr);
-            contextMenu.addItem(
-                Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", oscdata->wt.size)),
-                true, false, nullptr);
+            createWTShapeMenu(contextMenu);
         }
     }
+}
+
+void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
+{
+    auto &wt = oscdata->wt;
+    const int frames = wt.SourceFrameCount();
+    const int totalSamples = frames * wt.size;
+
+    // The window oscillator shares the wavetable but ignores wtf_is_sample entirely, so
+    // oneshot playback is only offered where it does something. Frame size and frame count
+    // still are, since the window oscillator reads both.
+    if (oscdata->type.val.i == ot_wavetable)
+    {
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "SHAPE");
+
+        const bool isSample = (wt.flags & wtf_is_sample) != 0;
+
+        contextMenu.addItem(Surge::GUI::toOSCase("Play as Oneshot"), true, isSample,
+                            [this, isSample]() {
+                                auto f = oscdata->wt.flags;
+
+                                if (isSample)
+                                {
+                                    // Looping is meaningless back in wavetable playback
+                                    f &= ~(wtf_is_sample | wtf_loop_sample);
+                                }
+                                else
+                                {
+                                    f |= wtf_is_sample;
+                                }
+
+                                queueWavetableReslice(-1, -1, f);
+                            });
+
+        contextMenu.addItem(
+            Surge::GUI::toOSCase("Loop Oneshot"), isSample, (wt.flags & wtf_loop_sample) != 0,
+            [this]() { queueWavetableReslice(-1, -1, oscdata->wt.flags ^ wtf_loop_sample); });
+
+        contextMenu.addSeparator();
+    }
+
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "INFO");
+
+    auto framesAction = [this, frames]() {
+        sge->promptForMiniEdit(
+            std::to_string(frames), "Enter the number of frames:", "Number of Frames",
+            juce::Point<int>{},
+            [this](const std::string &s) {
+                int n = 0;
+
+                try
+                {
+                    n = std::stoi(s);
+                }
+                catch (const std::exception &)
+                {
+                    return;
+                }
+
+                if (n > 0)
+                {
+                    queueWavetableReslice(-1, n, oscdata->wt.flags);
+                }
+            },
+            this);
+    };
+
+    contextMenu.addItem(Surge::GUI::toOSCase(fmt::format("Number of Frames: {}...", frames)), true,
+                        false, framesAction);
+
+    juce::PopupMenu sizeMenu;
+
+    for (int sz = Wavetable::min_reslice_size; sz <= max_wtable_size; sz <<= 1)
+    {
+        // Offer only frame sizes the samples can actually fill at least one frame of
+        if (sz > totalSamples)
+        {
+            break;
+        }
+
+        sizeMenu.addItem(std::to_string(sz), true, sz == wt.size,
+                         [this, sz]() { queueWavetableReslice(sz, -1, oscdata->wt.flags); });
+    }
+
+    contextMenu.addSubMenu(Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", wt.size)),
+                           sizeMenu);
+}
+
+void OscillatorWaveformDisplay::queueWavetableReslice(int newSize, int newFrames, int newFlags)
+{
+    sge->undoManager()->pushWavetable(scene, oscInScene);
+
+    auto &wt = oscdata->wt;
+
+    wt.reslice_size = newSize;
+    wt.reslice_frames = newFrames;
+    // Mark the table as diverged from its source before the audio thread rebuilds it, so
+    // patch reload does not re-attach it to the wt_list entry it was named after.
+    wt.reslice_flags = newFlags | wtf_user_modified;
+    wt.queue_reslice = true;
 }
 
 void OscillatorWaveformDisplay::createWTLoadMenu(juce::PopupMenu &contextMenu)
