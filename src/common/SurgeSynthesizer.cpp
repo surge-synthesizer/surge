@@ -1319,7 +1319,8 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
              */
             for (auto k = 127; k >= 0; k--) // search downwards
             {
-                if (k != key && channelState[channel].keyState[k].keystate)
+                // keyIsDown not keystate: a note the pedal is holding is not an anchor (#6620)
+                if (k != key && channelState[channel].keyState[k].keyIsDown)
                 {
                     sceneNoHold =
                         true; // This effects a release of current key because another key is down
@@ -1328,20 +1329,10 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
         }
 
         if (sceneNoHold)
-        {
             releaseNotePostHoldCheck(sc, channel, key, velocity, host_noteid);
-        }
         else
-        {
-            // hold pedal is down, add to buffer
-            holdbuffer[sc].push_back(HoldBufferItem{channel, key, channel, key, host_noteid});
-
-            // #6620 on reasoning why
-            if (storage.monoPedalMode == RELEASE_IF_OTHERS_HELD)
-            {
-                channelState[channel].keyState[key].keystate = 0;
-            }
-        }
+            holdbuffer[sc].push_back(HoldBufferItem{
+                channel, key, channel, key, host_noteid}); // hold pedal is down, add to buffer
     }
 }
 
