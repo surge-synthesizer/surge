@@ -32,6 +32,10 @@
 #include "UnitTestUtilities.h"
 #include "WavetableScriptEvaluator.h"
 #include "dsp/oscillators/WavetableOscillator.h"
+#include "PatchFileHeaderStructs.h"
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+
+namespace mech = sst::basic_blocks::mechanics;
 
 #include <chrono>
 #include <thread>
@@ -1763,4 +1767,97 @@ TEST_CASE("Looped Samples Keep Sounding", "[dsp]")
     // long finished and only the DC blocker's decay is left
     REQUIRE(looped > 1.f);
     REQUIRE(oneShot < looped * 0.01f);
+}
+
+TEST_CASE("A Rejected Wavetable Header Leaves The Wavetable Alone", "[io]")
+{
+    SECTION("BuildWT keeps the previous table on a bad header")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        const auto before = wt.FlattenSource();
+
+        wt_header wh;
+
+        memset(&wh, 0, sizeof(wt_header));
+        wh.n_samples = max_wtable_size * 2;
+        wh.n_tables = 1;
+        wh.flags = 0;
+
+        std::vector<float> junk((size_t)wh.n_samples, 0.5f);
+
+        REQUIRE(!wt.BuildWT(junk.data(), wh, false));
+
+        // Crucially it does not now claim a size its buffers cannot back
+        REQUIRE(wt.size == 64);
+        REQUIRE(wt.n_tables == 8);
+        REQUIRE(wt.everBuilt);
+        REQUIRE(wt.FlattenSource() == before);
+    }
+
+    SECTION("Too many frames is rejected the same way")
+    {
+        Wavetable wt;
+        buildRampWT(&wt, 8, 64);
+
+        wt_header wh;
+
+        memset(&wh, 0, sizeof(wt_header));
+        wh.n_samples = 64;
+        wh.n_tables = max_subtables + 1;
+        wh.flags = 0;
+
+        std::vector<float> junk((size_t)wh.n_samples * wh.n_tables, 0.5f);
+
+        REQUIRE(!wt.BuildWT(junk.data(), wh, false));
+        REQUIRE(wt.size == 64);
+        REQUIRE(wt.n_tables == 8);
+    }
+}
+
+TEST_CASE("A Patch With An Unbuildable Wavetable Does Not Leave The Oscillator Empty", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+    osc->type.val.i = ot_wavetable;
+
+    // Big enough that a corrupted header still claims fewer bytes than the blob holds,
+    // so it gets past the size guard in load_patch and reaches BuildWT
+    buildRampWT(&osc->wt, 16, 2048);
+
+    void *data = nullptr;
+    auto sz = surge->storage.getPatch().save_patch(&data);
+    REQUIRE(sz > 0);
+
+    // Take a copy, since save_patch owns its buffer and we are about to scribble on it
+    std::vector<char> blob((char *)data, (char *)data + sz);
+
+    auto *ph = (sst::io::patch_header *)blob.data();
+    const auto xmlsize = mech::endian_read_int32LE(ph->xmlsize);
+    auto *wth = (wt_header *)(blob.data() + sizeof(sst::io::patch_header) + xmlsize);
+
+    REQUIRE(mech::endian_read_int32LE(wth->n_samples) == 2048);
+
+    // A frame size BuildWT must refuse
+    wth->n_samples = mech::endian_write_int32LE(max_wtable_size * 2);
+    wth->n_tables = mech::endian_write_int16LE(1);
+
+    surge->storage.getPatch().load_patch(blob.data(), (int)blob.size(), false);
+
+    auto &rt = surge->storage.getPatch().scene[0].osc[0].wt;
+
+    // Either the previous table survived or a default was queued, but the oscillator is
+    // never left describing a table it does not have
+    REQUIRE(rt.size != max_wtable_size * 2);
+    REQUIRE((rt.everBuilt || rt.queue_id == 0));
+
+    surge->storage.perform_queued_wtloads();
+    REQUIRE(rt.everBuilt);
+
+    // And it can still be saved without tripping the assert in save_patch
+    void *again = nullptr;
+    REQUIRE(surge->storage.getPatch().save_patch(&again) > 0);
 }

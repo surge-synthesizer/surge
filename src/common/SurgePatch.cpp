@@ -1229,7 +1229,25 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                     void *d = (void *)((char *)dr + sizeof(wt_header));
 
                     storage->waveTableDataMutex.lock();
-                    scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
+                    const bool wtBuilt = scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
+
+                    if (!wtBuilt)
+                    {
+                        // The header passed the bounds checks above, so this is a frame or
+                        // sample count BuildWT itself rejects. Say so rather than carrying
+                        // on: an oscillator left with no wavetable at all reads garbage,
+                        // and trips the assert in save_patch if the patch is saved again.
+                        std::cerr << "Wavetable in scene " << (char)('A' + sc) << " oscillator "
+                                  << (osc + 1) << " could not be built; possible patch corruption."
+                                  << std::endl;
+
+                        if (!scene[sc].osc[osc].wt.everBuilt)
+                        {
+                            // Nothing usable was ever here, so queue the default rather
+                            // than leaving the oscillator pointing at an empty table
+                            scene[sc].osc[osc].wt.queue_id = 0;
+                        }
+                    }
 
                     // The osc's WT was just replaced by the loaded patch so invalidate any
                     // in-progress WT script job for it. Bump inside the mutex so the worker's

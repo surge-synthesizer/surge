@@ -172,19 +172,27 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
 {
     assert(wdata);
 
-    flags = mech::endian_read_int16LE(wh.flags);
-    n_tables = mech::endian_read_int16LE(wh.n_tables);
-    size = mech::endian_read_int32LE(wh.n_samples);
+    const auto newFlags = mech::endian_read_int16LE(wh.flags);
+    const auto newTables = mech::endian_read_int16LE(wh.n_tables);
+    const int newSize = mech::endian_read_int32LE(wh.n_samples);
 
     // Reject malformed/oversized headers before writing into the fixed-size
     // TableF32WeakPointers[max_mipmap_levels][max_subtables] arrays; otherwise a
     // bogus frame or sample count is an out-of-bounds write. The false return is
     // surfaced as a load error by load_wt_wt / load_wt_wt_mem.
-    if (size <= 0 || size > max_wtable_size ||
-        n_tables + (AppendSilence ? 3u : 0u) > (unsigned)max_subtables)
+    //
+    // Validate before assigning any of it: a rejected header must leave an
+    // already-built wavetable alone, rather than leaving it describing itself with
+    // counts its buffers do not have.
+    if (newSize <= 0 || newSize > max_wtable_size ||
+        newTables + (AppendSilence ? 3u : 0u) > (unsigned)max_subtables)
     {
         return false;
     }
+
+    flags = newFlags;
+    n_tables = newTables;
+    size = newSize;
 
     size_t req_size = RequiredWTSize(size, n_tables);
 
