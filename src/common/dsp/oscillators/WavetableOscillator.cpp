@@ -339,7 +339,15 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
                 last_tableipol = tableid;
             }
         }
+    }
 
+    // The mipmap level depends only on pitch, but ::init cannot compute it (pitchmult_inv
+    // is not available there), and with retrigger off a voice starts at a random state and
+    // so skips the state == 0 block above on its first convolute. Recompute it on first_run
+    // too, otherwise the voice runs the un-mipmapped table for its first partial cycle - a
+    // note-on CPU spike rather than an audible artifact. See issue #7570.
+    if (state[voice] == 0 || first_run)
+    {
         int ts = oscdata->wt.size;
         float a = oscdata->wt.dt * pitchmult_inv;
 
@@ -791,6 +799,8 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
             }
         }
     }
+
+    first_run = false;
 }
 
 void WavetableOscillator::handleStreamingMismatches(int streamingRevision,
