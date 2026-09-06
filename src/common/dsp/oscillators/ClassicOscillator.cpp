@@ -303,7 +303,10 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
                 lvl_start = level + g;
                 level = lvl_start - seg[s] * dcu;
 
-                if (acc + seg[s] > phase)
+                // >=, not >: rand_01() can return 1.0f, so phase can equal cycle. With >
+                // the loop would fall out with s wrapped back to 0 and a stale start_level;
+                // >= breaks at the last segment with frac == 1, which is the correct end.
+                if (acc + seg[s] >= phase)
                 {
                     break;
                 }
