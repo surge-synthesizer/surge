@@ -516,7 +516,8 @@ void SurgeVoice::switch_toggled()
 
     // scenepbpitch is pitch state but without state.pkey, so that it can be used to add
     // scene pitch/octave, pitch bend and associated modulations to non-keytracked oscillators
-    state.scenepbpitch = pb;
+    state.scenepbpitch = pb + localcopy[pitch_id].f * (scene->pitch.extend_range ? 12.f : 1.f) +
+                         (octaveSize * localcopy[octave_id].i);
     state.pitch = state.pkey + state.scenepbpitch;
 
     modsources[ms_keytrack]->set_output(0, (state.pitch - (float)scene->keytrack_root.val.i) *
