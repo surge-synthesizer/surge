@@ -2630,11 +2630,13 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
         bool isModEdit = mod_editor;
+
         if (isModEdit)
         {
             auto *pp = synth->storage.getPatch().param_ptr[ptag];
             isModEdit = isModEdit && synth->isValidModulation(pp->id, modsource);
         }
+
         if (isModEdit)
         {
             auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
@@ -2655,8 +2657,8 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
         {
             undoManager()->pushParameterChange(ptag, synth->storage.getPatch().param_ptr[ptag],
                                                synth->storage.getPatch().param_ptr[ptag]->val);
+            juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
         }
-        juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
     else if (tag_mod_source0 + int(ms_ctrl1) <= tag &&
              tag_mod_source0 + int(ms_ctrl1) + int(n_customcontrollers) > tag)
@@ -2679,14 +2681,17 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
         bool isModEdit = mod_editor;
+
         if (isModEdit)
         {
             auto *pp = synth->storage.getPatch().param_ptr[ptag];
             isModEdit = isModEdit && synth->isValidModulation(pp->id, modsource);
         }
+
         if (isModEdit)
         {
             auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+
             if (mci)
             {
                 for (auto l : synth->modListeners)
