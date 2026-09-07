@@ -755,8 +755,7 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
                                 auto f = oscdata->wt.flags;
                                 // Looping and the play count reading of the unison voices
                                 // parameter are both meaningless back in wavetable playback
-                                f &= ~(wtf_is_sample | wtf_loop_sample |
-                                       wtf_unison_is_loop_count);
+                                f &= ~(wtf_is_sample | wtf_loop_sample | wtf_unison_is_loop_count);
                                 queueWavetableReslice(-1, -1, f);
                                 this->sge->queue_refresh = true;
                             });

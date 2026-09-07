@@ -585,8 +585,7 @@ float WavetableOscillator::getMorph()
 */
 float WavetableOscillator::deformLegacy(float block_pos, int voice)
 {
-    float tblip_ipol =
-        (1 - block_pos) * last_tableipol[voice] + block_pos * tableipol[voice];
+    float tblip_ipol = (1 - block_pos) * last_tableipol[voice] + block_pos * tableipol[voice];
 
     // in Continuous Morph mode tblip_ipol gives us position between current and next frame
     // when not in Continuous Morph mode, we don't interpolate so this position should be
@@ -605,8 +604,7 @@ float WavetableOscillator::deformLegacy(float block_pos, int voice)
 float WavetableOscillator::deformContinuous(float block_pos, int voice)
 {
     block_pos = nointerp ? 1 : block_pos;
-    float tblip_ipol =
-        (1 - block_pos) * last_tableipol[voice] + block_pos * tableipol[voice];
+    float tblip_ipol = (1 - block_pos) * last_tableipol[voice] + block_pos * tableipol[voice];
 
     int tempTableId = floor(tblip_ipol);
     int targetTableId = min((int)(tempTableId + 1), (int)(oscdata->wt.n_tables - 1));

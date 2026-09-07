@@ -1296,8 +1296,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                     // collapsed to one voice. Record that on load so these patches keep
                     // playing the way they always have; a table arriving without the flag
                     // from here on gets real unison instead.
-                    if (streamingRevision <= 30 &&
-                        scene[sc].osc[osc].type.val.i == ot_wavetable &&
+                    if (streamingRevision <= 30 && scene[sc].osc[osc].type.val.i == ot_wavetable &&
                         (scene[sc].osc[osc].wt.flags & wtf_is_sample))
                     {
                         scene[sc].osc[osc].wt.flags |= wtf_unison_is_loop_count;
@@ -1307,10 +1306,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                         // The count now means what it says across its whole range, so the
                         // patches that were relying on that need the loop flag to keep
                         // sustaining.
-                        if (scene[sc]
-                                .osc[osc]
-                                .p[WavetableOscillator::wt_unison_voices]
-                                .val.i >= 7)
+                        if (scene[sc].osc[osc].p[WavetableOscillator::wt_unison_voices].val.i >= 7)
                         {
                             scene[sc].osc[osc].wt.flags |= wtf_loop_sample;
                         }

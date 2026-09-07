@@ -2086,7 +2086,6 @@ TEST_CASE("Sample Play Count Covers The Whole Unison Range", "[dsp]")
     {
         // Nine voices, but nine voices - so it is finished long before nine plays would be
         REQUIRE(energyIn(9, 0, 0, 40) > 1.f);
-        REQUIRE(energyIn(9, 0, 150, 250) <
-                energyIn(9, wtf_unison_is_loop_count, 150, 250) * 0.01f);
+        REQUIRE(energyIn(9, 0, 150, 250) < energyIn(9, wtf_unison_is_loop_count, 150, 250) * 0.01f);
     }
 }
