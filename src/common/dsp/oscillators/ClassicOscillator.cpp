@@ -256,7 +256,25 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
             */
             double detune = oscdata->p[co_unison_detune].get_extended(localcopy[id_detune].f) *
                             (detune_bias * float(i) + detune_offset);
-            float t = storage->note_to_pitch_inv_tuningctr(detune);
+
+            /*
+            ** Mirror ::convolute's non-absolute t, sync included, so a synced voice is seeded
+            ** from the period it will actually run at. The absolute branch is deliberately
+            ** left alone: its formula is samplerate dependent and known to be odd (see the
+            ** comment in ::convolute), so seeding from the unsynced period there keeps the
+            ** existing behaviour rather than baking the oddity into a second place.
+            */
+            float t;
+
+            if (oscdata->p[co_unison_detune].absolute)
+            {
+                t = storage->note_to_pitch_inv_tuningctr(detune);
+            }
+            else
+            {
+                float sync = min((float)l_sync.v, (12 + 72 + 72) - pitch);
+                t = storage->note_to_pitch_inv_tuningctr(detune + sync);
+            }
 
             float pw = limit_range(l_pw.v, 0.001f, 0.999f);
             float pw2 = 2.f * l_pw2.v;

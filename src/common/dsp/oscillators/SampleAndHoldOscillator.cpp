@@ -134,8 +134,22 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
 
             // l_pw is a lag<double> in this oscillator, unlike the Classic one
             float pw = (float)limit_range(l_pw.v, 0.001, 0.999);
+
+            // As in ClassicOscillator: mirror ::convolute's non-absolute t, sync included,
+            // and leave the absolute branch seeded from the unsynced period.
+            float t;
+
+            if (oscdata->p[shn_unison_detune].absolute)
+            {
+                t = storage->note_to_pitch_inv_tuningctr(detune);
+            }
+            else
+            {
+                t = storage->note_to_pitch_inv_tuningctr(detune + l_sync.v);
+            }
+
             // convolute uses the inverted form; state 0 runs for t * pwidth
-            float seg = storage->note_to_pitch_inv_tuningctr(detune) * pw;
+            float seg = t * pw;
 
             oscstate[i] = seg * (1.f - phase);
             syncstate[i] = oscstate[i];
