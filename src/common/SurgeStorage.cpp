@@ -1510,7 +1510,8 @@ void SurgeStorage::perform_queued_wtloads()
                 // first and any in-progress WT script generate skips its stale publish. The bump
                 // takes its own lock scope because load_wt takes waveTableDataMutex internally.
                 if (patch.scene[sc].osc[o].wt.queue_id != -1 ||
-                    patch.scene[sc].osc[o].wt.queue_filename[0])
+                    patch.scene[sc].osc[o].wt.queue_filename[0] ||
+                    patch.scene[sc].osc[o].wt.queue_reslice)
                 {
                     std::lock_guard<std::mutex> lk(waveTableDataMutex);
                     wtGenPublishToken[sc * n_oscs + o]++;
@@ -1549,12 +1550,42 @@ void SurgeStorage::perform_queued_wtloads()
                     if (patch.scene[sc].osc[o].wt.everBuilt)
                         patch.isDirty = true;
                 }
+                else if (patch.scene[sc].osc[o].wt.queue_reslice)
+                {
+                    auto &wt = patch.scene[sc].osc[o].wt;
+
+                    wt.queue_reslice = false;
+
+                    bool ok;
+                    {
+                        std::lock_guard<std::mutex> lk(waveTableDataMutex);
+                        ok = wt.Reslice(wt.reslice_size, wt.reslice_frames, wt.reslice_flags);
+                    }
+
+                    if (ok)
+                    {
+                        // The table no longer matches the file it came from, so detach it.
+                        // wavetable_display_name is deliberately left alone: it is what the
+                        // oscillator keeps showing, and it is what stops the patch loader
+                        // falling back to "(Patch Wavetable)".
+                        wt.current_id = -1;
+                        wt.current_filename = "";
+                        wt.force_refresh_display = true;
+                        wt.refresh_display = true;
+                        patch.isDirty = true;
+                    }
+
+                    wt.reslice_size = -1;
+                    wt.reslice_frames = -1;
+                    wt.reslice_flags = 0;
+                }
             }
             catch (const std::exception &e)
             {
                 // Clear the queue so we don't retry the bad load every block
                 patch.scene[sc].osc[o].wt.queue_id = -1;
                 patch.scene[sc].osc[o].wt.queue_filename = "";
+                patch.scene[sc].osc[o].wt.queue_reslice = false;
                 reportError(std::string("Unable to load wavetable: ") + e.what(),
                             "Wavetable Load Error");
             }
@@ -1842,7 +1873,9 @@ bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
 
     wth.n_samples = wt->size;
     wth.n_tables = wt->n_tables;
-    wth.flags = wt->flags;
+    // wtf_user_modified describes this session's edit history, not the file, and older
+    // Surge builds know nothing about the bit - so don't write it out.
+    wth.flags = wt->flags & ~wtf_user_modified;
     if (!metadata.empty())
         wth.flags |= wtf_has_metadata;
 

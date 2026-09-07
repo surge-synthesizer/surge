@@ -73,7 +73,9 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 
     if (oscdata->wt.flags & wtf_is_sample)
     {
-        sampleloop = n_unison;
+        // An explicit loop flag overrides the unison-count-as-play-count behavior rather
+        // than adding to it, so a looped sample ignores the voice count entirely.
+        sampleloop = (oscdata->wt.flags & wtf_loop_sample) ? infinite_sampleloop : n_unison;
         n_unison = 1;
     }
 
@@ -308,7 +310,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
             tableid++;
             if (tableid > oscdata->wt.n_tables - paddingLoop)
             {
-                if (sampleloop < 7)
+                if (sampleloop < infinite_sampleloop)
                     sampleloop--;
 
                 if (sampleloop > 0)

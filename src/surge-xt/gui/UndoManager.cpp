@@ -237,6 +237,18 @@ struct UndoManagerImpl
         {
             res += pt->estimateUserDataSize();
         }
+        if (auto pt = std::get_if<UndoWavetable>(&a))
+        {
+            // The variant only holds a pointer, so without this a stack of wavetable undos
+            // is invisible to maxUndoStackMem while really costing megabytes apiece: the
+            // weak pointer arrays are over 100k on their own, before the sample data.
+            res += pt->wavetable_script.size();
+
+            if (pt->wt)
+            {
+                res += sizeof(Wavetable) + pt->wt->dataSizes * (sizeof(float) + sizeof(short));
+            }
+        }
         return res;
     }
 
@@ -444,14 +456,17 @@ struct UndoManagerImpl
 
     void doCleanup()
     {
-        while (undoStackMem > maxUndoStackMem)
+        // Now that a wavetable record is accounted for honestly, a single one can be a
+        // sizeable fraction of the budget on its own - so these have to stop at empty
+        // rather than trusting the budget to be reachable by evicting.
+        while (undoStackMem > maxUndoStackMem && !undoStack.empty())
         {
             auto r = undoStack.front();
             undoStackMem -= actionSize(r.action);
             freeAction(r.action);
             undoStack.pop_front();
         }
-        while (redoStackMem > maxRedoStackMem)
+        while (redoStackMem > maxRedoStackMem && !redoStack.empty())
         {
             auto r = redoStack.front();
             redoStackMem -= actionSize(r.action);
