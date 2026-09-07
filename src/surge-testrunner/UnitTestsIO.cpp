@@ -1861,3 +1861,46 @@ TEST_CASE("A Patch With An Unbuildable Wavetable Does Not Leave The Oscillator E
     void *again = nullptr;
     REQUIRE(surge->storage.getPatch().save_patch(&again) > 0);
 }
+
+TEST_CASE("Load Patch By Path Preset Semantics", "[io]")
+{
+    /*
+     * loadPatchByPath defaults to treating the file as a preset, which deliberately throws away
+     * the name and category streamed in the patch and keeps whatever the caller passed. That is
+     * right for dropping an arbitrary fxp onto a running session, and wrong for restoring a
+     * periodic patch backup, which is Surge's own patch coming home.
+     */
+    auto path = fs::temp_directory_path() / "surge_test_preset_semantics.fxp";
+
+    auto src = Surge::Headless::createSurge(44100);
+    REQUIRE(src);
+
+    src->storage.getPatch().name = "Plus Minus";
+    src->storage.getPatch().category = "Malfunction/Leads";
+    src->savePatchToPath(path, false);
+
+    SECTION("Not As Preset Restores Streamed Name And Category")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        REQUIRE(surge->loadPatchByPath(path_to_string(path).c_str(), -1, "Plus Minus (23-16-20)",
+                                       false));
+
+        REQUIRE(surge->storage.getPatch().name == "Plus Minus");
+        REQUIRE(surge->storage.getPatch().category == "Malfunction/Leads");
+    }
+
+    SECTION("As Preset Keeps The Caller Supplied Name")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        REQUIRE(surge->loadPatchByPath(path_to_string(path).c_str(), -1, "Plus Minus (23-16-20)"));
+
+        REQUIRE(surge->storage.getPatch().name == "Plus Minus (23-16-20)");
+        REQUIRE(surge->storage.getPatch().category == "Drag & Drop");
+    }
+
+    fs::remove(path);
+}

@@ -71,6 +71,9 @@ enum DefaultKey
     InitialPatchCategoryType,
     AppendOriginalPatchBy,
 
+    EnablePatchBackups,
+    PatchBackupInterval,
+
     OverrideTuningOnPatchLoad,
     OverrideMappingOnPatchLoad,
     OverrideTempoOnPatchLoad,

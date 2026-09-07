@@ -792,6 +792,7 @@ void SurgeSynthProcessor::processBlockPlayhead()
         playhead->getCurrentPosition(cp);
         surge->time_data.tempo = cp.bpm;
         surge->time_data.isPlaying = cp.isPlaying;
+        surge->transportRunning = cp.isPlaying || cp.isRecording;
 
         // isRecording should always imply isPlaying but better safe than sorry
         if (cp.isPlaying || cp.isRecording)
@@ -823,6 +824,10 @@ void SurgeSynthProcessor::processBlockPlayhead()
 
         // Formula modulator only, in standalone the transport is always set running.
         surge->time_data.isPlaying = (wrapperType == wrapperType_Standalone);
+
+        // ...but the real transport is not running, since there is no host playhead here.
+        // Periodic patch backups read this, so in standalone they are never transport gated.
+        surge->transportRunning = false;
 
         surge->resetStateFromTimeData();
     }

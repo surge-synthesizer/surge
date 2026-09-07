@@ -200,6 +200,13 @@ struct PatchSelector : public juce::Component,
     bool populatePatchMenuForCategory(int index, juce::PopupMenu &contextMenu, bool single_category,
                                       int &main_e, bool rootCall);
 
+    /*
+     * Builds the periodic patch backups submenu straight off disk, since backups are kept out of
+     * patch_list and the patch database on purpose. Returns false, adding nothing, when there are
+     * no backups to show.
+     */
+    bool populateBackupsMenu(juce::PopupMenu &contextMenu);
+
     // a little transparent button to alow ally and focus over find and fav
     struct TB;
     std::unique_ptr<TB> searchButton, favoriteButton;

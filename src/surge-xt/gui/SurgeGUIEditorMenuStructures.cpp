@@ -1126,6 +1126,40 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
                                  !appendOGPatchBy);
                          });
 
+    auto patchBackupMenu = juce::PopupMenu();
+
+    bool enablePatchBackups = Surge::Storage::getUserDefaultValue(
+        &(synth->storage), Surge::Storage::EnablePatchBackups, false);
+
+    patchBackupMenu.addItem(Surge::GUI::toOSCase("Enable Patch Backups"), true, enablePatchBackups,
+                            [this, enablePatchBackups]() {
+                                Surge::Storage::updateUserDefaultValue(
+                                    &(this->synth->storage), Surge::Storage::EnablePatchBackups,
+                                    !enablePatchBackups);
+                            });
+
+    int backupInterval = std::clamp(Surge::Storage::getUserDefaultValue(
+                                        &(synth->storage), Surge::Storage::PatchBackupInterval, 5),
+                                    1, 30);
+
+    auto backupStr = fmt::format("Change Backup Save Interval (Current: {} {})", backupInterval,
+                                 backupInterval == 1 ? "Minute" : "Minutes");
+
+    patchBackupMenu.addItem(Surge::GUI::toOSCase(backupStr), [this, where, backupInterval]() {
+        promptForMiniEdit(
+            std::to_string(backupInterval),
+            "Enter a number of minutes (1 to 30):", "Backup Save Interval", where,
+            [this](const std::string &s) {
+                auto val = std::clamp(std::atoi(s.c_str()), 1, 30);
+
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::PatchBackupInterval, val);
+            },
+            mainMenu);
+    });
+
+    patchDefMenu.addSubMenu(Surge::GUI::toOSCase("Patch Backups"), patchBackupMenu);
+
     patchDefMenu.addSeparator();
 
     if (Surge::GUI::getIsStandalone())
