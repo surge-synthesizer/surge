@@ -744,30 +744,31 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
     // still are, since the window oscillator reads both.
     if (oscdata->type.val.i == ot_wavetable)
     {
-        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "SHAPE");
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "PLAYBACK");
 
         const bool isSample = (wt.flags & wtf_is_sample) != 0;
+        const bool isSampleLooped = isSample && (wt.flags & wtf_loop_sample) != 0;
+        const bool isSampleOneshot = isSample && !isSampleLooped;
 
-        contextMenu.addItem(Surge::GUI::toOSCase("Play as Oneshot"), true, isSample,
+        contextMenu.addItem(Surge::GUI::toOSCase("Play as Wavetable"), true, !isSample,
                             [this, isSample]() {
                                 auto f = oscdata->wt.flags;
-
-                                if (isSample)
-                                {
-                                    // Looping is meaningless back in wavetable playback
-                                    f &= ~(wtf_is_sample | wtf_loop_sample);
-                                }
-                                else
-                                {
-                                    f |= wtf_is_sample;
-                                }
-
+                                // Looping is meaningless back in wavetable playback
+                                f &= ~(wtf_is_sample | wtf_loop_sample);
                                 queueWavetableReslice(-1, -1, f);
                             });
 
-        contextMenu.addItem(
-            Surge::GUI::toOSCase("Loop Oneshot"), isSample, (wt.flags & wtf_loop_sample) != 0,
-            [this]() { queueWavetableReslice(-1, -1, oscdata->wt.flags ^ wtf_loop_sample); });
+        contextMenu.addItem(Surge::GUI::toOSCase("Play as Oneshot Sample"), true, isSampleOneshot,
+                            [this]() {
+                                auto f = oscdata->wt.flags | wtf_is_sample;
+                                queueWavetableReslice(-1, -1, f);
+                            });
+
+        contextMenu.addItem(Surge::GUI::toOSCase("Play as Looped Sample"), true, isSampleLooped,
+                            [this]() {
+                                auto f = oscdata->wt.flags | wtf_is_sample | wtf_loop_sample;
+                                queueWavetableReslice(-1, -1, f);
+                            });
 
         contextMenu.addSeparator();
     }
@@ -798,7 +799,7 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
             this);
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCase(fmt::format("Number of Frames: {}...", frames)), true,
+    contextMenu.addItem(Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", frames)), true,
                         false, framesAction);
 
     juce::PopupMenu sizeMenu;
