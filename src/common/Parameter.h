@@ -127,6 +127,10 @@ enum ctrltypes
     ct_wstype,
     ct_wt2window,
     ct_osccount,
+    // Same range and streaming as ct_osccount, but on the two wavetable-data oscillators
+    // the count doubles as a sample play count when wtf_unison_is_loop_count is set, so it
+    // needs a dynamic name and a display that reads "nx" rather than "voices".
+    ct_osccount_or_playcount,
     ct_oscspread,
     ct_oscspread_bipolar,
     ct_scenemode,

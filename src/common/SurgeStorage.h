@@ -150,9 +150,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 28 -> 29 (XT 1.4.* nightlies) save/load size of ArbitraryBlockStorage segment
 // 29 -> 30 (XT 1.4.* nightlies) reordered Phaser LFO waveforms and added a Saw shape (sst-effects upgrade)
 //                               Modern oscillator can now disable waveforms 2 and 3 to save CPU
+// 30 -> 31 (XT 1.4.* nightlies) Unison Voices parameter can change to Loop Count for Wavetable oscillator (old patches handled for wtf_loop_sample)
 // clang-format on
 
-const int ff_revision = 30;
+const int ff_revision = 31;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type

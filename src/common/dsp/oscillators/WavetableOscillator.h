@@ -85,18 +85,27 @@ class WavetableOscillator : public AbstractBlitOscillator
     int mipmap[MAX_UNISON], mipmap_ofs[MAX_UNISON];
     lag<float> FMdepth, hpf_coeff, integrator_mult, l_hskew, l_vskew, l_clip, l_shape;
     float formant_t, formant_last, pitch_last, pitch_t;
-    float tableipol, last_tableipol;
+    // Frame position, per unison voice. In morph mode every voice holds the same value and
+    // the block-rate code broadcasts it to all of them, which keeps the per-sample deform
+    // read - it sits in the innermost audio loop - a plain [voice] index with no branch. In
+    // sample mode the voices walk through the table independently.
+    float tableipol[MAX_UNISON], last_tableipol[MAX_UNISON];
     float hskew, last_hskew;
-    int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant, tableid, last_tableid;
+    int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant;
+    int tableid[MAX_UNISON];
+    // Read only by the pre-1.4 morph clamp and the init/reset paths, never in sample mode,
+    // so this one stays shared
+    int last_tableid;
     int FMdelay;
     int nointerp;
     float FMmul_inv;
-    // Play count for sample-mode playback, counted down each time the sample wraps. It is
-    // seeded from the unison voice count, which for samples has always doubled as "play the
-    // sample this many times"; at this value or above it stops counting down and the sample
-    // loops forever, which is what wtf_loop_sample pins it to.
-    static constexpr int infinite_sampleloop = 7;
-    int sampleloop;
+    // Play count for sample-mode playback, per voice, counted down each time the sample
+    // wraps. wtf_loop_sample means "never stop" and is represented by the sentinel below:
+    // at that value the countdown is skipped entirely. The sentinel sits above MAX_UNISON
+    // deliberately, so that when wtf_unison_is_loop_count makes the unison voice count
+    // double as the play count, the whole 1..MAX_UNISON range stays a literal play count.
+    static constexpr int infinite_sampleloop = MAX_UNISON + 1;
+    int sampleloop[MAX_UNISON];
 
     pdata *unmodulatedLocalcopy;
     FeatureDeform deformType;

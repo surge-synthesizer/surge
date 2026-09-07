@@ -985,6 +985,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_osccount:
+    case ct_osccount_or_playcount:
         valtype = vt_int;
         val_min.i = 1;
         val_max.i = 16;
@@ -2101,6 +2102,8 @@ bool Parameter::supportsDynamicName() const
     case ct_pitch_extendable_very_low_minval:
     case ct_freq_audible_very_low_minval:
     case ct_tape_drive:
+    case ct_oscspread:
+    case ct_osccount_or_playcount:
         return true;
     default:
         break;
@@ -3855,6 +3858,33 @@ std::string Parameter::get_display(bool external, float ef) const
         case ct_osccount:
             txt = fmt::format("{:d} voice{:s}", i, (i > 1 ? "s" : ""));
             break;
+        case ct_osccount_or_playcount:
+        {
+            // On the wavetable data oscillators this count doubles as a sample play count
+            // when wtf_unison_is_loop_count is set. Reach the oscillator the same way the
+            // dynamic name does rather than through user_data, which Morph already owns.
+            bool asPlays = false;
+
+            if (storage && scene > 0 && scene <= n_scenes && ctrlgroup == cg_OSC &&
+                ctrlgroup_entry >= 0 && ctrlgroup_entry < n_oscs)
+            {
+                const auto &wtf =
+                    storage->getPatch().scene[scene - 1].osc[ctrlgroup_entry].wt.flags;
+
+                asPlays = (wtf & wtf_is_sample) && (wtf & wtf_unison_is_loop_count);
+            }
+
+            if (asPlays)
+            {
+                txt = fmt::format("{:d}x", i);
+            }
+            else
+            {
+                txt = fmt::format("{:d} voice{:s}", i, (i > 1 ? "s" : ""));
+            }
+
+            break;
+        }
         case ct_fxtype:
             txt = fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)];
             break;
@@ -4491,6 +4521,7 @@ bool Parameter::can_be_nondestructively_modulated() const
     case ct_bool_retrigger:
     case ct_osctype:
     case ct_osccount:
+    case ct_osccount_or_playcount:
     case ct_pitch_octave:
     case ct_wt2window:
     case ct_ringmod_sineoscmode:

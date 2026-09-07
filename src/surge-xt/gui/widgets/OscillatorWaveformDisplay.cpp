@@ -753,22 +753,46 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
         contextMenu.addItem(Surge::GUI::toOSCase("Play as Wavetable"), true, !isSample,
                             [this, isSample]() {
                                 auto f = oscdata->wt.flags;
-                                // Looping is meaningless back in wavetable playback
-                                f &= ~(wtf_is_sample | wtf_loop_sample);
+                                // Looping and the play count reading of the unison voices
+                                // parameter are both meaningless back in wavetable playback
+                                f &= ~(wtf_is_sample | wtf_loop_sample |
+                                       wtf_unison_is_loop_count);
                                 queueWavetableReslice(-1, -1, f);
+                                this->sge->queue_refresh = true;
                             });
 
         contextMenu.addItem(Surge::GUI::toOSCase("Play as Oneshot Sample"), true, isSampleOneshot,
                             [this]() {
                                 auto f = oscdata->wt.flags | wtf_is_sample;
+                                f &= ~wtf_loop_sample;
                                 queueWavetableReslice(-1, -1, f);
+                                this->sge->queue_refresh = true;
                             });
 
         contextMenu.addItem(Surge::GUI::toOSCase("Play as Looped Sample"), true, isSampleLooped,
                             [this]() {
                                 auto f = oscdata->wt.flags | wtf_is_sample | wtf_loop_sample;
+                                f &= ~wtf_unison_is_loop_count;
                                 queueWavetableReslice(-1, -1, f);
+                                this->sge->queue_refresh = true;
                             });
+
+        // On a sample the unison voices parameter can be read as a play count instead,
+        // which is how samples behaved before this was selectable. It only means anything
+        // in sample playback and not looped, so it is only offered there.
+        if (isSampleOneshot)
+        {
+            contextMenu.addSeparator();
+
+            const bool isPlayCount = (wt.flags & wtf_unison_is_loop_count) != 0;
+
+            contextMenu.addItem(Surge::GUI::toOSCase("Use Unison Voices as Loop Count"), true,
+                                isPlayCount, [this]() {
+                                    auto f = oscdata->wt.flags ^ wtf_unison_is_loop_count;
+                                    queueWavetableReslice(-1, -1, f);
+                                    this->sge->queue_refresh = true;
+                                });
+        }
 
         contextMenu.addSeparator();
     }

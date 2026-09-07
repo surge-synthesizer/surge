@@ -1738,8 +1738,9 @@ TEST_CASE("Looped Samples Keep Sounding", "[dsp]")
 
         REQUIRE(wt.Reslice(-1, -1, flags));
 
-        // A one voice unison seeds sampleloop with 1, so an unlooped sample plays once and
-        // stops. Without pinning it the unison count would be doing the looping for us.
+        // Without wtf_unison_is_loop_count the play count is 1 whatever the unison voices
+        // are, so an unlooped sample plays once and stops. Pinned to a single voice anyway,
+        // so that this measures the loop flag rather than the unison spread.
         osc->p[WavetableOscillator::wt_unison_voices].val.i = 1;
 
         surge->playNote(0, 60, 127, 0);
@@ -1860,4 +1861,232 @@ TEST_CASE("A Patch With An Unbuildable Wavetable Does Not Leave The Oscillator E
     // And it can still be saved without tripping the assert in save_patch
     void *again = nullptr;
     REQUIRE(surge->storage.getPatch().save_patch(&again) > 0);
+}
+
+TEST_CASE("The Sample Unison Mode Flag Round Trips", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge.get());
+
+    auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+    osc->type.val.i = ot_wavetable;
+
+    auto &wt = osc->wt;
+    buildRampWT(&wt, 8, 64);
+    REQUIRE(wt.Reslice(-1, -1,
+                       wt.flags | wtf_is_sample | wtf_unison_is_loop_count | wtf_user_modified));
+
+    SECTION("through a .wt file")
+    {
+        auto f = fs::temp_directory_path() / "surge_unison_mode_flag.wt";
+        REQUIRE(surge->storage.export_wt_wt_portable(f, &wt, ""));
+
+        Wavetable back;
+        std::string md;
+        REQUIRE(surge->storage.load_wt_wt(path_to_string(f), &back, md));
+
+        REQUIRE(back.flags & wtf_is_sample);
+        // The mode says how the file should play, so unlike wtf_user_modified - which only
+        // records this session's edit history - it belongs in the exported file
+        REQUIRE(back.flags & wtf_unison_is_loop_count);
+        REQUIRE(!(back.flags & wtf_user_modified));
+
+        fs::remove(f);
+    }
+
+    SECTION("through a patch")
+    {
+        void *data = nullptr;
+        auto sz = surge->storage.getPatch().save_patch(&data);
+        REQUIRE(sz > 0);
+        surge->storage.getPatch().load_patch(data, sz, false);
+
+        REQUIRE(surge->storage.getPatch().scene[0].osc[0].wt.flags & wtf_unison_is_loop_count);
+    }
+
+    SECTION("and stays clear through a patch when it started clear")
+    {
+        REQUIRE(wt.Reslice(-1, -1, wt.flags & ~wtf_unison_is_loop_count));
+
+        void *data = nullptr;
+        auto sz = surge->storage.getPatch().save_patch(&data);
+        REQUIRE(sz > 0);
+        surge->storage.getPatch().load_patch(data, sz, false);
+
+        // A current revision patch must not pick the flag up from the migration
+        REQUIRE(!(surge->storage.getPatch().scene[0].osc[0].wt.flags & wtf_unison_is_loop_count));
+    }
+}
+
+TEST_CASE("Old Patches Keep Reading Unison Voices As A Sample Play Count", "[io]")
+{
+    // save_patch stamps the current ff_revision into the patch XML. Rewriting it in place is
+    // what puts the loader on the pre-flag migration path; both numbers are the same width,
+    // so the xml size recorded in the patch header stays correct.
+    auto downgradeRevision = [](void *data, size_t sz) {
+        const std::string from = "revision=\"" + std::to_string(ff_revision) + "\"";
+        const std::string to = "revision=\"30\"";
+
+        REQUIRE(from.size() == to.size());
+
+        char *p = (char *)data;
+
+        for (size_t i = 0; i + from.size() <= sz; ++i)
+        {
+            if (memcmp(p + i, from.c_str(), from.size()) == 0)
+            {
+                memcpy(p + i, to.c_str(), to.size());
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    auto roundTripAsOldPatch = [&](int oscType, int extraFlags, int unisonVoices) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge.get());
+
+        auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+        osc->type.val.i = oscType;
+        osc->p[WavetableOscillator::wt_unison_voices].val.i = unisonVoices;
+
+        buildRampWT(&osc->wt, 8, 64);
+        REQUIRE(osc->wt.Reslice(-1, -1, osc->wt.flags | extraFlags));
+
+        void *data = nullptr;
+        auto sz = surge->storage.getPatch().save_patch(&data);
+        REQUIRE(sz > 0);
+        REQUIRE(downgradeRevision(data, sz));
+
+        surge->storage.getPatch().load_patch(data, sz, false);
+
+        return surge->storage.getPatch().scene[0].osc[0].wt.flags;
+    };
+
+    SECTION("a sample gets the flag, so the count keeps meaning plays")
+    {
+        const auto flags = roundTripAsOldPatch(ot_wavetable, wtf_is_sample, 3);
+
+        REQUIRE(flags & wtf_is_sample);
+        REQUIRE(flags & wtf_unison_is_loop_count);
+        // Three plays was three plays then and is three plays now, so nothing pins it
+        REQUIRE(!(flags & wtf_loop_sample));
+    }
+
+    SECTION("a voice count of seven or more also gets the loop flag")
+    {
+        // The old countdown stopped decrementing at 7, so these patches were looping forever
+        // rather than playing nine times. Only the loop flag preserves that now that the
+        // whole range is a literal count.
+        const auto flags = roundTripAsOldPatch(ot_wavetable, wtf_is_sample, 9);
+
+        REQUIRE(flags & wtf_unison_is_loop_count);
+        REQUIRE(flags & wtf_loop_sample);
+    }
+
+    SECTION("seven is the boundary")
+    {
+        REQUIRE(roundTripAsOldPatch(ot_wavetable, wtf_is_sample, 7) & wtf_loop_sample);
+        REQUIRE(!(roundTripAsOldPatch(ot_wavetable, wtf_is_sample, 6) & wtf_loop_sample));
+    }
+
+    SECTION("a wavetable that is not a sample is left alone")
+    {
+        const auto flags = roundTripAsOldPatch(ot_wavetable, 0, 9);
+
+        REQUIRE(!(flags & wtf_unison_is_loop_count));
+        REQUIRE(!(flags & wtf_loop_sample));
+    }
+
+    SECTION("the window oscillator is left alone, since it never played samples")
+    {
+        const auto flags = roundTripAsOldPatch(ot_window, wtf_is_sample, 9);
+
+        REQUIRE(!(flags & wtf_unison_is_loop_count));
+        REQUIRE(!(flags & wtf_loop_sample));
+    }
+}
+
+TEST_CASE("Sample Play Count Covers The Whole Unison Range", "[dsp]")
+{
+    // Eight frames at note 60 works out at roughly 40 to 50 blocks per play, so sixteen
+    // plays finish around block 665 and land well inside the 1200 blocks below.
+    //
+    // Note that "stopped" is not "silent": the oscillator feeds a leaky integrator, so a
+    // finished sample leaves an exponential tail that is still around 1e-2 a hundred blocks
+    // later. The checks below therefore measure a stopped voice against one that is
+    // genuinely still sounding in the same window, rather than against zero.
+    auto energyIn = [](int voices, int extraFlags, int fromBlock, int toBlock) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge.get());
+
+        auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+        osc->queue_type = ot_wavetable;
+
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+
+        auto &wt = osc->wt;
+        buildSineWT(&wt, 8, 1024);
+        REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample | extraFlags));
+
+        osc->p[WavetableOscillator::wt_unison_voices].val.i = voices;
+
+        surge->playNote(0, 60, 127, 0);
+
+        float e = 0;
+
+        for (int q = 0; q < 1200; ++q)
+        {
+            surge->process();
+
+            if (q >= fromBlock && q < toBlock)
+            {
+                for (int s = 0; s < BLOCK_SIZE; ++s)
+                    e += fabs(surge->output[0][s]);
+            }
+        }
+
+        return e;
+    };
+
+    SECTION("a count of two stops after two plays")
+    {
+        const auto stopped = energyIn(2, wtf_unison_is_loop_count, 150, 250);
+        const auto sounding = energyIn(9, wtf_unison_is_loop_count, 150, 250);
+
+        REQUIRE(energyIn(2, wtf_unison_is_loop_count, 0, 40) > 1.f);
+        REQUIRE(sounding > 1.f);
+        REQUIRE(stopped < sounding * 0.01f);
+    }
+
+    SECTION("a count above six is a count, not a licence to loop forever")
+    {
+        // The regression guard. The old countdown stopped decrementing at 7, so nine plays
+        // used to sustain indefinitely; they now end around block 390.
+        REQUIRE(energyIn(9, wtf_unison_is_loop_count, 150, 250) > 1.f);
+        REQUIRE(energyIn(9, wtf_unison_is_loop_count, 1100, 1200) <
+                energyIn(9, wtf_unison_is_loop_count | wtf_loop_sample, 1100, 1200) * 0.001f);
+    }
+
+    SECTION("the top of the range is still a count")
+    {
+        REQUIRE(energyIn(16, wtf_unison_is_loop_count, 400, 500) > 1.f);
+        REQUIRE(energyIn(16, wtf_unison_is_loop_count, 1100, 1200) <
+                energyIn(16, wtf_unison_is_loop_count | wtf_loop_sample, 1100, 1200) * 0.001f);
+    }
+
+    SECTION("the loop flag overrides the count entirely")
+    {
+        REQUIRE(energyIn(2, wtf_unison_is_loop_count | wtf_loop_sample, 1100, 1200) > 1.f);
+    }
+
+    SECTION("without the flag the count is unison and the sample plays once")
+    {
+        // Nine voices, but nine voices - so it is finished long before nine plays would be
+        REQUIRE(energyIn(9, 0, 0, 40) > 1.f);
+        REQUIRE(energyIn(9, 0, 150, 250) <
+                energyIn(9, wtf_unison_is_loop_count, 150, 250) * 0.01f);
+    }
 }
