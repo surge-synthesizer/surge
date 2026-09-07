@@ -180,6 +180,66 @@ ClassicOscillator::ClassicOscillator(SurgeStorage *storage, OscillatorStorage *o
 
 ClassicOscillator::~ClassicOscillator() {}
 
+namespace
+{
+/*
+** One segment of the SuperOscillator four segment cycle.
+**
+** ::convolute walks this cycle one segment per impulse, and ::init replays it to seed a
+** voice that starts partway through. Both used to carry their own copy of the impulse
+** heights and the segment durations, so a change to one silently desynchronised the
+** other. This is the single description they now share.
+**
+** Given the segment index and the shape parameters, it reports the impulse height at the
+** start of the segment, the level just after that impulse, the level the DC ramp reaches
+** by the end of the segment, and the segment length as a fraction of the period t. The
+** four durations sum to 2, so a full cycle lasts 2 * t.
+*/
+struct ClassicSegment
+{
+    float g;
+    float startLevel;
+    float endLevel;
+    float durationFactor;
+};
+
+inline ClassicSegment classicSegment(int state, float level, float wf, float sub, float pw,
+                                     float pw2)
+{
+    ClassicSegment r;
+
+    switch (state & 3)
+    {
+    case 0:
+    {
+        // the height of the first impulse of the cycle is absolute rather than incremental
+        float tg = ((1 + wf) * 0.5f + (1 - pw) * (-wf)) * (1 - sub) + 0.5f * sub * (2.f - pw2);
+
+        r.g = tg - level;
+        r.durationFactor = pw * pw2;
+        break;
+    }
+    case 1:
+        r.g = wf * (1.f - sub) - sub;
+        r.durationFactor = (1.f - pw) * (2.f - pw2);
+        break;
+    case 2:
+        r.g = 1.f - sub;
+        r.durationFactor = pw * (2.f - pw2);
+        break;
+    default:
+        r.g = wf * (1.f - sub) + sub;
+        r.durationFactor = (1.f - pw) * pw2;
+        break;
+    }
+
+    r.startLevel = level + r.g;
+    r.endLevel = r.startLevel - r.durationFactor * (1.f + wf) * (1.f - sub);
+
+    return r;
+}
+} // namespace
+
 void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     assert(storage);
@@ -281,62 +341,45 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
             float wf = l_shape.v;
             float sub = l_sub.v;
 
-            // These mirror the rate computation at the end of ::convolute
-            float seg[4] = {t * pw * pw2, t * (1.f - pw) * (2.f - pw2), t * pw * (2.f - pw2),
-                            t * (1.f - pw) * pw2};
-            float cycle = seg[0] + seg[1] + seg[2] + seg[3];
+            // The four segment durations sum to 2 * t, so the cycle length is known without
+            // walking the cycle to add them up
+            float cycle = 2.f * t;
 
             // One draw per voice, as before, so the rest of the random sequence is unchanged
             float phase = storage->rand_01() * cycle;
 
             // mech::rcp, not a division, to match how ::convolute computes this
             float dcu = (1.f + wf) * (1.f - sub) * mech::rcp(t);
-            float level = 0.f, lvl_start = 0.f, acc = 0.f;
+            float level = 0.f, lvl_start = 0.f, acc = 0.f, seg = 0.f;
             int s = 0;
 
             for (int step = 0; step < 4; ++step)
             {
-                float g;
+                auto sg = classicSegment(s, level, wf, sub, pw, pw2);
 
-                switch (s)
-                {
-                case 0:
-                {
-                    float tg =
-                        ((1 + wf) * 0.5f + (1 - pw) * (-wf)) * (1 - sub) + 0.5f * sub * (2.f - pw2);
-                    g = tg - level;
-                    break;
-                }
-                case 1:
-                    g = wf * (1.f - sub) - sub;
-                    break;
-                case 2:
-                    g = 1.f - sub;
-                    break;
-                default:
-                    g = wf * (1.f - sub) + sub;
-                    break;
-                }
+                seg = t * sg.durationFactor;
+                lvl_start = sg.startLevel;
+                level = sg.endLevel;
 
-                lvl_start = level + g;
-                level = lvl_start - seg[s] * dcu;
-
-                // >=, not >: rand_01() can return 1.0f, so phase can equal cycle. With >
-                // the loop would fall out with s wrapped back to 0 and a stale start_level;
-                // >= breaks at the last segment with frac == 1, which is the correct end.
-                if (acc + seg[s] >= phase)
+                /*
+                ** Break on the last segment whatever the comparison says. rand_01() can
+                ** return 1.0f, so phase can equal the cycle length, and the four durations
+                ** summed in float can land a rounding step short of it; falling out of the
+                ** loop instead would leave s wrapped back to 0 with a stale start_level.
+                */
+                if (step == 3 || acc + seg >= phase)
                 {
                     break;
                 }
 
-                acc += seg[s];
+                acc += seg;
                 s = (s + 1) & 3;
             }
 
             float elapsed = phase - acc;
-            float frac = (seg[s] > 0.f) ? (elapsed / seg[s]) : 0.f;
+            float frac = (seg > 0.f) ? limit_range(elapsed / seg, 0.f, 1.f) : 0.f;
 
-            oscstate[i] = seg[s] - elapsed;
+            oscstate[i] = max(0.f, seg - elapsed);
             syncstate[i] = oscstate[i];
             last_level[i] = level;
 
@@ -553,40 +596,18 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
     ** level at this impulse. Each time we convolve we advance the state pointer and move to the
     ** next case.
     */
-    switch (state[voice])
+    if (state[voice] == 0)
     {
-    case 0:
-    {
+        // the pulse widths are latched for the whole cycle at its first impulse
         pwidth[voice] = l_pw.v;
         pwidth2[voice] = 2.f * l_pw2.v;
-
-        // calculate the height of the first impulse of the cycle
-        float tg = ((1 + wf) * 0.5f + (1 - pwidth[voice]) * (-wf)) * (1 - sub) +
-                   0.5f * sub * (2.f - pwidth2[voice]);
-
-        g = tg - last_level[voice];
-        last_level[voice] = tg;
-
-        // calculate the level sub-cycle will have at the end of its duration taking DC into account
-        last_level[voice] -= (pwidth[voice]) * (pwidth2[voice]) * (1.f + wf) * (1.f - sub);
-        break;
     }
-    case 1:
-        g = wf * (1.f - sub) - sub;
-        last_level[voice] += g;
-        last_level[voice] -= (1 - pwidth[voice]) * (2 - pwidth2[voice]) * (1 + wf) * (1.f - sub);
-        break;
-    case 2:
-        g = 1.f - sub;
-        last_level[voice] += g;
-        last_level[voice] -= (pwidth[voice]) * (2 - pwidth2[voice]) * (1 + wf) * (1.f - sub);
-        break;
-    case 3:
-        g = wf * (1.f - sub) + sub;
-        last_level[voice] += g;
-        last_level[voice] -= (1 - pwidth[voice]) * (pwidth2[voice]) * (1 + wf) * (1.f - sub);
-        break;
-    };
+
+    auto seg =
+        classicSegment(state[voice], last_level[voice], wf, sub, pwidth[voice], pwidth2[voice]);
+
+    g = seg.g;
+    last_level[voice] = seg.endLevel;
 
     g *= out_attenuation;
 
@@ -647,23 +668,7 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
     dc_uni[voice] = t_inv * (1.f + wf) * (1 - sub);
     dcbuffer[(bufpos + FIRoffset + delay)] += (dc_uni[voice] - olddc);
 
-    if (state[voice] & 1)
-    {
-        rate[voice] = t * (1.0 - pwidth[voice]);
-    }
-    else
-    {
-        rate[voice] = t * pwidth[voice];
-    }
-
-    if ((state[voice] + 1) & 2)
-    {
-        rate[voice] *= (2.0f - pwidth2[voice]);
-    }
-    else
-    {
-        rate[voice] *= pwidth2[voice];
-    }
+    rate[voice] = t * seg.durationFactor;
 
     oscstate[voice] += rate[voice];
     oscstate[voice] = max(0.f, oscstate[voice]);
