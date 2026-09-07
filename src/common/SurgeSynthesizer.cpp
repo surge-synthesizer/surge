@@ -4347,7 +4347,8 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         }
         else
         {
-            synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath).c_str(),
+            // The stem, not the whole path: this is the name the patch will be displayed under.
+            synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath.stem()).c_str(),
                                    asPreset);
         }
     }
