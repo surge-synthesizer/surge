@@ -666,24 +666,33 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         sge->getShortcutDescription(Surge::GUI::KeyboardActions::INITIALIZE_PATCH),
         [this]() { loadInitPatch(); });
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Set Current Patch as Default"), [this]() {
-        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
-                                               storage->patch_list[current_patch].name);
+    // Loading a patch straight off disk leaves current_category at -1 and current_patch stale,
+    // since such a patch has no entry in the patch list to point at. There is nothing sensible to
+    // store as the default patch in that case, so grey the item out rather than indexing the
+    // category vector at -1.
+    const bool canSetDefaultPatch =
+        current_patch >= 0 && current_patch < storage->patch_list.size() && current_category >= 0 &&
+        current_category < storage->patch_category.size();
 
-        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchCategory,
-                                               storage->patch_category[current_category].name);
+    contextMenu.addItem(
+        Surge::GUI::toOSCase("Set Current Patch as Default"), canSetDefaultPatch, false, [this]() {
+            Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
+                                                   storage->patch_list[current_patch].name);
 
-        Surge::Storage::updateUserDefaultValue(
-            storage, Surge::Storage::InitialPatchCategoryType,
-            storage->patch_category[current_category].isFactory ? "Factory" : "User");
+            Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchCategory,
+                                                   storage->patch_category[current_category].name);
 
-        storage->initPatchName = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::InitialPatchName, "Init Saw");
-        storage->initPatchCategory = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::InitialPatchCategory, "Templates");
-        storage->initPatchCategoryType = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::InitialPatchCategoryType, "Factory");
-    });
+            Surge::Storage::updateUserDefaultValue(
+                storage, Surge::Storage::InitialPatchCategoryType,
+                storage->patch_category[current_category].isFactory ? "Factory" : "User");
+
+            storage->initPatchName = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::InitialPatchName, "Init Saw");
+            storage->initPatchCategory = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::InitialPatchCategory, "Templates");
+            storage->initPatchCategoryType = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::InitialPatchCategoryType, "Factory");
+        });
 
     contextMenu.addSeparator();
 
