@@ -2218,6 +2218,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                             // Explicitly set scene to A. See #2285
                             t.source_scene = 0;
                         }
+
+                        // source_scene only disambiguates modulators which exist once per
+                        // scene. Streams written before #4960 tagged macros and MIDI
+                        // controllers with whichever scene happened to be active, which then
+                        // hides the routing from that modulator's menu. See #8053.
+                        if (!isModulatorDistinctPerScene((modsources)t.source_id))
+                        {
+                            t.source_scene = 0;
+                        }
                     }
 
                     int muted = 0;

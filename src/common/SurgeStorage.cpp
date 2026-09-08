@@ -2870,7 +2870,9 @@ void SurgeStorage::clipboard_paste(
                 ModulationRouting m;
                 m.source_id = ms;
                 m.source_index = clipboard_modulation_global[i].source_index;
-                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
+                // Only per-scene modulators carry a meaningful source_scene on a global
+                // target; stamping the paste scene onto a macro hides it. See #8053.
+                m.source_scene = isModulatorDistinctPerScene(ms) ? scene : 0;
                 m.depth = clipboard_modulation_global[i].depth;
                 m.destination_id = clipboard_modulation_global[i].destination_id;
 
@@ -2917,7 +2919,8 @@ void SurgeStorage::clipboard_paste(
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_global[i].source_id;
                 m.source_index = clipboard_modulation_global[i].source_index;
-                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
+                // See #8053; a macro's global routing is not scene tagged.
+                m.source_scene = isModulatorDistinctPerScene((modsources)m.source_id) ? scene : 0;
                 m.depth = clipboard_modulation_global[i].depth;
                 m.destination_id = clipboard_modulation_global[i].destination_id;
 
