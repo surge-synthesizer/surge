@@ -935,7 +935,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     amp_window_.setDescription("Y axis (amplitude) scale adjustment");
     keytrack_cycles_.setDescription("How many cycles of the tracked note fill the display");
 
-    trigger_speed_.setRange(0.441f, 139.4f);
+    updateSampleRate();
     trigger_limit_.setRange(1, 10000);
     trigger_level_.setRange(-100, 100);
     time_window_.setRange(-100, 100);
@@ -1150,6 +1150,21 @@ WaveformDisplay::Parameters Oscilloscope::WaveformParameters::getParams()
     return params_;
 }
 
+void Oscilloscope::WaveformParameters::updateSampleRate()
+{
+    if (storage_->samplerate == slider_samplerate_)
+    {
+        return;
+    }
+
+    slider_samplerate_ = storage_->samplerate;
+
+    // Mirrors the mapping in Parameters::triggerSpeed(), which is a phase increment per sample,
+    // so the frequency it corresponds to scales with the sample rate.
+    trigger_speed_.setRange(std::pow(10.f, -5.f) * slider_samplerate_,
+                            std::pow(10.f, -2.5f) * slider_samplerate_);
+}
+
 void Oscilloscope::WaveformParameters::onSkinChanged()
 {
     trigger_speed_.setSkin(skin, associatedBitmapStore);
@@ -1358,6 +1373,8 @@ void Oscilloscope::updateDrawing()
     {
         if (scope_mode_ == WAVEFORM)
         {
+            waveform_parameters_.updateSampleRate();
+
             auto dirty = waveform_parameters_.getParamsIfDirty();
             auto params = dirty ? std::move(*dirty) : waveform_parameters_.getParams();
 

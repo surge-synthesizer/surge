@@ -386,6 +386,10 @@ class Oscilloscope : public OverlayComponent,
         // fresh values down whenever the played note moves, not just when a control is touched.
         WaveformDisplay::Parameters getParams();
 
+        // The internal trigger runs at a fixed fraction of the sample rate, so its readout has to
+        // be refreshed whenever that changes.
+        void updateSampleRate();
+
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
@@ -410,6 +414,7 @@ class Oscilloscope : public OverlayComponent,
         WaveformDisplay::Parameters params_;
         bool params_changed_;
         std::mutex params_lock_;
+        float slider_samplerate_{0.f};
 
         Surge::Widgets::SelfUpdatingModulatableSlider trigger_speed_;
         Surge::Widgets::SelfUpdatingModulatableSlider trigger_level_;
