@@ -63,6 +63,7 @@ struct UndoManager
     void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
     void pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue);
     void pushFullLFO(int scene, int lfoid);
+    void pushLFOShape(int scene, int lfoid, int shape, int modIndex);
     void pushFormula(int scene, int lfoid, const FormulaModulatorStorage &pushValue);
     void pushFX(int fxslot);
 

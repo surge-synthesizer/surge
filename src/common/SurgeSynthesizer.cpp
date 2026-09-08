@@ -3974,6 +3974,44 @@ int SurgeSynthesizer::getMaxModulationIndex(int scene, modsources modsource) con
     return 1;
 }
 
+std::vector<std::pair<int, int>> SurgeSynthesizer::getModulationsFromSource(int modsourceScene,
+                                                                            modsources modsource,
+                                                                            int minIndex) const
+{
+    std::vector<std::pair<int, int>> res;
+
+    auto collect = [&](const std::vector<ModulationRouting> &ml, int idBase, int listScene) {
+        for (const auto &mr : ml)
+        {
+            if (mr.source_id != modsource || mr.source_index < minIndex)
+            {
+                continue;
+            }
+
+            // A global routing carries its originating scene explicitly, since the target
+            // parameter has none; a scene level one is implied by the list it lives in. See #2285
+            if (listScene < 0 ? mr.source_scene != modsourceScene : listScene != modsourceScene)
+            {
+                continue;
+            }
+
+            res.emplace_back(mr.destination_id + idBase, mr.source_index);
+        }
+    };
+
+    collect(storage.getPatch().modulation_global, 0, -1);
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        auto idBase = storage.getPatch().scene_start[sc];
+
+        collect(storage.getPatch().scene[sc].modulation_voice, idBase, sc);
+        collect(storage.getPatch().scene[sc].modulation_scene, idBase, sc);
+    }
+
+    return res;
+}
+
 void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int modsourceScene,
                                        int index, bool clearEvenIfInvalid)
 {
