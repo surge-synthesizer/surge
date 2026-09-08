@@ -117,6 +117,11 @@ struct PatchDB
     void addDebugMessage(const std::string &debug);
     void setUserFavorite(const std::string &path, bool isIt);
     void erasePatchByID(int id);
+    /*
+     * Drop every row for a path. Use this when you have just removed the file
+     * yourself, so the database follows without needing a full rescan to notice.
+     */
+    void erasePatchByPath(const std::string &path);
     void doAfterCurrentQueueDrained(std::function<void()> op);
 
     /*

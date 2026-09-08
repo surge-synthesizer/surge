@@ -732,48 +732,59 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         if (isUser)
         {
             contextMenu.addItem(Surge::GUI::toOSCase("Rename Patch..."), [this, sge]() {
-                sge->showOverlay(
-                    SurgeGUIEditor::SAVE_PATCH, [this](Overlays::OverlayComponent *co) {
-                        auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
-                        if (!psd)
+                sge->showOverlay(SurgeGUIEditor::SAVE_PATCH, [this](
+                                                                 Overlays::OverlayComponent *co) {
+                    auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+                    if (!psd)
+                        return;
+                    psd->setIsRename(true);
+                    psd->setEnclosingParentTitle("Rename Patch");
+                    const auto priorPath = storage->patch_list[current_patch].path;
+                    psd->onOK = [this, priorPath]() {
+                        /*
+                         * The save above has already queued the new path for indexing, so
+                         * queueing the removal of the old one behind it is correctly ordered
+                         * by construction. That means we can remove the file immediately
+                         * instead of waiting for the indexer to drain first, and we don't
+                         * need a full rescan for the database to notice it is gone.
+                         */
+                        try
+                        {
+                            fs::remove(priorPath);
+                        }
+                        catch (const fs::filesystem_error &e)
+                        {
+                            std::ostringstream oss;
+                            oss << "Experienced filesystem error while renaming patch " << e.what();
+                            storage->reportError(oss.str(), "Filesystem Error");
                             return;
-                        psd->setIsRename(true);
-                        psd->setEnclosingParentTitle("Rename Patch");
-                        const auto priorPath = storage->patch_list[current_patch].path;
-                        psd->onOK = [this, priorPath]() {
-                            /*
-                             * OK so the database doesn't like deleting files while it is indexing.
-                             * We should fix this (#6793) but for now put the delete action at the
-                             * end of the db processing thread. BUT that will run on the patchdb
-                             * thread so bounce it from here to there and then back here.
-                             */
-                            auto nextStep = [this, priorPath]() {
-                                auto doDelete = [this, priorPath]() {
-                                    fs::remove(priorPath);
-                                    storage->refresh_patchlist();
-                                    storage->initializePatchDb(true);
-                                };
-                                juce::MessageManager::getInstance()->callAsync(doDelete);
-                            };
-                            storage->patchDB->doAfterCurrentQueueDrained(nextStep);
-                        };
-                    });
+                        }
+
+                        storage->patchDB->erasePatchByPath(priorPath.u8string());
+                        storage->refresh_patchlist();
+                    };
+                });
             });
 
             contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this, sge]() {
                 auto onOk = [this]() {
+                    const auto path = storage->patch_list[current_patch].path;
+
                     try
                     {
-                        fs::remove(storage->patch_list[current_patch].path);
-                        storage->refresh_patchlist();
-                        storage->initializePatchDb(true);
+                        fs::remove(path);
                     }
                     catch (const fs::filesystem_error &e)
                     {
                         std::ostringstream oss;
                         oss << "Experienced filesystem error while deleting patch " << e.what();
                         storage->reportError(oss.str(), "Filesystem Error");
+                        return;
                     }
+
+                    // Tell the database directly rather than making it rescan to find out
+                    storage->patchDB->erasePatchByPath(path.u8string());
+                    storage->refresh_patchlist();
                     isUser = false;
                 };
 

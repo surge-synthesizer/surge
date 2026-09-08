@@ -344,6 +344,13 @@ CREATE TABLE IF NOT EXISTS Favorites (
         void go(WriterWorker &w) override { w.erasePatch(id); }
     };
 
+    struct EnQDeleteByPath : public EnQAble
+    {
+        std::string path;
+        EnQDeleteByPath(const std::string &p) : path(p) {}
+        void go(WriterWorker &w) override { w.erasePatchByPath(path); }
+    };
+
     struct EnQCategory : public EnQAble
     {
         std::string name;
@@ -1064,6 +1071,32 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
     }
 
+    /*
+     * Removing a patch file is something we know about at the moment it happens, so say so
+     * directly rather than making a subsequent full rescan diff the directory tree against
+     * the database in order to rediscover it.
+     */
+    void erasePatchByPath(const std::string &path)
+    {
+        try
+        {
+            auto feat = SQL::Statement(dbh, "DELETE FROM PatchFeature WHERE patch_id IN "
+                                            "(SELECT id FROM Patches WHERE path = ?1)");
+            feat.bind(1, path);
+            feat.step();
+            feat.finalize();
+
+            auto there = SQL::Statement(dbh, "DELETE FROM Patches WHERE path = ?1");
+            there.bind(1, path);
+            there.step();
+            there.finalize();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "Database Erase By Path");
+        }
+    }
+
     void addDebug(const std::string &m)
     {
         try
@@ -1448,6 +1481,12 @@ void PatchDB::erasePatchByID(int id)
 {
     prepareForWrites();
     worker->enqueueWorkItem(new WriterWorker::EnQDelete(id));
+}
+
+void PatchDB::erasePatchByPath(const std::string &path)
+{
+    prepareForWrites();
+    worker->enqueueWorkItem(new WriterWorker::EnQDeleteByPath(path));
 }
 
 std::vector<std::string> PatchDB::readUserFavorites()
