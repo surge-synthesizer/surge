@@ -26,6 +26,7 @@
 #include <iterator>
 #include <chrono>
 #include <functional>
+#include <cstring>
 
 #include "sqlite3.h"
 #include "SurgeStorage.h"
@@ -898,7 +899,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         auto *ph = (sst::io::patch_header *)(patchHeaderChunk.data());
         auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
 
-        if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
+        if (memcmp(ph->tag, "sub3", 4) != 0 || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
         {
             std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
             return;
