@@ -806,25 +806,29 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         {
             auto val = op.second;
 
-            contextMenu.addItem(op.first, true, (val == pControl->getValue()),
-                                [val, pControl, this]() {
-                                    pControl->setValue(val);
+            contextMenu.addItem(
+                op.first, true, (val == pControl->getValue()), [val, pControl, this]() {
+                    pControl->setValue(val);
 
-                                    // The switch button is self-draw and has its own value change
-                                    // so we need to handle that eventuality here
-                                    auto sc = dynamic_cast<SwitchButton *>(pControl);
-                                    if (sc)
-                                        sc->valueChanged(pControl);
-                                    else
-                                        valueChanged(pControl);
+                    // The switch button is self-draw and has its own value change
+                    // so we need to handle that eventuality here
+                    auto sc = dynamic_cast<SwitchButton *>(pControl);
+                    auto ms = dynamic_cast<Surge::Widgets::ClosedMultiSwitchSelfDraw *>(pControl);
 
-                                    auto iv = pControl->asJuceComponent();
+                    if (sc)
+                        sc->valueChanged(pControl);
+                    else if (ms)
+                        ms->valueChanged(pControl);
+                    else
+                        valueChanged(pControl);
 
-                                    if (iv)
-                                    {
-                                        iv->repaint();
-                                    }
-                                });
+                    auto iv = pControl->asJuceComponent();
+
+                    if (iv)
+                    {
+                        iv->repaint();
+                    }
+                });
         }
     }
 
