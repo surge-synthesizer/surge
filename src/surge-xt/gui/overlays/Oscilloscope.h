@@ -67,8 +67,22 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         kTriggerRising,
         kTriggerFalling,
         kTriggerInternal,
+        kTriggerKeytrack,
         kNumTriggerTypes
     };
+
+    // Which held key the keytrack trigger follows.
+    enum KeytrackSource
+    {
+        kKeytrackLowest = 0,
+        kKeytrackHighest,
+        kKeytrackLatest,
+        kNumKeytrackSources
+    };
+
+    // Range of the Cycles slider in keytrack mode, in note periods per screen.
+    static constexpr int minCycles = 1;
+    static constexpr int maxCycles = 16;
 
     struct Parameters
     {
@@ -84,8 +98,30 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         bool dc_kill = false;                    // kill DC, on/off
         bool sync_draw = false;                  // sync redraw, on/off
 
-        // Number of pixels per sample, calculated from the time window 0-1 slider value.
+        // Keytrack trigger settings.
+        int keytrack_source = kKeytrackLatest; // which held key to follow, selection
+        float keytrack_cycles = 0.05f;         // note periods filling the display, slider
+
+        // Resolved by the Oscilloscope every frame from the current keyboard state, sample rate
+        // and display width. Neither of these is user-facing and neither is streamed; zero means
+        // no note has been tracked yet, in which case the sliders are used as usual.
+        float keytrack_holdoff = 0.f;       // samples per sweep, ie cycles x the note's period
+        float keytrack_counter_speed = 0.f; // pixels per sample
+
+        // Number of pixels per sample. Derived from the tracked note in keytrack mode, and from
+        // the time window 0-1 slider value otherwise.
         float counterSpeed() const;
+
+        // Phase increment per sample of the internal trigger oscillator, from the trigger speed
+        // 0-1 slider value.
+        float triggerSpeed() const;
+
+        // Number of note periods the keytracked display spans, from the 0-1 slider value.
+        int cycles() const;
+
+        // Snap a raw slider value onto its integer bucket, so the Cycles handle sits on discrete
+        // detents rather than anywhere between them.
+        static float snapCycles(float value);
 
         // Calculate the amplitude "gain" value from the amp window 0-1 slider value.
         float gain() const;
@@ -132,6 +168,12 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     // the internal trigger oscillator
     float triggerPhase;
+
+    // How far past the ideal trigger instant the last trigger landed, in samples, in [0, 1).
+    // The trigger oscillator only fires on sample boundaries, so without compensating for this
+    // the trace jitters by up to a sample - which is several pixels once we are zoomed in past
+    // one sample per pixel. paint() shifts the interpolated trace by this much to cancel it.
+    float triggerSubsample{0.f};
 
     // trigger limiter
     int triggerLimitPhase;
@@ -241,6 +283,9 @@ class Oscilloscope : public OverlayComponent,
         tag_wf_retrigger_threshold,
         tag_wf_int_trigger_freq,
 
+        tag_wf_keytrack_source,
+        tag_wf_keytrack_cycles,
+
         tag_sp_freeze,
 
         tag_sp_min_level,
@@ -337,6 +382,10 @@ class Oscilloscope : public OverlayComponent,
 
         std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
 
+        // Current parameters regardless of whether anything changed. Keytrack mode has to push
+        // fresh values down whenever the played note moves, not just when a control is touched.
+        WaveformDisplay::Parameters getParams();
+
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
@@ -367,7 +416,9 @@ class Oscilloscope : public OverlayComponent,
         Surge::Widgets::SelfUpdatingModulatableSlider trigger_limit_;
         Surge::Widgets::SelfUpdatingModulatableSlider time_window_;
         Surge::Widgets::SelfUpdatingModulatableSlider amp_window_;
+        Surge::Widgets::SelfUpdatingModulatableSlider keytrack_cycles_;
         Surge::Widgets::ClosedMultiSwitchSelfDraw trigger_type_;
+        Surge::Widgets::ClosedMultiSwitchSelfDraw keytrack_source_;
         Surge::Widgets::SelfDrawToggleButton freeze_;
         Surge::Widgets::SelfDrawToggleButton dc_kill_;
         Surge::Widgets::SelfDrawToggleButton sync_draw_;
@@ -393,6 +444,18 @@ class Oscilloscope : public OverlayComponent,
     juce::Rectangle<int> getScopeRect();
     void pullData();
     void toggleChannel();
+
+    // Work out the trigger and time base implied by the currently held note, writing them into
+    // params. Returns true if they moved since the last call, which is what tells updateDrawing
+    // it needs to push parameters down even though no control was touched.
+    bool resolveKeytrack(WaveformDisplay::Parameters &params);
+
+    // Key the keytrack trigger is currently locked to, and the values derived from it. The key
+    // is held onto after the last note is released, so lifting your hands leaves the trace where
+    // it is instead of collapsing it just as the release tail becomes interesting.
+    int keytrack_key_{-1};
+    float keytrack_holdoff_{0.f};
+    float keytrack_counter_speed_{0.f};
 
     SurgeGUIEditor *editor_{nullptr};
     SurgeStorage *storage_{nullptr};

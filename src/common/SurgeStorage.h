@@ -1234,6 +1234,11 @@ struct DAWExtraStateStorage
             bool dc_kill = false;
             bool sync_draw = false;
 
+            // Keytrack trigger mode: which held key drives the trigger, and how many cycles of
+            // that note are shown. See WaveformDisplay::Parameters for the mappings.
+            int keytrack_source = 2; // 0 = lowest, 1 = highest, 2 = latest
+            float keytrack_cycles = 0.05f;
+
             // Spectrum values.
             float noise_floor = 0.f;
             float max_db = 1.f;
@@ -1527,6 +1532,20 @@ class alignas(16) SurgeStorage
     // Ring buffer that holds the audio output, used for the oscilloscope. Will hold a bit under 1/4
     // second of data, assuming the sample rate is 48k.
     sst::cpputils::StereoRingBuffer<float, 8192> audioOut;
+
+    // Held-key state published for the oscilloscope's keytrack trigger mode. Written on the audio
+    // thread from SurgeSynthesizer::updateHighLowKeys whenever the held note set changes, and read
+    // from the UI thread. A key of -1 means no note is held in that scene. latestOrder is the
+    // arrival stamp of the latest key, so a reader can pick the newest one across both scenes.
+    struct HeldKeyState
+    {
+        std::atomic<int> lowest{-1};
+        std::atomic<int> highest{-1};
+        std::atomic<int> latest{-1};
+        std::atomic<uint64_t> latestOrder{0};
+    };
+
+    HeldKeyState heldKeys[n_scenes];
 
     struct SurgeStorageConfig
     {

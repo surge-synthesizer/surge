@@ -1927,6 +1927,19 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
         }
     }
 
+    // Publish the raw held keys for the oscilloscope's keytrack trigger. This is unconditional
+    // (unlike the modulation sources below, which are only meaningful when routed) because the
+    // scope has no way to ask for them to start being maintained.
+    {
+        auto &hk = storage.heldKeys[scene];
+
+        hk.lowest.store(lowest < 129 ? lowest : -1, std::memory_order_relaxed);
+        hk.highest.store(highest, std::memory_order_relaxed);
+        hk.latest.store(latest, std::memory_order_relaxed);
+        hk.latestOrder.store(latest >= 0 ? midiKeyPressedForScene[scene][latest] : 0,
+                             std::memory_order_relaxed);
+    }
+
     float highestP = highest, lowestP = lowest, latestP = latest;
     for (auto *v : voices[scene])
     {

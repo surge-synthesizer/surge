@@ -3676,6 +3676,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         node->QueryIntAttribute("trigger_type", &oos->trigger_type);
                         node->QueryBoolAttribute("dc_kill", &oos->dc_kill);
                         node->QueryBoolAttribute("sync_draw", &oos->sync_draw);
+                        node->QueryIntAttribute("keytrack_source", &oos->keytrack_source);
+                        node->QueryFloatAttribute("keytrack_cycles", &oos->keytrack_cycles);
 
                         node->QueryFloatAttribute("noise_floor", &oos->noise_floor);
                         node->QueryFloatAttribute("max_db", &oos->max_db);
@@ -4561,6 +4563,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                            dawExtraState.editor.oscilloscopeOverlayState.trigger_type);
         scope.SetAttribute("dc_kill", dawExtraState.editor.oscilloscopeOverlayState.dc_kill);
         scope.SetAttribute("sync_draw", dawExtraState.editor.oscilloscopeOverlayState.sync_draw);
+        scope.SetAttribute("keytrack_source",
+                           dawExtraState.editor.oscilloscopeOverlayState.keytrack_source);
+        scope.SetDoubleAttribute("keytrack_cycles",
+                                 dawExtraState.editor.oscilloscopeOverlayState.keytrack_cycles);
         scope.SetDoubleAttribute("noise_floor",
                                  dawExtraState.editor.oscilloscopeOverlayState.noise_floor);
         scope.SetDoubleAttribute("max_db", dawExtraState.editor.oscilloscopeOverlayState.max_db);
