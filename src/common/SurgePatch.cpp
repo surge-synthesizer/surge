@@ -3671,6 +3671,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         node->QueryIntAttribute("mode", &oos->mode);
                         node->QueryFloatAttribute("trigger_speed", &oos->trigger_speed);
                         node->QueryFloatAttribute("trigger_level", &oos->trigger_level);
+                        node->QueryFloatAttribute("trigger_limit", &oos->trigger_limit);
                         node->QueryFloatAttribute("time_window", &oos->time_window);
                         node->QueryFloatAttribute("amp_window", &oos->amp_window);
                         node->QueryIntAttribute("trigger_type", &oos->trigger_type);
