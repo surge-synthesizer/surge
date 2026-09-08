@@ -1514,8 +1514,14 @@ void SurgeGUIEditor::setModsourceSelected(modsources ms, int ms_idx)
     modsource_editor[current_scene] = modsource;
 
     modsource_index = ms_idx;
-    // FIXME: assumed scene LFOs are always listed after all voice LFOs in the enum
-    modsource_index_cache[current_scene][ms_idx - ms_lfo1] = ms_idx;
+
+    // The cache is keyed by LFO, so it is the modulator which picks the slot, not the output
+    // index. Any other modulator - a macro, velocity - has no slot here at all
+    if (ms >= ms_lfo1 && ms <= ms_slfo6)
+    {
+        // FIXME: assumed scene LFOs are always listed after all voice LFOs in the enum
+        modsource_index_cache[current_scene][ms - ms_lfo1] = ms_idx;
+    }
 
     if (gui_modsrc[modsource])
     {
@@ -2925,10 +2931,9 @@ void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene
 void SurgeGUIEditor::pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
                                               Surge::GUI::UndoManager::Target which)
 {
-    undoManager()->pushModulationChange(
-        paramId, synth->storage.getPatch().param_ptr[paramId], ms, scene, idx,
-        synth->getModDepth01(paramId, ms, scene, idx),
-        synth->isModulationMuted(paramId, modsource, current_scene, modsource_index), which);
+    undoManager()->pushModulationChange(paramId, synth->storage.getPatch().param_ptr[paramId], ms,
+                                        scene, idx, synth->getModDepth01(paramId, ms, scene, idx),
+                                        synth->isModulationMuted(paramId, ms, scene, idx), which);
 }
 //------------------------------------------------------------------------------------------------
 
