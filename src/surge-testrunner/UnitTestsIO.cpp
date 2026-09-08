@@ -1279,6 +1279,171 @@ TEST_CASE("Mono Voice Priority Streams", "[io]")
     }
 }
 
+TEST_CASE("Global Modulation Routings Are Not Scene Tagged For Shared Modulators", "[io][mod]")
+{
+    // Macros and MIDI controllers are a single object shared by both scenes, so
+    // ModulationRouting::source_scene carries no information for them. Streams written
+    // before #4960 tagged a macro to FX routing with whichever scene happened to be
+    // active. That routing still sounds, and the Modulation List still shows it, but the
+    // macro's own context menu asks for scene A only and so never finds it. See #8053.
+
+    auto fromto = [](std::shared_ptr<SurgeSynthesizer> src,
+                     std::shared_ptr<SurgeSynthesizer> dest) {
+        void *d = nullptr;
+        auto sz = src->saveRaw(&d);
+
+        dest->loadRaw(d, sz, false);
+    };
+
+    // put a reverb in A Insert FX 1 and hand back the index of a param we can modulate
+    auto reverbInAIns1 = [](std::shared_ptr<SurgeSynthesizer> s) {
+        auto *pt = &(s->storage.getPatch().fx[fxslot_ains1].type);
+
+        s->setParameter01(s->idForParameter(pt),
+                          1.f * float(fxt_reverb) / (pt->val_max.i - pt->val_min.i), false);
+
+        for (int i = 0; i < 10; ++i)
+        {
+            s->process();
+        }
+
+        for (int i = 0; i < n_fx_params; ++i)
+        {
+            if (s->storage.getPatch().fx[fxslot_ains1].p[i].modulateable)
+            {
+                return i;
+            }
+        }
+
+        FAIL("no modulateable param in the reverb");
+
+        return 0;
+    };
+
+    SECTION("A Macro To FX Routing Tagged Scene B Loads As Scene A")
+    {
+        auto src = Surge::Headless::createSurge(44100);
+        auto dest = Surge::Headless::createSurge(44100);
+
+        auto pidx = reverbInAIns1(src);
+        auto *fxp = &(src->storage.getPatch().fx[fxslot_ains1].p[pidx]);
+
+        // this is what a pre-#4960 stream contained
+        REQUIRE(src->setModDepth01(fxp->id, ms_ctrl7, 1, 0, 0.5));
+
+        // and this is the bug: the macro menu always asks for scene A
+        REQUIRE_FALSE(src->isAnyActiveModulation(fxp->id, ms_ctrl7, 0));
+
+        fromto(src, dest);
+
+        auto *dfxp = &(dest->storage.getPatch().fx[fxslot_ains1].p[pidx]);
+
+        REQUIRE(dest->isAnyActiveModulation(dfxp->id, ms_ctrl7, 0));
+        REQUIRE(dest->getModDepth01(dfxp->id, ms_ctrl7, 0, 0) == Approx(0.5).margin(1e-5));
+
+        for (const auto &mg : dest->storage.getPatch().modulation_global)
+        {
+            if (!isModulatorDistinctPerScene((modsources)mg.source_id))
+            {
+                REQUIRE(mg.source_scene == 0);
+            }
+        }
+    }
+
+    SECTION("A Scene LFO To FX Routing Keeps Its Scene")
+    {
+        // the flip side; scene LFOs really do exist once per scene, so #2285 still holds
+        auto src = Surge::Headless::createSurge(44100);
+        auto dest = Surge::Headless::createSurge(44100);
+
+        auto pidx = reverbInAIns1(src);
+        auto *fxp = &(src->storage.getPatch().fx[fxslot_ains1].p[pidx]);
+
+        REQUIRE(src->setModDepth01(fxp->id, ms_slfo1, 1, 0, 0.5));
+
+        fromto(src, dest);
+
+        auto *dfxp = &(dest->storage.getPatch().fx[fxslot_ains1].p[pidx]);
+
+        REQUIRE(dest->isAnyActiveModulation(dfxp->id, ms_slfo1, 1));
+        REQUIRE_FALSE(dest->isAnyActiveModulation(dfxp->id, ms_slfo1, 0));
+    }
+
+    SECTION("Pasting A Scene Does Not Scene Tag A Macro Routing")
+    {
+        // copying scene A onto scene B used to stamp the paste scene onto every global
+        // routing it carried across, which recreated the bug in a current build
+        auto surge = Surge::Headless::createSurge(44100);
+
+        auto pidx = reverbInAIns1(surge);
+        auto *fxp = &(surge->storage.getPatch().fx[fxslot_ains1].p[pidx]);
+
+        REQUIRE(surge->setModDepth01(fxp->id, ms_ctrl7, 0, 0, 0.5));
+        REQUIRE(surge->isAnyActiveModulation(fxp->id, ms_ctrl7, 0));
+
+        auto isValid = [&surge](int id, modsources ms) { return surge->isValidModulation(id, ms); };
+
+        surge->storage.clipboard_copy(cp_scene, 0, -1);
+        surge->storage.clipboard_paste(cp_scene, 1, -1, ms_original, isValid);
+
+        for (const auto &mg : surge->storage.getPatch().modulation_global)
+        {
+            if (!isModulatorDistinctPerScene((modsources)mg.source_id))
+            {
+                REQUIRE(mg.source_scene == 0);
+            }
+        }
+    }
+
+    SECTION("Copying Scene B Carries Its Macro To FX Routings")
+    {
+        // the copy side of the same confusion: a macro routing onto a scene B insert FX
+        // is not scene tagged, so asking for source_scene == 1 found nothing at all
+        auto surge = Surge::Headless::createSurge(44100);
+
+        // a reverb in the matching insert slot of both scenes, which is the state a real
+        // scene paste arrives at once the UI has copied the FX across too
+        for (auto slot : {fxslot_ains1, fxslot_bins1})
+        {
+            auto *pt = &(surge->storage.getPatch().fx[slot].type);
+
+            surge->setParameter01(surge->idForParameter(pt),
+                                  1.f * float(fxt_reverb) / (pt->val_max.i - pt->val_min.i), false);
+
+            for (int i = 0; i < 10; ++i)
+            {
+                surge->process();
+            }
+        }
+
+        auto pidx = -1;
+
+        for (int i = 0; i < n_fx_params && pidx < 0; ++i)
+        {
+            if (surge->storage.getPatch().fx[fxslot_bins1].p[i].modulateable)
+            {
+                pidx = i;
+            }
+        }
+
+        REQUIRE(pidx >= 0);
+
+        auto *bfxp = &(surge->storage.getPatch().fx[fxslot_bins1].p[pidx]);
+
+        REQUIRE(surge->setModDepth01(bfxp->id, ms_ctrl7, 0, 0, 0.5));
+
+        auto isValid = [&surge](int id, modsources ms) { return surge->isValidModulation(id, ms); };
+
+        surge->storage.clipboard_copy(cp_scene, 1, -1);
+        surge->storage.clipboard_paste(cp_scene, 0, -1, ms_original, isValid);
+
+        // it should have landed on the matching slot of scene A's insert chain
+        auto *afxp = &(surge->storage.getPatch().fx[fxslot_ains1].p[pidx]);
+
+        REQUIRE(surge->isAnyActiveModulation(afxp->id, ms_ctrl7, 0));
+    }
+}
+
 TEST_CASE("XML Direct", "[io]")
 {
     // This is not a public API but we want to make sure it

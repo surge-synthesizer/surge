@@ -221,6 +221,26 @@ inline bool canModulateMonophonicTarget(modsources ms)
     return isScenelevel(ms) || ms == ms_aftertouch;
 }
 
+/*
+ * Does this modulator have a separate instance per scene? Voice and scene LFOs and the
+ * envelopes do; macros, MIDI controllers and the like are single objects shared by both
+ * scenes. Only modulators for which this is true need ModulationRouting::source_scene to
+ * disambiguate a routing onto a global (FX) target. See #2285 and #8053.
+ */
+inline bool isModulatorDistinctPerScene(modsources ms)
+{
+    if (ms >= ms_lfo1 && ms <= ms_slfo6)
+        return true;
+
+    if (ms == ms_ampeg || ms == ms_filtereg)
+        return true;
+
+    if (ms == ms_lowest_key || ms == ms_highest_key || ms == ms_latest_key)
+        return true;
+
+    return false;
+}
+
 inline bool isCustomController(modsources ms) { return (ms >= ms_ctrl1) && (ms <= ms_ctrl8); }
 
 inline bool isEnvelope(modsources ms) { return (ms == ms_ampeg) || (ms == ms_filtereg); }

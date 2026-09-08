@@ -2421,42 +2421,65 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
             if (type & cp_scene)
             {
+                assert(scene < 2);
+
+                // Which insert FX slot of this scene does this parameter belong to, if any?
+                auto insertSlotOfScene = [](const Parameter *dpar, int scene) {
+                    if (dpar->ctrlgroup != cg_FX)
+                    {
+                        return -1;
+                    }
+
+                    for (int q = 0; q < n_fx_per_chain; ++q)
+                    {
+                        if (dpar->ctrlgroup_entry == fxslot_order[q + scene * n_fx_per_chain])
+                        {
+                            return q;
+                        }
+                    }
+
+                    return -1;
+                };
+
                 n = getPatch().modulation_global.size();
                 for (int i = 0; i < n; i++)
                 {
-                    if (getPatch().modulation_global[i].source_scene != scene)
+                    const auto &mg = getPatch().modulation_global[i];
+                    auto dpar = getPatch().param_ptr[mg.destination_id];
+                    auto slot = insertSlotOfScene(dpar, scene);
+
+                    // What ties a global routing to a scene is the modulator when that
+                    // modulator exists once per scene, but the destination when it is
+                    // shared, since a macro belongs to neither scene. See #8053.
+                    if (isModulatorDistinctPerScene((modsources)mg.source_id))
+                    {
+                        if (mg.source_scene != scene)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (slot < 0)
                     {
                         continue;
                     }
 
                     ModulationRouting m;
-                    m.source_id = getPatch().modulation_global[i].source_id;
-                    m.source_index = getPatch().modulation_global[i].source_index;
-                    m.source_scene = getPatch().modulation_global[i].source_scene;
-                    m.depth = getPatch().modulation_global[i].depth;
+                    m.source_id = mg.source_id;
+                    m.source_index = mg.source_index;
+                    m.source_scene = mg.source_scene;
+                    m.depth = mg.depth;
+                    m.destination_id = mg.destination_id;
 
-                    auto did = getPatch().modulation_global[i].destination_id;
-                    auto dpar = getPatch().param_ptr[did];
-                    if (dpar->ctrlgroup == cg_FX)
+                    if (slot >= 0)
                     {
-                        assert(scene < 2);
-                        for (int q = 0; q < n_fx_per_chain; ++q)
-                        {
-                            auto srcSl = fxslot_order[q + scene * 4];
-                            auto tgtSl = fxslot_order[q + (1 - scene) * 4];
-                            if (dpar->ctrlgroup_entry == srcSl)
-                            {
-                                int64_t d0 =
-                                    getPatch().fx[tgtSl].p[0].id - getPatch().fx[srcSl].p[0].id;
-                                m.destination_id =
-                                    getPatch().modulation_global[i].destination_id + d0;
-                            }
-                        }
+                        // move it onto the matching insert slot of the other scene
+                        auto srcSl = fxslot_order[slot + scene * n_fx_per_chain];
+                        auto tgtSl = fxslot_order[slot + (1 - scene) * n_fx_per_chain];
+
+                        m.destination_id +=
+                            getPatch().fx[tgtSl].p[0].id - getPatch().fx[srcSl].p[0].id;
                     }
-                    else
-                    {
-                        m.destination_id = getPatch().modulation_global[i].destination_id;
-                    }
+
                     clipboard_modulation_global.push_back(m);
                 }
             }
@@ -2870,7 +2893,9 @@ void SurgeStorage::clipboard_paste(
                 ModulationRouting m;
                 m.source_id = ms;
                 m.source_index = clipboard_modulation_global[i].source_index;
-                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
+                // Only per-scene modulators carry a meaningful source_scene on a global
+                // target; stamping the paste scene onto a macro hides it. See #8053.
+                m.source_scene = isModulatorDistinctPerScene(ms) ? scene : 0;
                 m.depth = clipboard_modulation_global[i].depth;
                 m.destination_id = clipboard_modulation_global[i].destination_id;
 
@@ -2917,7 +2942,8 @@ void SurgeStorage::clipboard_paste(
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_global[i].source_id;
                 m.source_index = clipboard_modulation_global[i].source_index;
-                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
+                // See #8053; a macro's global routing is not scene tagged.
+                m.source_scene = isModulatorDistinctPerScene((modsources)m.source_id) ? scene : 0;
                 m.depth = clipboard_modulation_global[i].depth;
                 m.destination_id = clipboard_modulation_global[i].destination_id;
 
