@@ -24,6 +24,7 @@
 #include "SurgeStorage.h"
 #include <set>
 #include <numeric>
+#include <algorithm>
 #include <cctype>
 #include <map>
 #include <queue>
@@ -3769,6 +3770,43 @@ void SurgeStorage::publish_tuning_as_oddsound_main()
 
     MTS_SetNoteTunings(freqs);
     MTS_SetScaleName(currentTuning.scale.description.c_str());
+
+    /*
+     * Beyond the frequencies themselves, MTS-ESP lets a source describe the shape of the
+     * scale, and clients lean on that for octave shifts and for transposition by one
+     * period. If we never supply it they see the library defaults - a map size of -1 and
+     * a period of an octave - no matter what we are actually broadcasting, so a client
+     * shifting by an octave on a Bohlen-Pierce scale lands nowhere near the right note.
+     */
+    const auto &scale = currentTuning.scale;
+    const auto &mapping = currentTuning.keyboardMapping;
+
+    // The formal octave of a scale is its last tone, which is not necessarily a 2/1
+    MTS_SetPeriodRatio(scale.count > 0 ? pow(2.0, scale.tones[scale.count - 1].cents / 1200.0)
+                                       : 2.0);
+
+    // A mapping with no explicit key list repeats the scale pattern every scale.count keys
+    auto mapSize = (mapping.count > 0) ? mapping.count : scale.count;
+
+    MTS_SetMapSize((char)std::clamp(mapSize, 0, 127));
+    MTS_SetMapStartKey((char)std::clamp(mapping.middleNote, 0, 127));
+    MTS_SetRefKey((char)std::clamp(mapping.tuningConstantNote, 0, 127));
+
+    /*
+     * Surge drops notes the mapping skips rather than sounding them (see
+     * SurgeSynthesizer::playNote), so tell clients to do the same. We still broadcast an
+     * interpolated frequency for those notes, as the MTS-ESP API asks us to, since
+     * checking the note filter is optional for a client.
+     */
+    MTS_ClearNoteFilter();
+
+    for (int i = 0; i < 128; ++i)
+    {
+        if (!currentTuning.isMidiNoteMapped(i))
+        {
+            MTS_FilterNote(true, (char)i, -1);
+        }
+    }
 }
 #endif
 
