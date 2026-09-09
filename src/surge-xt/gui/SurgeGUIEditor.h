@@ -56,6 +56,7 @@
 #include <cstdarg>
 #include <bitset>
 #include <future>
+#include <chrono>
 #include "UndoManager.h"
 
 class SurgeSynthEditor;
@@ -384,6 +385,24 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void pollWtGenJobs();
     void idleWtGenService();
 
+    /*
+     * Periodic timestamped patch backups (see Surge::Storage::EnablePatchBackups). Driven from
+     * idle(), so backups only ever happen with the UI open - which is the point, since a patch
+     * nobody is editing has nothing worth backing up. The timer, the last written hash and the
+     * failure latch all live on the synth so that they survive the window being closed and
+     * reopened; see SurgeSynthesizer::lastPatchBackupTime.
+     */
+    void idlePatchBackup();
+
+    // Closing the window stops the interval, so capture the work on the way out. Called from the
+    // destructor, hence the quiet backup: there is no UI left to report a failure on.
+    void closePatchBackup();
+
+    void savePatchBackup(bool quiet);
+
+    // The configured backup interval, clamped to what the menu allows.
+    std::chrono::steady_clock::duration patchBackupInterval();
+
     // Message-thread-only cache of the newest preview filmstrip per (scene, osc), filled by the
     // response pollers (the overlay's pollGenJobs and the drop/menu tail; OSC generates complete
     // on the OSC thread and don't fill it). A hit requires every generation input to match, so
@@ -533,12 +552,15 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     float getModulationF01FromString(long tag, const std::string &s);
     std::string getAccessibleModulationVoiceover(long tag);
 
-    void queuePatchFileLoad(const std::string &file)
+    // isPreset false restores the name, category, master volume and FX bypass streamed in the
+    // file instead of dropping them, which is what a periodic patch backup wants.
+    void queuePatchFileLoad(const std::string &file, bool isPreset = true)
     {
         {
             std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
             undoManager()->pushPatch();
             strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
+            synth->patchid_file_isPreset = isPreset;
             synth->has_patchid_file = true;
         }
         synth->processAudioThreadOpsWhenAudioEngineUnavailable();

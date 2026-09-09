@@ -34,6 +34,7 @@ struct QuadFilterChainState;
 #include <list>
 #include <utility>
 #include <atomic>
+#include <chrono>
 #include <cstdio>
 #include <bitset>
 #include <vector>
@@ -72,6 +73,31 @@ class alignas(16) SurgeSynthesizer
 
     std::atomic<bool> audio_processing_active;
     std::atomic<bool> patchChanged{false};
+
+    /*
+     * Is the host transport actually rolling? Distinct from time_data.isPlaying, which the
+     * standalone deliberately pins to true so formula modulators keep running. This one is
+     * only ever set from a real host playhead and stays false in standalone and when no
+     * playhead is available, which is exactly what the periodic patch backup wants: skip
+     * backups while a DAW is playing, but always allow them in standalone.
+     */
+    std::atomic<bool> transportRunning{false};
+
+    /*
+     * Bookkeeping for the periodic patch backups. This lives on the synth rather than on the
+     * editor because the editor is constructed afresh every time the plugin window is opened,
+     * so editor-side state would restart the interval, forget which patch was last backed up,
+     * and re-report a failed backup, on every single open and close.
+     *
+     * Seeding the timer here at construction is also what keeps a window opened right after
+     * the plugin is instantiated from immediately writing a backup.
+     *
+     * Message thread only - the editor idle is the only thing that touches these.
+     */
+    std::chrono::steady_clock::time_point lastPatchBackupTime{std::chrono::steady_clock::now()};
+    size_t lastPatchBackupHash{0};
+    bool anyPatchBackupWritten{false};
+    bool patchBackupsFailed{false};
 
     // methods
   public:
@@ -485,6 +511,16 @@ class alignas(16) SurgeSynthesizer
     bool process_input;
     std::atomic<bool> has_patchid_file;
     char patchid_file[FILENAME_MAX];
+
+    /*
+     * Whether the queued patchid_file should be loaded as a preset. That is what makes
+     * loadPatchByPath keep the caller supplied name and drop the name, category, master
+     * volume and FX bypass carried in the file - right for dropping an arbitrary fxp into a
+     * running session, wrong when restoring something Surge itself wrote, such as a periodic
+     * patch backup, where that streamed metadata is the whole point. Consumed and reset to
+     * true by whichever load path picks the file up.
+     */
+    std::atomic<bool> patchid_file_isPreset{true};
     std::atomic<int> patchid_queue;
 
     // updated in audio thread, read from UI, so have assignments be atomic

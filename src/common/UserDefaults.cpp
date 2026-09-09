@@ -142,6 +142,12 @@ std::string defaultKeyToString(DefaultKey k)
     case AppendOriginalPatchBy:
         r = "appendOriginalPatchBy";
         break;
+    case EnablePatchBackups:
+        r = "enablePatchBackups";
+        break;
+    case PatchBackupInterval:
+        r = "patchBackupInterval";
+        break;
     case ModWindowShowsValues:
         r = "modWindowShowsValues";
         break;

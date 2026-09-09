@@ -1767,6 +1767,9 @@ class alignas(16) SurgeStorage
     fs::path userWavetablesExportPath;
     fs::path userWavetableScriptsPath;
     fs::path userSkinsPath;
+    // Timestamped periodic patch backups. Deliberately a sibling of userPatchesPath rather than
+    // a child, so refresh_patchlist() never scans it and backups stay out of the patch database.
+    fs::path userBackupsPath;
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
     fs::path extraUserWavetablesPath;       // used by rack

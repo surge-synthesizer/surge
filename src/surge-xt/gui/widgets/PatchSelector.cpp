@@ -32,6 +32,7 @@
 #include "fmt/core.h"
 #include "SurgeJUCEHelpers.h"
 #include "AccessibleHelpers.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 /*
  * It is an arbitrary number that we set as an ID for patch menu items.
@@ -665,24 +666,33 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         sge->getShortcutDescription(Surge::GUI::KeyboardActions::INITIALIZE_PATCH),
         [this]() { loadInitPatch(); });
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Set Current Patch as Default"), [this]() {
-        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
-                                               storage->patch_list[current_patch].name);
+    // Loading a patch straight off disk leaves current_category at -1 and current_patch stale,
+    // since such a patch has no entry in the patch list to point at. There is nothing sensible to
+    // store as the default patch in that case, so grey the item out rather than indexing the
+    // category vector at -1.
+    const bool canSetDefaultPatch =
+        current_patch >= 0 && current_patch < storage->patch_list.size() && current_category >= 0 &&
+        current_category < storage->patch_category.size();
 
-        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchCategory,
-                                               storage->patch_category[current_category].name);
+    contextMenu.addItem(
+        Surge::GUI::toOSCase("Set Current Patch as Default"), canSetDefaultPatch, false, [this]() {
+            Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
+                                                   storage->patch_list[current_patch].name);
 
-        Surge::Storage::updateUserDefaultValue(
-            storage, Surge::Storage::InitialPatchCategoryType,
-            storage->patch_category[current_category].isFactory ? "Factory" : "User");
+            Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchCategory,
+                                                   storage->patch_category[current_category].name);
 
-        storage->initPatchName = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::InitialPatchName, "Init Saw");
-        storage->initPatchCategory = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::InitialPatchCategory, "Templates");
-        storage->initPatchCategoryType = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::InitialPatchCategoryType, "Factory");
-    });
+            Surge::Storage::updateUserDefaultValue(
+                storage, Surge::Storage::InitialPatchCategoryType,
+                storage->patch_category[current_category].isFactory ? "Factory" : "User");
+
+            storage->initPatchName = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::InitialPatchName, "Init Saw");
+            storage->initPatchCategory = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::InitialPatchCategory, "Templates");
+            storage->initPatchCategoryType = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::InitialPatchCategoryType, "Factory");
+        });
 
     contextMenu.addSeparator();
 
@@ -835,7 +845,18 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         }
     });
 
+    // Only offered once periodic backups have actually written something, so people who never
+    // turned the option on don't get a menu entry pointing at a folder that isn't there.
+    if (fs::is_directory(storage->userBackupsPath))
+    {
+        contextMenu.addItem(Surge::GUI::toOSCase("Open Backups Folder..."), [this]() {
+            Surge::GUI::openFileOrFolder(this->storage->userBackupsPath);
+        });
+    }
+
     contextMenu.addSeparator();
+
+    populateBackupsMenu(contextMenu);
 
     if (tutorialCat >= 0)
     {
@@ -1045,6 +1066,155 @@ void PatchSelector::importFavorites()
     sge->fileChooser->launchAsync(juce::FileBrowserComponent::canSelectFiles, importCallback);
 }
 
+/*
+ * Fills in one level of the periodic patch backups tree: the backups sitting directly in dir, then
+ * a submenu per subdirectory. It recurses because a patch category can itself be nested, as third
+ * party patches are - Malfunction/Leads and the like - and the backup writer mirrors those levels
+ * as real directories. Sorted the same way the rest of the patch browser is, so that backups read
+ * like every other menu here rather than in reverse.
+ *
+ * added counts what went in. The return says whether the backup currently loaded is somewhere in
+ * this branch, so the caller can tick and preselect its way down to it.
+ */
+static bool addBackupsFromDir(const fs::path &dir, juce::PopupMenu &into, SurgeGUIEditor *sge,
+                              const fs::path &loaded, int &added)
+{
+    std::vector<fs::path> files, subdirs;
+
+    try
+    {
+        for (const auto &f : fs::directory_iterator(dir))
+        {
+            if (fs::is_directory(f))
+            {
+                subdirs.push_back(f.path());
+            }
+            else if (_stricmp(path_to_string(f.path().extension()).c_str(), ".fxp") == 0)
+            {
+                files.push_back(f.path());
+            }
+        }
+    }
+    catch (const fs::filesystem_error &)
+    {
+        return false;
+    }
+
+    auto byName = [](const fs::path &a, const fs::path &b) {
+        return strnatcasecmp(path_to_string(a.filename()).c_str(),
+                             path_to_string(b.filename()).c_str()) < 0;
+    };
+
+    std::sort(files.begin(), files.end(), byName);
+    std::sort(subdirs.begin(), subdirs.end(), byName);
+
+    bool anyChecked = false;
+
+    for (const auto &f : files)
+    {
+        auto name = path_to_string(f.stem());
+
+        // storage->lastLoadedPatch is set to the file path by both file load paths, so this is
+        // how a backup - which has no patch list entry to point at - gets its checkmark.
+        const bool isLoaded = !loaded.empty() && f == loaded;
+
+        anyChecked |= isLoaded;
+
+        // Loading a backup is a patch load like any other, so it warns over unsaved changes and
+        // lands on the undo stack (queuePatchFileLoad pushes it). Not as a preset though: a backup
+        // is Surge's own patch coming home, so the name and category it carries are the right ones.
+        auto item = juce::PopupMenu::Item(juce::CharPointer_UTF8(name.c_str()))
+                        .setEnabled(true)
+                        .setTicked(isLoaded)
+                        .setAction([sge, f]() {
+                            sge->loadPatchWithDirtyCheck(
+                                [sge, f]() { sge->queuePatchFileLoad(f.u8string(), false); });
+                        });
+
+        if (isLoaded)
+        {
+            item.setID(ID_TO_PRESELECT_MENU_ITEMS);
+        }
+
+        into.addItem(item);
+
+        if (++added % 32 == 0)
+        {
+            into.addColumnBreak();
+        }
+    }
+
+    for (const auto &d : subdirs)
+    {
+        juce::PopupMenu sub;
+        int inSub = 0;
+        const bool checkedKid = addBackupsFromDir(d, sub, sge, loaded, inSub);
+
+        if (inSub > 0)
+        {
+            auto name = path_to_string(d.filename());
+
+            if (checkedKid)
+            {
+                into.addSubMenu(juce::CharPointer_UTF8(name.c_str()), sub, true, nullptr, true,
+                                ID_TO_PRESELECT_MENU_ITEMS);
+                anyChecked = true;
+            }
+            else
+            {
+                into.addSubMenu(juce::CharPointer_UTF8(name.c_str()), sub);
+            }
+
+            added++;
+        }
+    }
+
+    return anyChecked;
+}
+
+bool PatchSelector::populateBackupsMenu(juce::PopupMenu &contextMenu)
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (!sge)
+    {
+        return false;
+    }
+
+    /*
+     * The backups folder deliberately lives outside the patch library, so it is never walked by
+     * refresh_patchlist() and never lands in the patch database. That keeps timestamped backups
+     * out of the categories and out of patch search, at the price of having to list the folder
+     * live, here, every time the menu opens.
+     */
+    if (!fs::is_directory(storage->userBackupsPath))
+    {
+        return false;
+    }
+
+    juce::PopupMenu backupsMenu;
+    int total = 0;
+    const bool anyChecked = addBackupsFromDir(storage->userBackupsPath, backupsMenu, sge,
+                                              storage->lastLoadedPatch, total);
+
+    if (total == 0)
+    {
+        return false;
+    }
+
+    if (anyChecked)
+    {
+        contextMenu.addSubMenu(Surge::GUI::toOSCase("Backups"), backupsMenu, true, nullptr, true,
+                               ID_TO_PRESELECT_MENU_ITEMS);
+    }
+    else
+    {
+        contextMenu.addSubMenu(Surge::GUI::toOSCase("Backups"), backupsMenu);
+    }
+
+    return true;
+}
+
 bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,
                                                  bool single_category, int &main_e, bool rootCall)
 {
@@ -1106,7 +1276,11 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
             bool thisCheck = false;
 
-            if (p == current_patch)
+            // current_category is -1 when the loaded patch came from a file rather than from the
+            // patch list - a periodic backup, a Load Patch from File, a drag and drop - in which
+            // case current_patch still points at whatever was loaded before it. Ticking that would
+            // claim we are sitting on a patch we are not.
+            if (p == current_patch && current_category >= 0)
             {
                 thisCheck = true;
                 amIChecked = true;

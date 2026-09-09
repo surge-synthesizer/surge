@@ -509,6 +509,8 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+    closePatchBackup();
+
     juce::PopupMenu::dismissAllActiveMenus();
     juce::Desktop::getInstance().removeFocusChangeListener(this);
     synth->removeModulationAPIListener(this);
@@ -566,6 +568,8 @@ void SurgeGUIEditor::idle()
         slowIdleCounter = 0;
         juceEditor->getSurgeLookAndFeel()->updateDarkIfNeeded();
     }
+
+    idlePatchBackup();
 
     if (needsModUpdate)
     {
@@ -3074,6 +3078,222 @@ SurgeGUIEditor::findWtPreview(int scene, int osc,
         return nullptr;
     }
     return &e.frames;
+}
+
+std::chrono::steady_clock::duration SurgeGUIEditor::patchBackupInterval()
+{
+    const auto mins = std::clamp(Surge::Storage::getUserDefaultValue(
+                                     &(synth->storage), Surge::Storage::PatchBackupInterval, 5),
+                                 1, 30);
+
+    return std::chrono::minutes(mins);
+}
+
+void SurgeGUIEditor::idlePatchBackup()
+{
+    if (synth->patchBackupsFailed)
+    {
+        return;
+    }
+
+    const auto now = std::chrono::steady_clock::now();
+
+    if (!Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::EnablePatchBackups,
+                                             false))
+    {
+        // Keep re-arming while the option is off, so that switching backups on starts a full fresh
+        // interval rather than dumping a backup immediately.
+        synth->lastPatchBackupTime = now;
+
+        return;
+    }
+
+    // Nothing to protect if the patch is saved, and we stay out of the way while a host transport
+    // is rolling. Neither case re-arms the timer, so once the condition clears the backup happens
+    // promptly instead of waiting out another full interval.
+    if (!synth->storage.getPatch().isDirty || synth->transportRunning)
+    {
+        return;
+    }
+
+    if (now - synth->lastPatchBackupTime < patchBackupInterval())
+    {
+        return;
+    }
+
+    synth->lastPatchBackupTime = now;
+
+    savePatchBackup(false);
+}
+
+void SurgeGUIEditor::closePatchBackup()
+{
+    if (synth->patchBackupsFailed)
+    {
+        return;
+    }
+
+    if (!Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::EnablePatchBackups,
+                                             false))
+    {
+        return;
+    }
+
+    if (!synth->storage.getPatch().isDirty || synth->transportRunning)
+    {
+        return;
+    }
+
+    /*
+     * Closing the window stops the interval, so grab the work on the way out regardless of how
+     * long it has been - otherwise tweaking for four minutes and then closing the window loses the
+     * lot if the host later goes down. Nothing runs away here: the hash check in savePatchBackup
+     * throws the file away unless the patch actually changed since the last backup.
+     */
+    synth->lastPatchBackupTime = std::chrono::steady_clock::now();
+
+    // Quiet, because the editor is already being torn down and there is nothing left for an error
+    // dialog to sit on top of.
+    savePatchBackup(true);
+}
+
+void SurgeGUIEditor::savePatchBackup(bool quiet)
+{
+    auto &storage = synth->storage;
+    auto &patch = storage.getPatch();
+
+    void *data{nullptr};
+    const auto datasize = patch.save_patch(&data);
+
+    if (!data || datasize == 0)
+    {
+        return;
+    }
+
+    // FNV-1a over the streamed patch. isDirty is sticky once set, so without this a patch left
+    // dirty but untouched would produce an identical backup file every single interval.
+    size_t hash{0xcbf29ce484222325ULL};
+
+    for (unsigned int i = 0; i < datasize; ++i)
+    {
+        hash ^= (size_t)(unsigned char)((const char *)data)[i];
+        hash *= 0x100000001b3ULL;
+    }
+
+    if (synth->anyPatchBackupWritten && hash == synth->lastPatchBackupHash)
+    {
+        return;
+    }
+
+    // Patch name and a single category level are free text, so scrub anything the filesystem
+    // rejects. Path separators matter most: left in, they would silently reshape the tree.
+    auto scrub = [](const std::string &in, const std::string &ifEmpty) {
+        static const std::string illegal{'<', '>', ':', '"', '/', '\\', '|', '?', '*'};
+        std::string r;
+
+        for (const auto &c : in)
+        {
+            if ((unsigned char)c >= 0x20 && illegal.find(c) == std::string::npos)
+            {
+                r += c;
+            }
+        }
+
+        // Windows silently strips these from the end of a path component
+        while (!r.empty() && (r.back() == '.' || r.back() == ' '))
+        {
+            r.pop_back();
+        }
+
+        return r.empty() ? ifEmpty : r;
+    };
+
+    const auto now = juce::Time::getCurrentTime();
+    auto dir = storage.userBackupsPath / string_to_path(now.formatted("%Y-%m-%d").toStdString());
+
+    /*
+     * A patch category can itself be nested - third party patches live at, say, Malfunction/Leads
+     * - and the category is carried around as one string with separators in it. Mirror those as
+     * real directories instead of scrubbing the separators out, which would flatten the example
+     * above into a single MalfunctionLeads folder.
+     */
+    std::string level;
+    bool anyLevel = false;
+
+    for (const auto &c : patch.category + "/")
+    {
+        if (c != '/' && c != '\\')
+        {
+            level += c;
+
+            continue;
+        }
+
+        if (!level.empty())
+        {
+            dir /= string_to_path(scrub(level, "Unsorted"));
+            anyLevel = true;
+            level.clear();
+        }
+    }
+
+    if (!anyLevel)
+    {
+        dir /= string_to_path("Unsorted");
+    }
+
+    const auto stamp = " (" + now.formatted("%H-%M-%S").toStdString() + ")";
+    const auto file = dir / string_to_path(scrub(patch.name, "Unnamed") + stamp + ".fxp");
+
+    try
+    {
+        fs::create_directories(dir);
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        synth->patchBackupsFailed = true;
+
+        if (!quiet)
+        {
+            storage.reportError(
+                std::string("Unable to create the patch backups folder. Patch backups "
+                            "are disabled for the rest of this session.\n\n") +
+                    e.what(),
+                "Patch Backup Error");
+        }
+
+        return;
+    }
+
+    /*
+     * Stamp the timestamp into the streamed patch name too, so that a restored backup announces
+     * itself as one and says when it was taken - the patch browser reads the name out of the file,
+     * not out of the file name. Only for the duration of the write, since the patch being edited
+     * keeps its own name. This has to happen after the hash above: with the timestamp in the
+     * stream every serialization would differ from the last, and duplicate suppression would never
+     * fire again.
+     */
+    const auto liveName = patch.name;
+
+    patch.name = liveName + stamp;
+
+    // false means don't refresh the patch list: this must not renumber patchid, retarget the
+    // current category, or clear isDirty. It just streams the patch out to disk.
+    synth->savePatchToPath(file, false);
+
+    patch.name = liveName;
+
+    if (!fs::exists(file))
+    {
+        // savePatchToPath has already reported the write failure, so just latch here rather than
+        // putting that same dialog in front of the user again on every interval.
+        synth->patchBackupsFailed = true;
+
+        return;
+    }
+
+    synth->lastPatchBackupHash = hash;
+    synth->anyPatchBackupWritten = true;
 }
 
 void SurgeGUIEditor::idleWtGenService()
