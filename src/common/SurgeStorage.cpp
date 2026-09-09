@@ -3405,13 +3405,11 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
+    // This can run on the audio thread, so when there is a UI to do it for us we let
+    // the tuningUpdates counter carry the news and publish from the idle loop instead
     if (oddsound_mts_active_as_main && !uiThreadChecksTunings)
     {
-        for (int i = 0; i < 128; ++i)
-        {
-            MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
-        }
-        MTS_SetScaleName(currentTuning.scale.description.c_str());
+        publish_tuning_as_oddsound_main();
     }
     tuningUpdates++;
 #endif
@@ -3731,16 +3729,14 @@ void SurgeStorage::connect_as_oddsound_main()
                     "source option.",
                     "MTS-ESP Error");
     }
-    lastSentTuningUpdate = -1;
-
-    if (!uiThreadChecksTunings && oddsound_mts_active_as_main)
-    {
-        for (int i = 0; i < 128; ++i)
-        {
-            MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
-        }
-        MTS_SetScaleName(currentTuning.scale.description.c_str());
-    }
+    /*
+     * MTS_RegisterMaster() starts the session off at 12-TET, so publish our own tuning
+     * right here rather than leaving the session mistuned until the next UI idle tick.
+     * Deferring to the UI is only needed where a retune can arrive on the audio thread;
+     * becoming a source is a deliberate act which never does.
+     */
+    lastSentTuningUpdate = tuningUpdates;
+    publish_tuning_as_oddsound_main();
 }
 void SurgeStorage::disconnect_as_oddsound_main()
 {
@@ -3754,13 +3750,24 @@ void SurgeStorage::send_tuning_update()
         return;
 
     lastSentTuningUpdate = tuningUpdates;
+    publish_tuning_as_oddsound_main();
+}
+
+void SurgeStorage::publish_tuning_as_oddsound_main()
+{
     if (!oddsound_mts_active_as_main)
+    {
         return;
+    }
+
+    double freqs[128];
 
     for (int i = 0; i < 128; ++i)
     {
-        MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
+        freqs[i] = currentTuning.frequencyForMidiNote(i);
     }
+
+    MTS_SetNoteTunings(freqs);
     MTS_SetScaleName(currentTuning.scale.description.c_str());
 }
 #endif

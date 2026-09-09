@@ -3814,18 +3814,21 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
 
             auto mts_main = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oddsound_mts_active_as_main"));
+            dawExtraState.oddsoundMTSActiveAsMain = false;
+
             if (mts_main)
             {
                 int tv;
 
                 if (mts_main->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
                 {
-                    if (tv)
-                    {
-#ifndef SURGE_SKIP_ODDSOUND_MTS
-                        storage->connect_as_oddsound_main();
-#endif
-                    }
+                    /*
+                     * Stage this like every other bit of DAW extra state rather than
+                     * connecting here. The scale and mapping are still being read at this
+                     * point, so registering as a source now would broadcast 12-TET to the
+                     * whole session and only correct itself once the tuning lands.
+                     */
+                    dawExtraState.oddsoundMTSActiveAsMain = (tv != 0);
                 }
             }
 
@@ -4645,7 +4648,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
         // Revision 21 adds MTS as main
         TiXmlElement oam("oddsound_mts_active_as_main");
-        oam.SetAttribute("v", (int)(storage->oddsound_mts_active_as_main));
+        oam.SetAttribute("v", dawExtraState.oddsoundMTSActiveAsMain ? 1 : 0);
         dawExtraXML.InsertEndChild(oam);
 
         /*

@@ -1273,6 +1273,7 @@ struct DAWExtraStateStorage
     bool isDirty{false};
 
     bool disconnectFromOddSoundMTS{false};
+    bool oddsoundMTSActiveAsMain{false};
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
     int oscPortInLastBound{0}; // Tracks bound port for restoration, 0 = never bound
@@ -1991,6 +1992,7 @@ class alignas(16) SurgeStorage
     void disconnect_as_oddsound_main();
     uint64_t lastSentTuningUpdate{0}; // since tuning update starts at 2
     void send_tuning_update();
+    void publish_tuning_as_oddsound_main();
     std::atomic<bool> uiThreadChecksTunings{false};
 #endif
     MTSClient *oddsound_mts_client = nullptr;
