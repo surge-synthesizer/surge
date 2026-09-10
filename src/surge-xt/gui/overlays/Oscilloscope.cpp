@@ -61,7 +61,37 @@ static float dbToY(float db, int height, float dbMin = -96.f, float dbMax = 0.f)
 
 float WaveformDisplay::Parameters::counterSpeed() const
 {
+    if (trigger_type == kTriggerKeytrack && keytrack_counter_speed > 0.f)
+    {
+        return keytrack_counter_speed;
+    }
+
     return std::pow(10.f, -time_window * 5.f + 1.5f);
+}
+
+float WaveformDisplay::Parameters::triggerSpeed() const
+{
+    return std::pow(10.f, 2.5f * trigger_speed - 5.f);
+}
+
+int WaveformDisplay::Parameters::cycles() const
+{
+    // Mirrors SelfUpdatingModulatableSlider::createDisplayString(), truncation and all, so that
+    // the number the slider reads out is the number of cycles we actually draw.
+    return juce::jlimit(minCycles, maxCycles,
+                        static_cast<int>(juce::jmap(keytrack_cycles, static_cast<float>(minCycles),
+                                                    static_cast<float>(maxCycles))));
+}
+
+float WaveformDisplay::Parameters::snapCycles(float value)
+{
+    Parameters p;
+    p.keytrack_cycles = value;
+
+    // This only ever positions the handle, it is never fed back into cycles(), so there is no
+    // rounding round trip to guard against and the first and last steps can sit exactly at the
+    // ends of the travel.
+    return static_cast<float>(p.cycles() - minCycles) / static_cast<float>(maxCycles - minCycles);
 }
 
 float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
@@ -112,7 +142,10 @@ void WaveformDisplay::paint(juce::Graphics &g)
 
     if (counterSpeedInverse < 1.0) // draw interpolated lines
     {
-        float phase = counterSpeedInverse;
+        // Zoomed in past one sample per pixel, so the sample the trigger landed on is several
+        // pixels wide. Start a fraction of a sample early to cancel the trigger's quantization,
+        // otherwise a keytracked high note shimmers back and forth by that many pixels.
+        float phase = std::max(counterSpeedInverse - triggerSubsample, 0.f);
         float dphase = counterSpeedInverse;
         float prevxi = points[0].x;
         float prevyi = points[0].y;
@@ -214,8 +247,10 @@ void WaveformDisplay::process(std::vector<float> data)
     float triggerLevel = params_.triggerLevel();
     int triggerLimit =
         static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
-    float triggerSpeed = std::pow(10.f, 2.5f * params_.trigger_speed - 5.f);
+    float triggerSpeed = params_.triggerSpeed();
     float counterSpeed = params_.counterSpeed();
+    // Samples the keytrack trigger waits before it starts looking for a zero crossing again.
+    int keytrackHoldoff = static_cast<int>(params_.keytrack_holdoff);
     float R = 1.f - 250.f / static_cast<float>(storage_->samplerate);
 
     for (float &f : data)
@@ -235,14 +270,53 @@ void WaveformDisplay::process(std::vector<float> data)
 
         // Triggers
         bool trigger = false;
+        // How far past the ideal trigger instant we ended up, in samples. Only the oscillator
+        // driven modes can know this; the edge triggers fire on the sample they find.
+        float subsample = 0.f;
+
         switch (params_.trigger_type)
         {
+        case kTriggerKeytrack:
+            // Hold off for as long as the tracked note says a sweep lasts, then take the next
+            // rising zero crossing. Running a free oscillator at the note's rate would keep the
+            // trace still but land on an arbitrary point of the waveform on each new note; edging
+            // off the crossing means every sweep starts at the same place. The holdoff window
+            // opens a sample early so an exact crossing can't be missed by rounding.
+            if (keytrackHoldoff <= 0)
+            {
+                // Keytrack mode before any note has been played. Free run rather than sit blank.
+                if (index >= getWidth())
+                {
+                    trigger = true;
+                }
+            }
+            else if (triggerLimitPhase >= keytrackHoldoff - 2)
+            {
+                if (sample >= 0.f && previousSample < 0.f)
+                {
+                    // Where the crossing actually fell between the two samples. Without this the
+                    // anchor shuffles by up to a sample, which is several pixels once a high note
+                    // has us zoomed in past one sample per pixel.
+                    subsample = 1.f - previousSample / (previousSample - sample);
+                    trigger = true;
+                }
+                else if (triggerLimitPhase > 4 * keytrackHoldoff)
+                {
+                    // Nothing has crossed zero for several sweeps - digital silence, most likely.
+                    // Sweep anyway rather than sit holding a waveform that stopped sounding.
+                    trigger = true;
+                }
+            }
+            break;
         case kTriggerInternal:
             // internal oscillator, nothing fancy
             triggerPhase += triggerSpeed;
             if (triggerPhase >= 1.0)
             {
                 triggerPhase -= 1.0;
+                // What is left in the accumulator is the overshoot past the ideal trigger, so
+                // dividing by the rate turns it back into a (sub-sample) count of samples.
+                subsample = triggerPhase / triggerSpeed;
                 trigger = true;
             }
             break;
@@ -278,7 +352,7 @@ void WaveformDisplay::process(std::vector<float> data)
         // if there's a retrigger, but too fast, kill it
         triggerLimitPhase++;
         if (trigger && triggerLimitPhase < triggerLimit && params_.trigger_type != kTriggerFree &&
-            params_.trigger_type != kTriggerInternal)
+            params_.trigger_type != kTriggerInternal && params_.trigger_type != kTriggerKeytrack)
         {
             trigger = false;
         }
@@ -303,6 +377,7 @@ void WaveformDisplay::process(std::vector<float> data)
             // reset everything
             index = 0;
             counter = 1.0;
+            triggerSubsample = subsample;
             max = std::numeric_limits<float>::lowest();
             min = std::numeric_limits<float>::max();
             triggerLimitPhase = 0;
@@ -677,7 +752,17 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         options.push_back(std::make_pair("Freerun", 0.0));
         options.push_back(std::make_pair("Rising Edge", 0.25));
         options.push_back(std::make_pair("Falling Edge", 0.5));
-        options.push_back(std::make_pair("Internal Trigger", 1.0));
+        options.push_back(std::make_pair("Internal Trigger", 0.75));
+        options.push_back(std::make_pair("Keytrack", 1.0));
+        break;
+    case tag_wf_keytrack_source:
+        menuName = "Note Priority";
+        options.push_back(std::make_pair("Lowest", 0.0));
+        options.push_back(std::make_pair("Highest", 0.5));
+        options.push_back(std::make_pair("Latest", 1.0));
+        break;
+    case tag_wf_keytrack_cycles:
+        menuName = "Cycles";
         break;
     case tag_wf_trigger_level:
         menuName = "Trigger Level";
@@ -721,25 +806,29 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         {
             auto val = op.second;
 
-            contextMenu.addItem(op.first, true, (val == pControl->getValue()),
-                                [val, pControl, this]() {
-                                    pControl->setValue(val);
+            contextMenu.addItem(
+                op.first, true, (val == pControl->getValue()), [val, pControl, this]() {
+                    pControl->setValue(val);
 
-                                    // The switch button is self-draw and has its own value change
-                                    // so we need to handle that eventuality here
-                                    auto sc = dynamic_cast<SwitchButton *>(pControl);
-                                    if (sc)
-                                        sc->valueChanged(pControl);
-                                    else
-                                        valueChanged(pControl);
+                    // The switch button is self-draw and has its own value change
+                    // so we need to handle that eventuality here
+                    auto sc = dynamic_cast<SwitchButton *>(pControl);
+                    auto ms = dynamic_cast<Surge::Widgets::ClosedMultiSwitchSelfDraw *>(pControl);
 
-                                    auto iv = pControl->asJuceComponent();
+                    if (sc)
+                        sc->valueChanged(pControl);
+                    else if (ms)
+                        ms->valueChanged(pControl);
+                    else
+                        valueChanged(pControl);
 
-                                    if (iv)
-                                    {
-                                        iv->repaint();
-                                    }
-                                });
+                    auto iv = pControl->asJuceComponent();
+
+                    if (iv)
+                    {
+                        iv->repaint();
+                    }
+                });
         }
     }
 
@@ -803,48 +892,59 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         juce::jlimit(0, WaveformDisplay::kNumTriggerTypes - 1, state->trigger_type));
     params_.dc_kill = state->dc_kill;
     params_.sync_draw = state->sync_draw;
+    params_.keytrack_source =
+        juce::jlimit(0, WaveformDisplay::kNumKeytrackSources - 1, state->keytrack_source);
+    params_.keytrack_cycles = juce::jlimit(0.f, 1.f, state->keytrack_cycles);
 
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_limit_.setOrientation(Surge::ParamConfig::kHorizontal);
     time_window_.setOrientation(Surge::ParamConfig::kHorizontal);
     amp_window_.setOrientation(Surge::ParamConfig::kHorizontal);
+    keytrack_cycles_.setOrientation(Surge::ParamConfig::kHorizontal);
 
     trigger_speed_.setStorage(s);
     trigger_level_.setStorage(s);
     trigger_limit_.setStorage(s);
     time_window_.setStorage(s);
     amp_window_.setStorage(s);
+    keytrack_cycles_.setStorage(s);
 
     trigger_speed_.setDefaultValue(params_.trigger_speed);
     trigger_level_.setDefaultValue(params_.trigger_level);
     trigger_limit_.setDefaultValue(params_.trigger_limit);
     time_window_.setDefaultValue(params_.time_window);
     amp_window_.setDefaultValue(params_.amp_window);
+    keytrack_cycles_.setDefaultValue(params_.keytrack_cycles);
 
     trigger_speed_.setQuantitizedDisplayValue(params_.trigger_speed);
     trigger_level_.setQuantitizedDisplayValue(params_.trigger_level);
     trigger_limit_.setQuantitizedDisplayValue(params_.trigger_limit);
     time_window_.setQuantitizedDisplayValue(params_.time_window);
     amp_window_.setQuantitizedDisplayValue(params_.amp_window);
+    keytrack_cycles_.setQuantitizedDisplayValue(
+        WaveformDisplay::Parameters::snapCycles(params_.keytrack_cycles));
 
     trigger_speed_.setLabel("Trigger Frequency");
     trigger_level_.setLabel("Trigger Level");
     trigger_limit_.setLabel("Retrigger Threshold");
     time_window_.setLabel("Time Scaling");
     amp_window_.setLabel("Amplitude Scaling");
+    keytrack_cycles_.setLabel("Cycles");
 
     trigger_speed_.setDescription("Rate at which the internal oscillator will run");
     trigger_level_.setDescription("Minimum value a waveform must rise/fall to trigger");
     trigger_limit_.setDescription("How fast to trigger again after a trigger happens");
     time_window_.setDescription("X axis (time) scale adjustment");
     amp_window_.setDescription("Y axis (amplitude) scale adjustment");
+    keytrack_cycles_.setDescription("How many cycles of the tracked note fill the display");
 
-    trigger_speed_.setRange(0.441f, 139.4f);
+    updateSampleRate();
     trigger_limit_.setRange(1, 10000);
     trigger_level_.setRange(-100, 100);
     time_window_.setRange(-100, 100);
     amp_window_.setRange(-100, 100);
+    keytrack_cycles_.setRange(WaveformDisplay::minCycles, WaveformDisplay::maxCycles);
 
     trigger_speed_.setUnit(" Hz");
     trigger_limit_.setUnit(" Samples");
@@ -857,6 +957,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setPrecision(0);
     time_window_.setPrecision(2);
     amp_window_.setPrecision(2);
+    keytrack_cycles_.setPrecision(0);
 
     trigger_type_.setTag(tag_wf_trigger_mode);
     trigger_speed_.setTag(tag_wf_int_trigger_freq);
@@ -864,6 +965,8 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setTag(tag_wf_retrigger_threshold);
     time_window_.setTag(tag_wf_time_scaling);
     amp_window_.setTag(tag_wf_amp_scaling);
+    keytrack_source_.setTag(tag_wf_keytrack_source);
+    keytrack_cycles_.setTag(tag_wf_keytrack_cycles);
 
     trigger_type_.addListener(this);
     trigger_speed_.addListener(this);
@@ -871,8 +974,11 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.addListener(this);
     time_window_.addListener(this);
     amp_window_.addListener(this);
+    keytrack_source_.addListener(this);
+    keytrack_cycles_.addListener(this);
 
     trigger_type_.setDraggable(true);
+    keytrack_source_.setDraggable(true);
 
     auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
@@ -899,27 +1005,57 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window),
                                        std::ref(state->time_window), _1));
     amp_window_.setOnUpdate(updateAmpWindow);
+    auto updateCycles = [this, state](float value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        params_.keytrack_cycles = value;
+        state->keytrack_cycles = value; // Update DAW state.
+        // Cycles is a whole number, so park the handle on the step it reads out instead of
+        // leaving it wherever the drag stopped.
+        keytrack_cycles_.setQuantitizedDisplayValue(WaveformDisplay::Parameters::snapCycles(value));
+    };
+
+    keytrack_cycles_.setOnUpdate(updateCycles);
 
     trigger_speed_.setRootWindow(parent_);
     trigger_level_.setRootWindow(parent_);
     trigger_limit_.setRootWindow(parent_);
     time_window_.setRootWindow(parent_);
     amp_window_.setRootWindow(parent_);
+    keytrack_cycles_.setRootWindow(parent_);
 
     // These are not visible by default, since the default trigger type is Freerun
     trigger_speed_.setVisible(false);
     trigger_level_.setVisible(false);
     trigger_limit_.setVisible(false);
+    keytrack_cycles_.setVisible(false);
 
     addAndMakeVisible(trigger_speed_);
     addAndMakeVisible(trigger_level_);
     addAndMakeVisible(trigger_limit_);
     addAndMakeVisible(time_window_);
     addAndMakeVisible(amp_window_);
+    addAndMakeVisible(keytrack_cycles_);
 
-    trigger_type_.setRows(4);
-    trigger_type_.setColumns(1);
-    trigger_type_.setLabels({"Freerun", "Rising Edge", "Falling Edge", "Internal Trigger"});
+    keytrack_source_.setRows(1);
+    keytrack_source_.setColumns(WaveformDisplay::kNumKeytrackSources);
+    keytrack_source_.setLabels({"Lowest", "Highest", "Latest"});
+    keytrack_source_.setIntegerValue(params_.keytrack_source);
+    keytrack_source_.setWantsKeyboardFocus(false);
+    keytrack_source_.setOnUpdate([this, state](int value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        params_.keytrack_source = juce::jlimit(0, WaveformDisplay::kNumKeytrackSources - 1, value);
+        state->keytrack_source = params_.keytrack_source; // Update DAW state.
+    });
+    keytrack_source_.valueChanged(nullptr);
+    keytrack_source_.setVisible(false);
+    addAndMakeVisible(keytrack_source_);
+
+    trigger_type_.setRows(1);
+    trigger_type_.setColumns(WaveformDisplay::kNumTriggerTypes);
+    trigger_type_.setLabels(
+        {"Freerun", "Rising Edge", "Falling Edge", "Internal Trigger", "Keytrack"});
     trigger_type_.setIntegerValue(static_cast<int>(params_.trigger_type));
     trigger_type_.setWantsKeyboardFocus(false);
     trigger_type_.setOnUpdate([this, state](int value) {
@@ -933,27 +1069,24 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
         state->trigger_type = static_cast<int>(params_.trigger_type); // Update DAW state.
 
-        if (params_.trigger_type == WaveformDisplay::kTriggerInternal)
-        {
-            trigger_speed_.setVisible(true);
-        }
-        else
-        {
-            trigger_speed_.setVisible(false);
-        }
+        auto keytrack = params_.trigger_type == WaveformDisplay::kTriggerKeytrack;
 
-        if (params_.trigger_type == WaveformDisplay::kTriggerRising ||
-            params_.trigger_type == WaveformDisplay::kTriggerFalling)
-        {
+        trigger_speed_.setVisible(params_.trigger_type == WaveformDisplay::kTriggerInternal);
 
-            trigger_level_.setVisible(true);
-            trigger_limit_.setVisible(true);
-        }
-        else
-        {
-            trigger_level_.setVisible(false);
-            trigger_limit_.setVisible(false);
-        }
+        auto edge = params_.trigger_type == WaveformDisplay::kTriggerRising ||
+                    params_.trigger_type == WaveformDisplay::kTriggerFalling;
+
+        trigger_level_.setVisible(edge);
+        trigger_limit_.setVisible(edge);
+
+        keytrack_source_.setVisible(keytrack);
+        keytrack_cycles_.setVisible(keytrack);
+
+        // In keytrack mode the time base comes from the note and the Cycles slider, so Time
+        // Scaling has nothing to say. Leave it in place but grey it out rather than hiding it,
+        // so the panel doesn't reshuffle every time the trigger mode changes.
+        time_window_.setDeactivated(keytrack);
+        time_window_.repaint();
     });
 
     // Explicitly inform the switch that the value has been updated, to take
@@ -1014,6 +1147,28 @@ std::optional<WaveformDisplay::Parameters> Oscilloscope::WaveformParameters::get
     return std::nullopt;
 }
 
+WaveformDisplay::Parameters Oscilloscope::WaveformParameters::getParams()
+{
+    std::lock_guard l(params_lock_);
+
+    return params_;
+}
+
+void Oscilloscope::WaveformParameters::updateSampleRate()
+{
+    if (storage_->samplerate == slider_samplerate_)
+    {
+        return;
+    }
+
+    slider_samplerate_ = storage_->samplerate;
+
+    // Mirrors the mapping in Parameters::triggerSpeed(), which is a phase increment per sample,
+    // so the frequency it corresponds to scales with the sample rate.
+    trigger_speed_.setRange(std::pow(10.f, -5.f) * slider_samplerate_,
+                            std::pow(10.f, -2.5f) * slider_samplerate_);
+}
+
 void Oscilloscope::WaveformParameters::onSkinChanged()
 {
     trigger_speed_.setSkin(skin, associatedBitmapStore);
@@ -1021,7 +1176,9 @@ void Oscilloscope::WaveformParameters::onSkinChanged()
     trigger_limit_.setSkin(skin, associatedBitmapStore);
     time_window_.setSkin(skin, associatedBitmapStore);
     amp_window_.setSkin(skin, associatedBitmapStore);
+    keytrack_cycles_.setSkin(skin, associatedBitmapStore);
     trigger_type_.setSkin(skin, associatedBitmapStore);
+    keytrack_source_.setSkin(skin, associatedBitmapStore);
     freeze_.setSkin(skin, associatedBitmapStore);
     dc_kill_.setSkin(skin, associatedBitmapStore);
     sync_draw_.setSkin(skin, associatedBitmapStore);
@@ -1033,6 +1190,7 @@ void Oscilloscope::WaveformParameters::onSkinChanged()
     trigger_limit_.setFont(font);
     time_window_.setFont(font);
     amp_window_.setFont(font);
+    keytrack_cycles_.setFont(font);
 }
 
 void Oscilloscope::WaveformParameters::paint(juce::Graphics &g)
@@ -1045,17 +1203,29 @@ void Oscilloscope::WaveformParameters::resized()
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
-    auto buttonWidth = 58;
-    int labelHeight = 12;
 
-    trigger_type_.setBounds(227, 14, 68, 52);
+    // Two columns to the right of the always-present display sliders hold whichever controls the
+    // current trigger mode needs, on the same row as Time Scaling. The trigger mode switch itself
+    // runs horizontally underneath them, lined up with the Sync Redraw button.
+    const auto slotA = 219;
+    const auto slotB = 374;
+    const auto buttonWidth = 58;
+    const auto slotWidth = 140;
+    const int labelHeight = 12;
 
-    trigger_speed_.setBounds(307, 28, 140, 26);
-    trigger_level_.setBounds(307, 14, 140, 26);
-    trigger_limit_.setBounds(307, 42, 140, 26);
+    trigger_type_.setBounds(slotA + 10, 52, slotB + slotWidth - slotA + 25, 14);
 
-    time_window_.setBounds(78, 14, 140, 26);
-    amp_window_.setBounds(78, 42, 140, 26);
+    trigger_speed_.setBounds(slotA, 14, slotWidth, 26);
+    trigger_level_.setBounds(slotA, 14, slotWidth, 26);
+    trigger_limit_.setBounds(slotB, 14, slotWidth, 26);
+
+    // The switch has no label underneath it, so centre it on the sliders' tray rather than on
+    // their bounds.
+    keytrack_source_.setBounds(slotA + 10, 19, slotWidth - 11, 14);
+    keytrack_cycles_.setBounds(slotB, 14, slotWidth, 26);
+
+    time_window_.setBounds(78, 14, slotWidth, 26);
+    amp_window_.setBounds(78, 42, slotWidth, 26);
 
     dc_kill_.setBounds(8, 14, buttonWidth, 14);
     freeze_.setBounds(8, 33, buttonWidth, 14);
@@ -1190,11 +1360,12 @@ void Oscilloscope::SpectrumParameters::resized()
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
-    auto buttonWidth = 58;
+    const auto buttonWidth = 58;
+    const auto slotWidth = 140;
 
-    noise_floor_.setBounds(78, 14, 140, 26);
-    max_db_.setBounds(78, 42, 140, 26);
-    decay_rate_.setBounds(219, 28, 140, 26);
+    noise_floor_.setBounds(78, 14, slotWidth, 26);
+    max_db_.setBounds(78, 42, slotWidth, 26);
+    decay_rate_.setBounds(219, 28, slotWidth, 26);
 
     freeze_.setBounds(8, 33, buttonWidth, 14);
 }
@@ -1206,12 +1377,20 @@ void Oscilloscope::updateDrawing()
     {
         if (scope_mode_ == WAVEFORM)
         {
-            auto params = waveform_parameters_.getParamsIfDirty();
-            if (params)
+            waveform_parameters_.updateSampleRate();
+
+            auto dirty = waveform_parameters_.getParamsIfDirty();
+            auto params = dirty ? std::move(*dirty) : waveform_parameters_.getParams();
+
+            // Keytrack mode has to push new values whenever the played note moves, not just when
+            // a control was touched, so resolve it before deciding whether anything changed.
+            bool changed = resolveKeytrack(params);
+
+            if (dirty || changed)
             {
-                background_.updateParameters(*params);
+                background_.updateParameters(params);
                 background_.repaint();
-                waveform_.setParameters(std::move(*params));
+                waveform_.setParameters(std::move(params));
             }
             waveform_.repaint();
         }
@@ -1316,6 +1495,90 @@ juce::Rectangle<int> Oscilloscope::getScopeRect()
                          .withTrimmedRight(30)            // y-scale on right
                          .reduced(8);
     return scopeRect;
+}
+
+bool Oscilloscope::resolveKeytrack(WaveformDisplay::Parameters &params)
+{
+    if (params.trigger_type != WaveformDisplay::kTriggerKeytrack)
+    {
+        return false;
+    }
+
+    // The scope taps the master output, so a note in either scene is a note we might be looking
+    // at. Take the union rather than picking a scene.
+    int key = -1;
+    uint64_t latestOrder = 0;
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        const auto &hk = storage_->heldKeys[sc];
+
+        switch (params.keytrack_source)
+        {
+        case WaveformDisplay::kKeytrackLowest:
+        {
+            auto k = hk.lowest.load(std::memory_order_relaxed);
+
+            if (k >= 0 && (key < 0 || k < key))
+            {
+                key = k;
+            }
+
+            break;
+        }
+        case WaveformDisplay::kKeytrackHighest:
+        {
+            key = std::max(key, hk.highest.load(std::memory_order_relaxed));
+            break;
+        }
+        default:
+        {
+            auto k = hk.latest.load(std::memory_order_relaxed);
+            auto order = hk.latestOrder.load(std::memory_order_relaxed);
+
+            if (k >= 0 && order >= latestOrder)
+            {
+                latestOrder = order;
+                key = k;
+            }
+
+            break;
+        }
+        }
+    }
+
+    // Hold onto the last key we saw once everything is released, so lifting your hands leaves the
+    // trace where it is instead of collapsing it just as the release tail gets interesting.
+    if (key >= 0)
+    {
+        keytrack_key_ = key;
+    }
+
+    float holdoff = 0.f;
+    float counterSpeed = 0.f;
+
+    if (keytrack_key_ >= 0 && storage_->samplerate > 0)
+    {
+        // Tuning-aware, so a microtonal patch locks as readily as a 12-TET one.
+        auto freq =
+            SurgeStorage::MIDI_0_FREQ * storage_->note_to_pitch(static_cast<float>(keytrack_key_));
+        auto period = params.cycles() * storage_->samplerate / freq; // samples per sweep
+
+        if (period > 0)
+        {
+            holdoff = static_cast<float>(period);
+            counterSpeed = static_cast<float>(getScopeRect().getWidth() / period);
+        }
+    }
+
+    bool changed = holdoff != keytrack_holdoff_ || counterSpeed != keytrack_counter_speed_;
+
+    keytrack_holdoff_ = holdoff;
+    keytrack_counter_speed_ = counterSpeed;
+    params.keytrack_holdoff = holdoff;
+    params.keytrack_counter_speed = counterSpeed;
+
+    return changed;
 }
 
 void Oscilloscope::pullData()

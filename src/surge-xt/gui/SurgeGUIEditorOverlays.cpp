@@ -419,7 +419,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
                               Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop,
                               Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop_Plugin});
         scope->setCanTearOutResize({true, Surge::Storage::OscilloscopeOverlaySizeTearOut});
-        scope->setMinimumSize(500, 300);
+        scope->setMinimumSize(560, 300);
 
         return scope;
     }
