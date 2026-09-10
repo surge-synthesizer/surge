@@ -361,6 +361,14 @@ class alignas(16) SurgeSynthesizer
     int getMaxModulationIndex(int scene, modsources modsource) const;
     std::vector<int> getModulationIndicesBetween(long ptag, modsources modsource,
                                                  int modsourceScene) const;
+    /*
+     * Enumerate every routing which originates from a given modulation source in a given
+     * scene, as (destination parameter tag, source index) pairs. Optionally restricted to
+     * routings at or above minIndex, which is what a modulator losing outputs needs - see
+     * getMaxModulationIndex - so the now unreachable routings can be cleared. See #6705.
+     */
+    std::vector<std::pair<int, int>>
+    getModulationsFromSource(int modsourceScene, modsources modsource, int minIndex = 0) const;
     ModulationRouting *getModRouting(long ptag, modsources modsource, int modsourceScene,
                                      int index) const;
 
