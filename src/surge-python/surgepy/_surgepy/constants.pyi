@@ -2,7 +2,7 @@
 Constants which are used to navigate Surge XT
 """
 from __future__ import annotations
-__all__ = ['adsr_ampeg', 'adsr_filteg', 'cg_ENV', 'cg_FILTER', 'cg_FX', 'cg_GLOBAL', 'cg_LFO', 'cg_MIX', 'cg_OSC', 'fc_dual1', 'fc_dual2', 'fc_ring', 'fc_serial1', 'fc_serial2', 'fc_serial3', 'fc_stereo', 'fc_wide', 'fm_2and3to1', 'fm_2to1', 'fm_3to2to1', 'fm_off', 'fxslot_ains1', 'fxslot_ains2', 'fxslot_bins1', 'fxslot_bins2', 'fxslot_global1', 'fxslot_global2', 'fxslot_send1', 'fxslot_send2', 'fxt_airwindows', 'fxt_chorus4', 'fxt_conditioner', 'fxt_delay', 'fxt_distortion', 'fxt_eq', 'fxt_flanger', 'fxt_freqshift', 'fxt_neuron', 'fxt_off', 'fxt_phaser', 'fxt_reverb', 'fxt_reverb2', 'fxt_ringmod', 'fxt_rotaryspeaker', 'fxt_vocoder', 'lt_envelope', 'lt_formula', 'lt_mseg', 'lt_noise', 'lt_ramp', 'lt_sine', 'lt_snh', 'lt_square', 'lt_tri', 'ms_aftertouch', 'ms_alternate_bipolar', 'ms_alternate_unipolar', 'ms_ampeg', 'ms_breath', 'ms_ctrl1', 'ms_ctrl2', 'ms_ctrl3', 'ms_ctrl4', 'ms_ctrl5', 'ms_ctrl6', 'ms_ctrl7', 'ms_ctrl8', 'ms_expression', 'ms_filtereg', 'ms_highest_key', 'ms_keytrack', 'ms_latest_key', 'ms_lfo1', 'ms_lfo2', 'ms_lfo3', 'ms_lfo4', 'ms_lfo5', 'ms_lfo6', 'ms_lowest_key', 'ms_modwheel', 'ms_pitchbend', 'ms_polyaftertouch', 'ms_random_bipolar', 'ms_random_unipolar', 'ms_releasevelocity', 'ms_slfo1', 'ms_slfo2', 'ms_slfo3', 'ms_slfo4', 'ms_slfo5', 'ms_slfo6', 'ms_sustain', 'ms_timbre', 'ms_velocity', 'ot_FM2', 'ot_FM3', 'ot_audioinput', 'ot_classic', 'ot_shnoise', 'ot_sine', 'ot_wavetable', 'ot_window', 'pm_latch', 'pm_mono', 'pm_mono_fp', 'pm_mono_st', 'pm_mono_st_fp', 'pm_poly', 'sm_chsplit', 'sm_dual', 'sm_single', 'sm_split']
+__all__ = ['adsr_ampeg', 'adsr_filteg', 'cg_ENV', 'cg_FILTER', 'cg_FX', 'cg_GLOBAL', 'cg_LFO', 'cg_MIX', 'cg_OSC', 'fc_dual1', 'fc_dual2', 'fc_ring', 'fc_serial1', 'fc_serial2', 'fc_serial3', 'fc_stereo', 'fc_wide', 'fm_2and3to1', 'fm_2to1', 'fm_3to2to1', 'fm_off', 'fxslot_ains1', 'fxslot_ains2', 'fxslot_bins1', 'fxslot_bins2', 'fxslot_global1', 'fxslot_global2', 'fxslot_send1', 'fxslot_send2', 'fxt_airwindows', 'fxt_chorus4', 'fxt_conditioner', 'fxt_delay', 'fxt_distortion', 'fxt_eq', 'fxt_flanger', 'fxt_freqshift', 'fxt_neuron', 'fxt_off', 'fxt_phaser', 'fxt_reverb', 'fxt_reverb2', 'fxt_ringmod', 'fxt_rotaryspeaker', 'fxt_vocoder', 'lt_envelope', 'lt_formula', 'lt_mseg', 'lt_noise', 'lt_ramp', 'lt_sine', 'lt_snh', 'lt_square', 'lt_tri', 'ms_aftertouch', 'ms_alternate_bipolar', 'ms_alternate_unipolar', 'ms_ampeg', 'ms_breath', 'ms_ctrl1', 'ms_ctrl2', 'ms_ctrl3', 'ms_ctrl4', 'ms_ctrl5', 'ms_ctrl6', 'ms_ctrl7', 'ms_ctrl8', 'ms_expression', 'ms_filtereg', 'ms_highest_key', 'ms_keytrack', 'ms_latest_key', 'ms_lfo1', 'ms_lfo2', 'ms_lfo3', 'ms_lfo4', 'ms_lfo5', 'ms_lfo6', 'ms_lowest_key', 'ms_modwheel', 'ms_pitchbend', 'ms_polyaftertouch', 'ms_random_bipolar', 'ms_random_unipolar', 'ms_releasevelocity', 'ms_slfo1', 'ms_slfo2', 'ms_slfo3', 'ms_slfo4', 'ms_slfo5', 'ms_slfo6', 'ms_sustain', 'ms_timbre', 'ms_velocity', 'ot_FM2', 'ot_FM3', 'ot_audioinput', 'ot_classic', 'ot_shnoise', 'ot_sine', 'ot_wavetable', 'ot_window', 'pm_latch', 'pm_mono', 'pm_mono_fp', 'pm_mono_st', 'pm_mono_st_fp', 'pm_poly', 'porta_exp', 'porta_lin', 'porta_log', 'sm_chsplit', 'sm_dual', 'sm_single', 'sm_split']
 adsr_ampeg: int = 0
 adsr_filteg: int = 1
 cg_ENV: int = 5
@@ -111,6 +111,9 @@ pm_mono_fp: int = 3
 pm_mono_st: int = 2
 pm_mono_st_fp: int = 4
 pm_poly: int = 0
+porta_exp: int = 1
+porta_lin: int = 0
+porta_log: int = -1
 sm_chsplit: int = 3
 sm_dual: int = 2
 sm_single: int = 0

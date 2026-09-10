@@ -23,6 +23,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <optional>
 #include <thread>
 #include <utility>
 
@@ -603,6 +604,38 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         oss << "Parameter value type: " << val_type << std::endl;
         oss << "Parameter display value: " << display << std::endl;
 
+        // Only report the features which actually apply to this parameter
+        const auto p = paramPtr(id);
+        const auto onOff = [](bool b) { return b ? "on" : "off"; };
+
+        if (p->can_extend_range())
+        {
+            oss << "Parameter extended range: " << onOff(p->extend_range) << std::endl;
+        }
+
+        if (p->can_temposync())
+        {
+            oss << "Parameter temposync: " << onOff(p->temposync) << std::endl;
+        }
+
+        if (p->can_be_absolute())
+        {
+            oss << "Parameter absolute mode: " << onOff(p->absolute) << std::endl;
+        }
+
+        if (p->has_deformoptions())
+        {
+            oss << "Parameter deform type: " << p->deform_type << std::endl;
+        }
+
+        if (p->has_portaoptions())
+        {
+            oss << "Parameter portamento constant rate: " << onOff(p->porta_constrate) << std::endl;
+            oss << "Parameter portamento glissando: " << onOff(p->porta_gliss) << std::endl;
+            oss << "Parameter portamento retrigger: " << onOff(p->porta_retrigger) << std::endl;
+            oss << "Parameter portamento curve: " << p->porta_curve << std::endl;
+        }
+
         return oss.str();
     }
 
@@ -613,6 +646,143 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             return;
 
         setParameter01(id.getID(), p->value_to_normalized(f));
+    }
+
+    /*
+     * Parameter features are the per-parameter flags which sit alongside a value and stream with
+     * the patch: extended range, temposync, absolute mode, the deform type, and the portamento
+     * options. Each of them is only meaningful on the parameters which support it, so every feature
+     * pairs its accessors with a query, and the setters raise rather than quietly writing a flag
+     * the engine will never read back.
+     */
+    Parameter *paramPtr(const SurgePyNamedParam &id)
+    {
+        auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
+
+        if (!p)
+        {
+            throw std::invalid_argument(std::string("Unknown parameter '") + id.getName() + "'!");
+        }
+
+        return p;
+    }
+
+    void requireFeature(Parameter *p, bool supported, const std::string &feature)
+    {
+        if (!supported)
+        {
+            throw std::invalid_argument(std::string("Parameter '") + p->get_name() +
+                                        "' does not support " + feature + "!");
+        }
+    }
+
+    bool canExtend(const SurgePyNamedParam &id) { return paramPtr(id)->can_extend_range(); }
+
+    bool getExtend(const SurgePyNamedParam &id) { return paramPtr(id)->extend_range; }
+
+    void setExtend(const SurgePyNamedParam &id, bool b)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->can_extend_range(), "extended range");
+        // set_extend_range also rescales the current value, so never assign the flag directly
+        p->set_extend_range(b);
+        storage.getPatch().isDirty = true;
+    }
+
+    bool canTempoSync(const SurgePyNamedParam &id) { return paramPtr(id)->can_temposync(); }
+
+    bool getTempoSync(const SurgePyNamedParam &id) { return paramPtr(id)->temposync; }
+
+    void setTempoSync(const SurgePyNamedParam &id, bool b)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->can_temposync(), "temposync");
+        p->temposync = b;
+        storage.getPatch().isDirty = true;
+    }
+
+    bool canBeAbsolute(const SurgePyNamedParam &id) { return paramPtr(id)->can_be_absolute(); }
+
+    bool getAbsolute(const SurgePyNamedParam &id) { return paramPtr(id)->absolute; }
+
+    void setAbsolute(const SurgePyNamedParam &id, bool b)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->can_be_absolute(), "absolute mode");
+        p->absolute = b;
+        storage.getPatch().isDirty = true;
+    }
+
+    bool canDeform(const SurgePyNamedParam &id) { return paramPtr(id)->has_deformoptions(); }
+
+    int getDeform(const SurgePyNamedParam &id) { return paramPtr(id)->deform_type; }
+
+    void setDeform(const SurgePyNamedParam &id, int deformType)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->has_deformoptions(), "deform types");
+        // What a deform type means is up to the control type, so there's no range to check here
+        p->deform_type = deformType;
+        storage.getPatch().isDirty = true;
+    }
+
+    bool canPortamento(const SurgePyNamedParam &id) { return paramPtr(id)->has_portaoptions(); }
+
+    py::dict getPortamentoOptions(const SurgePyNamedParam &id)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->has_portaoptions(), "portamento options");
+
+        py::dict res;
+
+        res["constantRate"] = p->porta_constrate;
+        res["glissando"] = p->porta_gliss;
+        res["retrigger"] = p->porta_retrigger;
+        res["curve"] = p->porta_curve;
+
+        return res;
+    }
+
+    void setPortamentoOptions(const SurgePyNamedParam &id, std::optional<bool> constantRate,
+                              std::optional<bool> glissando, std::optional<bool> retrigger,
+                              std::optional<int> curve)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->has_portaoptions(), "portamento options");
+
+        if (constantRate.has_value())
+        {
+            p->porta_constrate = *constantRate;
+        }
+
+        if (glissando.has_value())
+        {
+            p->porta_gliss = *glissando;
+        }
+
+        if (retrigger.has_value())
+        {
+            p->porta_retrigger = *retrigger;
+        }
+
+        if (curve.has_value())
+        {
+            if (*curve < porta_log || *curve > porta_exp)
+            {
+                throw std::invalid_argument("Portamento curve must be one of porta_log, porta_lin "
+                                            "or porta_exp from surgepy.constants!");
+            }
+
+            p->porta_curve = *curve;
+        }
+
+        storage.getPatch().isDirty = true;
     }
 
     void releaseNoteWithInts(int ch, int note, int vel) { releaseNote(ch, note, vel); }
@@ -629,12 +799,51 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         {
             throw std::invalid_argument((std::string("File not found: ") + s).c_str());
         }
-        std::cout << "Would load " << scene << " " << osc << " with " << s << std::endl;
         auto os = &(storage.getPatch().scene[scene].osc[osc]);
         auto wt = &(os->wt);
         storage.load_wt(s, wt, os);
 
         return true;
+    }
+
+    bool saveWavetablePy(int scene, int osc, const std::string &s)
+    {
+        if (scene < 0 || scene >= n_scenes || osc < 0 || osc >= n_oscs)
+        {
+            throw std::invalid_argument("OSC and SCENE out of range in saveWavetable");
+        }
+
+        auto os = &(storage.getPatch().scene[scene].osc[osc]);
+
+        // Every oscillator carries a wavetable buffer, but only the wavetable and window types
+        // actually have one which means anything, so don't hand back an init table for the rest.
+        if (!uses_wavetabledata(os->type.val.i))
+        {
+            throw std::invalid_argument("This oscillator type has no wavetable to save!");
+        }
+
+        if (!os->wt.everBuilt || os->wt.n_tables <= 0 || os->wt.size <= 0)
+        {
+            throw std::invalid_argument("This oscillator has no wavetable to save!");
+        }
+
+        auto path = string_to_path(s);
+
+        if (path.extension() != ".wt")
+        {
+            path.replace_extension(".wt");
+        }
+
+        // Copy the live wavetable under waveTableDataMutex so the write can't race a rebuild, then
+        // export the copy lock-free, exactly as the editor's wavetable export does.
+        Wavetable copy;
+
+        {
+            std::lock_guard<std::mutex> lock(storage.waveTableDataMutex);
+            copy.Copy(&os->wt);
+        }
+
+        return storage.export_wt_wt_portable(path, &copy, storage.make_wt_metadata(os));
     }
     bool loadPatchPy(const std::string &s)
     {
@@ -1125,6 +1334,50 @@ PYBIND11_MODULE(surgepy, m)
         .def("setParamVal", &SurgeSynthesizerWithPythonExtensions::setParamVal,
              "Set a parameter value", py::arg("param"), py::arg("toThis"))
 
+        .def("canExtend", &SurgeSynthesizerWithPythonExtensions::canExtend,
+             "Can this parameter have an extended range?", py::arg("param"))
+        .def("getExtend", &SurgeSynthesizerWithPythonExtensions::getExtend,
+             "Is this parameter in extended range mode?", py::arg("param"))
+        .def("setExtend", &SurgeSynthesizerWithPythonExtensions::setExtend,
+             "Set the extended range mode of a parameter, rescaling its value to the new range.",
+             py::arg("param"), py::arg("toThis"))
+
+        .def("canTempoSync", &SurgeSynthesizerWithPythonExtensions::canTempoSync,
+             "Can this parameter be tempo synced?", py::arg("param"))
+        .def("getTempoSync", &SurgeSynthesizerWithPythonExtensions::getTempoSync,
+             "Is this parameter tempo synced?", py::arg("param"))
+        .def("setTempoSync", &SurgeSynthesizerWithPythonExtensions::setTempoSync,
+             "Set the tempo sync mode of a parameter.", py::arg("param"), py::arg("toThis"))
+
+        .def("canBeAbsolute", &SurgeSynthesizerWithPythonExtensions::canBeAbsolute,
+             "Can this parameter be switched to absolute mode?", py::arg("param"))
+        .def("getAbsolute", &SurgeSynthesizerWithPythonExtensions::getAbsolute,
+             "Is this parameter in absolute mode?", py::arg("param"))
+        .def("setAbsolute", &SurgeSynthesizerWithPythonExtensions::setAbsolute,
+             "Set the absolute mode of a parameter.", py::arg("param"), py::arg("toThis"))
+
+        .def("canDeform", &SurgeSynthesizerWithPythonExtensions::canDeform,
+             "Does this parameter have deform options?", py::arg("param"))
+        .def("getDeform", &SurgeSynthesizerWithPythonExtensions::getDeform,
+             "The deform type of this parameter, as an integer whose meaning depends on the "
+             "parameter.",
+             py::arg("param"))
+        .def("setDeform", &SurgeSynthesizerWithPythonExtensions::setDeform,
+             "Set the deform type of a parameter.", py::arg("param"), py::arg("toThis"))
+
+        .def("canPortamento", &SurgeSynthesizerWithPythonExtensions::canPortamento,
+             "Does this parameter have portamento options?", py::arg("param"))
+        .def("getPortamentoOptions", &SurgeSynthesizerWithPythonExtensions::getPortamentoOptions,
+             "The portamento options of this parameter, as a dictionary with the keys "
+             "'constantRate', 'glissando', 'retrigger' and 'curve'.",
+             py::arg("param"))
+        .def("setPortamentoOptions", &SurgeSynthesizerWithPythonExtensions::setPortamentoOptions,
+             "Set the portamento options of a parameter. Options which are not given are left "
+             "alone. The curve is one of surgepy.constants.porta_log, porta_lin or porta_exp.",
+             py::arg("param"), py::arg("constantRate") = py::none(),
+             py::arg("glissando") = py::none(), py::arg("retrigger") = py::none(),
+             py::arg("curve") = py::none())
+
         .def("loadPatch", &SurgeSynthesizerWithPythonExtensions::loadPatchPy,
              "Load a Surge XT .fxp patch from the file system.", py::arg("path"))
         .def("savePatch", &SurgeSynthesizerWithPythonExtensions::savePatchPy,
@@ -1132,6 +1385,11 @@ PYBIND11_MODULE(surgepy, m)
 
         .def("loadWavetable", &SurgeSynthesizerWithPythonExtensions::loadWavetablePy,
              "Load a wavetable file directly into a scene and oscillator immediately on this "
+             "thread.",
+             py::arg("scene"), py::arg("osc"), py::arg("path"))
+
+        .def("saveWavetable", &SurgeSynthesizerWithPythonExtensions::saveWavetablePy,
+             "Save the wavetable of a scene and oscillator to a .wt file, immediately on this "
              "thread.",
              py::arg("scene"), py::arg("osc"), py::arg("path"))
 
@@ -1243,6 +1501,10 @@ PYBIND11_MODULE(surgepy, m)
         m.def_submodule("constants", "Constants which are used to navigate Surge XT");
 
 #define C(x) m_const.attr(#x) = py::int_((int)(x));
+    C(porta_log);
+    C(porta_lin);
+    C(porta_exp);
+
     C(cg_GLOBAL);
     C(cg_OSC);
     C(cg_MIX);

@@ -62,6 +62,26 @@ class SurgeSynthesizer:
         """
         Turn off all playing notes
         """
+    def canBeAbsolute(self, param: SurgePyNamedParam) -> bool:
+        """
+        Can this parameter be switched to absolute mode?
+        """
+    def canDeform(self, param: SurgePyNamedParam) -> bool:
+        """
+        Does this parameter have deform options?
+        """
+    def canExtend(self, param: SurgePyNamedParam) -> bool:
+        """
+        Can this parameter have an extended range?
+        """
+    def canPortamento(self, param: SurgePyNamedParam) -> bool:
+        """
+        Does this parameter have portamento options?
+        """
+    def canTempoSync(self, param: SurgePyNamedParam) -> bool:
+        """
+        Can this parameter be tempo synced?
+        """
     def channelAftertouch(self, channel: int, value: int) -> None:
         """
         Send the channel aftertouch MIDI message
@@ -78,6 +98,10 @@ class SurgeSynthesizer:
         ...
     def fromSynthSideId(self, arg0: int, arg1: SurgeSynthesizer_ID) -> bool:
         ...
+    def getAbsolute(self, param: SurgePyNamedParam) -> bool:
+        """
+        Is this parameter in absolute mode?
+        """
     def getAllModRoutings(self) -> dict:
         """
         Get the entire modulation matrix for this instance.
@@ -87,6 +111,14 @@ class SurgeSynthesizer:
     def getControlGroup(self, entry: int) -> SurgePyControlGroup:
         """
         Gather the parameters groups for a surge.constants.cg_ control group
+        """
+    def getDeform(self, param: SurgePyNamedParam) -> int:
+        """
+        The deform type of this parameter, as an integer whose meaning depends on the parameter.
+        """
+    def getExtend(self, param: SurgePyNamedParam) -> bool:
+        """
+        Is this parameter in extended range mode?
         """
     def getFactoryDataPath(self) -> str:
         ...
@@ -142,8 +174,16 @@ class SurgeSynthesizer:
         """
         Get a Python dictionary with the Surge XT parameters laid out in the logical patch format
         """
+    def getPortamentoOptions(self, param: SurgePyNamedParam) -> dict:
+        """
+        The portamento options of this parameter, as a dictionary with the keys 'constantRate', 'glissando', 'retrigger' and 'curve'.
+        """
     def getSampleRate(self) -> float:
         ...
+    def getTempoSync(self, param: SurgePyNamedParam) -> bool:
+        """
+        Is this parameter tempo synced?
+        """
     def getUserDataPath(self) -> str:
         ...
     def isActiveModulation(self, targetParameter: SurgePyNamedParam, modulationSource: SurgePyModSource, scene: int = 0, index: int = 0) -> bool:
@@ -169,6 +209,10 @@ class SurgeSynthesizer:
     def loadSCLFile(self, arg0: str) -> None:
         """
         Load an SCL tuning file and apply tuning to this instance
+        """
+    def loadWavetable(self, scene: int, osc: int, path: str) -> bool:
+        """
+        Load a wavetable file directly into a scene and oscillator immediately on this thread.
         """
     def pitchBend(self, channel: int, bend: int) -> None:
         """
@@ -217,6 +261,22 @@ class SurgeSynthesizer:
         """
         Save the current state of Surge XT to an .fxp file.
         """
+    def saveWavetable(self, scene: int, osc: int, path: str) -> bool:
+        """
+        Save the wavetable of a scene and oscillator to a .wt file, immediately on this thread.
+        """
+    def setAbsolute(self, param: SurgePyNamedParam, toThis: bool) -> None:
+        """
+        Set the absolute mode of a parameter.
+        """
+    def setDeform(self, param: SurgePyNamedParam, toThis: int) -> None:
+        """
+        Set the deform type of a parameter.
+        """
+    def setExtend(self, param: SurgePyNamedParam, toThis: bool) -> None:
+        """
+        Set the extended range mode of a parameter, rescaling its value to the new range.
+        """
     def setModDepth01(self, targetParameter: SurgePyNamedParam, modulationSource: SurgePyModSource, depth: float, scene: int = 0, index: int = 0) -> None:
         """
         Set a modulation to a given depth
@@ -224,6 +284,14 @@ class SurgeSynthesizer:
     def setParamVal(self, param: SurgePyNamedParam, toThis: float) -> None:
         """
         Set a parameter value
+        """
+    def setPortamentoOptions(self, param: SurgePyNamedParam, constantRate: bool | None = None, glissando: bool | None = None, retrigger: bool | None = None, curve: int | None = None) -> None:
+        """
+        Set the portamento options of a parameter. Options which are not given are left alone. The curve is one of surgepy.constants.porta_log, porta_lin or porta_exp.
+        """
+    def setTempoSync(self, param: SurgePyNamedParam, toThis: bool) -> None:
+        """
+        Set the tempo sync mode of a parameter.
         """
 class SurgeSynthesizer_ID:
     def __init__(self) -> None:
