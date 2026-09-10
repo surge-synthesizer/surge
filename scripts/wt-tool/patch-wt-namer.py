@@ -4,7 +4,7 @@ patch-wt-namer.py
 
 Attaches proper wavetable names to factory and 3rd party patches whose
 oscillators currently display "(Patch Wavetable)", by identifying the
-embedded table against the shipped .wt library.
+embedded table against the shipped wavetable library.
 
 Run from the Surge XT repository root:
 
@@ -30,7 +30,7 @@ revision bump.
 --- What this script does ---
 
 Case A -- clean rename:
-The embedded table is identical to a shipped .wt, to within one LSB of
+The embedded table is identical to a shipped wavetable, within one LSB of
 the int16 quantization save_patch applies to embedded tables. Only the
 name is written. Nothing else about the patch changes.
 
@@ -38,20 +38,35 @@ Case B -- near rename (see --near-lsb):
 As case A but the table differs by a few LSB, below audibility and with
 identical dimensions. Only the name is written.
 
-Case C -- pre-#8440 wave count:
-The embedded table is the leading frames of a shipped .wt. This is not a
-reslice: before commit 9a6301ac3 ("Fix factory wavetables", issue #8013)
-a number of Waldorf .wt files declared 60 frames in their header while
-physically holding 63 or 64, so Surge only ever read 60 frames and any
-patch saved against them embedded a 60 frame table. The sample data
-itself never changed across that fix.
+Case B2 -- all but a few samples identical:
+The tables agree bit for bit except at a handful of samples. This is a
+rendering difference at a waveform discontinuity, not a different
+wavetable: Organ 3 against Saw Asymmetric differs by 15879 steps at
+exactly one sample out of 16384 and by nothing anywhere else, because the
+two renderings put the sawtooth's reset in a slightly different place.
+Judging by the largest difference alone would reject these; counting how
+many samples disagree does not. Name only, as with case A.
+
+Case C -- short frame count:
+The embedded table is the leading frames of a shipped wavetable, rather
+than a reslice of it.
+
+Nearly all of these come from one cause. Before commit 9a6301ac3 ("Fix
+factory wavetables", issue #8013) a number of Waldorf .wt files declared
+60 frames in their header while physically holding 63 or 64, so Surge
+only ever read 60 frames and any patch saved against them embedded a 60
+frame table. The sample data itself never changed across that fix.
+
+One case is not that: two slots hold the first 4 frames of the 6 frame
+Generated/Saw ATC.wav. The handling is the same either way, since what
+matters is only that the patch holds fewer frames than the file does.
 
 For these the script does three things together, because doing any one of
 them alone changes how the patch sounds:
 
   1. writes the name;
-  2. re-embeds the wavetable from the current .wt file, so the patch
-     carries the full table rather than the stale short one;
+  2. re-embeds the wavetable from the current file, so the patch carries
+     the full table rather than the stale short one;
   3. rescales Morph, and every modulation depth routed to Morph, so the
      oscillator still lands on the frame it landed on before.
 
@@ -79,11 +94,21 @@ Two notes on the limits of that correction:
     above 1/k, so within that band it travels on into the restored frames
     instead of holding, which is audibly different from what ships today.
 
-    Seven slots reach that far. They were auditioned before this script
-    landed, starting with the most exposed of them -- Anomaly, whose
-    modulation asks for 1.4902 -- and the character survives, so they are
-    corrected along with the rest. Pass --hold-ceiling-clippers to leave
-    them alone and have them reported instead.
+    A handful of slots reach that far. They were auditioned, starting with
+    the most exposed of them -- Anomaly, whose modulation asks for 1.4902
+    -- and the character survives, so they are corrected along with the
+    rest. Pass --hold-ceiling-clippers to leave them alone and have them
+    reported instead.
+
+Case E -- curated ear match:
+A small hand-kept table, EAR_MATCHES below, for slots that are audibly a
+shipped wavetable but a different rendering of it, so no honest numeric
+tolerance can match them. Each entry says whether the table may also be
+re-embedded, which is a per-patch listening decision rather than
+something the numbers can settle: re-embedding makes the name truthful
+and removes the reattach surprise, at the cost of changing how the patch
+sounds today. An entry that declines it gets the name only.
+--skip-ear-matches leaves the whole set alone.
 
 Case D -- retired name:
 The oscillator already names a wavetable that no longer ships, because
@@ -120,11 +145,49 @@ WTF_INT16_IS_16 = 8
 PLACEHOLDERS = ("", "(Patch Wavetable)", "(Patch Sample)")
 LSB = 1.0 / 16384.0
 
+# A table that is bit-identical apart from this many samples is the same
+# wavetable rendered slightly differently, typically at a waveform's
+# discontinuity. Both limits must hold, so a small table cannot qualify on the
+# fraction alone nor a large one on the absolute count alone.
+MAX_OUTLIER_SAMPLES = 16
+MAX_OUTLIER_FRACTION = 0.0005
+
 # Wavetables removed from the factory set as byte-for-byte duplicates, mapped to
 # the file that survives. A patch naming the retired file is repointed, after its
 # embedded table is checked against the replacement.
 RETIRED_NAMES = {
     "mw1": "VeryHi WM",     # identical to Waldorf/VeryHi WM.wt
+}
+
+# Slots identified by ear, where the numbers alone cannot make the call. Each is
+# audibly the shipped wavetable but a different rendering of it, so the tables do
+# not compare equal at any honest tolerance. Keyed by patch, scene and oscillator;
+# the value is the wavetable name, why it cannot be matched automatically, and
+# whether the table may also be re-embedded.
+#
+# Naming alone reattaches the oscillator to the file, so a viewer who jogs the
+# wavetable away and back gets the file's version rather than the patch's.
+# Re-embedding settles that by making the patch hold the file, at the cost of
+# changing how the patch sounds today, so it is a listening decision taken per
+# patch rather than a default. --skip-ear-matches declines the whole set and
+# leaves those slots showing "(Patch Wavetable)".
+EAR_MATCHES = {
+    # Triangle frame 0 at half resolution: the patch holds 512 x 2 where the file
+    # is 1024 x 16, the two frames are identical, and resampling the file's first
+    # frame down to 512 reproduces the patch to within one step. Re-embedding was
+    # auditioned and approved; it is audible only at very low octaves, and this
+    # patch does not key track.
+    ("patches_3rdparty/Argitoth/Drums/Kick.fxp", "A", 2):
+        ("Triangle", "512 x 2 holding frame 0 of a 1024 x 16 file", True),
+    # The same wavetable generated with an off-by-one. Its frames are the file's
+    # function sampled over a 127 sample period inside a 128 sample frame, the
+    # inclusive-endpoint mistake: frame 0 is cos(2*pi*n/127) where the file is
+    # exactly cos(2*pi*n/128), and every frame's last sample duplicates its first,
+    # which no frame of the file does. Audibly that is a one sample plateau at the
+    # wrap and a small DC offset. Re-embedding therefore repairs the patch rather
+    # than merely relabelling it, and was auditioned against the file.
+    ("patches_3rdparty/Zoozither/Pads/Oncoming.fxp", "A", 2):
+        ("Cosine Inverse Power", "generated on a 127 sample period, not 128", True),
 }
 
 # modsources that never swing below zero, by index into enum modsources
@@ -190,25 +253,221 @@ def read_wt_file(path):
     raw = b[WT_HEADER:WT_HEADER + need]
     if len(raw) < need:                          # Surge's own loader zero-pads a short file
         raw += b"\0" * (need - len(raw))
+    rows = decode_samples(flags, n_samples, n_tables, raw)
     return dict(path=path, n_samples=n_samples, n_tables=n_tables, flags=flags,
-                raw=raw, rows=decode_samples(flags, n_samples, n_tables, raw))
+                raw=raw, rows=rows, i15=to_i15(rows))
+
+
+SH_FOR_LEN = {1 << n: n for n in range(1, 13)}      # frame sizes 2 .. 4096
+
+
+def read_wav_file(path):
+    """
+    Read a .wav the way SurgeStorage::load_wt_wav_portable does, so a .wav in the
+    wavetable menu is compared as the table Surge would actually build from it.
+
+    The frame size is metadata, not geometry: a clm or uhWT chunk means 2048, a
+    regular cue chunk gives the spacing, srge carries it outright, and a smpl
+    loop implies it. Without any of those the file is treated as a sample, which
+    is not a wavetable match and is skipped here.
+    """
+    with open(path, "rb") as fh:
+        b = fh.read()
+    if len(b) < 12 or b[0:4] != b"RIFF" or b[8:12] != b"WAVE":
+        return None
+
+    fmt = None
+    has_fmt = has_smpl = has_clm = has_cue = has_srge = False
+    clm_len = smpl_len = cue_len = srge_len = 0
+    wavdata, datasamples = None, 0
+
+    off = 12
+    while off + 8 <= len(b):
+        ctype = b[off:off + 4]
+        cs, = struct.unpack_from("<i", b, off + 4)
+        off += 8
+        if cs < 0:
+            break
+        if cs % 2 == 1:                              # RIFF chunks are word aligned
+            cs += 1
+        data = b[off:off + cs]
+        if len(data) != cs:
+            break
+        off += cs
+
+        if ctype == b"fmt ":
+            if cs < 16:
+                return None
+            has_fmt = True
+            fmt = struct.unpack_from("<HHIIHH", data, 0)
+            audio_format, channels, bits = fmt[0], fmt[1], fmt[5]
+            if not (((audio_format == 1 and bits == 16) or (audio_format == 3 and bits == 32))
+                    and channels > 0):
+                return None                          # Surge refuses these too
+        elif ctype == b"clm ":
+            if cs >= 7 and data[3:7] == b"2048":
+                has_clm, clm_len = True, 2048
+        elif ctype == b"uhWT":
+            has_clm, clm_len = True, 2048
+        elif ctype in (b"srge", b"srgo"):
+            if cs >= 8:
+                has_srge = ctype == b"srge" or has_srge
+                srge_len, = struct.unpack_from("<i", data, 4)
+        elif ctype == b"cue ":
+            n_cues = struct.unpack_from("<i", data, 0)[0] if cs >= 4 else 0
+            in_chunk = (cs - 4) // 24 if cs >= 4 else 0
+            if n_cues < 0 or n_cues > in_chunk:
+                n_cues = in_chunk
+            starts = [struct.unpack_from("<6i", data, 4 + i * 24)[5] for i in range(n_cues)]
+            d, regular = -1, True
+            for i in range(1, len(starts)):
+                if d == -1:
+                    d = starts[i] - starts[i - 1]
+                elif d != starts[i] - starts[i - 1]:
+                    regular = False
+            if regular:
+                has_cue, cue_len = True, d
+        elif ctype == b"data":
+            if not has_fmt:
+                return None
+            datasamples = cs * 8 // fmt[5] // fmt[1]
+            wavdata = data
+        elif ctype == b"smpl":
+            if cs < 36:
+                continue
+            sc = struct.unpack_from("<9I", data, 0)
+            if sc[7] == 0:                           # RAPID writes an empty smpl to mean 2048
+                has_smpl, smpl_len = True, 2048
+            if sc[7] >= 1 and cs >= 60:
+                loop = struct.unpack_from("<6I", data, 36)
+                has_smpl = True
+                smpl_len = loop[3] - loop[2] + 1 or 2048
+
+    if not has_fmt or wavdata is None:
+        return None
+
+    loop_data = has_smpl or has_clm or has_srge
+    loop_len = (clm_len if has_clm else
+                cue_len if has_cue else
+                srge_len if has_srge else
+                smpl_len if has_smpl else -1)
+    if loop_len in (0, -1):
+        return None
+
+    sh = SH_FOR_LEN.get(loop_len, 0) if loop_data else 0
+    if sh == 0 or datasamples // loop_len < 1:
+        return None                                  # a sample, not a wavetable
+
+    audio_format, channels, bits = fmt[0], fmt[1], fmt[5]
+    n_samples = 1 << sh
+    sample_length = min(datasamples, 4096 * 512)
+    n_tables = min(512, sample_length >> sh)
+    if n_tables < 1:
+        return None
+    flags = WTF_INT16 if (audio_format == 1 and bits == 16) else 0
+
+    step = bits // 8
+    if channels > 1:                                 # Surge keeps the left channel
+        mono = bytearray()
+        for i in range(datasamples):
+            src = i * step * channels
+            mono += wavdata[src:src + step]
+        wavdata = bytes(mono)
+
+    need = n_samples * n_tables * step
+    if len(wavdata) < need:
+        wavdata += b"\0" * (need - len(wavdata))
+    raw = wavdata[:need]
+    rows = decode_samples(flags, n_samples, n_tables, raw)
+    return dict(path=path, n_samples=n_samples, n_tables=n_tables, flags=flags, raw=raw,
+                rows=rows, i15=to_i15(rows))
 
 
 def load_library(data_dir):
+    """
+    Everything refresh_wtlist would put in the wavetable menu. That is .wt and
+    .wav alike -- see supportedTableFileTypes in SurgeStorage.cpp -- and more than
+    half the shipped library is .wav, so a matcher that reads only .wt silently
+    fails to recognize the larger half of it.
+
+    .wtscript is deliberately not covered. Those tables are produced by running
+    Lua, which this script cannot do, so a patch holding one is reported as
+    having no match rather than being matched wrongly.
+    """
     lib = []
     for base in ("wavetables", "wavetables_3rdparty"):
         for dirpath, _, files in os.walk(os.path.join(data_dir, base)):
             for f in sorted(files):
-                if not f.lower().endswith(".wt"):
-                    continue
+                low = f.lower()
                 full = os.path.join(dirpath, f)
-                wt = read_wt_file(full)
+                if low.endswith(".wt"):
+                    wt = read_wt_file(full)
+                elif low.endswith(".wav"):
+                    wt = read_wav_file(full)
+                else:
+                    continue
                 if wt is None:
                     continue
                 wt["rel"] = os.path.relpath(full, data_dir).replace("\\", "/")
                 wt["name"] = os.path.splitext(f)[0]
                 lib.append(wt)
     return lib
+
+
+def to_i15(rows):
+    """
+    Put a table through float2i15, the conversion save_patch applies on the way
+    into an .fxp: truncate toward zero, then clamp to [-16384, 16383].
+
+    Comparing in this space rather than in floats is not a tolerance, it is the
+    only correct comparison. Several shipped wavetables reach past +/-1 -- Laser
+    peaks at 1.676, Noise at 1.469 -- and the clamp means the copy inside a patch
+    is legitimately a clipped version of the file. Compared as floats those look
+    wildly different while being the same wavetable.
+    """
+    out = []
+    for r in rows:
+        row = []
+        for x in r:
+            v = int(x * 16384.0)
+            row.append(-16384 if v < -16384 else (16383 if v > 16383 else v))
+        out.append(row)
+    return out
+
+
+def max_i15_diff(a, b):
+    """Largest difference, in int15 steps, between two already-quantized tables."""
+    worst = 0
+    for ra, rb in zip(a, b):
+        for x, y in zip(ra, rb):
+            d = x - y
+            if d < 0:
+                d = -d
+            if d > worst:
+                worst = d
+    return worst
+
+
+def i15_outliers(a, b):
+    """
+    (count, total) of samples differing by more than one step.
+
+    The largest difference on its own is a poor test of sameness, because a
+    waveform with a discontinuity - any sawtooth - can be rendered two ways that
+    differ only in where the reset lands, and a single sample at the jump then
+    reads as a near full scale difference. Organ 3 against Saw Asymmetric differs
+    by 15879 steps at exactly one sample out of 16384, and by nothing anywhere
+    else. Counting how many samples disagree separates that from a table which is
+    genuinely different, where the disagreement is everywhere.
+    """
+    n = bad = 0
+    for ra, rb in zip(a, b):
+        for x, y in zip(ra, rb):
+            n += 1
+            d = x - y
+            if d > 1 or d < -1:
+                bad += 1
+    return bad, n
 
 
 def max_diff(rows_a, rows_b):
@@ -413,27 +672,34 @@ class PatchFile:
 
 def classify(chunk, lib, near_lsb):
     """Return (kind, wavetable, detail), kind in exact / near / prehdr / none."""
-    rows = decode_samples(chunk["flags"], chunk["n_samples"], chunk["n_tables"], chunk["raw"])
+    rows = to_i15(decode_samples(chunk["flags"], chunk["n_samples"], chunk["n_tables"],
+                                 chunk["raw"]))
     same_dim = [w for w in lib
                 if w["n_samples"] == chunk["n_samples"] and w["n_tables"] == chunk["n_tables"]]
-    scored = sorted(((max_diff(rows, w["rows"]), w) for w in same_dim),
+    scored = sorted(((max_i15_diff(rows, w["i15"]), w) for w in same_dim),
                     key=lambda t: (t[0], t[1]["rel"]))
     if scored:
         best_d, best = scored[0]
-        if best_d <= 1.01 * LSB:
-            ties = [w["rel"] for d, w in scored if d <= 1.01 * LSB]
-            return "exact", best, dict(lsb=best_d / LSB, ties=ties)
-        if best_d <= near_lsb * LSB:
-            return "near", best, dict(lsb=best_d / LSB, ties=[])
+        if best_d <= 1:
+            ties = [w["rel"] for d, w in scored if d <= 1]
+            return "exact", best, dict(lsb=best_d, ties=ties)
+        if best_d <= near_lsb:
+            return "near", best, dict(lsb=best_d, ties=[])
+        # A handful of disagreeing samples in an otherwise bit-identical table is
+        # a rendering difference at a discontinuity, not a different wavetable.
+        for d, w in scored:
+            bad, total = i15_outliers(rows, w["i15"])
+            if bad <= MAX_OUTLIER_SAMPLES and bad <= total * MAX_OUTLIER_FRACTION:
+                return "sparse", w, dict(lsb=d, ties=[], outliers=bad, total=total)
 
     # leading-frame match: the pre-#8440 wave count case
     for w in sorted(lib, key=lambda w: w["rel"]):
         if w["n_samples"] != chunk["n_samples"] or w["n_tables"] <= chunk["n_tables"]:
             continue
-        d = max_diff(rows, w["rows"][:chunk["n_tables"]])
-        if d <= 2.01 * LSB:
-            return "prehdr", w, dict(lsb=d / LSB, ties=[])
-    return "none", None, dict(lsb=scored[0][0] / LSB if scored else None, ties=[])
+        d = max_i15_diff(rows, w["i15"][:chunk["n_tables"]])
+        if d <= 2:
+            return "prehdr", w, dict(lsb=d, ties=[])
+    return "none", None, dict(lsb=scored[0][0] if scored else None, ties=[])
 
 
 def span(n_tables, extend):
@@ -455,6 +721,9 @@ def main():
                     help="skip the clean renames, do only the pre-#8440 group")
     ap.add_argument("--skip-prehdr", action="store_true",
                     help="skip the pre-#8440 group, do only the clean renames")
+    ap.add_argument("--skip-ear-matches", action="store_true",
+                    help="do not apply the curated EAR_MATCHES names, leaving those slots "
+                         "showing the placeholder")
     ap.add_argument("--hold-ceiling-clippers", action="store_true",
                     help="leave pre-#8440 slots whose Morph modulation reaches the ceiling alone, "
                          "and report them instead of correcting them")
@@ -474,7 +743,8 @@ def main():
     print("wavetable library: %d files" % len(lib))
 
     report, counts = [], dict(exact=0, near=0, prehdr=0, none=0, named=0,
-                              sample=0, ear=0, ambiguous=0, retired=0)
+                              sample=0, ear=0, ambiguous=0, retired=0,
+                              ear_match=0, sparse=0)
     changed = 0
 
     for base in ("patches_factory", "patches_3rdparty"):
@@ -506,14 +776,14 @@ def main():
                         if current in RETIRED_NAMES:
                             want = RETIRED_NAMES[current]
                             repl = next((w for w in lib if w["name"] == want), None)
-                            rows = decode_samples(chunk["flags"], chunk["n_samples"],
-                                                  chunk["n_tables"], chunk["raw"])
+                            rows = to_i15(decode_samples(chunk["flags"], chunk["n_samples"],
+                                                         chunk["n_tables"], chunk["raw"]))
                             if repl is None:
                                 print("  retired name %r maps to %r, which is not in the library"
                                       % (current, want))
                             elif (repl["n_samples"] != chunk["n_samples"]
                                     or repl["n_tables"] != chunk["n_tables"]
-                                    or max_diff(rows, repl["rows"]) > 1.01 * LSB):
+                                    or max_i15_diff(rows, repl["i15"]) > 1):
                                 print("  %s %s names retired %r but its table does not match %r; "
                                       "left alone" % (rel, slot, current, want))
                             else:
@@ -530,10 +800,34 @@ def main():
 
                         kind, wt, detail = classify(chunk, lib, args.near_lsb)
                         if kind == "none":
+                            ear = EAR_MATCHES.get((rel, "AB"[sc], osc + 1))
+                            if ear and not args.skip_ear_matches:
+                                want, why, reimport = ear
+                                repl = next((w for w in lib if w["name"] == want), None)
+                                if repl is None:
+                                    print("  ear match %r for %s %s is not in the library"
+                                          % (want, rel, slot))
+                                else:
+                                    counts["ear_match"] += 1
+                                    morph = ""
+                                    p.set_display_name(sc, osc, want)
+                                    if reimport:
+                                        value, extend, _ = p.morph(sc, osc)
+                                        if value is not None:
+                                            k = (span(chunk["n_tables"], extend)
+                                                 / float(span(repl["n_tables"], extend)))
+                                            p.scale_morph(sc, osc, k)
+                                            morph = "%.6f -> %.6f" % (value, value * k)
+                                        p.replace_table(sc, osc, repl)
+                                        why = why + "; re-embedded"
+                                    report.append((rel, slot, "ear", repl["rel"], want,
+                                                   morph, why))
+                                    dirty = True
+                                continue
                             counts["none"] += 1
                             report.append((rel, slot, "skip", "no library match", "", "",
                                            "" if detail["lsb"] is None
-                                           else "closest same-size %.0f LSB" % detail["lsb"]))
+                                           else "closest same-size %d steps" % detail["lsb"]))
                             continue
 
                         if len(detail["ties"]) > 1:
@@ -546,12 +840,16 @@ def main():
                             print("  ambiguous: %s %s matches %s -- using %s"
                                   % (rel, slot, ", ".join(detail["ties"]), wt["rel"]))
 
-                        if kind in ("exact", "near"):
+                        if kind in ("exact", "near", "sparse"):
                             if args.skip_names:
                                 continue
                             counts[kind] += 1
+                            note = ""
+                            if kind == "sparse":
+                                note = ("%d of %d samples differ"
+                                        % (detail["outliers"], detail["total"]))
                             report.append((rel, slot, kind, wt["rel"], wt["name"],
-                                           "%.2f LSB" % detail["lsb"], ""))
+                                           "%d steps" % detail["lsb"], note))
                             p.set_display_name(sc, osc, wt["name"])
                             dirty = True
                             continue
@@ -593,8 +891,10 @@ def main():
     print()
     print("clean renames, identical            : %d" % counts["exact"])
     print("clean renames, near (<= %-4.0f LSB)    : %d" % (args.near_lsb, counts["near"]))
+    print("clean renames, all but a few samples : %d" % counts["sparse"])
     print("pre-#8440 name + reimport + Morph   : %d" % counts["prehdr"])
     print("repointed off a retired wavetable   : %d" % counts["retired"])
+    print("named from the curated ear list     : %d" % counts["ear_match"])
     if args.hold_ceiling_clippers:
         print("held back, ceiling clippers         : %d" % counts["ear"])
     print("left alone, already named           : %d" % counts["named"])
