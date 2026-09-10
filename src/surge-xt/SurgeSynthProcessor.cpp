@@ -574,11 +574,6 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         return;
     }
 
-    if (oscCheckStartup)
-    {
-        tryLazyOscStartupFromStreamedState();
-    }
-
     priorCallWasProcessBlockNotBypassed = true;
 
     // Make sure we have a main output
@@ -1089,6 +1084,13 @@ void SurgeSynthProcessor::processBlockOSC()
 
 void SurgeSynthProcessor::processBlockPostFunction()
 {
+    // This has to run *after* the block, since a patch enqueued by setStateInformation
+    // is only deserialized part way through it, by processControl. See #8096.
+    if (oscCheckStartup)
+    {
+        tryLazyOscStartupFromStreamedState();
+    }
+
     if (checkNamesEvery++ > 10)
     {
         checkNamesEvery = 0;
@@ -1626,6 +1628,13 @@ void SurgeSynthProcessor::reset() { blockPos = 0; }
 
 void SurgeSynthProcessor::tryLazyOscStartupFromStreamedState()
 {
+    if (surge->rawLoadEnqueued)
+    {
+        // The streamed state hasn't landed yet, so oscStartIn/oscStartOut would read
+        // stale. Leave oscCheckStartup set and try again once the load has been applied.
+        return;
+    }
+
     if ((!oscHandler.listening && surge->storage.oscStartIn && surge->storage.oscPortIn > 0) ||
         (!oscHandler.sendingOSC && surge->storage.oscStartOut && surge->storage.oscPortOut > 0))
     {
