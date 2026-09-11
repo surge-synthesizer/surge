@@ -26,6 +26,7 @@
 #include <iterator>
 #include <chrono>
 #include <functional>
+#include <cstring>
 
 #include "sqlite3.h"
 #include "SurgeStorage.h"
@@ -343,6 +344,13 @@ CREATE TABLE IF NOT EXISTS Favorites (
         void go(WriterWorker &w) override { w.erasePatch(id); }
     };
 
+    struct EnQDeleteByPath : public EnQAble
+    {
+        std::string path;
+        EnQDeleteByPath(const std::string &p) : path(p) {}
+        void go(WriterWorker &w) override { w.erasePatchByPath(path); }
+    };
+
     struct EnQCategory : public EnQAble
     {
         std::string name;
@@ -651,7 +659,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         int lock_retries{0};
         while (keepRunning)
         {
-            std::vector<EnQAble *> doThis;
+            std::vector<std::unique_ptr<EnQAble>> doThis;
             {
                 std::unique_lock<std::mutex> lk(qLock);
 
@@ -670,7 +678,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     const auto &e = (pathQ.size() < transChunkSize)
                                         ? pathQ.end()
                                         : pathQ.begin() + transChunkSize;
-                    std::copy(b, e, std::back_inserter(doThis));
+                    for (auto it = b; it != e; ++it)
+                    {
+                        doThis.emplace_back(*it);
+                    }
                     pathQ.erase(b, e);
                 }
             }
@@ -687,10 +698,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     {
                         SQL::TxnGuard tg(dbh);
 
-                        for (auto *p : doThis)
+                        for (auto &p : doThis)
                         {
                             p->go(*this);
-                            delete p;
+                            p.reset();
                         }
 
                         tg.end();
@@ -712,10 +723,17 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         {
                             {
                                 std::unique_lock<std::mutex> lk(qLock);
-                                std::reverse(doThis.begin(), doThis.end());
-                                for (auto p : doThis)
+                                /*
+                                 * Only the TxnGuard constructor throws this, so nothing in the
+                                 * chunk has run yet. Skip any consumed item anyway, so that this
+                                 * stays correct if that ever stops being true.
+                                 */
+                                for (auto it = doThis.rbegin(); it != doThis.rend(); ++it)
                                 {
-                                    pathQ.push_front(p);
+                                    if (*it)
+                                    {
+                                        pathQ.push_front(it->release());
+                                    }
                                 }
                             }
                             std::this_thread::sleep_for(std::chrono::seconds(lock_retries * 3));
@@ -731,6 +749,24 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     {
                         storage->reportError(e.what(), "Database Error");
                     }
+                    catch (const std::exception &e)
+                    {
+                        /*
+                         * Historically only SQL exceptions were caught here, so anything else
+                         * thrown by a work item escaped this function and the thread lambda
+                         * entirely, which terminates the process. A file vanishing under a
+                         * filesystem call is the obvious way to provoke that (#6973), but
+                         * whatever the cause, losing the whole application over one bad patch
+                         * file is never the right answer.
+                         */
+                        storage->reportError(e.what(), "Patch Database Error");
+                    }
+                    catch (...)
+                    {
+                        storage->reportError(
+                            "An unknown error occurred while updating the patch database.",
+                            "Patch Database Error");
+                    }
                 }
             }
         }
@@ -738,35 +774,152 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
     void parseFXPIntoDB(const EnQPatch &p)
     {
-        sqlite3_stmt *insertStmt = nullptr, *insfeatureStmt = nullptr, *dropIdStmt = nullptr;
+        /*
+         * This runs on the patch database worker thread and the file we are pointed at can
+         * vanish underneath us at any moment (#6973): a rename, a file sync client, or a
+         * second Surge instance can remove it between any two statements here.
+         *
+         * So do all of the file IO first, into local state, and only touch the database once
+         * a complete and valid patch is in hand. A file which disappears mid-parse then
+         * leaves the database exactly as it was, instead of having its existing rows dropped
+         * and replaced by a stub row with no features and no search string.
+         *
+         * For the same reason use the non-throwing filesystem overloads, and don't bother
+         * with an fs::exists() pre-check: it cannot close the race, it only widens the window
+         * between the check and the use.
+         */
+        std::error_code ec;
+        auto qtime = fs::last_write_time(p.path, ec);
 
-        if (!fs::exists(p.path))
+        if (ec)
         {
 #if TRACE_DB
-            std::cout << "    - Warning: Non existent " << path_to_string(p.path) << std::endl;
+            std::cout << "    - Warning: Unstattable " << path_to_string(p.path) << std::endl;
 #endif
             return;
         }
-        // Check with
-        auto qtime = fs::last_write_time(p.path);
+
         int64_t qtimeInt =
             std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
 
-        bool patchLoaded = false;
+        std::ifstream stream(p.path, std::ios::in | std::ios::binary);
+
+        if (!stream.is_open())
+        {
+#if TRACE_DB
+            std::cout << "    - Warning: Unopenable " << path_to_string(p.path) << std::endl;
+#endif
+            return;
+        }
+
+        std::vector<char> fxChunk;
+        fxChunk.resize(sizeof(sst::io::fxChunkSetCustom));
+        stream.read(fxChunk.data(), fxChunk.size());
+
+        if (!stream)
+        {
+            return;
+        }
+
+        auto *fxp = (sst::io::fxChunkSetCustom *)(fxChunk.data());
+
+        if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
+            (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
+            (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
+        {
+            return;
+        }
+
+        std::vector<char> patchHeaderChunk;
+        patchHeaderChunk.resize(sizeof(sst::io::patch_header));
+        stream.read(patchHeaderChunk.data(), patchHeaderChunk.size());
+
+        if (!stream)
+        {
+            return;
+        }
+
+        auto *ph = (sst::io::patch_header *)(patchHeaderChunk.data());
+        auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
+
+        if (memcmp(ph->tag, "sub3", 4) != 0 || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
+        {
+            std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
+            return;
+        }
+
+        std::string xmlData;
+        xmlData.resize(xmlSz);
+        stream.read(xmlData.data(), xmlData.size());
+
+        if (!stream)
+        {
+            return;
+        }
+
+        auto features = extractFeaturesFromXML(xmlData.data());
+
+        /*
+         * The patch has been read in full and is valid, so assemble the search string. The
+         * tags contribute to it, which is why this waits until the features are extracted.
+         */
+        std::ostringstream searchName;
+        searchName << p.name << " ";
+
+        if (storage)
+        {
+            auto pTmp = p.path.parent_path();
+            std::vector<fs::path> parentFiles;
+            int maxItForSafety{0};
+            while ((pTmp != storage->userPatchesPath) &&
+                   (pTmp != storage->datapath / "patches_factory") &&
+                   (pTmp != storage->datapath / "patches_3rdparty") && !pTmp.empty() &&
+                   (pTmp != pTmp.root_directory()) && maxItForSafety < 10)
+            {
+                parentFiles.push_back(pTmp.filename());
+                pTmp = pTmp.parent_path();
+                maxItForSafety++;
+            }
+
+            if (pTmp == storage->datapath / "patches_3rdparty")
+            {
+                parentFiles.erase(parentFiles.end() - 1);
+            }
+
+            for (const auto &pf : parentFiles)
+            {
+                searchName << pf.u8string() << " ";
+            }
+        }
+
+        for (const auto &f : features)
+        {
+            if (std::get<0>(f) == "TAG")
+            {
+                searchName << " " << std::get<3>(f);
+            }
+        }
+
+        const auto sns = searchName.str();
+        const auto path = p.path.u8string();
+
+        /*
+         * From here on it is database work only, and no further failure can leave a patch
+         * half described. Since the search string is known up front the row goes in complete,
+         * which also retires the separate UPDATE that used to finish the job afterwards.
+         */
         std::vector<int> dropIds;
+
         try
         {
             auto exists = SQL::Statement(
                 dbh, "SELECT id, last_write_time from Patches WHERE Patches.Path LIKE ?1");
-            const auto path(p.path.u8string());
             exists.bind(1, path);
 
             // Drop all the ones with this path independent of time if I'm adding
             while (exists.step())
             {
-                auto id = exists.col_int(0);
-                auto t = exists.col_int64(1);
-                dropIds.push_back(id);
+                dropIds.push_back(exists.col_int(0));
             }
 
             exists.finalize();
@@ -809,21 +962,20 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         }
 
-        if (patchLoaded)
-            return;
-
         int64_t patchid = -1;
+
         try
         {
             auto ins = SQL::Statement(dbh, "INSERT INTO PATCHES ( \"path\", \"name\", "
-                                           "\"category\", \"category_type\", \"last_write_time\" ) "
-                                           "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
-            const auto path(p.path.u8string());
+                                           "\"category\", \"category_type\", \"last_write_time\", "
+                                           "\"search_over\" ) "
+                                           "VALUES ( ?1, ?2, ?3, ?4, ?5, ?6 )");
             ins.bind(1, path);
             ins.bind(2, p.name);
             ins.bind(3, p.catname);
             ins.bind(4, (int)p.type);
             ins.bindi64(5, qtimeInt);
+            ins.bind(6, sns);
 
             ins.step();
 
@@ -841,84 +993,15 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         }
 
-        std::ostringstream searchName;
-        searchName << p.name << " ";
-
-        if (storage)
-        {
-            auto pTmp = p.path.parent_path();
-            std::vector<fs::path> parentFiles;
-            int maxItForSafety{0};
-            while ((pTmp != storage->userPatchesPath) &&
-                   (pTmp != storage->datapath / "patches_factory") &&
-                   (pTmp != storage->datapath / "patches_3rdparty") && !pTmp.empty() &&
-                   (pTmp != pTmp.root_directory()) && maxItForSafety < 10)
-            {
-                parentFiles.push_back(pTmp.filename());
-                pTmp = pTmp.parent_path();
-                maxItForSafety++;
-            }
-
-            if (pTmp == storage->datapath / "patches_3rdparty")
-            {
-                parentFiles.erase(parentFiles.end() - 1);
-            }
-
-            for (const auto &pf : parentFiles)
-            {
-                searchName << pf.u8string() << " ";
-            }
-        }
-
-        std::ifstream stream(p.path, std::ios::in | std::ios::binary);
-
-        std::vector<char> fxChunk;
-        fxChunk.resize(sizeof(sst::io::fxChunkSetCustom));
-        stream.read(fxChunk.data(), fxChunk.size());
-        if (!stream)
-        {
-            return;
-        }
-
-        auto *fxp = (sst::io::fxChunkSetCustom *)(fxChunk.data());
-        if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
-            (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
-            (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
-        {
-            return;
-        }
-
-        std::vector<char> patchHeaderChunk;
-        patchHeaderChunk.resize(sizeof(sst::io::patch_header));
-        stream.read(patchHeaderChunk.data(), patchHeaderChunk.size());
-        if (!stream)
-        {
-            return;
-        }
-        auto *ph = (sst::io::patch_header *)(patchHeaderChunk.data());
-        auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
-
-        if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
-        {
-            std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
-            return;
-        }
-
-        std::string xmlData;
-        xmlData.resize(xmlSz);
-        stream.read(xmlData.data(), xmlData.size());
-        if (!stream)
-            return;
         try
         {
             auto ins =
                 SQL::Statement(dbh, "INSERT INTO PATCHFEATURE ( \"patch_id\", \"feature\", "
                                     "\"feature_type\", \"feature_ivalue\", \"feature_svalue\" ) "
                                     "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
-            auto feat = extractFeaturesFromXML(xmlData.data());
-            for (const auto &f : feat)
+
+            for (const auto &f : features)
             {
-                const auto &ftype = std::get<0>(f);
                 ins.bindi64(1, patchid);
                 ins.bind(2, std::get<0>(f));
                 ins.bind(3, (int)std::get<1>(f));
@@ -929,31 +1012,8 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
                 ins.clearBindings();
                 ins.reset();
-                if (ftype == "TAG")
-                {
-                    searchName << " " << std::get<3>(f);
-                }
             }
 
-            ins.finalize();
-        }
-        catch (const SQL::Exception &e)
-        {
-            if (storage)
-            {
-                storage->reportError(e.what(), "Database FXP Features");
-            }
-            return;
-        }
-
-        auto sns = searchName.str();
-        try
-        {
-            auto ins = SQL::Statement(dbh, "UPDATE PATCHES SET search_over=?1 WHERE id=?2");
-            ins.bind(1, sns);
-            ins.bind(2, patchid);
-
-            ins.step();
             ins.finalize();
         }
         catch (const SQL::Exception &e)
@@ -1008,6 +1068,32 @@ CREATE TABLE IF NOT EXISTS Favorites (
         catch (const SQL::Exception &e)
         {
             storage->reportError(e.what(), "Database Junk Gave Junk");
+        }
+    }
+
+    /*
+     * Removing a patch file is something we know about at the moment it happens, so say so
+     * directly rather than making a subsequent full rescan diff the directory tree against
+     * the database in order to rediscover it.
+     */
+    void erasePatchByPath(const std::string &path)
+    {
+        try
+        {
+            auto feat = SQL::Statement(dbh, "DELETE FROM PatchFeature WHERE patch_id IN "
+                                            "(SELECT id FROM Patches WHERE path = ?1)");
+            feat.bind(1, path);
+            feat.step();
+            feat.finalize();
+
+            auto there = SQL::Statement(dbh, "DELETE FROM Patches WHERE path = ?1");
+            there.bind(1, path);
+            there.step();
+            there.finalize();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "Database Erase By Path");
         }
     }
 
@@ -1395,6 +1481,12 @@ void PatchDB::erasePatchByID(int id)
 {
     prepareForWrites();
     worker->enqueueWorkItem(new WriterWorker::EnQDelete(id));
+}
+
+void PatchDB::erasePatchByPath(const std::string &path)
+{
+    prepareForWrites();
+    worker->enqueueWorkItem(new WriterWorker::EnQDeleteByPath(path));
 }
 
 std::vector<std::string> PatchDB::readUserFavorites()
