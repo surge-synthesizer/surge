@@ -5217,6 +5217,7 @@ void SurgeSynthesizer::populateDawExtraState()
 
     des.mapChannelToOctave = storage.mapChannelToOctave;
     des.transposeByTuningPeriod = storage.transposeByTuningPeriod;
+    des.oddsoundMTSActiveAsMain = storage.oddsound_mts_active_as_main;
 
     int n = n_global_params + (n_scene_params * n_scenes);
 
@@ -5322,6 +5323,15 @@ void SurgeSynthesizer::loadFromDawExtraState()
 
     storage.mapChannelToOctave = des.mapChannelToOctave;
     storage.transposeByTuningPeriod = des.transposeByTuningPeriod;
+
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    // Only once the scale and mapping above are in place, so the session gets our tuning
+    // rather than the 12-TET table MTS_RegisterMaster() starts everyone off with
+    if (des.oddsoundMTSActiveAsMain && !storage.oddsound_mts_active_as_main)
+    {
+        storage.connect_as_oddsound_main();
+    }
+#endif
 
     int n = n_global_params + (n_scene_params * n_scenes);
     int nOld = n_global_params + n_scene_params;

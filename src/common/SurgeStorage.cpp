@@ -24,6 +24,7 @@
 #include "SurgeStorage.h"
 #include <set>
 #include <numeric>
+#include <algorithm>
 #include <cctype>
 #include <map>
 #include <queue>
@@ -3405,13 +3406,11 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
+    // This can run on the audio thread, so when there is a UI to do it for us we let
+    // the tuningUpdates counter carry the news and publish from the idle loop instead
     if (oddsound_mts_active_as_main && !uiThreadChecksTunings)
     {
-        for (int i = 0; i < 128; ++i)
-        {
-            MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
-        }
-        MTS_SetScaleName(currentTuning.scale.description.c_str());
+        publish_tuning_as_oddsound_main();
     }
     tuningUpdates++;
 #endif
@@ -3731,16 +3730,14 @@ void SurgeStorage::connect_as_oddsound_main()
                     "source option.",
                     "MTS-ESP Error");
     }
-    lastSentTuningUpdate = -1;
-
-    if (!uiThreadChecksTunings && oddsound_mts_active_as_main)
-    {
-        for (int i = 0; i < 128; ++i)
-        {
-            MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
-        }
-        MTS_SetScaleName(currentTuning.scale.description.c_str());
-    }
+    /*
+     * MTS_RegisterMaster() starts the session off at 12-TET, so publish our own tuning
+     * right here rather than leaving the session mistuned until the next UI idle tick.
+     * Deferring to the UI is only needed where a retune can arrive on the audio thread;
+     * becoming a source is a deliberate act which never does.
+     */
+    lastSentTuningUpdate = tuningUpdates;
+    publish_tuning_as_oddsound_main();
 }
 void SurgeStorage::disconnect_as_oddsound_main()
 {
@@ -3754,14 +3751,62 @@ void SurgeStorage::send_tuning_update()
         return;
 
     lastSentTuningUpdate = tuningUpdates;
+    publish_tuning_as_oddsound_main();
+}
+
+void SurgeStorage::publish_tuning_as_oddsound_main()
+{
     if (!oddsound_mts_active_as_main)
+    {
         return;
+    }
+
+    double freqs[128];
 
     for (int i = 0; i < 128; ++i)
     {
-        MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
+        freqs[i] = currentTuning.frequencyForMidiNote(i);
     }
+
+    MTS_SetNoteTunings(freqs);
     MTS_SetScaleName(currentTuning.scale.description.c_str());
+
+    /*
+     * Beyond the frequencies themselves, MTS-ESP lets a source describe the shape of the
+     * scale, and clients lean on that for octave shifts and for transposition by one
+     * period. If we never supply it they see the library defaults - a map size of -1 and
+     * a period of an octave - no matter what we are actually broadcasting, so a client
+     * shifting by an octave on a Bohlen-Pierce scale lands nowhere near the right note.
+     */
+    const auto &scale = currentTuning.scale;
+    const auto &mapping = currentTuning.keyboardMapping;
+
+    // The formal octave of a scale is its last tone, which is not necessarily a 2/1
+    MTS_SetPeriodRatio(scale.count > 0 ? pow(2.0, scale.tones[scale.count - 1].cents / 1200.0)
+                                       : 2.0);
+
+    // A mapping with no explicit key list repeats the scale pattern every scale.count keys
+    auto mapSize = (mapping.count > 0) ? mapping.count : scale.count;
+
+    MTS_SetMapSize((char)std::clamp(mapSize, 0, 127));
+    MTS_SetMapStartKey((char)std::clamp(mapping.middleNote, 0, 127));
+    MTS_SetRefKey((char)std::clamp(mapping.tuningConstantNote, 0, 127));
+
+    /*
+     * Surge drops notes the mapping skips rather than sounding them (see
+     * SurgeSynthesizer::playNote), so tell clients to do the same. We still broadcast an
+     * interpolated frequency for those notes, as the MTS-ESP API asks us to, since
+     * checking the note filter is optional for a client.
+     */
+    MTS_ClearNoteFilter();
+
+    for (int i = 0; i < 128; ++i)
+    {
+        if (!currentTuning.isMidiNoteMapped(i))
+        {
+            MTS_FilterNote(true, (char)i, -1);
+        }
+    }
 }
 #endif
 
