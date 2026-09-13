@@ -489,12 +489,36 @@ void SurgeJUCELookAndFeel::drawPopupMenuSectionHeaderWithOptions(Graphics &graph
     LookAndFeel_V2::drawPopupMenuSectionHeaderWithOptions(graphics, area, sectionName, options);
 }
 
+// The standalone Audio/MIDI Settings dialog is built by JUCE's standalone wrapper, and its
+// background is hardcoded dark in onSkinChanged() rather than skinned, so its tickboxes must not
+// take their base color from the skin. The device lists place their buttons inside the selector,
+// while the feedback loop mute button is a sibling of it.
+static bool isInAudioDeviceSettings(const Component &c)
+{
+    if (auto *parent = c.getParentComponent())
+    {
+        for (auto *sibling : parent->getChildren())
+        {
+            if (dynamic_cast<const AudioDeviceSelectorComponent *>(sibling))
+            {
+                return true;
+            }
+        }
+    }
+
+    return c.findParentComponentOfClass<AudioDeviceSelectorComponent>() != nullptr;
+}
+
 void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
                                             bool shouldDrawButtonAsHighlighted,
                                             bool shouldDrawButtonAsDown)
 {
     const auto tickWidth = jmin(15.0f, (float)button.getHeight() * 0.75f) * 1.2f;
     constexpr auto rectRadius = 2.f;
+
+    const auto baseColor = isInAudioDeviceSettings(button)
+                               ? Colour(180, 180, 180)
+                               : skin->getColor(Colors::Dialog::Button::Text);
 
     juce::Rectangle<float> tickBounds(2.f, ((float)button.getHeight() - tickWidth) * 0.5f,
                                       tickWidth, tickWidth);
@@ -505,7 +529,7 @@ void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
     }
     else
     {
-        g.setColour(skin->getColor(Colors::Dialog::Button::Text));
+        g.setColour(baseColor);
     }
 
     if (!button.isEnabled())
@@ -519,7 +543,7 @@ void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
 
     if (button.getToggleState())
     {
-        g.setColour(skin->getColor(Colors::Dialog::Button::Text));
+        g.setColour(baseColor);
     }
 
     if (shouldDrawButtonAsHighlighted)
@@ -537,7 +561,7 @@ void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
 
     g.fillRoundedRectangle(tickBounds.reduced(2.f), rectRadius * 0.5f);
 
-    g.setColour(skin->getColor(Colors::Dialog::Button::Text));
+    g.setColour(baseColor);
     g.setFont(skin->fontManager->getLatoAtSize(9));
 
     g.drawFittedText(
