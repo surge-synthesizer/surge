@@ -552,6 +552,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void openLFORenameDialog(const int lfo_id, const juce::Point<int> where, juce::Component *r);
 
     void lfoShapeChanged(int prior, int curr);
+    void setLFOModulationIndex(int scene, int lfoid, int index);
     void broadcastMSEGState();
     int msegIsOpenFor = -1, msegIsOpenInScene = -1;
     bool showMSEGEditorOnNextIdleOrOpen = false;

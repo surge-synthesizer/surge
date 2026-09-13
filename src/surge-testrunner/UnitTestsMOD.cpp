@@ -1435,3 +1435,84 @@ TEST_CASE("Mod LFO Is Well Behaved", "[mod]")
         }
     }
 }
+
+TEST_CASE("Enumerate Modulations From A Source", "[mod]")
+{
+    // getModulationsFromSource is what lets us find the routings which become unreachable
+    // when a modulator loses outputs, as happens when an LFO leaves the formula shape. See #6705
+    auto indicesOf = [](const std::vector<std::pair<int, int>> &v) {
+        std::vector<int> res;
+        for (const auto &[ptag, idx] : v)
+            res.push_back(idx);
+        std::sort(res.begin(), res.end());
+        return res;
+    };
+
+    SECTION("Scene Level Routings Are Found And Filtered By Index")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
+
+        auto cutoff = surge->storage.getPatch().scene[0].filterunit[0].cutoff.id;
+        auto reso = surge->storage.getPatch().scene[0].filterunit[0].resonance.id;
+
+        REQUIRE(surge->setModDepth01(cutoff, ms_lfo1, 0, 0, 0.1));
+        REQUIRE(surge->setModDepth01(reso, ms_lfo1, 0, 2, 0.2));
+        REQUIRE(surge->setModDepth01(cutoff, ms_lfo1, 0, 5, 0.3));
+
+        REQUIRE(indicesOf(surge->getModulationsFromSource(0, ms_lfo1)) ==
+                std::vector<int>{0, 2, 5});
+
+        // Now switch off formula, the way the editor does before it prunes: only the routing
+        // above the three outputs a non-formula LFO has should survive the filter
+        surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_sine;
+
+        auto beyond =
+            surge->getModulationsFromSource(0, ms_lfo1, surge->getMaxModulationIndex(0, ms_lfo1));
+
+        REQUIRE(indicesOf(beyond) == std::vector<int>{5});
+        REQUIRE(beyond[0].first == cutoff);
+
+        // A different modulator, and the same modulator in the other scene, are not ours
+        REQUIRE(surge->getModulationsFromSource(0, ms_lfo2).empty());
+        REQUIRE(surge->getModulationsFromSource(1, ms_lfo1).empty());
+    }
+
+    SECTION("Scenes Are Kept Distinct")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        REQUIRE(surge->setModDepth01(surge->storage.getPatch().scene[0].filterunit[0].cutoff.id,
+                                     ms_lfo1, 0, 1, 0.1));
+        REQUIRE(surge->setModDepth01(surge->storage.getPatch().scene[1].filterunit[0].cutoff.id,
+                                     ms_lfo1, 1, 4, 0.2));
+
+        REQUIRE(indicesOf(surge->getModulationsFromSource(0, ms_lfo1)) == std::vector<int>{1});
+        REQUIRE(indicesOf(surge->getModulationsFromSource(1, ms_lfo1)) == std::vector<int>{4});
+    }
+
+    SECTION("Global Routings Carry Their Originating Scene")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+
+        auto fxp = surge->storage.getPatch().fx[0].p[2].id;
+
+        // A scene LFO modulating an FX parameter is the case which needs source_scene, see #2285
+        REQUIRE(surge->setModDepth01(fxp, ms_slfo1, 1, 3, 0.1));
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
+
+        REQUIRE(surge->getModulationsFromSource(0, ms_slfo1).empty());
+
+        auto fromB = surge->getModulationsFromSource(1, ms_slfo1);
+
+        REQUIRE(fromB.size() == 1);
+        REQUIRE(fromB[0].first == fxp);
+        REQUIRE(fromB[0].second == 3);
+    }
+}

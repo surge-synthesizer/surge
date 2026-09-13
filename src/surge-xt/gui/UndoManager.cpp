@@ -176,6 +176,20 @@ struct UndoManagerImpl
         std::vector<UndoParam> undoParamValues;
         std::variant<bool, MSEGStorage, StepSequencerStorage, FormulaModulatorStorage> extraStorage;
     };
+    /*
+     * Switching an LFO off the formula shape drops it from max_formula_outputs outputs
+     * down to three, so we clear the routings which can no longer be reached. Recording
+     * them next to the shape - the way UndoOscillator and UndoFX record the modulations
+     * they blow away - keeps the whole gesture a single undo. See #6705.
+     */
+    struct UndoLFOShape
+    {
+        int scene;
+        int lfoid;
+        int shape;
+        int modIndex;
+        std::vector<UndoModulation> undoModulations;
+    };
     struct UndoRename
     {
         bool isMacro;
@@ -207,7 +221,8 @@ struct UndoManagerImpl
     // to undo.
     typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoOscillatorExtraConfig,
                          UndoWavetable, UndoFX, UndoStep, UndoMSEG, UndoFormula, UndoRename,
-                         UndoMacro, UndoTuning, UndoPatch, UndoFullLFO, UndoFilterAnalysisMovement>
+                         UndoMacro, UndoTuning, UndoPatch, UndoFullLFO, UndoFilterAnalysisMovement,
+                         UndoLFOShape>
         UndoAction;
     struct UndoRecord
     {
@@ -236,6 +251,10 @@ struct UndoManagerImpl
         if (auto pt = std::get_if<UndoFX>(&a))
         {
             res += pt->estimateUserDataSize();
+        }
+        if (auto pt = std::get_if<UndoLFOShape>(&a))
+        {
+            res += pt->undoModulations.size() * sizeof(UndoModulation);
         }
         if (auto pt = std::get_if<UndoWavetable>(&a))
         {
@@ -316,6 +335,11 @@ struct UndoManagerImpl
             // No way to generate these other than discretely
             return false;
         }
+        if (auto pa = std::get_if<UndoLFOShape>(&a))
+        {
+            // A shape change is a discrete gesture, so never compress two of them together
+            return false;
+        }
         return false;
     }
 
@@ -383,6 +407,11 @@ struct UndoManagerImpl
         if (auto pa = std::get_if<UndoFullLFO>(&a))
         {
             return fmt::format("FullLFO[]");
+        }
+        if (auto pa = std::get_if<UndoLFOShape>(&a))
+        {
+            return fmt::format("LFOShape[scene={},lfoid={},shape={},nmods={}]", pa->scene,
+                               pa->lfoid, pa->shape, pa->undoModulations.size());
         }
         return "UNK";
     }
@@ -778,6 +807,36 @@ struct UndoManagerImpl
             pushRedo(r);
     }
 
+    void pushLFOShape(int scene, int lfoid, int shape, int modIndex,
+                      UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoLFOShape();
+        r.scene = scene;
+        r.lfoid = lfoid;
+        r.shape = shape;
+        r.modIndex = modIndex;
+
+        auto ms = (modsources)(ms_lfo1 + lfoid);
+
+        // Record every routing out of this modulator, not just the ones about to be cleared,
+        // so that undo and redo can both simply restore the recorded set wholesale
+        for (const auto &[ptag, idx] : synth->getModulationsFromSource(scene, ms))
+        {
+            auto mr = UndoModulation();
+            auto *p = synth->storage.getPatch().param_ptr[ptag];
+
+            populateUndoModulation(ptag, p, ms, scene, idx,
+                                   synth->getModDepth01(ptag, ms, scene, idx),
+                                   synth->isModulationMuted(ptag, ms, scene, idx), mr);
+            r.undoModulations.push_back(mr);
+        }
+
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
     void pushFormula(int scene, int lfoid, const FormulaModulatorStorage &pushValue,
                      UndoManager::Target to = UndoManager::UNDO)
     {
@@ -1011,6 +1070,43 @@ struct UndoManagerImpl
             auto ann = fmt::format("{} Oscillator Wavetable in Scene {} Oscillator {}", verb,
                                    (char)('A' + p->scene), p->oscNum + 1);
             editor->enqueueAccessibleAnnouncement(ann);
+            return true;
+        }
+        if (auto p = std::get_if<UndoLFOShape>(&q))
+        {
+            auto ms = (modsources)(ms_lfo1 + p->lfoid);
+            auto lf = &(editor->getPatch().scene[p->scene].lfo[p->lfoid]);
+
+            pushLFOShape(p->scene, p->lfoid, lf->shape.val.i,
+                         editor->getPatch()
+                             .dawExtraState.editor.modulationSourceButtonState[p->scene][p->lfoid]
+                             .index,
+                         opposite);
+            auto g = SelfPushGuard(this);
+
+            auto pd = pdata();
+            pd.i = p->shape;
+            editor->setParamFromUndo(lf->shape.id, pd);
+
+            // The shape decides how many outputs are reachable, so restore the recorded set
+            // of routings wholesale rather than trying to work out which ones to put back
+            for (const auto &[ptag, idx] : synth->getModulationsFromSource(p->scene, ms))
+            {
+                synth->clearModulation(ptag, ms, p->scene, idx, true);
+            }
+
+            for (const auto &qp : p->undoModulations)
+            {
+                editor->setModulationFromUndo(qp.paramId, qp.ms, qp.scene, qp.index, qp.val,
+                                              qp.muted);
+            }
+
+            editor->setLFOModulationIndex(p->scene, p->lfoid, p->modIndex);
+
+            auto ann = fmt::format("{} Modulator Shape, Scene {} Modulator {}", verb,
+                                   (char)('A' + p->scene), p->lfoid + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+
             return true;
         }
         if (auto p = std::get_if<UndoFullLFO>(&q))
@@ -1333,6 +1429,11 @@ void UndoManager::pushMacroChange(int macroid, float val) { impl->pushMacroChang
 void UndoManager::pushPatch() { impl->pushPatch(); }
 
 void UndoManager::pushFullLFO(int scene, int lfoid) { impl->pushFullLFO(scene, lfoid); }
+
+void UndoManager::pushLFOShape(int scene, int lfoid, int shape, int modIndex)
+{
+    impl->pushLFOShape(scene, lfoid, shape, modIndex);
+}
 
 void UndoManager::pushWavetable(int scene, int oscnum) { impl->pushWavetable(scene, oscnum); };
 void UndoManager::pushOscillatorExtraConfig(int scene, int oscnum)

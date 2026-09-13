@@ -1514,8 +1514,14 @@ void SurgeGUIEditor::setModsourceSelected(modsources ms, int ms_idx)
     modsource_editor[current_scene] = modsource;
 
     modsource_index = ms_idx;
-    // FIXME: assumed scene LFOs are always listed after all voice LFOs in the enum
-    modsource_index_cache[current_scene][ms_idx - ms_lfo1] = ms_idx;
+
+    // The cache is keyed by LFO, so it is the modulator which picks the slot, not the output
+    // index. Any other modulator - a macro, velocity - has no slot here at all
+    if (ms >= ms_lfo1 && ms <= ms_slfo6)
+    {
+        // FIXME: assumed scene LFOs are always listed after all voice LFOs in the enum
+        modsource_index_cache[current_scene][ms - ms_lfo1] = ms_idx;
+    }
 
     if (gui_modsrc[modsource])
     {
@@ -2925,10 +2931,9 @@ void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene
 void SurgeGUIEditor::pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
                                               Surge::GUI::UndoManager::Target which)
 {
-    undoManager()->pushModulationChange(
-        paramId, synth->storage.getPatch().param_ptr[paramId], ms, scene, idx,
-        synth->getModDepth01(paramId, ms, scene, idx),
-        synth->isModulationMuted(paramId, modsource, current_scene, modsource_index), which);
+    undoManager()->pushModulationChange(paramId, synth->storage.getPatch().param_ptr[paramId], ms,
+                                        scene, idx, synth->getModDepth01(paramId, ms, scene, idx),
+                                        synth->isModulationMuted(paramId, ms, scene, idx), which);
 }
 //------------------------------------------------------------------------------------------------
 
@@ -5467,22 +5472,67 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
     effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 }
 
+/*
+ * The output index of an LFO lives in two places which have to agree: the editor's own
+ * modsource_index, which is what drives assignment, the mod rings and the infowindows, and
+ * the DAW extra state, which is what the modulator button reads back in setModList. Letting
+ * those diverge is what made the button show one output while we assigned to another. See #6705.
+ */
+void SurgeGUIEditor::setLFOModulationIndex(int scene, int lfoid, int index)
+{
+    synth->storage.getPatch().dawExtraState.editor.modulationSourceButtonState[scene][lfoid].index =
+        index;
+
+    auto ms = (modsources)(ms_lfo1 + lfoid);
+
+    // Everything below is live editor state, so it only applies when this is what's on screen
+    if (scene != current_scene || modsource != ms)
+    {
+        return;
+    }
+
+    modsource_index = index;
+
+    if (gui_modsrc[ms])
+    {
+        gui_modsrc[ms]->modlistIndex = index;
+        gui_modsrc[ms]->repaint();
+    }
+
+    if (lfoDisplay)
+    {
+        lfoDisplay->setModIndex(index);
+    }
+}
+
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
+    auto lfoid = modsource - ms_lfo1;
+
     if (prior != curr)
     {
-        auto lfoid = modsource - ms_lfo1;
-        auto id = synth->storage.getPatch().scene[current_scene].lfo[lfoid].shape.id;
-        auto pd = pdata();
-        pd.i = prior;
-        undoManager()->pushParameterChange(
-            id, &(synth->storage.getPatch().scene[current_scene].lfo[lfoid].shape), pd);
+        auto &lfodata = synth->storage.getPatch().scene[current_scene].lfo[lfoid];
+
+        if (prior == lt_formula)
+        {
+            // Leaving formula takes us from max_formula_outputs outputs down to three, so the
+            // routings above that are about to be cleared. Push them alongside the shape so
+            // that the whole gesture comes back in a single undo. See #6705
+            undoManager()->pushLFOShape(current_scene, lfoid, prior, modsource_index);
+        }
+        else
+        {
+            auto pd = pdata();
+            pd.i = prior;
+            undoManager()->pushParameterChange(lfodata.shape.id, &(lfodata.shape), pd);
+        }
+
         synth->storage.getPatch().isDirty = true;
 
         // Clear phase extend range when leaving step sequencer
         if (prior == lt_stepseq && curr != lt_stepseq)
         {
-            auto &phase = synth->storage.getPatch().scene[current_scene].lfo[lfoid].start_phase;
+            auto &phase = lfodata.start_phase;
             if (phase.extend_range)
             {
                 phase.set_extend_range(false);
@@ -5494,22 +5544,25 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     // Currently only formula is indexed
     if (prior == lt_formula && curr != lt_formula)
     {
-        auto lfoid = modsource - ms_lfo1;
         modsource_index_cache[current_scene][lfoid] = modsource_index;
-        modsource_index = 0;
-        lfoDisplay->setModIndex(modsource_index);
+        setLFOModulationIndex(current_scene, lfoid, 0);
+
+        // The outputs above the new maximum are unreachable now - a non-formula LFO simply
+        // never writes them - so drop those routings rather than leaving them in the patch
+        // where they show up in menus and do nothing
+        auto maxIndex = synth->getMaxModulationIndex(current_scene, modsource);
+
+        for (const auto &[ptag, idx] :
+             synth->getModulationsFromSource(current_scene, modsource, maxIndex))
+        {
+            synth->clearModulation(ptag, modsource, current_scene, idx, true);
+        }
+
         needs_refresh = true;
     }
     else if (curr == lt_formula && prior != lt_formula)
     {
-        auto lfoid = modsource - ms_lfo1;
-        modsource_index = modsource_index_cache[current_scene][lfoid];
-        if (gui_modsrc[modsource])
-        {
-            gui_modsrc[modsource]->modlistIndex = modsource_index;
-            gui_modsrc[modsource]->repaint();
-        }
-        lfoDisplay->setModIndex(modsource_index);
+        setLFOModulationIndex(current_scene, lfoid, modsource_index_cache[current_scene][lfoid]);
         needs_refresh = true;
     }
 
