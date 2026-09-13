@@ -3494,6 +3494,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
+                synth->switch_toggled_queued = true;
             }
             else if (p->ctrltype == ct_bool_solo)
             {
@@ -3514,6 +3515,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
+                synth->switch_toggled_queued = true;
             }
             else
             {
