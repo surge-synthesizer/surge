@@ -171,7 +171,7 @@ void playOnEveryPatch(std::shared_ptr<SurgeSynthesizer> surge, const playerEvent
                 float *data = NULL;
                 int nSamples, nChannels;
 
-                playOnPatch(surge, i, events, &data, &nSamples, &nChannels);
+                playOnPatch(surge, idx, events, &data, &nSamples, &nChannels);
                 cb(p, pc, data, nSamples, nChannels);
 
                 if (data)
@@ -199,7 +199,7 @@ void playOnNRandomPatches(std::shared_ptr<SurgeSynthesizer> surge, const playerE
         float *data = NULL;
         int nSamples, nChannels;
 
-        playOnPatch(surge, i, events, &data, &nSamples, &nChannels);
+        playOnPatch(surge, rp, events, &data, &nSamples, &nChannels);
         cb(p, pc, data, nSamples, nChannels);
 
         if (data)
