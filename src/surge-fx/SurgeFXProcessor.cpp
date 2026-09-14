@@ -519,10 +519,13 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         auto outL = mainOutput.getWritePointer(0, 0);
         auto outR = mainOutput.getWritePointer(1, 0);
 
+        // std::clamp passes NaN straight through, so silence non-finite samples explicitly
+        auto clip = [](float v) { return std::isfinite(v) ? std::clamp(v, -2.f, 2.f) : 0.f; };
+
         for (int i = 0; i < buffer.getNumSamples(); ++i)
         {
-            outL[i] = std::clamp(outL[i], -2.f, 2.f);
-            outR[i] = std::clamp(outR[i], -2.f, 2.f);
+            outL[i] = clip(outL[i]);
+            outR[i] = clip(outR[i]);
         }
     }
 
