@@ -820,3 +820,28 @@ TEST_CASE("Invalid Sample Rates Are Ignored", "[dsp]") // See issue 8240
         REQUIRE(surge->storage.samplerate == 96000);
     }
 }
+
+TEST_CASE("Audio Input Is Cleared When Not Processing Input", "[dsp]") // See issue 8240
+{
+    auto surge = Surge::Headless::createSurge(48000);
+    REQUIRE(surge);
+
+    for (int c = 0; c < 2; ++c)
+    {
+        std::fill(surge->storage.audio_in[c], surge->storage.audio_in[c] + BLOCK_SIZE_OS, 1.f);
+        std::fill(surge->storage.audio_in_nonOS[c], surge->storage.audio_in_nonOS[c] + BLOCK_SIZE,
+                  1.f);
+    }
+
+    surge->process_input = false;
+    surge->process();
+
+    for (int c = 0; c < 2; ++c)
+    {
+        INFO("Channel " << c);
+        for (int s = 0; s < BLOCK_SIZE_OS; ++s)
+            REQUIRE(surge->storage.audio_in[c][s] == 0.f);
+        for (int s = 0; s < BLOCK_SIZE; ++s)
+            REQUIRE(surge->storage.audio_in_nonOS[c][s] == 0.f);
+    }
+}
