@@ -725,6 +725,26 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
         REQUIRE(f1 == Approx(fr * 3).margin(1));
     }
 
+    SECTION("ED3-7 Triples Frequency in MIDI-Only Mode")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        auto scale = Tunings::evenDivisionOfSpanByM(3, 7);
+        surge->storage.retuneToScale(scale);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+        auto f0 = frequencyForNote(surge, 60, 2, 0, 0);
+        auto f1 = frequencyForNote(surge, 60, 2, 0, 1);
+        auto f15 = frequencyForNote(surge, 60, 2, 0, 15);
+
+        auto fr = Tunings::MIDI_0_FREQ * 32;
+        REQUIRE(f0 == Approx(fr).margin(1));
+        REQUIRE(f1 == Approx(fr * 3).margin(1));
+        REQUIRE(f15 == Approx(fr / 3).margin(1));
+    }
+
     SECTION("ED4-7 Quads Frequency")
     {
         auto surge = surgeOnSine();
