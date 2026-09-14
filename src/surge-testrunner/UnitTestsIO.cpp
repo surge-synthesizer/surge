@@ -2026,3 +2026,45 @@ TEST_CASE("A Patch With An Unbuildable Wavetable Does Not Leave The Oscillator E
     void *again = nullptr;
     REQUIRE(surge->storage.getPatch().save_patch(&again) > 0);
 }
+
+TEST_CASE("Hard Clip Modes Stream Only Valid Values", "[io]") // See issue 8240
+{
+    auto fromto = [](std::shared_ptr<SurgeSynthesizer> src,
+                     std::shared_ptr<SurgeSynthesizer> dest) {
+        void *d = nullptr;
+        auto sz = src->saveRaw(&d);
+
+        dest->loadRaw(d, sz, false);
+    };
+
+    SECTION("Valid Modes Round Trip")
+    {
+        auto ssrc = Surge::Headless::createSurge(44100);
+        ssrc->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_0DBFS;
+        ssrc->storage.sceneHardclipMode[0] = SurgeStorage::BYPASS_HARDCLIP;
+        ssrc->storage.sceneHardclipMode[1] = SurgeStorage::HARDCLIP_TO_0DBFS;
+        auto sdst = Surge::Headless::createSurge(44100);
+
+        fromto(ssrc, sdst);
+
+        REQUIRE(sdst->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_0DBFS);
+        REQUIRE(sdst->storage.sceneHardclipMode[0] == SurgeStorage::BYPASS_HARDCLIP);
+        REQUIRE(sdst->storage.sceneHardclipMode[1] == SurgeStorage::HARDCLIP_TO_0DBFS);
+    }
+
+    SECTION("Out Of Range Modes Fall Back To The Default")
+    {
+        // An unknown mode matches no case when clipping, which silently disables the clipper
+        auto ssrc = Surge::Headless::createSurge(44100);
+        ssrc->storage.hardclipMode = (SurgeStorage::HardClipMode)42;
+        ssrc->storage.sceneHardclipMode[0] = (SurgeStorage::HardClipMode)0;
+        ssrc->storage.sceneHardclipMode[1] = (SurgeStorage::HardClipMode)-3;
+        auto sdst = Surge::Headless::createSurge(44100);
+
+        fromto(ssrc, sdst);
+
+        REQUIRE(sdst->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_18DBFS);
+        REQUIRE(sdst->storage.sceneHardclipMode[0] == SurgeStorage::HARDCLIP_TO_18DBFS);
+        REQUIRE(sdst->storage.sceneHardclipMode[1] == SurgeStorage::HARDCLIP_TO_18DBFS);
+    }
+}
