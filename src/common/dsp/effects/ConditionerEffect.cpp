@@ -50,6 +50,9 @@ ConditionerEffect::~ConditionerEffect() {}
 
 void ConditionerEffect::init()
 {
+    band1.suspend();
+    band2.suspend();
+    hp.suspend();
     setvars(true);
     ef = 0;
     bufpos = 0;

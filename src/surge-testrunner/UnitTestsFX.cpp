@@ -23,6 +23,8 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
+#include <limits>
 
 #include "HeadlessUtils.h"
 #include "Player.h"
@@ -1182,5 +1184,45 @@ TEST_CASE("Distortion Digital Waveshaper Does Not Diverge", "[fx]")
         // Normal output should stay well under 10; divergence reaches ~1e7
         INFO("Max output amplitude: " << maxOut);
         REQUIRE(maxOut < 7.9f);
+    }
+}
+
+TEST_CASE("Stopping Sound Clears Poisoned FX State", "[fx]") // See issue 8240
+{
+    // A single non-finite sample that reaches an effect's internal state must not survive
+    // stopSound(). Otherwise it recirculates forever, and the output hard clipper turns it
+    // into a sustained full scale signal that no volume control can attenuate.
+    for (int t = fxt_off + 1; t < n_fx_types; ++t)
+    {
+        DYNAMIC_SECTION("FX " << t << " " << fx_type_names[t])
+        {
+            auto surge = Surge::Headless::createSurge(48000);
+            REQUIRE(surge);
+
+            Surge::Test::setFX(surge, 0, (fx_type)t);
+            REQUIRE(surge->fx[0]);
+
+            float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
+
+            std::fill(L, L + BLOCK_SIZE, std::numeric_limits<float>::quiet_NaN());
+            std::fill(R, R + BLOCK_SIZE, std::numeric_limits<float>::quiet_NaN());
+            surge->fx[0]->process(L, R);
+
+            surge->stopSound();
+
+            for (int b = 0; b < 100; ++b)
+            {
+                std::fill(L, L + BLOCK_SIZE, 0.f);
+                std::fill(R, R + BLOCK_SIZE, 0.f);
+                surge->fx[0]->process(L, R);
+
+                INFO("Block " << b);
+                for (int s = 0; s < BLOCK_SIZE; ++s)
+                {
+                    REQUIRE(std::isfinite(L[s]));
+                    REQUIRE(std::isfinite(R[s]));
+                }
+            }
+        }
     }
 }

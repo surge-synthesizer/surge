@@ -52,6 +52,7 @@ void ExciterEffect::init()
     toneFilter.coeff_instantize();
 
     levelDetector.reset(storage->samplerate);
+    os.reset();
 
     drive_gain.set_target(1.0f);
     wet_gain.set_target(0.0f);
