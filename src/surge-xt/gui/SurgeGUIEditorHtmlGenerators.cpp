@@ -95,6 +95,13 @@ void SurgeGUIEditor::showHTML(const std::string &html)
 
 std::string SurgeGUIEditor::tuningToHtml()
 {
+    // Export what the tuning editor shows, which is the received tuning under MTS-ESP. That one
+    // always carries a mapping of its own, since it fixes a reference note.
+    const auto tuning = tuningForTuningEditor();
+    const auto &scale = tuning.scale;
+    const auto &mapping = tuning.keyboardMapping;
+    const auto isStandardMapping = !isMTSESPClient() && synth->storage.isStandardMapping;
+
     std::ostringstream htmls;
 
     htmls <<
@@ -134,7 +141,7 @@ std::string SurgeGUIEditor::tuningToHtml()
         Surge XT Tuning Information
       </div>
       <div style="font-size: 12pt; font-family: Lato; padding: 2pt;">
-    )HTML" << escapeForHTML(synth->storage.currentScale.description)
+    )HTML" << escapeForHTML(scale.description)
           <<
         R"HTML(
       </div>
@@ -144,7 +151,7 @@ std::string SurgeGUIEditor::tuningToHtml()
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
          )HTML";
 
-    if (!synth->storage.isStandardMapping)
+    if (!isStandardMapping)
     {
         htmls << "<ul>\n"
               << "<li><a href=\"#rawscl\">Raw Scala Tuning (.SCL)</a>\n"
@@ -171,20 +178,18 @@ std::string SurgeGUIEditor::tuningToHtml()
         <div style="padding-bottom: 10pt;">
     )HTML";
 
-    if (!synth->storage.isStandardMapping)
+    if (!isStandardMapping)
     {
-        htmls << "Scale position 0 maps to MIDI note " << synth->storage.currentMapping.middleNote
-              << "\n<br/>"
-              << "MIDI note " << synth->storage.currentMapping.tuningConstantNote
-              << " is set to a frequency of " << synth->storage.currentMapping.tuningFrequency
-              << " Hz.\n</div> ";
+        htmls << "Scale position 0 maps to MIDI note " << mapping.middleNote << "\n<br/>"
+              << "MIDI note " << mapping.tuningConstantNote << " is set to a frequency of "
+              << mapping.tuningFrequency << " Hz.\n</div> ";
     }
     else
     {
         htmls << "\nTuning uses standard keyboard mapping.\n</div>";
     }
 
-    htmls << synth->storage.currentScale.count << " tones\n</p>"
+    htmls << scale.count << " tones\n</p>"
           <<
         R"HTML(
     </div>
@@ -199,7 +204,7 @@ std::string SurgeGUIEditor::tuningToHtml()
 
     int ct = 1;
     float priorCents = 0;
-    for (auto &t : synth->storage.currentScale.tones)
+    for (auto &t : scale.tones)
     {
         htmls << "<tr class=\"cnt\"><td> " << ct++ << "</td><td>";
         if (t.type == Tunings::Tone::kToneCents)
@@ -243,11 +248,11 @@ std::string SurgeGUIEditor::tuningToHtml()
         htmls << "<tr " << rowstyle << ">" << tdopen << i << " (" << get_notename(i, oct_offset)
               << ")</td>\n";
 
-        if (synth->storage.currentTuning.isMidiNoteMapped(i))
+        if (tuning.isMidiNoteMapped(i))
         {
-            auto tn = synth->storage.currentTuning.scalePositionForMidiNote(i);
-            auto p = synth->storage.currentTuning.frequencyForMidiNote(i);
-            auto lp = synth->storage.currentTuning.logScaledFrequencyForMidiNote(i);
+            auto tn = tuning.scalePositionForMidiNote(i);
+            auto p = tuning.frequencyForMidiNote(i);
+            auto lp = tuning.logScaledFrequencyForMidiNote(i);
 
             htmls << "<td class=\"cnt\">" << tn << "</td><td class=\"cnt\">"
                   << fmt::format("{:.3f}", p) << " Hz</td>"
@@ -271,21 +276,21 @@ std::string SurgeGUIEditor::tuningToHtml()
       <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawscl">Tuning Raw File</a>:
            )HTML"
-          << escapeForHTML(synth->storage.currentScale.name) << "</div><br/>\n<pre>\n"
-          << escapeForHTML(synth->storage.currentScale.rawText) << R"HTML(
+          << escapeForHTML(scale.name) << "</div><br/>\n<pre>\n"
+          << escapeForHTML(scale.rawText) << R"HTML(
       </pre>
     </div>
 )HTML";
 
-    if (!synth->storage.isStandardMapping)
+    if (!isStandardMapping)
     {
         htmls << R"HTML(
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawkbm">Keyboard Mapping Raw File</a>:
            )HTML"
-              << escapeForHTML(synth->storage.currentMapping.name) << "</div><br/>\n<pre>\n"
-              << escapeForHTML(synth->storage.currentMapping.rawText) << R"HTML(
+              << escapeForHTML(mapping.name) << "</div><br/>\n<pre>\n"
+              << escapeForHTML(mapping.rawText) << R"HTML(
       </pre>
     </div>
 )HTML";
@@ -297,16 +302,16 @@ std::string SurgeGUIEditor::tuningToHtml()
         <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="matrices">Interval Matrices</a>:
            )HTML"
-          << escapeForHTML(synth->storage.currentScale.name) << "</div><br/>\n";
+          << escapeForHTML(scale.name) << "</div><br/>\n";
 
-    if (synth->storage.currentMapping.count > 48)
+    if (mapping.count > 48)
     {
         htmls << "Surge XT only displays interval matrices for scales lower than 48 in length"
               << std::endl;
     }
     else
     {
-        int w = synth->storage.currentScale.count;
+        int w = scale.count;
         htmls << "<table><tr>";
         for (int i = 0; i <= w; ++i)
         {
@@ -318,12 +323,12 @@ std::string SurgeGUIEditor::tuningToHtml()
         std::vector<float> cents;
         float lastc = 0;
         cents.push_back(0);
-        for (auto &t : synth->storage.currentScale.tones)
+        for (auto &t : scale.tones)
         {
             cents.push_back(t.cents);
             lastc = t.cents;
         }
-        for (auto &t : synth->storage.currentScale.tones)
+        for (auto &t : scale.tones)
         {
             cents.push_back(t.cents + lastc);
         }

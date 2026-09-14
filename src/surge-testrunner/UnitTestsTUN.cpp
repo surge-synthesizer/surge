@@ -25,6 +25,7 @@
 #include <algorithm>
 
 #include "HeadlessUtils.h"
+#include "MTSESPTuning.h"
 #include "Player.h"
 #include "Tunings.h"
 
@@ -1952,5 +1953,196 @@ TEST_CASE("Transpose by Tuning Period", "[tun]")
         surge->storage.transposeByTuningPeriod = true;
         REQUIRE(sceneRatio(surge) == Approx(3.0).margin(0.05));
         REQUIRE(sceneRatioDown(surge) == Approx(1.0 / 3.0).margin(0.01));
+    }
+}
+
+TEST_CASE("Tuning From MTS-ESP Data", "[tun]")
+{
+    namespace st = Surge::Storage;
+
+    auto checkReproduces = [](const st::MTSESPTuningInfo &info, const Tunings::Tuning &t) {
+        for (int i = 0; i < 128; ++i)
+        {
+            INFO("MIDI note " << i);
+            REQUIRE(t.isMidiNoteMapped(i) == !info.filtered[i]);
+
+            if (!info.filtered[i])
+            {
+                REQUIRE(t.frequencyForMidiNote(i) == Approx(info.frequencies[i]).epsilon(1e-9));
+            }
+        }
+    };
+
+    // What a client would build from Surge broadcasting this tuning as an MTS-ESP source
+    auto roundTrip = [&checkReproduces](const Tunings::Tuning &source) {
+        auto info = st::mtsESPInfoForTuning(source);
+        auto res = st::tuningFromMTSESPInfo(info);
+        checkReproduces(info, res);
+        return res;
+    };
+
+    auto justMajor = Tunings::parseSCLData(R"SCL(! just-major.scl
+!
+5-limit just major scale
+ 7
+!
+ 9/8
+ 5/4
+ 4/3
+ 3/2
+ 5/3
+ 15/8
+ 2/1
+)SCL");
+
+    SECTION("12-TET")
+    {
+        auto t = roundTrip(Tunings::Tuning());
+
+        REQUIRE(t.scale.count == 12);
+        REQUIRE(t.keyboardMapping.middleNote == 60);
+
+        // Equal steps are irrational, so none of them may pass for a ratio, but the period is
+        for (int i = 0; i < 11; ++i)
+        {
+            INFO("Tone " << i);
+            REQUIRE(t.scale.tones[i].type == Tunings::Tone::kToneCents);
+        }
+
+        REQUIRE(t.scale.tones[11].type == Tunings::Tone::kToneRatio);
+        REQUIRE(t.scale.tones[11].ratio_n == 2);
+        REQUIRE(t.scale.tones[11].ratio_d == 1);
+    }
+
+    SECTION("31-EDO With A Moved Reference Note")
+    {
+        auto s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note53-to-430-408.kbm");
+        auto t = roundTrip(Tunings::Tuning(s, k));
+
+        REQUIRE(t.scale.count == 31);
+        REQUIRE(t.keyboardMapping.tuningConstantNote == 53);
+    }
+
+    SECTION("Non-Octave Period")
+    {
+        auto t =
+            roundTrip(Tunings::Tuning(Tunings::readSCLFile("resources/test-data/scl/ED3-17.scl")));
+
+        REQUIRE(t.scale.count == 17);
+        REQUIRE(t.scale.tones.back().type == Tunings::Tone::kToneRatio);
+        REQUIRE(t.scale.tones.back().ratio_n == 3);
+        REQUIRE(t.scale.tones.back().ratio_d == 1);
+    }
+
+    SECTION("Ratios Are Recovered")
+    {
+        auto t = roundTrip(Tunings::Tuning(justMajor));
+
+        REQUIRE(t.scale.count == 7);
+
+        for (int i = 0; i < 7; ++i)
+        {
+            INFO("Tone " << i);
+            REQUIRE(t.scale.tones[i].type == Tunings::Tone::kToneRatio);
+            REQUIRE(t.scale.tones[i].ratio_n == justMajor.tones[i].ratio_n);
+            REQUIRE(t.scale.tones[i].ratio_d == justMajor.tones[i].ratio_d);
+        }
+    }
+
+    SECTION("Mixed Cents And Ratios")
+    {
+        auto s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
+        auto t = roundTrip(Tunings::Tuning(s));
+
+        REQUIRE(t.scale.count == 12);
+        REQUIRE(t.scale.tones[6].type == Tunings::Tone::kToneCents);
+        REQUIRE(t.scale.tones[11].type == Tunings::Tone::kToneRatio);
+    }
+
+    SECTION("Unmapped Keys Stay Unmapped")
+    {
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-whitekeys-c261.kbm");
+        auto t = roundTrip(Tunings::Tuning(justMajor, k));
+
+        // One tone per key of the mapping, since that is the pattern MTS-ESP describes
+        REQUIRE(t.scale.count == 12);
+        REQUIRE(t.keyboardMapping.count == 12);
+        REQUIRE(!t.isMidiNoteMapped(61));
+        REQUIRE(t.isMidiNoteMapped(62));
+    }
+
+    SECTION("Scale Name Is The Description")
+    {
+        auto t = roundTrip(Tunings::Tuning(justMajor));
+
+        REQUIRE(t.scale.description == "5-limit just major scale");
+        REQUIRE(t.scale.name == "5-limit just major scale");
+    }
+
+    SECTION("An Octave Scale Without Map Information Is Found From The Frequencies")
+    {
+        auto s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
+        auto info = st::mtsESPInfoForTuning(Tunings::Tuning(s));
+
+        info.mapSize = -1;
+        info.mapStartKey = -1;
+        info.refKey = -1;
+
+        auto t = st::tuningFromMTSESPInfo(info);
+
+        checkReproduces(info, t);
+        REQUIRE(t.scale.count == 12);
+    }
+
+    SECTION("A Non-Octave Scale Without Any Shape Information Falls Back To The Whole Keyboard")
+    {
+        auto s = Tunings::readSCLFile("resources/test-data/scl/ED3-17.scl");
+        auto info = st::mtsESPInfoForTuning(Tunings::Tuning(s));
+
+        // As a source that never supplies them looks to a client
+        info.periodRatio = 2.0;
+        info.mapSize = -1;
+        info.mapStartKey = -1;
+        info.refKey = -1;
+
+        auto t = st::tuningFromMTSESPInfo(info);
+
+        checkReproduces(info, t);
+        REQUIRE(t.scale.count == 127);
+    }
+
+    SECTION("Wrong Shape Information Falls Back Rather Than Misreporting")
+    {
+        auto info = st::mtsESPInfoForTuning(Tunings::Tuning(justMajor));
+
+        info.mapSize = 5;
+
+        auto t = st::tuningFromMTSESPInfo(info);
+
+        checkReproduces(info, t);
+        REQUIRE(t.scale.count == 7);
+    }
+
+    SECTION("Irregular Tables Are Reproduced")
+    {
+        st::MTSESPTuningInfo info;
+        info.scaleName = "Irregular";
+
+        auto f = 20.0;
+
+        for (int i = 0; i < 128; ++i)
+        {
+            info.frequencies[i] = f;
+            f *= 1.03 + 0.02 * ((i * 7) % 5);
+        }
+
+        info.filtered[30] = true;
+        info.filtered[31] = true;
+
+        auto t = st::tuningFromMTSESPInfo(info);
+
+        checkReproduces(info, t);
+        REQUIRE(t.scale.count == 127);
     }
 }

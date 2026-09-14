@@ -33,7 +33,6 @@
 #include "fmt/core.h"
 #include <chrono>
 #include "UnitConversions.h"
-#include "libMTSClient.h"
 
 namespace Surge
 {
@@ -109,6 +108,76 @@ struct TuningTextEditor : juce::TextEditor
         refreshAccessibleName(false);
         scrollIntoView(this);
         juce::TextEditor::focusGained(cause);
+
+        // Undo the select all on focus, which would otherwise highlight display only text
+        if (isReadOnly())
+        {
+            setHighlightedRegion({});
+        }
+    }
+
+    /*
+     * JUCE's read-only still lets text be selected, copied and offered in a context menu.
+     * Display only text is just there to be read, and a reader gets it through focus anyway.
+     */
+    void setDisplayOnly(bool b)
+    {
+        setReadOnly(b);
+        setMouseCursor(b ? juce::MouseCursor::NormalCursor : juce::MouseCursor::IBeamCursor);
+
+        if (b)
+        {
+            setHighlightedRegion({});
+        }
+    }
+
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        if (!isReadOnly())
+        {
+            return juce::TextEditor::keyPressed(key);
+        }
+
+        // Read-only JUCE editors pass escape on, so leave the field the way an editable one does
+        if (key.isKeyCode(juce::KeyPress::escapeKey) && onEscapeKey)
+        {
+            onEscapeKey();
+            return true;
+        }
+
+        return false;
+    }
+
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::TextEditor::mouseDown(e);
+        }
+    }
+
+    void mouseDrag(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::TextEditor::mouseDrag(e);
+        }
+    }
+
+    void mouseUp(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::TextEditor::mouseUp(e);
+        }
+    }
+
+    void mouseDoubleClick(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::TextEditor::mouseDoubleClick(e);
+        }
     }
 
     std::string label, unit;
@@ -156,11 +225,43 @@ struct TuningCodeEditor : juce::CodeEditorComponent
 
     std::function<void()> onApply{nullptr};
 
+    // As with TuningTextEditor, display only text can be scrolled through but not selected
+    void setDisplayOnly(bool b)
+    {
+        setReadOnly(b);
+        setMouseCursor(b ? juce::MouseCursor::NormalCursor : juce::MouseCursor::IBeamCursor);
+
+        if (b)
+        {
+            deselectAll();
+        }
+    }
+
     bool keyPressed(const juce::KeyPress &key) override
     {
         if (Surge::Widgets::handleControlGroupFocusKey(this, key))
         {
             return true;
+        }
+
+        if (isReadOnly())
+        {
+            // Read-only JUCE editors pass escape on, so leave the way an editable one does
+            if (key.isKeyCode(juce::KeyPress::escapeKey))
+            {
+                handleEscapeKey();
+                return true;
+            }
+
+            // Plain keys only scroll, but shift extends a selection and command selects or copies
+            auto mods = key.getModifiers();
+
+            if (mods.isShiftDown() || mods.isCommandDown())
+            {
+                return false;
+            }
+
+            return juce::CodeEditorComponent::keyPressed(key);
         }
 
         if (onApply && key.getModifiers().isCommandDown() &&
@@ -171,6 +272,39 @@ struct TuningCodeEditor : juce::CodeEditorComponent
         }
 
         return juce::CodeEditorComponent::keyPressed(key);
+    }
+
+    // A right click opens the context menu from mouseDown, so this covers that too
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::CodeEditorComponent::mouseDown(e);
+        }
+    }
+
+    void mouseDrag(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::CodeEditorComponent::mouseDrag(e);
+        }
+    }
+
+    void mouseUp(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::CodeEditorComponent::mouseUp(e);
+        }
+    }
+
+    void mouseDoubleClick(const juce::MouseEvent &e) override
+    {
+        if (!isReadOnly())
+        {
+            juce::CodeEditorComponent::mouseDoubleClick(e);
+        }
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningCodeEditor);
@@ -227,15 +361,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
     }
 
-    double frequencyForRow(int rowNumber) const
-    {
-        if (storage && storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
-        {
-            return MTS_NoteToFrequency(storage->oddsound_mts_client, rowNumber, 0);
-        }
-
-        return tuning.frequencyForMidiNote(rowNumber);
-    }
+    double frequencyForRow(int rowNumber) const { return tuning.frequencyForMidiNote(rowNumber); }
 
     struct TuningRowComp : juce::Component
     {
@@ -892,6 +1018,7 @@ class RadialScaleGraph : public juce::Component,
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
+                    tk->setVisible(!readOnly);
                     toneKnobs.push_back(std::move(tk));
 
                     hideBtn = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -925,6 +1052,7 @@ class RadialScaleGraph : public juce::Component,
                     te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
                     te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                     te->setEnabled(i != 0);
+                    te->setDisplayOnly(readOnly);
                     te->addListener(this);
                     te->setSelectAllWhenFocused(true);
 
@@ -975,6 +1103,7 @@ class RadialScaleGraph : public juce::Component,
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
+                    tk->setVisible(!readOnly);
                     toneKnobs.push_back(std::move(tk));
                 }
             }
@@ -1012,6 +1141,32 @@ class RadialScaleGraph : public juce::Component,
                 tk->repaint();
             }
         }
+    }
+
+    // Tones can still be read, but the knobs and graph handles that edit them go
+    bool readOnly{false};
+
+    void setReadOnly(bool ro)
+    {
+        readOnly = ro;
+
+        for (const auto &te : toneEditors)
+        {
+            te->setDisplayOnly(ro);
+        }
+
+        for (const auto &tk : toneKnobs)
+        {
+            tk->setVisible(!ro);
+        }
+
+        if (ro)
+        {
+            hotSpotIndex = -1;
+            wheelHotSpotIndex = -1;
+        }
+
+        repaint();
     }
 
     bool centsShowing{true};
@@ -1993,30 +2148,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             ypos += rowHeight;
 
             auto noteToFreq = [this](auto note) -> float {
-                auto st = matrix->overlay->storage;
-                auto mts = matrix->overlay->mtsMode;
-                if (mts)
-                {
-                    return MTS_NoteToFrequency(st->oddsound_mts_client, note, 0);
-                }
-                else
-                {
-                    return matrix->tuning.frequencyForMidiNote(note);
-                }
+                return matrix->tuning.frequencyForMidiNote(note);
             };
 
             auto noteToPitch = [this](auto note) -> float {
-                auto st = matrix->overlay->storage;
-                auto mts = matrix->overlay->mtsMode;
-                if (mts)
-                {
-                    return log2(MTS_NoteToFrequency(st->oddsound_mts_client, note, 0) /
-                                Tunings::MIDI_0_FREQ);
-                }
-                else
-                {
-                    return matrix->tuning.logScaledFrequencyForMidiNote(note);
-                }
+                return matrix->tuning.logScaledFrequencyForMidiNote(note);
             };
 
             for (int i = 0; i < bs.size(); ++i)
@@ -2238,10 +2374,13 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
         int hoverI{-1}, hoverJ{-1};
 
+        // Dragging a cell edits the scale, which a read-only editor must not do
+        bool isReadOnly() const { return matrix->overlay->mtsMode; }
+
         juce::Point<float> lastMousePos;
         void mouseDown(const juce::MouseEvent &e) override
         {
-            if (mode == TRUE_KEYS)
+            if (mode == TRUE_KEYS || isReadOnly())
             {
                 return;
             }
@@ -2255,7 +2394,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseUp(const juce::MouseEvent &e) override
         {
-            if (mode == TRUE_KEYS)
+            if (mode == TRUE_KEYS || isReadOnly())
             {
                 return;
             }
@@ -2271,7 +2410,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseDrag(const juce::MouseEvent &e) override
         {
-            if (mode == TRUE_KEYS)
+            if (mode == TRUE_KEYS || isReadOnly())
             {
                 return;
             }
@@ -2308,6 +2447,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
         void mouseDoubleClick(const juce::MouseEvent &e) override
         {
+            if (isReadOnly())
+            {
+                return;
+            }
+
             if (mode == ROTATION)
             {
                 if (hoverI > 0 && hoverJ > 0)
@@ -2346,8 +2490,8 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         {
             if (setupHoverFrom(e.position))
                 repaint();
-            if (hoverI >= 1 && hoverI <= matrix->tuning.scale.count && hoverJ >= 1 &&
-                hoverJ <= matrix->tuning.scale.count && hoverI > hoverJ)
+            if (!isReadOnly() && hoverI >= 1 && hoverI <= matrix->tuning.scale.count &&
+                hoverJ >= 1 && hoverJ <= matrix->tuning.scale.count && hoverI > hoverJ)
             {
                 setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
             }
@@ -2437,6 +2581,12 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
 void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
 {
+    // The hover highlight only marks a handle to drag
+    if (readOnly)
+    {
+        return;
+    }
+
     int owso = whichSideOfZero;
     int ohsi = hotSpotIndex;
     hotSpotIndex = -1;
@@ -2469,6 +2619,11 @@ void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
 }
 void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
 {
+    if (readOnly)
+    {
+        return;
+    }
+
     if (hotSpotIndex == -1)
     {
         centsAtMouseDown = 0;
@@ -2485,7 +2640,7 @@ void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
 
 void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 {
-    if (hotSpotIndex != -1)
+    if (!readOnly && hotSpotIndex != -1)
     {
         float dr = 0;
         auto mdp = e.getMouseDownPosition().toFloat();
@@ -2572,7 +2727,7 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 
 void RadialScaleGraph::mouseDoubleClick(const juce::MouseEvent &e)
 {
-    if (hotSpotIndex != -1)
+    if (!readOnly && hotSpotIndex != -1)
     {
         auto newCents = (hotSpotIndex + 1) * scale.tones[scale.count - 1].cents / scale.count;
         toneKnobs[hotSpotIndex + 1]->angle = 0;
@@ -2586,7 +2741,7 @@ void RadialScaleGraph::mouseDoubleClick(const juce::MouseEvent &e)
 void RadialScaleGraph::mouseWheelMove(const juce::MouseEvent &event,
                                       const juce::MouseWheelDetails &wheel)
 {
-    if (wheelHotSpotIndex != -1)
+    if (!readOnly && wheelHotSpotIndex != -1)
     {
         float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
         if (delta == 0)
@@ -2618,6 +2773,11 @@ void RadialScaleGraph::mouseWheelMove(const juce::MouseEvent &event,
 }
 void RadialScaleGraph::textEditorReturnKeyPressed(juce::TextEditor &editor)
 {
+    if (readOnly)
+    {
+        return;
+    }
+
     for (int i = 0; i <= scale.count - 1; ++i)
     {
         if (&editor == toneEditors[i].get())
@@ -2979,6 +3139,27 @@ struct SCLKBMDisplay : public juce::Component,
         setApplyEnabled(false);
     }
 
+    // Save Scale and Export HTML take the text out, and the generator rows only exist to edit
+    bool readOnly{false};
+
+    void setReadOnly(bool ro)
+    {
+        readOnly = ro;
+        scl->setDisplayOnly(ro);
+        kbm->setDisplayOnly(ro);
+        sclControls->setVisible(!ro);
+        kbmControls->setVisible(!ro);
+
+        // The overlay sets its mode before its skin, and layout needs the skin's fonts. The
+        // first real bounds lay us out anyway.
+        if (skin)
+        {
+            resized();
+        }
+
+        repaint();
+    }
+
     // Apply commits the documents, so compare them rather than reading the button state.
     bool hasUnappliedEdits() const
     {
@@ -2994,7 +3175,8 @@ struct SCLKBMDisplay : public juce::Component,
         sclGroup->setBounds(0, 0, w / 2, h);
         kbmGroup->setBounds(w / 2, 0, w - w / 2, h);
 
-        auto b = juce::Rectangle<int>(0, 0, w / 2, h).reduced(3, 3).withTrimmedBottom(20);
+        auto b =
+            juce::Rectangle<int>(0, 0, w / 2, h).reduced(3, 3).withTrimmedBottom(readOnly ? 0 : 20);
 
         scl->setBounds(b);
         kbm->setBounds(b);
@@ -3269,14 +3451,22 @@ struct TuningControlArea : public juce::Component,
             addAndMakeVisible(*exportS);
             marginPos += btnWidth + 5;
 
-            libraryS = ma("Tuning Library", tag_open_library, 40);
-            addAndMakeVisible(*libraryS);
-            marginPos += btnWidth + 5;
+            // Under MTS-ESP there is nothing to load a tuning into and nothing to apply
+            libraryS.reset();
+            applyS.reset();
 
-            applyS = ma("Apply", tag_apply_sclkbm, 50);
-            addAndMakeVisible(*applyS);
-            applyS->setEnabled(applyEnabled);
-            applyS->setVisible(editMode == 0);
+            if (!overlay->mtsMode)
+            {
+                libraryS = ma("Tuning Library", tag_open_library, 40);
+                addAndMakeVisible(*libraryS);
+                marginPos += btnWidth + 5;
+
+                applyS = ma("Apply", tag_apply_sclkbm, 50);
+                addAndMakeVisible(*applyS);
+                applyS->setEnabled(applyEnabled);
+                applyS->setVisible(editMode == 0);
+            }
+
             xpos += btnWidth + 5;
         }
     }
@@ -3486,9 +3676,6 @@ void TuningOverlay::resized()
     int kbWidth = 87;
     int ctrlHeight = 35;
 
-    if (mtsMode)
-        ctrlHeight = 0;
-
     t.transformPoint(w, h);
 
     tuningKeyboardTable->setBounds(0, 0, kbWidth, h);
@@ -3564,8 +3751,8 @@ std::vector<juce::Component *> TuningOverlay::getGroupNavigationComponents()
 {
     // Left to right: the tuning table, the editor pane, then the controls. Scala mode
     // splits its pane into scale and the kbm halves. The wrapper drops any group
-    // with nothing focusable in it, so the hidden panes and the control area in MTS mode
-    // take care of themselves.
+    // with nothing focusable in it, so the hidden panes and the generator rows hidden in
+    // MTS-ESP mode take care of themselves.
     auto *table = tuningKeyboardTable.get();
 
     if (sclKbmDisplay->isVisible())
@@ -3588,9 +3775,13 @@ std::vector<juce::Component *> TuningOverlay::getGroupNavigationComponents()
     return {table, intervalMatrix.get(), controlArea.get()};
 }
 
+/*
+ * Under MTS-ESP the subviews don't offer to edit, but the tuning we show is only a picture of
+ * what the source sends, so make certain no stray path writes it into our own tuning either.
+ */
 void TuningOverlay::onToneChanged(int tone, double newCentsValue)
 {
-    if (storage)
+    if (storage && !mtsMode)
     {
         editor->undoManager()->pushTuning(storage->currentTuning);
         storage->currentScale.tones[tone].type = Tunings::Tone::kToneCents;
@@ -3601,7 +3792,7 @@ void TuningOverlay::onToneChanged(int tone, double newCentsValue)
 
 void TuningOverlay::onScaleRescaled(double scaleBy)
 {
-    if (!storage)
+    if (!storage || mtsMode)
         return;
 
     editor->undoManager()->pushTuning(storage->currentTuning);
@@ -3632,7 +3823,7 @@ void TuningOverlay::onScaleRescaled(double scaleBy)
 
 void TuningOverlay::onScaleRescaledAbsolute(double riTo)
 {
-    if (!storage)
+    if (!storage || mtsMode)
         return;
 
     editor->undoManager()->pushTuning(storage->currentTuning);
@@ -3655,7 +3846,7 @@ void TuningOverlay::onScaleRescaledAbsolute(double riTo)
 
 void TuningOverlay::onToneStringChanged(int tone, const std::string &newStringValue)
 {
-    if (storage)
+    if (storage && !mtsMode)
     {
         editor->undoManager()->pushTuning(storage->currentTuning);
         try
@@ -3673,7 +3864,7 @@ void TuningOverlay::onToneStringChanged(int tone, const std::string &newStringVa
 
 void TuningOverlay::onNewSCLKBM(const std::string &scl, const std::string &kbm)
 {
-    if (!storage)
+    if (!storage || mtsMode)
         return;
 
     try
@@ -3749,20 +3940,10 @@ void TuningOverlay::setTuning(const Tunings::Tuning &t)
 
 void TuningOverlay::resetParentTitle()
 {
-    if (mtsMode)
-    {
-        std::string scale = "";
-        if (storage)
-        {
-            scale = MTS_GetScaleName(storage->oddsound_mts_client);
-            scale = " - " + scale;
-        }
-        setEnclosingParentTitle("Tuning Visualizer" + scale);
-    }
-    else
-    {
-        setEnclosingParentTitle("Tuning Editor - " + tuning.scale.name);
-    }
+    // Under MTS-ESP the scale name is the one the source sends
+    setEnclosingParentTitle((mtsMode ? "Tuning Visualizer - " : "Tuning Editor - ") +
+                            tuning.scale.name);
+
     if (getParentComponent())
         getParentComponent()->repaint();
 }
@@ -3801,15 +3982,18 @@ void TuningOverlay::setMTSMode(bool isMTSOn)
 {
     mtsMode = isMTSOn;
 
+    // The source owns the tuning, so every view can show it but none may edit it
+    radialScaleGraph->setReadOnly(isMTSOn);
+    sclKbmDisplay->setReadOnly(isMTSOn);
+
+    // Which action buttons exist depends on the mode, and a rebuild is how they change
+    if (controlArea && skin)
+    {
+        controlArea->rebuild();
+    }
+
     resetParentTitle();
     resized();
-
-    if (controlArea)
-        controlArea->setVisible(!isMTSOn);
-    if (isMTSOn)
-    {
-        showEditor(5);
-    }
 }
 
 } // namespace Overlays

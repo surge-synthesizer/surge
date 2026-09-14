@@ -30,6 +30,7 @@
 #include "SurgeGUICallbackInterfaces.h"
 
 #include "SurgeStorage.h"
+#include "MTSESPTuning.h"
 #include "SurgeImageStore.h"
 
 #include "SurgeSynthesizer.h"
@@ -401,6 +402,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::string tuningToHtml();
     void tuningChanged();
+
+    // Surge's own tuning, or the one MTS-ESP is sending when this instance is a client
+    bool isMTSESPClient() const;
+    Tunings::Tuning tuningForTuningEditor();
+    void idleTuningEditorForMTSESP();
+    Surge::Storage::MTSESPTuningInfo lastMTSESPTuningInfo;
 
     Surge::Widgets::ModulatableControlInterface *modSourceDragOverTarget{nullptr};
     Surge::Widgets::ModulatableControlInterface::ModulationState priorModulationState;
