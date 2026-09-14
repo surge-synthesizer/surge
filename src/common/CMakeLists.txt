@@ -81,6 +81,8 @@ add_library(${PROJECT_NAME}
   ModulationSource.h
   ModulatorPresetManager.cpp
   ModulatorPresetManager.h
+  MTSESPTuning.cpp
+  MTSESPTuning.h
   Parameter.cpp
   Parameter.h
   PatchDB.cpp

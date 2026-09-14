@@ -351,7 +351,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         te->setStorage(&(this->synth->storage));
         te->setEditor(this);
         te->setSkin(currentSkin, bitmapStore);
-        te->setTuning(synth->storage.currentTuning);
+        te->setTuning(tuningForTuningEditor());
         te->setEnclosingParentTitle("Tuning Editor");
         te->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut,
                            Surge::Storage::TuningOverlayTearOutAlwaysOnTop,
@@ -829,7 +829,9 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
 
         if (tunol)
         {
-            tunol->setTuning(synth->storage.currentTuning);
+            // Connecting to or leaving MTS-ESP recreates the editor, which lands here
+            tunol->setMTSMode(isMTSESPClient());
+            tunol->setTuning(tuningForTuningEditor());
         }
         break;
     }

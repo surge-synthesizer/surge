@@ -1436,14 +1436,7 @@ void SurgeGUIEditor::idle()
         scanJuceSkinComponents = false;
     }
 
-    if (synth->storage.oddsound_mts_active_as_client)
-    {
-        auto w = getOverlayWrapperIfOpen(TUNING_EDITOR);
-        if (w && (slowIdleCounter % 30 == 0))
-        {
-            w->repaint();
-        }
-    }
+    idleTuningEditorForMTSESP();
 
     juceEditor->fireListenersOnEndEdit = false;
     for (int s = 0; s < n_scenes; ++s)
@@ -2403,12 +2396,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
-    // if the Tuning Editor was open and ODDSound was activated (which causes a refresh), close it
-    if (synth->storage.oddsound_mts_active_as_client)
-    {
-        closeOverlay(TUNING_EDITOR);
-    }
-
     // Finally make sure the Z-order fronting for our overlays is still OK
     std::vector<juce::Component *> frontthese;
     std::vector<juce::Component *> thenFrontThese;
@@ -3226,9 +3213,67 @@ void SurgeGUIEditor::tuningChanged()
 
     if (tc)
     {
-        tc->setTuning(synth->storage.currentTuning);
+        tc->setTuning(tuningForTuningEditor());
         tc->repaint();
     }
+}
+
+bool SurgeGUIEditor::isMTSESPClient() const
+{
+    return synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
+}
+
+Tunings::Tuning SurgeGUIEditor::tuningForTuningEditor()
+{
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    if (isMTSESPClient())
+    {
+        lastMTSESPTuningInfo =
+            Surge::Storage::mtsESPInfoFromClient(synth->storage.oddsound_mts_client);
+
+        return Surge::Storage::tuningFromMTSESPInfo(lastMTSESPTuningInfo);
+    }
+#endif
+
+    return synth->storage.currentTuning;
+}
+
+void SurgeGUIEditor::idleTuningEditorForMTSESP()
+{
+    // MTS-ESP has no change notification, so look for a new tuning every few frames
+    if (slowIdleCounter % 10 != 0)
+    {
+        return;
+    }
+
+    auto tun = getOverlayIfOpenAs<Surge::Overlays::TuningOverlay>(TUNING_EDITOR);
+
+    if (!tun)
+    {
+        return;
+    }
+
+    auto hasMTS = isMTSESPClient();
+
+    if (tun->mtsMode != hasMTS)
+    {
+        tun->setMTSMode(hasMTS);
+        tun->setTuning(tuningForTuningEditor());
+        return;
+    }
+
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    if (hasMTS)
+    {
+        auto info = Surge::Storage::mtsESPInfoFromClient(synth->storage.oddsound_mts_client);
+
+        if (info != lastMTSESPTuningInfo)
+        {
+            lastMTSESPTuningInfo = info;
+            tun->setTuning(Surge::Storage::tuningFromMTSESPInfo(info));
+        }
+    }
+#endif
 }
 
 bool SurgeGUIEditor::doesZoomFitToScreen(float zf, float &correctedZf)
