@@ -2447,7 +2447,8 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
         void mouseDoubleClick(const juce::MouseEvent &e) override
         {
-            if (isReadOnly())
+            // Hover still tracks the grid cells in True Keys, but there is no scale to edit there
+            if (mode == TRUE_KEYS || isReadOnly())
             {
                 return;
             }
@@ -2490,8 +2491,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         {
             if (setupHoverFrom(e.position))
                 repaint();
-            if (!isReadOnly() && hoverI >= 1 && hoverI <= matrix->tuning.scale.count &&
-                hoverJ >= 1 && hoverJ <= matrix->tuning.scale.count && hoverI > hoverJ)
+            if (mode != TRUE_KEYS && !isReadOnly() && hoverI >= 1 &&
+                hoverI <= matrix->tuning.scale.count && hoverJ >= 1 &&
+                hoverJ <= matrix->tuning.scale.count && hoverI > hoverJ)
             {
                 setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
             }
