@@ -35,6 +35,23 @@
 
 using namespace Surge::Test;
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+TEST_CASE("MTS channel-to-octave shift uses the period fallback", "[tun][mts]")
+{
+    auto surge = surgeOnSine();
+    REQUIRE(surge->storage.oddsound_mts_client);
+
+    // Model an MTS source which does not publish a map size. The MTS API defines a
+    // 12-semitone period fallback, while MTS_GetMapSize() returns -1.
+    surge->storage.isStandardTuning = false;
+    surge->storage.oddsound_mts_active_as_client = true;
+    REQUIRE(surge->storage.tuningPeriodSemitones() == Approx(12.0f));
+
+    auto shifted = SurgeVoice::channelKeyEquivalent(60.0f, 1, &surge->storage, false);
+    REQUIRE(shifted == Approx(72.0f));
+}
+#endif
+
 TEST_CASE("Retune Surge XT to Scala Files", "[tun]")
 {
     auto surge = Surge::Headless::createSurge(44100);

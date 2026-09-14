@@ -123,25 +123,7 @@ float SurgeVoice::channelKeyEquivalent(float key, int channel, SurgeStorage *sto
         shift = channel;
     }
 
-    if (storage->isStandardTuning)
-    {
-        res += 12 * shift;
-    }
-    else if (storage->oddsound_mts_active_as_client)
-    {
-        res += MTS_GetMapSize(storage->oddsound_mts_client) * shift;
-    }
-    else if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-    {
-        // keys are in scale space so move scale.count
-        res += storage->currentScale.count * shift;
-    }
-    else
-    {
-        // keys are in tuning space so move cents worth of keys
-        auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
-        res += ct / 100 * shift;
-    }
+    res += storage->tuningPeriodSemitones() * shift;
 
     return res;
 }
