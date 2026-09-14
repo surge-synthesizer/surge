@@ -591,6 +591,8 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             surge->storage.reportError(msg.str(), "Bus Configuration Error");
             warnedAboutBadConfig = true;
         }
+        // The host plays back whatever is in the buffer, and JUCE does not zero it for us
+        buffer.clear();
         return;
     }
 
@@ -606,6 +608,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             surge->storage.reportError(msg.str(), "Bus Configuration Error");
             warnedAboutBadConfig = true;
         }
+        buffer.clear();
         return;
     }
 
@@ -619,6 +622,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
         if (bypassCountdown == 0)
         {
+            buffer.clear();
             return;
         }
 
@@ -644,6 +648,11 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     auto mainInput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
     auto sceneBOutput = getBusBuffer(buffer, false, 2);
+
+    // The scene buses are only written below when extra outputs are active and stereo,
+    // so make sure they don't carry stale data otherwise
+    sceneAOutput.clear();
+    sceneBOutput.clear();
 
     auto midiIt = midiMessages.findNextSamplePosition(0);
     int nextMidi = -1;
