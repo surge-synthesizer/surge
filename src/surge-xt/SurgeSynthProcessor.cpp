@@ -574,8 +574,6 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         return;
     }
 
-    priorCallWasProcessBlockNotBypassed = true;
-
     // Make sure we have a main output
     auto mb = getBus(false, 0);
 
@@ -630,6 +628,10 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         surge->audio_processing_active = false;
         priorCallWasProcessBlockNotBypassed = false;
         midiMessages.clear(); // but don't send notes. We are all notes off
+    }
+    else
+    {
+        priorCallWasProcessBlockNotBypassed = true;
     }
 
     if (!surge->audio_processing_active)
