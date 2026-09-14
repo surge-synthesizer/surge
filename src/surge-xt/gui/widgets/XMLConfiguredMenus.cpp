@@ -1157,14 +1157,26 @@ void FxMenu::saveFX()
     {
         sge->promptForMiniEdit(
             "", "Enter the preset name:", "Save FX Preset", juce::Point<int>{},
-            [this](const std::string &s) {
-                this->storage->fxUserPreset->saveFxIn(this->storage, fx, s);
-                /*
-                // TODO: queueRebuildUI() nukes the okCancelProvider() box so remove this later
-                auto *sge = firstListenerOfType<SurgeGUIEditor>();
-                if (sge)
-                    sge->queueRebuildUI();
-                */
+            [this, sge, slot = current_fx](const std::string &s) {
+                this->storage->fxUserPreset->saveFxIn(
+                    this->storage, fx, s, [this, sge, slot](const fs::path &savedFile) {
+                        // The slot now matches the preset it was saved as
+                        sge->fxPresetName[slot] = path_to_string(savedFile.stem());
+                        sge->fxPresetUserFile[slot] = path_to_string(savedFile);
+                        sge->selectedFX[slot] = -1;
+
+                        if (slot == current_fx)
+                        {
+                            selectedIdx = -1;
+                            selectedName = sge->fxPresetName[slot];
+                            selectedUserPresetFile = sge->fxPresetUserFile[slot];
+                        }
+
+                        // Lays the preset name label out again from fxPresetName. This only
+                        // runs once any overwrite confirmation has been answered, so it can't
+                        // take that dialog down with it.
+                        sge->queueRebuildUI();
+                    });
             },
             this);
     }
