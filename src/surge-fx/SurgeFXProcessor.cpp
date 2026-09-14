@@ -866,6 +866,12 @@ void SurgefxAudioProcessor::loadFxPreset(const Surge::Storage::FxUserPreset::Pre
     resettingFx = false;
 }
 
+void SurgefxAudioProcessor::saveFxPreset(Surge::Storage::FxUserPreset &presetManager,
+                                         const std::string &name)
+{
+    presetManager.saveFxIn(storage.get(), fxstorage, name);
+}
+
 void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
 {
     reorderSurgeParams();

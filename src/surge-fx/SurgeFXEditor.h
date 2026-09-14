@@ -29,6 +29,8 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
+struct PresetPicker;
+
 //==============================================================================
 /**
  */
@@ -53,7 +55,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     };
     std::vector<FxMenu> menu;
     std::unique_ptr<juce::Component> picker;
-    std::unique_ptr<juce::Component> presetPicker;
+    std::unique_ptr<PresetPicker> presetPicker;
 
     static constexpr int topSection = 80;
 
@@ -68,6 +70,15 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void stepPreset(int direction); // -1 = prev, +1 = next
     void loadCurrentPreset();
     void rebuildCurrentPresets();
+    void saveCurrentPreset();
+    void finishPresetSave();
+    void deleteCurrentPreset();
+    void refreshPresetList();
+    void rebuildCurrentPresetsKeepingSelection();
+
+    // Presets are looked up by identity rather than kept by index, since a rescan can shift
+    // the list. Returns -1 if there is no such preset.
+    int findPresetIndex(bool isFactory, const fs::path &subPath, const std::string &name) const;
 
     //==============================================================================
     void paint(juce::Graphics &) override;
@@ -122,6 +133,12 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     std::vector<Surge::Storage::FxUserPreset::Preset> currentPresets;
     int currentPresetIndex{-1};
     int lastSeenEffectType{-1};
+
+    // The user preset being saved. If saving asks for an overwrite confirmation, the save
+    // is only finished once the user has confirmed it.
+    fs::path pendingSaveSubPath;
+    std::string pendingSaveName;
+    bool awaitingSaveConfirmation{false};
 
     int defaultPresetIndexForCurrentType() const { return currentPresets.empty() ? -1 : 0; }
 

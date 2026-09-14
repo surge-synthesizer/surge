@@ -82,13 +82,25 @@ struct PickerBase : public juce::Component
         g.setColour(edge.withAlpha(0.5f));
         g.drawLine(splitX, bounds.getY() + 4, splitX, bounds.getBottom() - 4, 1.f);
 
-        g.setColour(textCol);
-        g.setFont(SST_JUCE_FONT_OPTIONS(pickerFontSize * editor->getImpliedZoom()));
-        auto labelRect = bounds.withWidth(splitX - bounds.getX() - 4.f);
-        g.drawText(currentLabel(), labelRect.reduced(8, 3), juce::Justification::centred, true);
+        if (!isLabelHidden())
+        {
+            g.setColour(textCol);
+            g.setFont(SST_JUCE_FONT_OPTIONS(pickerFontSize * editor->getImpliedZoom()));
+            g.drawText(currentLabel(), labelBounds(), juce::Justification::centred, true);
+        }
 
         drawUpDownArrows(g, bounds.withLeft(splitX), textCol);
     }
+
+    // The area left of the divider where the label is drawn
+    juce::Rectangle<float> labelBounds() const
+    {
+        auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
+
+        return bounds.withWidth(arrowSplitX() - bounds.getX() - 4.f).reduced(8, 3);
+    }
+
+    virtual bool isLabelHidden() const { return false; }
 
     bool keyPressed(const juce::KeyPress &p) override
     {
@@ -244,22 +256,136 @@ struct Picker : public PickerBase
     }
 };
 
-struct PresetPicker : public PickerBase
+struct PresetPicker : public PickerBase, juce::TextEditor::Listener
 {
     PresetPicker(SurgefxAudioProcessorEditor *ed) : PickerBase(ed, "FX Preset") {}
+
+    std::unique_ptr<juce::TextEditor> nameEditor;
+    std::function<void(const std::string &)> onNameCommit;
+    bool editingName{false};
+
+    // Turns the label into a text field. Enter hands the typed text to onCommit, while
+    // Escape or clicking elsewhere cancels.
+    void beginNameEdit(const std::string &initialText,
+                       std::function<void(const std::string &)> onCommit)
+    {
+        if (!nameEditor)
+        {
+            auto textCol = findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay);
+            auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
+
+            nameEditor = std::make_unique<juce::TextEditor>();
+            nameEditor->setColour(juce::TextEditor::backgroundColourId,
+                                  juce::Colours::transparentBlack);
+            nameEditor->setColour(juce::TextEditor::outlineColourId,
+                                  juce::Colours::transparentBlack);
+            nameEditor->setColour(juce::TextEditor::focusedOutlineColourId,
+                                  juce::Colours::transparentBlack);
+            nameEditor->setColour(juce::TextEditor::textColourId, textCol);
+            nameEditor->setColour(juce::TextEditor::highlightColourId, edge.withAlpha(0.5f));
+            nameEditor->setColour(juce::TextEditor::highlightedTextColourId, textCol);
+            nameEditor->setColour(juce::CaretComponent::caretColourId, textCol);
+            nameEditor->setJustification(juce::Justification::centred);
+            nameEditor->setIndents(0, 0);
+            nameEditor->setSelectAllWhenFocused(true);
+            nameEditor->addListener(this);
+            addChildComponent(*nameEditor);
+        }
+
+        onNameCommit = std::move(onCommit);
+        editingName = true;
+
+        resized();
+        nameEditor->setText(initialText, juce::NotificationType::dontSendNotification);
+        nameEditor->setVisible(true);
+        repaint();
+
+        // Grab focus once the popup menu that started this has fully gone away, so it
+        // can't take focus back
+        juce::MessageManager::callAsync([w = juce::Component::SafePointer<PresetPicker>(this)]() {
+            if (w && w->editingName)
+            {
+                w->nameEditor->grabKeyboardFocus();
+            }
+        });
+    }
+
+    void endNameEdit(bool commit)
+    {
+        if (!editingName)
+        {
+            return;
+        }
+
+        // Cleared before hiding, since hiding the focused editor reports a focus loss
+        editingName = false;
+
+        auto text = nameEditor->getText().toStdString();
+        auto cb = std::move(onNameCommit);
+        onNameCommit = nullptr;
+
+        nameEditor->setVisible(false);
+        repaint();
+
+        if (commit && cb)
+        {
+            cb(text);
+        }
+    }
+
+    void resized() override
+    {
+        if (nameEditor)
+        {
+            auto font =
+                juce::Font(SST_JUCE_FONT_OPTIONS(pickerFontSize * editor->getImpliedZoom()));
+
+            nameEditor->setFont(font);
+            nameEditor->applyFontToAllText(font);
+            nameEditor->setBounds(labelBounds().toNearestIntEdges());
+        }
+    }
+
+    bool isLabelHidden() const override { return editingName; }
+
+    void textEditorReturnKeyPressed(juce::TextEditor &) override { endNameEdit(true); }
+    void textEditorEscapeKeyPressed(juce::TextEditor &) override { endNameEdit(false); }
+    void textEditorFocusLost(juce::TextEditor &) override { endNameEdit(false); }
 
     std::string currentLabel() const override
     {
         if (editor->currentPresetIndex < 0 || editor->currentPresets.empty() ||
             editor->currentPresetIndex >= (int)editor->currentPresets.size())
         {
-            return "- Init -";
+            // A stored name that isn't in the list means the loaded settings came from a
+            // preset that no longer exists, for example one that was just deleted
+            return editor->processor.getCurrentPresetName().empty() ? "- Init -" : "Unsaved";
         }
         return editor->currentPresets[editor->currentPresetIndex].name;
     }
 
     void openMenu() override { editor->showPresetMenu(); }
-    void step(int direction) override { editor->stepPreset(direction); }
+
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        // Right-click is a shortcut for Save FX Preset As...
+        if (e.mods.isPopupMenu())
+        {
+            editor->saveCurrentPreset();
+            return;
+        }
+
+        PickerBase::mouseDown(e);
+    }
+
+    void step(int direction) override
+    {
+        // Keeps the mouse wheel from changing presets underneath the name being typed
+        if (!editingName)
+        {
+            editor->stepPreset(direction);
+        }
+    }
 };
 
 //==============================================================================
@@ -311,6 +437,47 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
+
+    // Without this, the storage's default provider silently answers OK, so saving
+    // an FX preset under an existing name would overwrite it without asking
+    processor.storage->okCancelProvider =
+        [w = juce::Component::SafePointer(this)](
+            const std::string &msg, const std::string &title, SurgeStorage::OkCancel def,
+            std::function<void(SurgeStorage::OkCancel)> callback) {
+            if (!w)
+            {
+                callback(SurgeStorage::CANCEL);
+                return;
+            }
+
+            w->awaitingSaveConfirmation = !w->pendingSaveName.empty();
+
+            auto options = juce::MessageBoxOptions()
+                               .withIconType(juce::MessageBoxIconType::QuestionIcon)
+                               .withTitle(title)
+                               .withMessage(msg)
+                               .withButton("OK")
+                               .withButton("Cancel")
+                               .withAssociatedComponent(w);
+
+            juce::AlertWindow::showAsync(options, [w, callback](int result) {
+                const bool ok = result == 1;
+
+                callback(ok ? SurgeStorage::OK : SurgeStorage::CANCEL);
+
+                if (w && w->awaitingSaveConfirmation)
+                {
+                    w->awaitingSaveConfirmation = false;
+
+                    if (ok)
+                    {
+                        w->finishPresetSave();
+                    }
+
+                    w->pendingSaveName.clear();
+                }
+            });
+        };
 
     fxPresetManager = std::make_unique<Surge::Storage::FxUserPreset>();
     fxPresetManager->doPresetRescan(processor.storage.get());
@@ -570,6 +737,7 @@ SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
     setLookAndFeel(nullptr);
     this->processor.setParameterChangeListener([]() {});
     this->processor.storage->removeErrorListener(this);
+    this->processor.storage->clearOkCancelProvider();
 }
 
 void SurgefxAudioProcessorEditor::parentHierarchyChanged()
@@ -860,15 +1028,53 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
 
     auto p = juce::PopupMenu();
 
-    if (currentPresets.empty())
-    {
-        p.addItem("No presets available", false, false, []() {});
+    auto addFunctionsAndShow = [this, &p]() {
+        p.addColumnBreak();
+        p.addSectionHeader("FUNCTIONS");
+
+        p.addItem(Surge::GUI::toOSCase("Save FX Preset As..."),
+                  [w = juce::Component::SafePointer(this)]() {
+                      if (w)
+                      {
+                          w->saveCurrentPreset();
+                      }
+                  });
+
+        if (currentPresetIndex >= 0 && currentPresetIndex < (int)currentPresets.size() &&
+            !currentPresets[currentPresetIndex].isFactory &&
+            !currentPresets[currentPresetIndex].file.empty())
+        {
+            p.addItem(Surge::GUI::toOSCase("Delete FX Preset"),
+                      [w = juce::Component::SafePointer(this)]() {
+                          if (w)
+                          {
+                              w->deleteCurrentPreset();
+                          }
+                      });
+        }
+
+        p.addSeparator();
+
+        p.addItem(Surge::GUI::toOSCase("Refresh FX Preset List"),
+                  [w = juce::Component::SafePointer(this)]() {
+                      if (w)
+                      {
+                          w->refreshPresetList();
+                      }
+                  });
 
         auto o =
             juce::PopupMenu::Options()
                 .withTargetComponent(presetPicker.get())
                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
+
         p.showMenuAsync(o);
+    };
+
+    if (currentPresets.empty())
+    {
+        p.addItem("No presets available", false, false, []() {});
+        addFunctionsAndShow();
         return;
     }
 
@@ -924,7 +1130,7 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
             firstSection = false;
             flatItemsInColumn = 0;
 
-            p.addSectionHeader(preset.isFactory ? "Factory" : "User");
+            p.addSectionHeader(preset.isFactory ? "FACTORY" : "USER");
             lastIsFactory = preset.isFactory;
             currentSubMenuPath.clear();
         }
@@ -957,12 +1163,178 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
     }
 
     flushSubMenu();
+    addFunctionsAndShow();
+}
 
-    auto o = juce::PopupMenu::Options()
-                 .withTargetComponent(presetPicker.get())
-                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
+void SurgefxAudioProcessorEditor::saveCurrentPreset()
+{
+    if (!presetPicker)
+    {
+        return;
+    }
 
-    p.showMenuAsync(o);
+    // Start from the current preset, subfolders included, so overwriting it is just Enter
+    std::string initialText;
+
+    if (currentPresetIndex >= 0 && currentPresetIndex < (int)currentPresets.size())
+    {
+        const auto &preset = currentPresets[currentPresetIndex];
+
+        initialText = path_to_string(preset.subPath);
+        std::replace(initialText.begin(), initialText.end(), '\\', '/');
+
+        if (!initialText.empty())
+        {
+            initialText += "/";
+        }
+
+        initialText += preset.name;
+    }
+
+    presetPicker->beginNameEdit(initialText,
+                                [w = juce::Component::SafePointer(this)](const std::string &name) {
+                                    if (!w || name.empty())
+                                    {
+                                        return;
+                                    }
+
+                                    // Match how saveFxIn() lays the file out: anything before the
+                                    // last separator becomes subfolders, which is exactly the
+                                    // subPath the rescan reports back
+                                    auto sp = string_to_path(name);
+
+                                    w->pendingSaveSubPath = sp.parent_path();
+                                    w->pendingSaveName = path_to_string(sp.filename());
+                                    w->awaitingSaveConfirmation = false;
+
+                                    w->processor.saveFxPreset(*w->fxPresetManager, name);
+
+                                    // If the preset already existed, the save waits for the
+                                    // overwrite confirmation, which finishes it from
+                                    // okCancelProvider instead
+                                    if (!w->awaitingSaveConfirmation)
+                                    {
+                                        w->finishPresetSave();
+                                        w->pendingSaveName.clear();
+                                    }
+                                });
+}
+
+void SurgefxAudioProcessorEditor::finishPresetSave()
+{
+    // saveFxIn() has already rescanned. If the save failed (for example because of an
+    // invalid name), the saved preset won't be found and the previous selection stays.
+    rebuildCurrentPresetsKeepingSelection();
+
+    auto idx = findPresetIndex(false, pendingSaveSubPath, pendingSaveName);
+
+    if (idx >= 0)
+    {
+        currentPresetIndex = idx;
+        processor.setCurrentPresetName(currentPresets[idx].name);
+
+        if (presetPicker)
+        {
+            presetPicker->repaint();
+        }
+    }
+}
+
+void SurgefxAudioProcessorEditor::deleteCurrentPreset()
+{
+    if (currentPresetIndex < 0 || currentPresetIndex >= (int)currentPresets.size())
+    {
+        return;
+    }
+
+    const auto file = currentPresets[currentPresetIndex].file;
+
+    if (currentPresets[currentPresetIndex].isFactory || file.empty())
+    {
+        return;
+    }
+
+    // Shown relative to the user FX presets folder, which is all that tells presets apart
+    auto shownPath =
+        path_to_string(string_to_path(file).lexically_relative(processor.storage->userFXPath));
+
+    if (shownPath.empty())
+    {
+        shownPath = file;
+    }
+
+    auto options =
+        juce::MessageBoxOptions()
+            .withIconType(juce::MessageBoxIconType::WarningIcon)
+            .withTitle("Delete FX Preset")
+            .withMessage("Do you really want to delete\n" + shownPath + "?\nThis cannot be undone!")
+            .withButton("OK")
+            .withButton("Cancel")
+            .withAssociatedComponent(this);
+
+    juce::AlertWindow::showAsync(
+        options, [w = juce::Component::SafePointer(this), file](int result) {
+            if (!w || result != 1)
+            {
+                return;
+            }
+
+            try
+            {
+                fs::remove(string_to_path(file));
+            }
+            catch (const fs::filesystem_error &e)
+            {
+                std::ostringstream oss;
+                oss << "Experienced filesystem error while deleting FX preset " << e.what();
+                w->processor.storage->reportError(oss.str(), "Filesystem Error");
+                return;
+            }
+
+            // The deleted preset is no longer found, so this clears the selection. Its name stays
+            // stored, which is what makes the picker show the settings as Unsaved.
+            w->refreshPresetList();
+        });
+}
+
+void SurgefxAudioProcessorEditor::refreshPresetList()
+{
+    fxPresetManager->doPresetRescan(processor.storage.get(), true);
+    rebuildCurrentPresetsKeepingSelection();
+}
+
+void SurgefxAudioProcessorEditor::rebuildCurrentPresetsKeepingSelection()
+{
+    const bool hadCurrent =
+        currentPresetIndex >= 0 && currentPresetIndex < (int)currentPresets.size();
+    const auto previous =
+        hadCurrent ? currentPresets[currentPresetIndex] : Surge::Storage::FxUserPreset::Preset{};
+
+    rebuildCurrentPresets();
+
+    currentPresetIndex =
+        hadCurrent ? findPresetIndex(previous.isFactory, previous.subPath, previous.name) : -1;
+
+    if (presetPicker)
+    {
+        presetPicker->repaint();
+    }
+}
+
+int SurgefxAudioProcessorEditor::findPresetIndex(bool isFactory, const fs::path &subPath,
+                                                 const std::string &name) const
+{
+    for (int i = 0; i < (int)currentPresets.size(); ++i)
+    {
+        const auto &p = currentPresets[i];
+
+        if (p.isFactory == isFactory && p.subPath == subPath && p.name == name)
+        {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 //==============================================================================

@@ -145,6 +145,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void setStateInformation(const void *data, int sizeInBytes) override;
 
     void setCurrentPresetName(const std::string &name) { currentPresetName = name; }
+    const std::string &getCurrentPresetName() const { return currentPresetName; }
 
     std::string consumePendingPresetName()
     {
@@ -412,6 +413,10 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     // changing the effect type, via resetFxType(). Violating this is a bug
     // at the call site, asserted via jassert rather than handled here.
     void loadFxPreset(const Surge::Storage::FxUserPreset::Preset &p);
+
+    // Saves the current effect's parameter values as a user FX preset. The given
+    // preset manager is the one rescanned once the file has been written.
+    void saveFxPreset(Surge::Storage::FxUserPreset &presetManager, const std::string &name);
 
     // Members for the FX. If this looks a lot like surge-rack/SurgeFX.hpp that's not a coincidence
     std::unique_ptr<SurgeStorage> storage;
