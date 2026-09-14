@@ -1664,7 +1664,13 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
 #ifndef SURGE_SKIP_ODDSOUND_MTS
         if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
         {
-            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
+            // Match getPitch(), so the glide starts from where the prior key would sound
+            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk,
+                                          state.mtsUseChannelWhenRetuning ? channel : -1);
+
+            if (storage->mapChannelToOctave && !mpeEnabled)
+                lk = channelKeyEquivalent(lk, state.channel, storage, false);
+
             state.portasrc_key = lk;
         }
         else
