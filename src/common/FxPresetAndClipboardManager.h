@@ -28,6 +28,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <functional>
 
 namespace Surge
 {
@@ -76,7 +77,10 @@ struct FxUserPreset
     bool hasPresetsForSingleType(int type_id);
     bool readFromXMLSnapshot(Preset &p, TiXmlElement *);
 
-    void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn);
+    // onSaved is called with the written file once the save has happened, which can be after an
+    // overwrite confirmation or not at all if the save is canceled or fails
+    void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn,
+                  std::function<void(const fs::path &)> onSaved = nullptr);
 
     void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
 };

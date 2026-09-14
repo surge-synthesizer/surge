@@ -250,7 +250,8 @@ bool FxUserPreset::hasPresetsForSingleType(int id)
     return scannedPresets.find(id) != scannedPresets.end();
 }
 
-void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
+void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s,
+                            std::function<void(const fs::path &)> onSaved)
 {
     try
     {
@@ -280,7 +281,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 
         fs::create_directories(storagePath);
 
-        auto doSave = [this, outputPath, storage, fx, fnp]() {
+        auto doSave = [this, outputPath, storage, fx, fnp, onSaved]() {
             std::ofstream pfile(outputPath, std::ios::out);
             if (!pfile.is_open())
             {
@@ -356,6 +357,11 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
             pfile.close();
 
             doPresetRescan(storage, true);
+
+            if (onSaved)
+            {
+                onSaved(outputPath);
+            }
         };
 
         if (fs::exists(outputPath))
