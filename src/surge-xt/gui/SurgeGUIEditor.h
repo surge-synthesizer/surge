@@ -674,6 +674,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     int selectedFX[n_fx_slots];
     std::string fxPresetName[n_fx_slots];
+    // The user FX preset file each slot was loaded from, which is what Delete FX Preset removes
+    std::string fxPresetUserFile[n_fx_slots];
 
   private:
     std::function<void(SurgeGUIEditor *, bool resizeWindow)> zoom_callback;

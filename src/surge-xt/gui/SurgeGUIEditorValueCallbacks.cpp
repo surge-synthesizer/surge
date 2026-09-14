@@ -3975,6 +3975,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             if (fxMenu->selectedIdx >= 0 && fxMenu->selectedIdx != selectedFX[current_fx])
                 selectedFX[current_fx] = fxMenu->selectedIdx;
 
+            fxPresetUserFile[current_fx] = fxMenu->selectedUserPresetFile;
+
             if (fxPresetLabel)
             {
                 fxPresetLabel->setText(fxMenu->selectedName.c_str(), juce::dontSendNotification);
@@ -4048,6 +4050,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         // queue_refresh = true;
         synth->fx_reload[limit_range(current_fx, 0, n_fx_slots - 1)] = true;
         synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+
+        if (fxMenu)
+        {
+            fxPresetUserFile[current_fx] = fxMenu->selectedUserPresetFile;
+        }
 
         if (fxMenu && fxMenu->selectedIdx >= 0)
         {

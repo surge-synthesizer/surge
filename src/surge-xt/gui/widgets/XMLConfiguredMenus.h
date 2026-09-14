@@ -241,6 +241,10 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void copyFX();
     void pasteFX();
     void saveFX();
+    void deleteFX();
+
+    // The file of the user FX preset loaded last, empty if the last load wasn't one
+    std::string selectedUserPresetFile;
 
     static Surge::FxClipboard::ChainClipboard fxChainClipboard;
 

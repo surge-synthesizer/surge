@@ -125,10 +125,18 @@ struct UndoManagerImpl
         int scene;
         OscillatorStorage::ExtraConfigurationData extraConfig;
     };
+    // What the editor knows about the preset an FX slot was loaded from
+    struct UndoFXPresetInfo
+    {
+        std::string name;
+        std::string userFile;
+        int selectedIdx{-1};
+    };
     struct UndoFX
     {
         int fxslot;
         int type;
+        UndoFXPresetInfo presetInfo;
         std::vector<UndoParam> undoParamValues;
         std::vector<UndoModulation> undoModulations;
         std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
@@ -212,6 +220,7 @@ struct UndoManagerImpl
         void *data{nullptr};
         size_t dataSz{0};
         fs::path path{};
+        std::array<UndoFXPresetInfo, n_fx_slots> fxPresetInfo;
     };
     struct UndoFilterAnalysisMovement
     {
@@ -707,6 +716,7 @@ struct UndoManagerImpl
         auto r = UndoFX();
         r.fxslot = fxslot;
         r.type = fx->type.val.i;
+        r.presetInfo = getFXPresetInfo(fxslot);
         r.user_data = fx->user_data;
 
         for (int i = 0; i < n_fx_params; ++i)
@@ -888,12 +898,38 @@ struct UndoManagerImpl
             pushRedo(r);
     }
 
+    // Preset names and files are held by the editor rather than the patch, so they are
+    // recorded alongside the FX state. Otherwise undo leaves a slot claiming to be loaded from
+    // a preset it no longer uses, which Delete FX Preset would then offer to delete.
+    // The preset list index is kept too, so jogging carries on from the restored preset.
+    UndoFXPresetInfo getFXPresetInfo(int fxslot)
+    {
+        auto r = UndoFXPresetInfo();
+        r.name = editor->fxPresetName[fxslot];
+        r.userFile = editor->fxPresetUserFile[fxslot];
+        r.selectedIdx = editor->selectedFX[fxslot];
+        return r;
+    }
+
+    void setFXPresetInfo(int fxslot, const UndoFXPresetInfo &info)
+    {
+        editor->fxPresetName[fxslot] = info.name;
+        editor->fxPresetUserFile[fxslot] = info.userFile;
+        editor->selectedFX[fxslot] = info.selectedIdx;
+    }
+
     void pushPatch(UndoManager::Target to = UndoManager::UNDO)
     {
         auto r = UndoPatch();
         r.data = nullptr;
         r.dataSz = 0;
         r.path = fs::path{};
+
+        for (int i = 0; i < n_fx_slots; ++i)
+        {
+            r.fxPresetInfo[i] = getFXPresetInfo(i);
+        }
+
         static int qq = 0;
         bool doStream = editor->getPatch().isDirty;
         if (!doStream)
@@ -1158,6 +1194,8 @@ struct UndoManagerImpl
 
             int cge = p->fxslot;
 
+            setFXPresetInfo(cge, p->presetInfo);
+
             synth->fxsync[cge].type.val.i = p->type;
             synth->fxsync[cge].user_data = p->user_data;
             Effect *t_fx = spawn_effect(synth->fxsync[cge].type.val.i, &synth->storage,
@@ -1286,6 +1324,12 @@ struct UndoManagerImpl
         {
             pushPatch(opposite);
             auto g = SelfPushGuard(this);
+
+            for (int i = 0; i < n_fx_slots; ++i)
+            {
+                setFXPresetInfo(i, p->fxPresetInfo[i]);
+            }
+
             if (p->dataSz == 0)
             {
                 editor->queuePatchFileLoad(p->path.u8string());
