@@ -76,6 +76,10 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void refreshPresetList();
     void rebuildCurrentPresetsKeepingSelection();
 
+    // Selects the preset the processor's stored name refers to, or the default one if no
+    // name is stored. Nothing is selected if the named preset no longer exists.
+    void selectPresetByStoredName();
+
     // Presets are looked up by identity rather than kept by index, since a rescan can shift
     // the list. Returns -1 if there is no such preset.
     int findPresetIndex(bool isFactory, const fs::path &subPath, const std::string &name) const;

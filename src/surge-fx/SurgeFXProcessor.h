@@ -144,8 +144,18 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
-    void setCurrentPresetName(const std::string &name) { currentPresetName = name; }
-    const std::string &getCurrentPresetName() const { return currentPresetName; }
+    // The name of the preset the current settings came from, empty if there is none
+    void setCurrentPresetName(const std::string &name)
+    {
+        currentPresetName = name;
+        fxTypeChangedByHost = false;
+    }
+
+    // Once the host has changed the effect type, the settings no longer come from that preset
+    std::string getCurrentPresetName() const
+    {
+        return fxTypeChangedByHost ? std::string() : currentPresetName;
+    }
 
     std::string consumePendingPresetName()
     {
@@ -560,6 +570,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     std::string currentPresetName;
     std::string pendingPresetName;
+
+    // Set on the audio thread, where the name itself can't be touched
+    std::atomic<bool> fxTypeChangedByHost{false};
 
     void prepareParametersAbsentAudio();
     void setParameterByString(int i, const std::string &s);

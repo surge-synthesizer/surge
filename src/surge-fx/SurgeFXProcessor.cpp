@@ -385,6 +385,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     {
         effectNum = pt;
         resetFxType(effectNum);
+        fxTypeChangedByHost = true;
     }
 
     if (audio_thread_surge_effect.get() != surge_effect.get())
@@ -615,7 +616,7 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
     xml->setAttribute("fxt", effectNum);
     xml->setAttribute("oscpin", oscPortIn);
     xml->setAttribute("oscin", oscStartIn);
-    xml->setAttribute("currentPresetName", juce::String(currentPresetName));
+    xml->setAttribute("currentPresetName", juce::String(getCurrentPresetName()));
 
     copyXmlToBinary(*xml, destData);
 }
@@ -714,7 +715,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
             updateJuceParamsFromStorage();
 
             auto nm = xmlState->getStringAttribute("currentPresetName", "").toStdString();
-            currentPresetName = nm;
+            setCurrentPresetName(nm);
             pendingPresetName = nm;
         }
     }
