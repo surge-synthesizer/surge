@@ -484,7 +484,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     rebuildCurrentPresets();
 
-    currentPresetIndex = defaultPresetIndexForCurrentType();
+    // The editor can be closed and reopened at any time, so pick up whichever preset the
+    // processor says is loaded
+    selectPresetByStoredName();
     lastSeenEffectType = processor.getEffectType();
 
     presetPicker = std::make_unique<PresetPicker>(this);
@@ -832,7 +834,9 @@ void SurgefxAudioProcessorEditor::setEffectType(int i)
     processor.resetFxType(i);
     blastToggleState(i - 1);
 
-    // Rebuild preset list for the new FX type and reset selection
+    // Rebuild preset list for the new FX type and reset selection. The settings are the new
+    // type's defaults now, not the previously loaded preset.
+    processor.setCurrentPresetName("");
     rebuildCurrentPresets();
     currentPresetIndex = defaultPresetIndexForCurrentType();
     lastSeenEffectType = i;
@@ -880,7 +884,10 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
                     lastSeenEffectType = newType;
                     blastToggleState(newType - 1);
                     rebuildCurrentPresets();
-                    currentPresetIndex = defaultPresetIndexForCurrentType();
+
+                    // A host type change has already dropped the stored name, while a state
+                    // restore has just set the one to select
+                    selectPresetByStoredName();
                     resetLabels();
                 }
             }
@@ -1318,6 +1325,28 @@ void SurgefxAudioProcessorEditor::rebuildCurrentPresetsKeepingSelection()
     if (presetPicker)
     {
         presetPicker->repaint();
+    }
+}
+
+void SurgefxAudioProcessorEditor::selectPresetByStoredName()
+{
+    const auto name = processor.getCurrentPresetName();
+
+    if (name.empty())
+    {
+        currentPresetIndex = defaultPresetIndexForCurrentType();
+        return;
+    }
+
+    currentPresetIndex = -1;
+
+    for (int i = 0; i < (int)currentPresets.size(); ++i)
+    {
+        if (currentPresets[i].name == name)
+        {
+            currentPresetIndex = i;
+            break;
+        }
     }
 }
 
@@ -1914,17 +1943,7 @@ void SurgefxAudioProcessorEditor::idle()
     if (!pending.empty())
     {
         rebuildCurrentPresets();
-        currentPresetIndex = -1;
-
-        for (int i = 0; i < (int)currentPresets.size(); ++i)
-        {
-            if (currentPresets[i].name == pending)
-            {
-                currentPresetIndex = i;
-                break;
-            }
-        }
-
+        selectPresetByStoredName();
         resetLabels();
     }
 }
