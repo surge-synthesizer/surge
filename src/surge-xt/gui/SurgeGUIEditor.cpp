@@ -392,6 +392,7 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     {
         selectedFX[i] = -1;
         fxPresetName[i] = "";
+        fxPresetUserFile[i] = "";
     }
 
     for (auto i = 0; i < n_scenes; ++i)
@@ -968,6 +969,7 @@ void SurgeGUIEditor::idle()
             for (int i = 0; i < n_fx_slots; ++i)
             {
                 fxPresetName[i] = "";
+                fxPresetUserFile[i] = "";
             }
 
             if (!firstTimePatchLoad)
@@ -5482,6 +5484,7 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
         {
             synth->enqueueFXOff(fxslot_order[i]);
             effectChooser->setEffectSlotDeactivation(fxslot_order[i], false);
+            fxPresetUserFile[fxslot_order[i]] = "";
         }
     }
 }
@@ -5497,18 +5500,22 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
     undoManager()->pushPatch();
 
     auto t = fxPresetName[target];
+    auto tf = fxPresetUserFile[target];
 
     fxPresetName[target] = fxPresetName[source];
+    fxPresetUserFile[target] = fxPresetUserFile[source];
 
     if (m == SurgeSynthesizer::FXReorderMode::SWAP)
     {
         fxPresetName[source] = t;
+        fxPresetUserFile[source] = tf;
     }
 
     if (m == SurgeSynthesizer::FXReorderMode::MOVE ||
         (source == target && m == SurgeSynthesizer::FXReorderMode::NONE))
     {
         fxPresetName[source] = "";
+        fxPresetUserFile[source] = "";
     }
 
     synth->reorderFx(source, target, m);

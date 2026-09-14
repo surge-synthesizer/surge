@@ -743,6 +743,8 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     {
         sge->undoManager()->pushFX(current_fx);
     }
+    selectedUserPresetFile = "";
+
     if (type > -1)
     {
         fxbuffer->type.val.i = type;
@@ -832,6 +834,15 @@ static void buildChainSlotPtrs(SurgeGUIEditor *sge, int current_fx,
         slots[i] = &patch.fx[idx];
         bufs[i] = &sge->synth->fxsync[idx];
         names[i] = sge->fxPresetName[idx];
+    }
+}
+
+// Loading or pasting a whole chain replaces what its slots were loaded from
+static void clearChainUserPresetFiles(SurgeGUIEditor *sge, int current_fx)
+{
+    for (int i = 0; i < n_fx_per_chain; ++i)
+    {
+        sge->fxPresetUserFile[fxslot_order[fxSlotToChain(current_fx) * n_fx_per_chain + i]] = "";
     }
 }
 
@@ -946,6 +957,16 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     if (fx->type.val.i != fxt_off)
     {
         menu.addItem(Surge::GUI::toOSCase("Save FX Preset As..."), [this]() { this->saveFX(); });
+
+        // The file can be gone while still recorded, for example after undoing back past a
+        // load of a preset that has since been deleted
+        std::error_code ec;
+
+        if (sge && !sge->fxPresetUserFile[current_fx].empty() &&
+            fs::exists(string_to_path(sge->fxPresetUserFile[current_fx]), ec))
+        {
+            menu.addItem(Surge::GUI::toOSCase("Delete FX Preset"), [this]() { this->deleteFX(); });
+        }
     }
 
     if (showPresetsOnlyFor == -1)
@@ -1023,6 +1044,7 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
                     buildChainSlotPtrs(sge, cur_fx, slots, bufs, names);
 
                     storage->fxChainUserPreset->loadPresetOnto(cp, storage, bufs);
+                    clearChainUserPresetFiles(sge, cur_fx);
 
                     sge->synth->load_fx_needed = true;
                     storage->getPatch().isDirty = true;
@@ -1099,6 +1121,7 @@ void FxMenu::pasteFX()
     Surge::FxClipboard::pasteFx(storage, fxbuffer, fxClipboard);
 
     selectedName = std::string("Copied ") + fx_type_shortnames[fxbuffer->type.val.i];
+    selectedUserPresetFile = "";
 
     notifyValueChanged();
 }
@@ -1121,6 +1144,58 @@ void FxMenu::saveFX()
             },
             this);
     }
+}
+
+void FxMenu::deleteFX()
+{
+    auto *sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (!sge || sge->fxPresetUserFile[current_fx].empty())
+    {
+        return;
+    }
+
+    const auto slot = current_fx;
+    const auto file = sge->fxPresetUserFile[slot];
+
+    // Shown relative to the user FX presets folder, which is all that tells presets apart
+    auto shownPath = path_to_string(string_to_path(file).lexically_relative(storage->userFXPath));
+
+    if (shownPath.empty())
+    {
+        shownPath = file;
+    }
+
+    sge->alertOKCancel("Delete FX Preset",
+                       "Do you really want to delete\n" + shownPath + "?\nThis cannot be undone!",
+                       [this, sge, slot, file]() {
+                           try
+                           {
+                               fs::remove(string_to_path(file));
+                           }
+                           catch (const fs::filesystem_error &e)
+                           {
+                               std::ostringstream oss;
+                               oss << "Experienced filesystem error while deleting FX preset "
+                                   << e.what();
+                               storage->reportError(oss.str(), "Filesystem Error");
+                               return;
+                           }
+
+                           storage->fxUserPreset->doPresetRescan(storage, true);
+
+                           // The slot keeps the deleted preset's settings, which no longer come
+                           // from any preset. The rescan also shifted the preset list, so jogging
+                           // starts over from the top.
+                           sge->fxPresetUserFile[slot] = "";
+                           sge->fxPresetName[slot] = "Unsaved";
+                           sge->selectedFX[slot] = -1;
+                           selectedUserPresetFile = "";
+
+                           // Lays the preset name label out again from fxPresetName, like Refresh
+                           // FX Preset List
+                           sge->queueRebuildUI();
+                       });
 }
 
 //////////
@@ -1157,6 +1232,7 @@ void FxMenu::pasteChain()
     buildChainSlotPtrs(sge, current_fx, slots, bufs, names);
 
     Surge::FxClipboard::pasteFxChain(storage, bufs, fxChainClipboard);
+    clearChainUserPresetFiles(sge, current_fx);
 
     storage->getPatch().isDirty = true;
     sge->queueRebuildUI();
@@ -1230,6 +1306,7 @@ void FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
 
     selectedIdx = -1;
     selectedName = p.name;
+    selectedUserPresetFile = p.isFactory ? "" : p.file;
 
     notifyValueChanged();
 }
