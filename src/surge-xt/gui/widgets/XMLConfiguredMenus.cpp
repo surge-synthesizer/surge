@@ -183,6 +183,9 @@ void XMLMenuPopulator::buildPopupMenu(int filterType)
         bool hasFac{false};
         bool colBreak{false};
 
+        // Normally the factory and user headers only tell the two apart when both exist
+        bool alwaysShowPresetHeaders{false};
+
         void addByPath(const Item &i, int idx, int depth = 0)
         {
             if (i.pathElements.size() == depth)
@@ -263,12 +266,30 @@ void XMLMenuPopulator::buildPopupMenu(int filterType)
         void buildJuceMenu(juce::PopupMenu &m, XMLMenuPopulator *host)
         {
             bool inFac = true;
+            const bool showPresetHeaders =
+                depth == 1 && ((hasFac && hasUser) || alwaysShowPresetHeaders);
 
-            if (depth == 1 && hasFac && hasUser)
+            if (showPresetHeaders && hasFac)
             {
                 Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(m,
                                                                                 "FACTORY PRESETS");
             }
+
+            // User presets come after the factory ones, either directly or in their own folders
+            auto beginUserSectionIfNeeded = [&]() {
+                if (inFac && showPresetHeaders)
+                {
+                    inFac = false;
+
+                    if (hasFac)
+                    {
+                        m.addColumnBreak();
+                    }
+
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(m,
+                                                                                    "USER PRESETS");
+                }
+            };
 
             for (auto c : children)
             {
@@ -330,13 +351,7 @@ void XMLMenuPopulator::buildPopupMenu(int filterType)
                 break;
                 case USPS:
                 {
-                    if (inFac && depth == 1 && hasFac && hasUser)
-                    {
-                        inFac = false;
-                        m.addColumnBreak();
-                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                            m, "USER PRESETS");
-                    }
+                    beginUserSectionIfNeeded();
                     auto idx = c->idx;
                     m.addItem(c->name, [host, n = c->name, idx]() { host->loadByIndex(n, idx); });
                 }
@@ -355,6 +370,11 @@ void XMLMenuPopulator::buildPopupMenu(int filterType)
                 break;
                 case FOLD:
                 {
+                    if (c->hasUser && !c->hasFac)
+                    {
+                        beginUserSectionIfNeeded();
+                    }
+
                     auto subM = juce::PopupMenu();
                     c->buildJuceMenu(subM, host);
                     m.addSubMenu(c->name, subM, true, nullptr, isChecked);
@@ -406,6 +426,10 @@ void XMLMenuPopulator::buildPopupMenu(int filterType)
         // "FACTORY PRESETS" / "USER PRESETS" headers and column break behave exactly as
         // they do when this same content is shown nested inside that folder's submenu.
         rootTree->depth = 1;
+
+        // Here the presets sit next to the FUNCTIONS column, so they get a header even when
+        // there are only factory or only user presets
+        rootTree->alwaysShowPresetHeaders = true;
     }
 
     rootTree->updateFacUserFlag();
