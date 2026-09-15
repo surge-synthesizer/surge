@@ -62,6 +62,8 @@ class SineOscillator : public Oscillator
     using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc sine[MAX_UNISON];
     double phase[MAX_UNISON];
+    double omegaPrior[MAX_UNISON];
+    bool omegaPriorValid = false;
     Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
     Surge::Oscillator::CharacterFilter<float> charFilt;
     float fb_val;

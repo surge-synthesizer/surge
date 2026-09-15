@@ -38,6 +38,7 @@ void FM3Oscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     oldout1 = 0.f;
     oldout2 = 0.f;
     driftLFO.init(nonzero_init_drift);
+    omegaPriorValid = false;
     fb_val = 0.f;
     fb_mode = 0;
     AM.set_phase(phase);
@@ -77,6 +78,22 @@ void FM3Oscillator::process_block_internal(float pitch, float drift, float fmdep
 {
     auto driftlfo = driftLFO.next() * drift;
     double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
+
+    /*
+     * Ramp the carrier's phase increment across the block, centered on this block's omega, so
+     * that pitch modulation doesn't put sidebands at the block rate. See SineOscillator for why
+     * the ramp is centered. The modulators are ramped the same way inside SurgeQuadrOscRamped.
+     */
+    if (!omegaPriorValid)
+    {
+        omegaPrior = omega;
+        omegaPriorValid = true;
+    }
+
+    double omegaStep = (omega - omegaPrior) * BLOCK_SIZE_OS_INV;
+    double omegaCurr = omega - omegaStep * 0.5 * (BLOCK_SIZE_OS - 1);
+    omegaPrior = omega;
+
     auto m1 = oscdata->p[fm3_m1ratio].get_extended(
         localcopy[oscdata->p[fm3_m1ratio].param_id_in_scene].f);
 
@@ -161,7 +178,8 @@ void FM3Oscillator::process_block_internal(float pitch, float drift, float fmdep
         oldout1 = sin(output[k]);
         output[k] = oldout1;
 
-        phase += omega;
+        phase += omegaCurr;
+        omegaCurr += omegaStep;
 
         if (phase > 2.0 * M_PI)
         {

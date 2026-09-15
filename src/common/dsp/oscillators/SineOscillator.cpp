@@ -127,6 +127,7 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     }
 
     firstblock = (oscdata->retrigger.val.b || is_display);
+    omegaPriorValid = false;
 
     fb_val = 0.f;
 
@@ -693,6 +694,35 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
         omega[l] = std::min(M_PI, pitch_to_omega(pitch + detune));
     }
 
+    /*
+     * Pitch only arrives once per block. Holding omega constant across the block steps the
+     * instantaneous frequency at the block rate, which puts sidebands at multiples of the block
+     * rate around the fundamental whenever pitch is modulated (see issue #3784). So ramp the
+     * phase increment across the block instead, with the slope of the change since the prior
+     * block.
+     *
+     * The ramp is centered on this block's omega rather than running from the prior one, so the
+     * phase advance over the whole block is exactly what it was with a constant omega. A ramp
+     * from the prior value would lag by half a block, and that lag accumulates into a phase
+     * offset proportional to the total pitch change, which audibly rotates the body of a pitch
+     * enveloped kick against its other layers.
+     */
+    if (!omegaPriorValid)
+    {
+        for (int l = 0; l < n_unison; l++)
+            omegaPrior[l] = omega[l];
+        omegaPriorValid = true;
+    }
+
+    double omegaCurr[MAX_UNISON], omegaStep[MAX_UNISON];
+
+    for (int l = 0; l < n_unison; l++)
+    {
+        omegaStep[l] = (omega[l] - omegaPrior[l]) * BLOCK_SIZE_OS_INV;
+        omegaCurr[l] = omega[l] - omegaStep[l] * 0.5 * (BLOCK_SIZE_OS - 1);
+        omegaPrior[l] = omega[l];
+    }
+
     float fv = 32.0 * M_PI * fmdepth * fmdepth * fmdepth;
 
     /*
@@ -806,8 +836,9 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
             outR += orv[u];
 
             // These are doubles and need to be so keep it unrolled
-            phase[u] += omega[u];
+            phase[u] += omegaCurr[u];
             phase[u] -= (phase[u] > M_PI) * 2.0 * M_PI;
+            omegaCurr[u] += omegaStep[u];
         }
 
         FMdepth.process();
@@ -855,6 +886,9 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
 {
     double detune;
     double omega[MAX_UNISON];
+
+    // the non-legacy path's omega ramp must not start from a stale value if behavior is switched
+    omegaPriorValid = false;
 
     if (FM)
     {

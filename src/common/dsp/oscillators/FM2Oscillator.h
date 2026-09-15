@@ -59,8 +59,10 @@ class FM2Oscillator : public Oscillator
     void process_block_internal(float pitch, float drift, float FMdepth);
 
     double phase, oldout1, oldout2;
+    double omegaPrior;
+    bool omegaPriorValid = false;
 
-    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOscRamped<float, BLOCK_SIZE_OS>;
 
     quadr_osc RM1, RM2;
     Surge::Oscillator::DriftLFO driftLFO;
