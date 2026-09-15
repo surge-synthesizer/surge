@@ -169,6 +169,9 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     }
 
     addKeyListener(this);
+    // lets the editor itself hold keyboard focus, so that takeInitialKeyboardFocus()
+    // doesn't push focus onto the first focusable widget instead
+    setWantsKeyboardFocus(true);
 
     topLevelContainer = std::make_unique<juce::Component>();
     addAndMakeVisible(*topLevelContainer);
@@ -363,6 +366,8 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 
 void SurgeSynthEditor::idle()
 {
+    takeInitialKeyboardFocus();
+
     sge->idle();
 
     if (processor.surge->refresh_vkb)
@@ -377,6 +382,33 @@ void SurgeSynthEditor::idle()
 
         processor.surge->refresh_vkb = false;
     }
+}
+
+/*
+ * Keyboard shortcuts are key listeners on this editor. When nothing has keyboard focus,
+ * JUCE delivers key presses to the window's top-level component and walks up from there,
+ * which in the standalone is our parent, so shortcuts never arrive until something inside
+ * the editor is clicked. So once the window is showing and focused, take focus once.
+ *
+ * This is polled from idle because the window isn't focused yet when the editor is
+ * attached, and JUCE silently drops a focus grab made while the peer isn't focused.
+ * Requiring the peer to already be focused means we never take OS focus away from a
+ * host; in plugins where the view only gets focus on click, this simply doesn't fire.
+ */
+void SurgeSynthEditor::takeInitialKeyboardFocus()
+{
+    if (initialKeyboardFocusTaken)
+        return;
+
+    auto *peer = getPeer();
+
+    if (!isShowing() || !peer || !peer->isFocused())
+        return;
+
+    initialKeyboardFocusTaken = true;
+
+    if (!hasKeyboardFocus(true))
+        Surge::GUI::grabKeyboardFocusIfAllowed(this);
 }
 
 void SurgeSynthEditor::reapplySurgeComponentColours()
