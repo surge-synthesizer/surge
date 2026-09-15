@@ -41,6 +41,49 @@
 
 using namespace std;
 
+namespace Surge
+{
+namespace Oscillator
+{
+
+/*
+ * Shared by the Wavetable and Window oscillators - see OscillatorCommonFunctions.h. Both
+ * hooks answer the same question: is this oscillator's wavetable a sample whose unison
+ * count has been repurposed as a play count?
+ */
+static bool unisonIsPlayCount(const Parameter *p)
+{
+    if (!p->storage || p->scene < 1 || p->scene > n_scenes || p->ctrlgroup != cg_OSC ||
+        p->ctrlgroup_entry < 0 || p->ctrlgroup_entry >= n_oscs)
+    {
+        return false;
+    }
+
+    const auto &flags = p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry].wt.flags;
+
+    return (flags & wtf_is_sample) && (flags & wtf_unison_is_loop_count);
+}
+
+const char *SampleUnisonDynamicName::getName(const Parameter *p) const
+{
+    if (p->ctrltype == ct_oscspread)
+        return unisonIsPlayCount(p) ? "N/A" : "Unison Detune";
+    else
+        return unisonIsPlayCount(p) ? "Loop Count" : "Unison Voices";
+}
+
+bool SampleUnisonDetuneDeact::getValue(const Parameter *p) const
+{
+    // In play count mode the oscillator runs a single voice, so there is nothing to detune
+    return unisonIsPlayCount(p);
+}
+
+SampleUnisonDynamicName sampleUnisonDynamicName;
+SampleUnisonDetuneDeact sampleUnisonDetuneDeact;
+
+} // namespace Oscillator
+} // namespace Surge
+
 Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *oscdata,
                       pdata *localcopy, pdata *localcopyUnmod, unsigned char *onto)
 {
