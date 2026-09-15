@@ -56,6 +56,10 @@ class ClassicOscillator : public AbstractBlitOscillator
     bool first_run;
     float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
         pwidth[MAX_UNISON], pwidth2[MAX_UNISON];
+    // Output level each voice starts at, from the phase ::init picked for it. The shared
+    // integrator is seeded from these on the first ::process_block, which is the first
+    // point at which the stereo flag is known.
+    float start_level[MAX_UNISON];
     template <bool is_init> void update_lagvals();
     float pitch;
     lipol_ps li_hpf, li_DC;
