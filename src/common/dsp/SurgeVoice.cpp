@@ -224,9 +224,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     state.tunedkey = state.getPitch(storage);
 
-    resetPortamentoFrom(storage->last_key[scene_id], channel);
+    resetPortamentoFrom(storage->last_key[scene_id], storage->last_channel[scene_id]);
 
     storage->last_key[scene_id] = key;
+    storage->last_channel[scene_id] = channel;
     noisegenL[0] = 0.f;
     noisegenR[0] = 0.f;
     noisegenL[1] = 0.f;
@@ -428,6 +429,8 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 
     state.key = key;
     storage->last_key[state.scene_id] = key;
+    // Callers which move the voice to another channel after this update it again
+    storage->last_channel[state.scene_id] = state.channel;
     state.portaphase = 0;
 
     /*state.velocity = velocity;
@@ -1669,7 +1672,7 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
                                           state.mtsUseChannelWhenRetuning ? channel : -1);
 
             if (storage->mapChannelToOctave && !mpeEnabled)
-                lk = channelKeyEquivalent(lk, state.channel, storage, false);
+                lk = channelKeyEquivalent(lk, channel, storage, false);
 
             state.portasrc_key = lk;
         }
@@ -1677,7 +1680,7 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
 #endif
         {
             if (storage->mapChannelToOctave && !mpeEnabled)
-                state.portasrc_key = channelKeyEquivalent(lk, state.channel, storage, true);
+                state.portasrc_key = channelKeyEquivalent(lk, channel, storage, true);
             else
                 state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
         }

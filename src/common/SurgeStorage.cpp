@@ -155,6 +155,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     pitch_bend = 0;
     last_key[0] = 60;
     last_key[1] = 60;
+    last_channel[0] = 0;
+    last_channel[1] = 0;
     temposyncratio = 1.f;
 
     // Use this as a sentinel, since it was not initialized prior to 1.6.5
