@@ -92,8 +92,10 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     };
 
     void idle();
+    void takeInitialKeyboardFocus();
 
     std::unique_ptr<IdleTimer> idleTimer;
+    bool initialKeyboardFocusTaken{false};
     bool drawExtendedControls{false};
     int midiKeyboardOctave{5};
     float midiKeyboardVelocity{127.f / 127.f}; // see issue #6409
