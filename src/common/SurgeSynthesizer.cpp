@@ -982,7 +982,10 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
 
                     voices[scene].push_back(nvoice);
                     if ((storage.getPatch().scene[scene].polymode.val.i == pm_mono_fp) && !glide)
+                    {
                         storage.last_key[scene] = key;
+                        storage.last_channel[scene] = channel;
+                    }
                     new (nvoice) SurgeVoice(
                         &storage, &storage.getPatch().scene[scene],
                         storage.getPatch().scenedata[scene],
@@ -1099,6 +1102,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         */
                         v->state.channel = channel;
                         v->state.voiceChannelState = &channelState[channel];
+                        storage.last_channel[scene] = channel;
                     }
                     break;
                 }
@@ -1744,6 +1748,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                             v->state.channel = ch;
                             v->state.voiceChannelState = &channelState[ch];
+                            storage.last_channel[v->state.scene_id] = ch;
                         }
                     }
                     else
@@ -1805,6 +1810,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                             // See the comment above at the other _st legato spot
                             v->state.channel = kchan;
                             v->state.voiceChannelState = &channelState[kchan];
+                            storage.last_channel[v->state.scene_id] = kchan;
                             // std::cout << _D(v->state.gate) << _D(v->state.key) <<
                             // _D(v->state.scene_id ) << std::endl;
                         }
@@ -5733,6 +5739,7 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     auto priorNoteId = v->host_note_id;
     auto priorChannel = v->originating_host_channel;
     auto priorKey = v->originating_host_key;
+    auto priorVoiceChannel = v->state.channel;
 
     v->state.gate = true;
     v->state.key = key;
@@ -5750,7 +5757,7 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     v->restartAEGFEGAttack(aegStart, fegStart);
     v->retriggerLFOEnvelopes();
     v->retriggerOSCWithIndependentAttacks();
-    v->resetPortamentoFrom(priorKey, channel);
+    v->resetPortamentoFrom(priorKey, priorVoiceChannel);
 
     // Now end this note unless it is used by another scene
     bool endHostVoice = true;

@@ -123,25 +123,10 @@ float SurgeVoice::channelKeyEquivalent(float key, int channel, SurgeStorage *sto
         shift = channel;
     }
 
-    if (storage->isStandardTuning)
-    {
-        res += 12 * shift;
-    }
-    else if (storage->oddsound_mts_active_as_client)
-    {
-        res += MTS_GetMapSize(storage->oddsound_mts_client) * shift;
-    }
-    else if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-    {
-        // keys are in scale space so move scale.count
-        res += storage->currentScale.count * shift;
-    }
-    else
-    {
-        // keys are in tuning space so move cents worth of keys
-        auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
-        res += ct / 100 * shift;
-    }
+    // One period per channel, in whatever pitch units the current tuning mode uses. This has
+    // to be the period rather than the MTS-ESP map size, since the map size counts keys and
+    // is -1 when the source doesn't supply it
+    res += storage->tuningPeriodSemitones() * shift;
 
     return res;
 }
@@ -239,9 +224,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     state.tunedkey = state.getPitch(storage);
 
-    resetPortamentoFrom(storage->last_key[scene_id], channel);
+    resetPortamentoFrom(storage->last_key[scene_id], storage->last_channel[scene_id]);
 
     storage->last_key[scene_id] = key;
+    storage->last_channel[scene_id] = channel;
     noisegenL[0] = 0.f;
     noisegenR[0] = 0.f;
     noisegenL[1] = 0.f;
@@ -443,6 +429,8 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 
     state.key = key;
     storage->last_key[state.scene_id] = key;
+    // Callers which move the voice to another channel after this update it again
+    storage->last_channel[state.scene_id] = state.channel;
     state.portaphase = 0;
 
     /*state.velocity = velocity;
@@ -1679,14 +1667,20 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
 #ifndef SURGE_SKIP_ODDSOUND_MTS
         if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
         {
-            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
+            // Match getPitch(), so the glide starts from where the prior key would sound
+            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk,
+                                          state.mtsUseChannelWhenRetuning ? channel : -1);
+
+            if (storage->mapChannelToOctave && !mpeEnabled)
+                lk = channelKeyEquivalent(lk, channel, storage, false);
+
             state.portasrc_key = lk;
         }
         else
 #endif
         {
             if (storage->mapChannelToOctave && !mpeEnabled)
-                state.portasrc_key = channelKeyEquivalent(lk, state.channel, storage, true);
+                state.portasrc_key = channelKeyEquivalent(lk, channel, storage, true);
             else
                 state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
         }

@@ -36,6 +36,23 @@
 
 using namespace Surge::Test;
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+TEST_CASE("MTS channel-to-octave shift uses the period fallback", "[tun]")
+{
+    auto surge = surgeOnSine();
+    REQUIRE(surge->storage.oddsound_mts_client);
+
+    // Model an MTS source which does not publish a map size. The MTS API defines a
+    // 12-semitone period fallback, while MTS_GetMapSize() returns -1.
+    surge->storage.isStandardTuning = false;
+    surge->storage.oddsound_mts_active_as_client = true;
+    REQUIRE(surge->storage.tuningPeriodSemitones() == Approx(12.0f));
+
+    auto shifted = SurgeVoice::channelKeyEquivalent(60.0f, 1, &surge->storage, false);
+    REQUIRE(shifted == Approx(72.0f));
+}
+#endif
+
 TEST_CASE("Retune Surge XT to Scala Files", "[tun]")
 {
     auto surge = Surge::Headless::createSurge(44100);
@@ -724,6 +741,26 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
         auto fr = Tunings::MIDI_0_FREQ * 32;
         REQUIRE(f0 == Approx(fr).margin(1));
         REQUIRE(f1 == Approx(fr * 3).margin(1));
+    }
+
+    SECTION("ED3-7 Triples Frequency in MIDI-Only Mode")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        auto scale = Tunings::evenDivisionOfSpanByM(3, 7);
+        surge->storage.retuneToScale(scale);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+        auto f0 = frequencyForNote(surge, 60, 2, 0, 0);
+        auto f1 = frequencyForNote(surge, 60, 2, 0, 1);
+        auto f15 = frequencyForNote(surge, 60, 2, 0, 15);
+
+        auto fr = Tunings::MIDI_0_FREQ * 32;
+        REQUIRE(f0 == Approx(fr).margin(1));
+        REQUIRE(f1 == Approx(fr * 3).margin(1));
+        REQUIRE(f15 == Approx(fr / 3).margin(1));
     }
 
     SECTION("ED4-7 Quads Frequency")
@@ -1539,6 +1576,74 @@ TEST_CASE("Octave Per Channel And Porta", "[tun]")
                 }
             }
         }
+    }
+}
+
+TEST_CASE("Portamento Starts From The Prior Note's Channel", "[tun]")
+{
+    auto setup = [](int polymode) {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.getPatch().scene[0].polymode.val.i = polymode;
+        surge->storage.getPatch().scene[0].portamento.val.f = 1;
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        return surge;
+    };
+
+    auto playAndRelease = [](std::shared_ptr<SurgeSynthesizer> surge, int channel, int key) {
+        surge->playNote(channel, key, 100, 0);
+
+        for (int i = 0; i < 20; ++i)
+            surge->process();
+
+        surge->releaseNote(channel, key, 0);
+
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+    };
+
+    auto glideStartFor = [](std::shared_ptr<SurgeSynthesizer> surge, int channel, int key) {
+        surge->playNote(channel, key, 100, 0);
+        surge->process();
+
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate && v->state.key == key && v->state.channel == channel)
+            {
+                return v->state.portasrc_key;
+            }
+        }
+
+        FAIL("No gated voice for the new note");
+        return 0.f;
+    };
+
+    SECTION("A new poly voice glides from the octave the prior note sounded in")
+    {
+        auto surge = setup(pm_poly);
+        playAndRelease(surge, 0, 60);
+
+        REQUIRE(glideStartFor(surge, 1, 62) == Approx(60));
+    }
+
+    SECTION("A reclaimed mono voice glides from the octave the prior note sounded in")
+    {
+        auto surge = setup(pm_mono);
+        surge->storage.getPatch().scene[0].monoVoiceEnvelopeMode = RESTART_FROM_LATEST;
+        playAndRelease(surge, 0, 60);
+
+        REQUIRE(glideStartFor(surge, 1, 62) == Approx(60));
+    }
+
+    SECTION("A glide within one channel keeps that channel's octave")
+    {
+        auto surge = setup(pm_poly);
+        playAndRelease(surge, 1, 60);
+
+        REQUIRE(glideStartFor(surge, 1, 62) == Approx(72));
     }
 }
 

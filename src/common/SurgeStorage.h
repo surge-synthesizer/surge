@@ -1655,6 +1655,8 @@ class alignas(16) SurgeStorage
     void init_tables();
     float nyquist_pitch;
     int last_key[2]; // TODO: FIX SCENE ASSUMPTION
+    // The channel last_key sounded on, since tuning can differ by channel (octave shift, MTS-ESP)
+    int last_channel[2];
     TiXmlElement *getSnapshotSection(const char *name);
     void load_midi_controllers();
     void write_midi_controllers_to_user_default();

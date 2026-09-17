@@ -221,6 +221,7 @@ class alignas(16) SurgeVoice
 
     void retriggerLFOEnvelopes();
     void retriggerOSCWithIndependentAttacks();
+    // Glide from key as it sounded on the channel it was played on
     void resetPortamentoFrom(int key, int channel);
 
     static float channelKeyEquivalent(float key, int channel, SurgeStorage *storage,
