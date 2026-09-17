@@ -799,6 +799,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::Component *mpeStatus{nullptr}, *zoomStatus{nullptr}, *tuneStatus{nullptr},
         *mainMenu{nullptr}, *lfoMenuButton{nullptr}, *undoButton{nullptr}, *redoButton{nullptr},
         *lfoRateSlider{nullptr};
+
+    // last MTS-ESP scale name seen in idle, so the Tune button tooltip follows the master
+    std::string lastObservedMTSScaleName{};
     Surge::Widgets::ModulatableControlInterface *filterCutoffSlider[2]{nullptr, nullptr},
         *filterResonanceSlider[2]{nullptr, nullptr};
     /*

@@ -959,6 +959,23 @@ void SurgeGUIEditor::idle()
             }
         }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+        {
+            std::string mtsScale{};
+
+            if (synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client)
+            {
+                mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
+            }
+
+            if (mtsScale != lastObservedMTSScaleName)
+            {
+                lastObservedMTSScaleName = mtsScale;
+                tuningChanged();
+            }
+        }
+#endif
+
         if (patchSelector)
         {
             patchSelector->idle();
@@ -3189,7 +3206,14 @@ void SurgeGUIEditor::tuningChanged()
             const auto hasmts =
                 synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
 
-            if (synth->storage.isStandardTuning ? hasmts : !synth->storage.isToggledToCache)
+            if (hasmts)
+            {
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+                info =
+                    "Tuning: " + std::string(MTS_GetScaleName(synth->storage.oddsound_mts_client));
+#endif
+            }
+            else if (!synth->storage.isStandardTuning && !synth->storage.isToggledToCache)
             {
                 if (!scl.empty())
                 {
