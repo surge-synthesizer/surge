@@ -246,6 +246,10 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     std::function<bool(T *)> onMenuKey = [](T *) { return false; };
     std::function<bool(T *)> onReturnKey = [](T *) { return false; };
     std::function<bool(T *)> onGetIsChecked = [](T *) { return false; };
+    // Up/down arrows on a button which steps through a list of choices. dir is +1 for
+    // Increase and -1 for Decrease, as in OverlayAsAccessibleSlider. Left unset, the
+    // arrow keys keep falling through to whoever handled them before.
+    std::function<bool(T *, int)> onJogValue = [](T *, int) { return false; };
 
     bool keyPressed(const juce::KeyPress &) override;
 
@@ -618,6 +622,11 @@ template <typename T> bool OverlayAsAccessibleButton<T>::keyPressed(const juce::
     if (action == Return)
     {
         return onReturnKey(under);
+    }
+
+    if (action == Increase || action == Decrease)
+    {
+        return onJogValue(under, action == Increase ? 1 : -1);
     }
     return false;
 }

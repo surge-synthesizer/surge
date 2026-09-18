@@ -60,61 +60,14 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
         showWavetableMenu();
         return true;
     };
-
-    menuOverlays[0] = std::move(ol);
-
-    ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "Wavetable: Previous", juce::AccessibilityRole::button);
-    ol->onPress = [this](OscillatorWaveformDisplay *d) {
-        auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
-
-        if (id >= 0)
-        {
-            std::string announce = "Loaded Wavetable ";
-            announce += storage->wt_list[id].name;
-            sge->enqueueAccessibleAnnouncement(announce);
-
-            handleWavetableLoad(id);
-        }
-    };
-    ol->onReturnKey = [ov = ol.get()](OscillatorWaveformDisplay *d) {
-        ov->onPress(d);
+    // Negated so that, as everywhere else in Surge, up walks up the list of wavetables
+    // and down walks down it.
+    ol->onJogValue = [this](OscillatorWaveformDisplay *d, int dir) {
+        jogWavetable(-dir);
         return true;
     };
 
-    addChildComponent(*ol);
-
-    menuOverlays[1] = std::move(ol);
-
-    ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "Wavetable: Next", juce::AccessibilityRole::button);
-
-    addChildComponent(*ol);
-
-    ol->onPress = [this](OscillatorWaveformDisplay *d) {
-        auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
-
-        if (id >= 0)
-        {
-            std::string announce = "Loaded Wavetable ";
-            announce += storage->wt_list[id].name;
-            sge->enqueueAccessibleAnnouncement(announce);
-
-            handleWavetableLoad(id);
-            auto new_name = storage->getCurrentWavetableName(oscdata);
-
-            SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
-            ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
-                                        (float)oscInScene, (float)id, new_name);
-        }
-    };
-
-    ol->onReturnKey = [ov = ol.get()](OscillatorWaveformDisplay *d) {
-        ov->onPress(d);
-        return true;
-    };
-
-    menuOverlays[2] = std::move(ol);
+    wavetableAccOverlay = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, customEditor ? "Close Custom Editor" : "Open Custom Editor",
@@ -345,10 +298,10 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
             auto nd = std::string("Wavetable: ") + storage->getCurrentWavetableName(oscdata);
 
-            menuOverlays[0]->setTitle(nd);
-            menuOverlays[0]->setDescription(nd);
+            wavetableAccOverlay->setTitle(nd);
+            wavetableAccOverlay->setDescription(nd);
 
-            if (auto ah = menuOverlays[0]->getAccessibilityHandler())
+            if (auto ah = wavetableAccOverlay->getAccessibilityHandler())
             {
                 ah->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
             }
@@ -461,11 +414,9 @@ void OscillatorWaveformDisplay::resized()
     auto wtl = getLocalBounds().withTrimmedBottom(wtbheight);
 
     leftJog = wtr.withRight(wtbheight);
-    menuOverlays[1]->setBounds(leftJog.toNearestInt());
     rightJog = wtr.withLeft(wtr.getWidth() - wtbheight);
-    menuOverlays[2]->setBounds(rightJog.toNearestInt());
     waveTableName = wtr.withTrimmedRight(wtbheight).withTrimmedLeft(wtbheight);
-    menuOverlays[0]->setBounds(waveTableName.toNearestInt());
+    wavetableAccOverlay->setBounds(wtr.toNearestInt());
 
     customEditorBox = getLocalBounds()
                           .withTop(getHeight() - wtbheight)
@@ -1442,7 +1393,29 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
         SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
         ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
                                     (float)oscInScene, (float)id, new_name);
+
+        // However the wavetable got picked - jog arrow, menu entry or arrow key - leave the
+        // focus on the selector, so the keyboard can carry straight on from there. The
+        // impulse response loader gets this for free from its reload, which relays the FX
+        // out and refocuses it. Only worth doing while we are on screen, since the menu
+        // action runs asynchronously and JUCE asserts on a focus grab into a component
+        // which is not showing.
+        if (wavetableAccOverlay->isShowing())
+        {
+            Surge::GUI::grabKeyboardFocusIfAllowed(wavetableAccOverlay.get());
+        }
     }
+}
+
+void OscillatorWaveformDisplay::jogWavetable(int dir)
+{
+    if (!uses_wavetabledata(oscdata->type.val.i))
+    {
+        return;
+    }
+
+    // A -1 here means there was nothing to move onto, which loadWavetable ignores.
+    loadWavetable(storage->getAdjacentWaveTable(oscdata->wt.current_id, dir > 0));
 }
 
 void OscillatorWaveformDisplay::loadWavetableFromFile()
@@ -1505,7 +1478,9 @@ void OscillatorWaveformDisplay::showWavetableMenu(bool singleCategory)
 
         populateMenu(menu, id, singleCategory);
 
-        auto where = sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+        // Anchored to the name rather than the whole widget, so that widening the accessible
+        // overlay onto the jog arrows does not shift where the menu pops up.
+        auto where = sge->frame->getLocalPoint(this, waveTableName.toNearestInt().getBottomLeft());
 
         menu.showMenuAsync(sge->popupMenuOptions(where));
     }
@@ -1526,32 +1501,13 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
     if (usesWT)
     {
-        int id = oscdata->wt.current_id;
         bool openMenu = false;
 
         if (leftJog.contains(event.position))
         {
             if (!event.mods.isPopupMenu())
             {
-                if (sge)
-                    sge->undoManager()->pushWavetable(scene, oscInScene);
-                id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
-
-                if (id >= 0)
-                {
-                    if (sge)
-                    {
-                        std::string announce = "Loaded wavetable is: ";
-                        announce += storage->wt_list[id].name;
-                        sge->enqueueAccessibleAnnouncement(announce);
-                    }
-
-                    handleWavetableLoad(id);
-                    auto new_name = storage->getCurrentWavetableName(oscdata);
-                    SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
-                    ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
-                                                (float)oscInScene, (float)id, new_name);
-                }
+                jogWavetable(-1);
             }
             else
             {
@@ -1562,26 +1518,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
         {
             if (!event.mods.isPopupMenu())
             {
-                if (sge)
-                    sge->undoManager()->pushWavetable(scene, oscInScene);
-
-                id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
-
-                if (id >= 0)
-                {
-                    if (sge)
-                    {
-                        std::string announce = "Loaded wavetable is: ";
-                        announce += storage->wt_list[id].name;
-                        sge->enqueueAccessibleAnnouncement(announce);
-                    }
-
-                    handleWavetableLoad(id);
-                    auto new_name = storage->getCurrentWavetableName(oscdata);
-                    SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
-                    ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
-                                                (float)oscInScene, (float)id, new_name);
-                }
+                jogWavetable(1);
             }
             else
             {
@@ -2547,10 +2484,7 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
 
     setAccessible(vis);
 
-    for (const auto &ao : menuOverlays)
-    {
-        ao->setVisible(visWT);
-    }
+    wavetableAccOverlay->setVisible(visWT);
 
     if (visWT)
     {
