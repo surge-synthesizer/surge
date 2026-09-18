@@ -806,6 +806,12 @@ void CurrentFxDisplay::convolutionLayout()
         c->showIRMenu();
         return true;
     };
+    // Negated so that, as everywhere else in Surge, up walks up the list of impulse
+    // responses and down walks down it.
+    ol->onJogValue = [this](ConvolutionButton *c, int dir) {
+        c->jogIR(-dir);
+        return true;
+    };
 
     menu = std::move(ol);
     menu->setBounds(vr);

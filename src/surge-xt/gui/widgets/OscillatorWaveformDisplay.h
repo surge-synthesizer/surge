@@ -109,6 +109,10 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void handleWavetableLoad(int id);
     void loadWavetable(int id);
     void loadWavetableFromFile();
+    // Step to the adjacent wavetable, dir > 0 being the next one in the list. Shared by the
+    // jog arrows, their accessible counterparts and the arrow keys, so that all of them push
+    // undo, announce and notify listeners alike.
+    void jogWavetable(int dir);
 
     void populateMenu(juce::PopupMenu &m, int selectedItem, bool singleCategory = false);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem,
@@ -145,7 +149,10 @@ struct OscillatorWaveformDisplay : public juce::Component,
     static constexpr int wt3DControlWidth = 20;
     std::unique_ptr<juce::Component> customEditor;
 
-    std::array<std::unique_ptr<juce::Component>, 3> menuOverlays;
+    // One tab stop covering the name and both jog arrows, as the impulse response
+    // loader does. The arrows are steered from here with the up/down keys rather than
+    // being tab stops of their own.
+    std::unique_ptr<juce::Component> wavetableAccOverlay;
     std::unique_ptr<juce::Component> customEditorAccOverlay;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
     int lastWavetableId{-1};
