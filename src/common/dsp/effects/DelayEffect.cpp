@@ -80,7 +80,7 @@ void DelayEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[dly_time_left].set_type(ct_envtime);
+    fxdata->p[dly_time_left].set_type(ct_envtime_delay_line_mode);
     fxdata->p[dly_time_right].set_type(ct_envtime_linkable_delay);
     fxdata->p[dly_feedback].set_name("Feedback");
     fxdata->p[dly_feedback].set_type(ct_dly_fb_clippingmodes);
@@ -116,7 +116,9 @@ void DelayEffect::init_ctrltypes()
 void DelayEffect::init_default_values()
 {
     fxdata->p[dly_time_left].val.f = -2.f;
+    fxdata->p[dly_time_left].deform_type = dly_line_tape;
     fxdata->p[dly_time_right].val.f = -2.f;
+    fxdata->p[dly_time_right].deform_type = dly_line_tape;
     fxdata->p[dly_time_right].deactivated = false;
     fxdata->p[dly_feedback].val.f = 0.5f;
     fxdata->p[dly_feedback].deform_type = 1;

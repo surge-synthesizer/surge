@@ -261,6 +261,7 @@ bool Parameter::can_temposync() const
     case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
+    case ct_envtime_delay_line_mode:
     case ct_envtime_lfodecay:
     case ct_reverbpredelaytime:
     case ct_floaty_delay_time:
@@ -381,6 +382,8 @@ bool Parameter::has_deformoptions() const
     case ct_amplitude_ringmod:
     case ct_bonsai_bass_boost:
     case ct_envtime_deformable:
+    case ct_envtime_delay_line_mode:
+    case ct_envtime_linkable_delay:
     case ct_filter_feedback:
     case ct_osc_feedback_negative:
     case ct_countedset_percent_extendable_wtdeform:
@@ -799,6 +802,7 @@ void Parameter::set_type(int ctrltype)
     case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
+    case ct_envtime_delay_line_mode:
     case ct_envtime_lfodecay:
         valtype = vt_float;
         val_min.f = -8;
@@ -1589,6 +1593,7 @@ void Parameter::set_type(int ctrltype)
     case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
+    case ct_envtime_delay_line_mode:
     case ct_reverbtime:
     case ct_reverbpredelaytime:
     case ct_chorusmodtime:
@@ -1957,6 +1962,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_envtime_deformable:
         case ct_envtime_deactivatable:
         case ct_envtime_linkable_delay:
+        case ct_envtime_delay_line_mode:
         case ct_envtime_lfodecay:
         case ct_reverbtime:
         case ct_reverbpredelaytime:
@@ -4627,6 +4633,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
+    case ct_envtime_delay_line_mode:
     case ct_envtime_lfodecay:
     case ct_delaymodtime:
     case ct_reverbtime:
