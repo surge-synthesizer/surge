@@ -80,23 +80,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     if (suppliedDataPath == skipPatchLoadDataPathSentinel)
         suppliedDataPath = "";
 
-    if (samplerate == 0)
-    {
-        setSamplerate(48000);
-    }
-    else if (samplerate < 12000 || samplerate > 48000 * 32)
-    {
-        std::ostringstream oss;
-        oss << "SurgeStorage was constructed with invalid samplerate (" << samplerate
-            << " Hz). It will be reset to 48000 until audio system tells us otherwise!\n";
-        reportError(oss.str(), "Initialization Error");
-        setSamplerate(48000);
-    }
-    else
-    {
-        // Just in case, make sure we are completely consistent in all tables etc
-        setSamplerate(samplerate);
-    }
+    // Run at a sensible default until the audio system tells us the actual rate
+    setSamplerate(48000);
 
     _patch.reset(new SurgePatch(this));
 
@@ -3024,6 +3009,14 @@ void SurgeStorage::write_midi_controllers_to_user_default()
 
 void SurgeStorage::setSamplerate(float sr)
 {
+    // Hosts can hand us a nonsensical rate, for instance while an audio device is being
+    // torn down or re-initialized. Every table below divides by the rate, so applying it
+    // would poison the engine with inf and NaN. Keep running at the previous rate instead.
+    if (!std::isfinite(sr) || sr < 12000 || sr > 48000 * 32)
+    {
+        return;
+    }
+
     // If I am changing my sample rate I will change my internal tables, so this
     // needs to be tuning aware and reapply tuning if needed
     auto s = currentScale;

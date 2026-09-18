@@ -4823,7 +4823,7 @@ void SurgeSynthesizer::process()
     {
         mech::clear_block<BLOCK_SIZE_OS>(storage.audio_in[0]);
         mech::clear_block<BLOCK_SIZE_OS>(storage.audio_in[1]);
-        mech::clear_block<BLOCK_SIZE>(storage.audio_in_nonOS[1]);
+        mech::clear_block<BLOCK_SIZE>(storage.audio_in_nonOS[0]);
         mech::clear_block<BLOCK_SIZE>(storage.audio_in_nonOS[1]);
     }
 
