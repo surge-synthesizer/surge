@@ -125,7 +125,6 @@
 
 const int yofs = 10;
 
-using namespace std;
 using namespace Surge::ParamConfig;
 
 struct DroppedUserDataEntries
@@ -2103,7 +2102,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     memset(nonmod_param, 0, n_paramslots * sizeof(void *));
 
     int i = 0;
-    vector<Parameter *>::iterator iter;
+    std::vector<Parameter *>::iterator iter;
 
     for (iter = synth->storage.getPatch().param_ptr.begin();
          iter != synth->storage.getPatch().param_ptr.end(); iter++)
@@ -3010,7 +3009,7 @@ void SurgeGUIEditor::toggleTuning()
     this->synth->refresh_editor = true;
 }
 
-void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
+void SurgeGUIEditor::wtscriptFileDropped(const std::string &fn)
 {
     int scene = current_scene;
     int osc = current_osc[current_scene];
@@ -3924,7 +3923,7 @@ std::string SurgeGUIEditor::helpURLFor(Parameter *p)
     return "";
 }
 
-std::string SurgeGUIEditor::helpURLForSpecial(const string &special)
+std::string SurgeGUIEditor::helpURLForSpecial(const std::string &special)
 {
     auto storage = &(synth->storage);
     return helpURLForSpecial(storage, special);
@@ -3940,7 +3939,7 @@ std::string SurgeGUIEditor::helpURLForSpecial(SurgeStorage *storage, const std::
     }
     return "";
 }
-std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
+std::string SurgeGUIEditor::fullyResolvedHelpURL(const std::string &helpurl)
 {
     std::string lurl = helpurl;
     if (helpurl[0] == '#')
@@ -5787,7 +5786,7 @@ void SurgeGUIEditor::hideMidiLearnOverlay()
     }
 }
 
-void SurgeGUIEditor::onSurgeError(const string &msg, const string &title,
+void SurgeGUIEditor::onSurgeError(const std::string &msg, const std::string &title,
                                   const SurgeStorage::ErrorType &et)
 {
     std::lock_guard<std::mutex> g(errorItemsMutex);
@@ -7466,49 +7465,85 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             std::string xmlStr;
             xmlStr << doc;
 
-            std::ofstream outFile(fullLocation, std::ios::binary);
-            if (!outFile)
+            // Use temp file to correct the issue about Saving truncates the
+            // existing file before the save can fail
+            juce::File targetFile{fullLocation.string()};
+            juce::TemporaryFile tempFile(targetFile);
+            bool streamWriteSuccess = true;
+
+            do
             {
-                storage->reportError("Failed to open file for writing.", "Write Error");
+                juce::FileOutputStream outStream(tempFile.getFile());
+                if (outStream.failedToOpen())
+                {
+                    storage->reportError(fmt::format("Fail to write into Wavetable script {}",
+                                                     targetFile.getFullPathName().toStdString()),
+                                         "Write Error");
+                    return;
+                }
+
+                if (!hasSnapshots)
+                {
+                    // Just the XML
+                    if (!outStream.write(xmlStr.data(), xmlStr.size()))
+                    {
+                        streamWriteSuccess = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    // Compress the binn snapshot data
+                    namespace mech = sst::basic_blocks::mechanics;
+                    const auto rawSize = binn_size(oscmap);
+                    const auto compBound = ZSTD_compressBound(rawSize);
+                    std::vector<uint8_t> compressed(compBound);
+                    const size_t compSize =
+                        ZSTD_compress(compressed.data(), compBound, binn_ptr(oscmap), rawSize, 3);
+                    if (ZSTD_isError(compSize))
+                    {
+                        storage->reportError("Failed to compress snapshot data.", "Write Error");
+                        return;
+                    }
+                    compressed.resize(compSize);
+
+                    // Fixed binary header: tag + xmlsize + blobsize
+                    sst::io::wtscript_header header{};
+                    std::memcpy(header.tag, "wts1", 4);
+                    header.xmlsize =
+                        mech::endian_write_int32LE(static_cast<unsigned int>(xmlStr.size()));
+                    header.blobsize =
+                        mech::endian_write_int32LE(static_cast<unsigned int>(compressed.size()));
+
+                    if (!outStream.write(reinterpret_cast<const char *>(&header), sizeof(header)))
+                    {
+                        streamWriteSuccess = false;
+                        break;
+                    }
+                    if (!outStream.write(xmlStr.data(), xmlStr.size()))
+                    {
+                        streamWriteSuccess = false;
+                        break;
+                    }
+                    if (!outStream.write(reinterpret_cast<const char *>(compressed.data()),
+                                         compressed.size()))
+                    {
+                        streamWriteSuccess = false;
+                        break;
+                    }
+                }
+                outStream.flush();
+            } while (0);
+
+            if (!streamWriteSuccess)
+            {
+                storage->reportError("Failed to write file.", "Write Error");
                 return;
             }
 
-            if (!hasSnapshots)
-            {
-                // Just the XML
-                outFile.write(xmlStr.data(), xmlStr.size());
-            }
-            else
-            {
-                // Compress the binn snapshot data
-                namespace mech = sst::basic_blocks::mechanics;
-                const auto rawSize = binn_size(oscmap);
-                const auto compBound = ZSTD_compressBound(rawSize);
-                std::vector<uint8_t> compressed(compBound);
-                const size_t compSize =
-                    ZSTD_compress(compressed.data(), compBound, binn_ptr(oscmap), rawSize, 3);
-                if (ZSTD_isError(compSize))
-                {
-                    storage->reportError("Failed to compress snapshot data.", "Write Error");
-                    return;
-                }
-                compressed.resize(compSize);
+            auto overWriteSuccess = tempFile.overwriteTargetFileWithTemporary();
 
-                // Fixed binary header: tag + xmlsize + blobsize
-                sst::io::wtscript_header header{};
-                std::memcpy(header.tag, "wts1", 4);
-                header.xmlsize =
-                    mech::endian_write_int32LE(static_cast<unsigned int>(xmlStr.size()));
-                header.blobsize =
-                    mech::endian_write_int32LE(static_cast<unsigned int>(compressed.size()));
-
-                outFile.write(reinterpret_cast<const char *>(&header), sizeof(header));
-                outFile.write(xmlStr.data(), xmlStr.size());
-                outFile.write(reinterpret_cast<const char *>(compressed.data()), compressed.size());
-            }
-
-            outFile.close();
-            if (!outFile)
+            if (!overWriteSuccess)
             {
                 storage->reportError("Failed to write file.", "Write Error");
                 return;
