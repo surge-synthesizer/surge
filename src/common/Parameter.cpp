@@ -585,15 +585,24 @@ void Parameter::set_user_data(ParamUserData *ud)
 
 void Parameter::set_type(int ctrltype)
 {
-    this->ctrltype = ctrltype;
-    posy_offset = 0;
-    moverate = 1.f;
-
-    affect_other_parameters = false;
+    /*
+     * Unpublish first, publish last. Every switch below reads the ctrltype argument, not the
+     * member, so this->ctrltype is assigned at the very end of this function, once the ranges
+     * and display info it describes are actually in place. The UI thread and the host read
+     * these members off a live parameter without synchronization, so a reader which catches us
+     * mid-flight now sees the old type with the old handlers rather than the new type paired
+     * with stale ranges - the latter is how an out of range index reaches a discrete index
+     * remapper. See #6619.
+     */
     user_data = nullptr;
     dynamicName = nullptr;
     dynamicBipolar = nullptr;
     dynamicDeactivation = nullptr;
+
+    posy_offset = 0;
+    moverate = 1.f;
+
+    affect_other_parameters = false;
 
     basicBlocksParamMetaData = {};
 
@@ -1792,6 +1801,9 @@ void Parameter::set_type(int ctrltype)
     default:
         break;
     }
+
+    // Everything the new type implies is set up now, so publish it. See the note at the top.
+    this->ctrltype = ctrltype;
 }
 
 void Parameter::bound_value(bool force_integer)

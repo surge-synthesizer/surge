@@ -601,6 +601,14 @@ class Parameter
     // I take a shallow copy and don't assume ownership and assume I am referenceable
     void set_user_data(ParamUserData *ud);
 
+    /*
+     * Since I don't own my user data, whoever does has to unpublish it here before it goes
+     * away. The UI thread and the host both read user_data off a live parameter (to format a
+     * display, to build a menu), so a pointer which outlives its owner is a use after free.
+     * See #6619.
+     */
+    void clear_user_data() { user_data = nullptr; }
+
     bool supportsDynamicName() const;
     ParameterDynamicNameFunction *dynamicName = nullptr;
 
