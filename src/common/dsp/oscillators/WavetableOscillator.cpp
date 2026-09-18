@@ -71,12 +71,25 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 
     n_unison = limit_range(oscdata->p[wt_unison_voices].val.i, 1, MAX_UNISON);
 
+    int playcount = 1;
+
     if (oscdata->wt.flags & wtf_is_sample)
     {
-        // An explicit loop flag overrides the unison-count-as-play-count behavior rather
-        // than adding to it, so a looped sample ignores the voice count entirely.
-        sampleloop = (oscdata->wt.flags & wtf_loop_sample) ? infinite_sampleloop : n_unison;
-        n_unison = 1;
+        if (oscdata->wt.flags & wtf_unison_is_loop_count)
+        {
+            // The voice count is a play count instead, so the oscillator runs one voice.
+            // This is how samples behaved before the flag existed, which is why old patches
+            // get it set on load.
+            playcount = n_unison;
+            n_unison = 1;
+        }
+
+        // An explicit loop flag overrides the count rather than adding to it, so a looped
+        // sample ignores it entirely
+        if (oscdata->wt.flags & wtf_loop_sample)
+        {
+            playcount = infinite_sampleloop;
+        }
     }
 
     if (is_display)
@@ -108,12 +121,14 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     }
 
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
-    tableipol = modff(shape, &intpart);
+    float t_ipol = modff(shape, &intpart);
     if (deformType != XT_134_EARLIER)
-        tableipol = shape;
-    tableid = limit_range((int)intpart, 0, std::max((int)oscdata->wt.n_tables - 2 + nointerp, 0));
-    last_tableipol = tableipol;
-    last_tableid = tableid;
+        t_ipol = shape;
+    int t_id = limit_range((int)intpart, 0, std::max((int)oscdata->wt.n_tables - 2 + nointerp, 0));
+    // Note last_tableipol deliberately keeps the morph-derived value below even though
+    // tableipol is zeroed for a sample, which is what the original scalar code did
+    float t_last_ipol = t_ipol;
+    last_tableid = t_id;
 
     selectDeform();
 
@@ -122,8 +137,20 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 
     if (oscdata->wt.flags & wtf_is_sample)
     {
-        tableipol = 0.f;
-        tableid -= 1;
+        // Morph is the start point offset for a sample: the frame it lands on is where
+        // playback begins, and the -1 is what the first advance in convolute() cancels out
+        t_ipol = 0.f;
+        t_id -= 1;
+    }
+
+    // Broadcast to every voice, not just the sounding ones, so nothing is ever read
+    // uninitialized if the unison count changes underneath us
+    for (int i = 0; i < MAX_UNISON; i++)
+    {
+        tableipol[i] = t_ipol;
+        last_tableipol[i] = t_last_ipol;
+        tableid[i] = t_id;
+        sampleloop[i] = playcount;
     }
 
     for (int i = 0; i < n_unison; i++)
@@ -164,8 +191,11 @@ void WavetableOscillator::init_ctrltypes()
     oscdata->p[wt_skewh].set_type(ct_percent_bipolar);
     oscdata->p[wt_unison_detune].set_name("Unison Detune");
     oscdata->p[wt_unison_detune].set_type(ct_oscspread);
+    oscdata->p[wt_unison_detune].dynamicDeactivation = &Surge::Oscillator::sampleUnisonDetuneDeact;
+    oscdata->p[wt_unison_detune].dynamicName = &Surge::Oscillator::sampleUnisonDynamicName;
     oscdata->p[wt_unison_voices].set_name("Unison Voices");
-    oscdata->p[wt_unison_voices].set_type(ct_osccount);
+    oscdata->p[wt_unison_voices].set_type(ct_osccount_or_playcount);
+    oscdata->p[wt_unison_voices].dynamicName = &Surge::Oscillator::sampleUnisonDynamicName;
 }
 
 void WavetableOscillator::init_default_values()
@@ -307,19 +337,19 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
         if (oscdata->wt.flags & wtf_is_sample)
         {
-            tableid++;
-            if (tableid > oscdata->wt.n_tables - paddingLoop)
+            tableid[voice]++;
+            if (tableid[voice] > (int)oscdata->wt.n_tables - paddingLoop)
             {
-                if (sampleloop < infinite_sampleloop)
-                    sampleloop--;
+                if (sampleloop[voice] < infinite_sampleloop)
+                    sampleloop[voice]--;
 
-                if (sampleloop > 0)
+                if (sampleloop[voice] > 0)
                 {
-                    tableid = 0;
+                    tableid[voice] = 0;
                 }
                 else
                 {
-                    tableid = oscdata->wt.n_tables - paddingEnd;
+                    tableid[voice] = oscdata->wt.n_tables - paddingEnd;
                     oscstate[voice] = 100000000000.f; // rather large number
                     return;
                 }
@@ -327,8 +357,8 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
             if (deformType != XT_134_EARLIER)
             {
-                tableipol = tableid;
-                last_tableipol = tableid;
+                tableipol[voice] = tableid[voice];
+                last_tableipol[voice] = tableid[voice];
             }
         }
 
@@ -555,7 +585,7 @@ float WavetableOscillator::getMorph()
 */
 float WavetableOscillator::deformLegacy(float block_pos, int voice)
 {
-    float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
+    float tblip_ipol = (1 - block_pos) * last_tableipol[voice] + block_pos * tableipol[voice];
 
     // in Continuous Morph mode tblip_ipol gives us position between current and next frame
     // when not in Continuous Morph mode, we don't interpolate so this position should be
@@ -564,16 +594,17 @@ float WavetableOscillator::deformLegacy(float block_pos, int voice)
 
     // that 1 - nointerp makes sure we don't read the table off memory, keeps us bounded
     // and since it gets multiplied by lipol, in morph mode ends up being zero - no sweat!
-    return (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] *
+    return (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid[voice]][state[voice]] *
             (1.f - lipol)) +
-           (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1 - nointerp][state[voice]] *
+           (oscdata->wt
+                .TableF32WeakPointers[mipmap[voice]][tableid[voice] + 1 - nointerp][state[voice]] *
             lipol);
 }
 
 float WavetableOscillator::deformContinuous(float block_pos, int voice)
 {
     block_pos = nointerp ? 1 : block_pos;
-    float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
+    float tblip_ipol = (1 - block_pos) * last_tableipol[voice] + block_pos * tableipol[voice];
 
     int tempTableId = floor(tblip_ipol);
     int targetTableId = min((int)(tempTableId + 1), (int)(oscdata->wt.n_tables - 1));
@@ -589,7 +620,7 @@ float WavetableOscillator::deformContinuous(float block_pos, int voice)
 float WavetableOscillator::deformMorph(float block_pos, int voice)
 {
 
-    float frames[2] = {(last_tableipol), (tableipol)};
+    float frames[2] = {(last_tableipol[voice]), (tableipol[voice])};
     for (int i = 0; i < 2; i++)
     {
         int actualFrame = floor(frames[i]);
@@ -636,32 +667,56 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
     l_hskew.process();
     l_clip.process();
 
-    if ((oscdata->wt.n_tables == 1) ||
-        (tableid >=
-         oscdata->wt.n_tables)) // TableID-range may have changed in the meantime, check it!
+    // TableID-range may have changed in the meantime, check it! In sample mode the voices
+    // carry independent frame indices, so every sounding one has to be checked and reset,
+    // not just the first: a voice left pointing past a table that shrank underneath us
+    // reads out of bounds in the deform functions.
+    //
+    // The cast to int matters. n_tables is unsigned, so the old comparison promoted the
+    // frame index and a sample sitting at the -1 that init() seeds - which is what the
+    // first advance in convolute() cancels out - looked enormous and got reset to 0 before
+    // it ever played. That skipped frame 0 whenever Morph put the start point there.
+    bool outOfRange = (oscdata->wt.n_tables == 1);
+
+    for (int i = 0; i < n_unison && !outOfRange; i++)
     {
-        tableipol = 0.f;
-        tableid = 0;
+        outOfRange = (tableid[i] >= (int)oscdata->wt.n_tables);
+    }
+
+    if (outOfRange)
+    {
         last_tableid = 0;
-        last_tableipol = 0.f;
+
+        for (int i = 0; i < MAX_UNISON; i++)
+        {
+            tableipol[i] = 0.f;
+            last_tableipol[i] = 0.f;
+            tableid[i] = 0;
+        }
     }
     else if (oscdata->wt.flags & wtf_is_sample)
     {
-        if (deformType == XT_134_EARLIER)
+        for (int i = 0; i < n_unison; i++)
         {
-            tableipol = 0.f;
-            last_tableipol = 0.f;
-        }
-        else
-        {
-            tableipol = tableid;
-            last_tableipol = tableid;
+            if (deformType == XT_134_EARLIER)
+            {
+                tableipol[i] = 0.f;
+                last_tableipol[i] = 0.f;
+            }
+            else
+            {
+                tableipol[i] = tableid[i];
+                last_tableipol[i] = tableid[i];
+            }
         }
     }
     else
     {
-        last_tableipol = tableipol;
-        last_tableid = tableid;
+        // Morph mode is identical for every voice, so work it out once on locals and
+        // broadcast. Doing it this way rather than having the deform functions pick an
+        // index keeps the branch out of the per-sample read in convolute().
+        float t_last_ipol = tableipol[0];
+        last_tableid = tableid[0];
 
         float shape;
         float intpart;
@@ -669,34 +724,41 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
         shape = getMorph();
 
         shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
-        tableipol = deformType == XT_134_EARLIER ? modff(shape, &intpart) : shape;
+        float t_ipol = deformType == XT_134_EARLIER ? modff(shape, &intpart) : shape;
         modff(shape, &intpart);
-        tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
+        int t_id = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
 
         selectDeform();
 
         if (deformType == XT_134_EARLIER)
         {
-            if (tableid > last_tableid)
+            if (t_id > last_tableid)
             {
-                if (last_tableipol != 1.f)
+                if (t_last_ipol != 1.f)
                 {
-                    tableid = last_tableid;
-                    tableipol = 1.f;
+                    t_id = last_tableid;
+                    t_ipol = 1.f;
                 }
                 else
-                    last_tableipol = 0.0f;
+                    t_last_ipol = 0.0f;
             }
-            else if (tableid < last_tableid)
+            else if (t_id < last_tableid)
             {
-                if (last_tableipol != 0.f)
+                if (t_last_ipol != 0.f)
                 {
-                    tableid = last_tableid;
-                    tableipol = 0.f;
+                    t_id = last_tableid;
+                    t_ipol = 0.f;
                 }
                 else
-                    last_tableipol = 1.0f;
+                    t_last_ipol = 1.0f;
             }
+        }
+
+        for (int i = 0; i < MAX_UNISON; i++)
+        {
+            tableipol[i] = t_ipol;
+            last_tableipol[i] = t_last_ipol;
+            tableid[i] = t_id;
         }
     }
 
