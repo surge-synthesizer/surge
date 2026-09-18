@@ -71,6 +71,7 @@ class alignas(16) AirWindowsEffect : public Effect
     void setupSubFX(int awfx, bool useStreamedValues);
     std::unique_ptr<AirWinBaseClass> airwin;
     int lastSelected = -1;
+    char groupLabel[1024]{};
 
     void sampleRateReset() override
     {

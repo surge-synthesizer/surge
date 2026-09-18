@@ -89,9 +89,12 @@ const char *AirWindowsEffect::group_label(int id)
     {
         if (airwin)
         {
-            static char txt[1024];
-            strncpy(txt, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(), 1023);
-            return (const char *)txt;
+            // This used to be a function local static, so two effect instances - or two
+            // plugin instances - asking for their group label at once scribbled over each
+            // other's answer.
+            strncpy(groupLabel, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(),
+                    sizeof(groupLabel) - 1);
+            return (const char *)groupLabel;
         }
         else
         {
