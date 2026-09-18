@@ -1388,21 +1388,24 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
 
         handleWavetableLoad(id);
 
-        auto new_name = storage->getCurrentWavetableName(oscdata);
-
-        SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
-        ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
-                                    (float)oscInScene, (float)id, new_name);
-
-        // However the wavetable got picked - jog arrow, menu entry or arrow key - leave the
-        // focus on the selector, so the keyboard can carry straight on from there. The
-        // impulse response loader gets this for free from its reload, which relays the FX
-        // out and refocuses it. Only worth doing while we are on screen, since the menu
-        // action runs asynchronously and JUCE asserts on a focus grab into a component
-        // which is not showing.
-        if (wavetableAccOverlay->isShowing())
+        if (sge)
         {
-            Surge::GUI::grabKeyboardFocusIfAllowed(wavetableAccOverlay.get());
+            auto new_name = storage->getCurrentWavetableName(oscdata);
+
+            SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+            ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
+                                        (float)oscInScene, (float)id, new_name);
+
+            // However the wavetable got picked - jog arrow, menu entry or arrow key - leave
+            // the focus on the selector, so the keyboard can carry straight on from there.
+            // The impulse response loader gets this for free from its reload, which relays
+            // the FX out and refocuses it. Only worth doing while we are on screen, since
+            // the menu action runs asynchronously and JUCE asserts on a focus grab into a
+            // component which is not showing.
+            if (wavetableAccOverlay->isShowing())
+            {
+                Surge::GUI::grabKeyboardFocusIfAllowed(wavetableAccOverlay.get());
+            }
         }
     }
 }
