@@ -88,6 +88,7 @@ add_library(${PROJECT_NAME}
   PatchDB.cpp
   PatchDBQueryParser.cpp
   PatchDB.h
+  ScaleRotation.h
   SkinColors.cpp
   SkinColors.h
   SkinFonts.cpp

@@ -81,6 +81,12 @@ struct TuningOverlay : public OverlayComponent,
     void onToneStringChanged(int tone, const std::string &newCentsValue);
     void onScaleRescaled(double scaledBy);
     void onScaleRescaledAbsolute(double setRITo);
+
+    // Rotate the scale so the given degree becomes its root, optionally mirroring it, and
+    // the context menu which offers that for the degree under the mouse.
+    void onScaleRotated(int degree, bool invert);
+    void showRotationMenu(int degree);
+
     void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
     void resetParentTitle();

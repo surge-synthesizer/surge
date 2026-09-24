@@ -24,11 +24,14 @@
 
 #include "TuningOverlays.h"
 #include "RuntimeFont.h"
+#include "ScaleRotation.h"
+#include "StringOps.h"
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeSynthEditor.h" // bit gross but so I can do DnD
+#include "widgets/MenuCustomComponents.h"
 #include "widgets/MultiSwitch.h"
 #include "fmt/core.h"
 #include <chrono>
@@ -1258,6 +1261,8 @@ class RadialScaleGraph : public juce::Component,
         [](int, const std::string &) {};
     std::function<void(double)> onScaleRescaled = [](double) {};
     std::function<void(double)> onScaleRescaledAbsolute = [](double) {};
+    // The overlay owns the scale and so builds the menu; we only say which degree was clicked
+    std::function<void(int degree)> onShowRotationMenu = [](int) {};
     static constexpr int usedForSidebar = 185;
 
     std::unique_ptr<juce::Viewport> toneList;
@@ -2378,10 +2383,29 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         bool isReadOnly() const { return matrix->overlay->mtsMode; }
 
         juce::Point<float> lastMousePos;
+        /*
+         * Each row of the grid belongs to one degree, and the left hand header labels it, so
+         * that is the degree a right click offers to rotate to. The header row along the top
+         * labels itself by column instead, so there we read the column.
+         */
+        int degreeAt(const juce::Point<float> &here) const
+        {
+            auto i = (int)std::floor(here.x / cellW);
+            auto j = (int)std::floor(here.y / cellH);
+
+            return (j == 0) ? i - 1 : j - 1;
+        }
+
         void mouseDown(const juce::MouseEvent &e) override
         {
             if (mode == TRUE_KEYS || isReadOnly())
             {
+                return;
+            }
+
+            if (e.mods.isPopupMenu())
+            {
+                matrix->overlay->showRotationMenu(degreeAt(e.position));
                 return;
             }
 
@@ -2394,7 +2418,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseUp(const juce::MouseEvent &e) override
         {
-            if (mode == TRUE_KEYS || isReadOnly())
+            // A right click opened the context menu and never captured the mouse, so there is
+            // nothing here to undo
+            if (mode == TRUE_KEYS || isReadOnly() || e.mods.isPopupMenu())
             {
                 return;
             }
@@ -2410,7 +2436,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseDrag(const juce::MouseEvent &e) override
         {
-            if (mode == TRUE_KEYS || isReadOnly())
+            if (mode == TRUE_KEYS || isReadOnly() || e.mods.isPopupMenu())
             {
                 return;
             }
@@ -2626,6 +2652,14 @@ void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
         return;
     }
 
+    if (e.mods.isPopupMenu())
+    {
+        // Node n draws tone n, and away from any node we are on the root, which can only
+        // mirror
+        onShowRotationMenu(hotSpotIndex + 1);
+        return;
+    }
+
     if (hotSpotIndex == -1)
     {
         centsAtMouseDown = 0;
@@ -2642,7 +2676,7 @@ void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
 
 void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 {
-    if (!readOnly && hotSpotIndex != -1)
+    if (!readOnly && !e.mods.isPopupMenu() && hotSpotIndex != -1)
     {
         float dr = 0;
         auto mdp = e.getMouseDownPosition().toFloat();
@@ -2729,7 +2763,7 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 
 void RadialScaleGraph::mouseDoubleClick(const juce::MouseEvent &e)
 {
-    if (!readOnly && hotSpotIndex != -1)
+    if (!readOnly && !e.mods.isPopupMenu() && hotSpotIndex != -1)
     {
         auto newCents = (hotSpotIndex + 1) * scale.tones[scale.count - 1].cents / scale.count;
         toneKnobs[hotSpotIndex + 1]->angle = 0;
@@ -3640,6 +3674,7 @@ TuningOverlay::TuningOverlay()
     radialScaleGraph->onScaleRescaledAbsolute = [this](double d) {
         this->onScaleRescaledAbsolute(d);
     };
+    radialScaleGraph->onShowRotationMenu = [this](int degree) { this->showRotationMenu(degree); };
 
     intervalMatrix = std::make_unique<IntervalMatrix>(this);
 
@@ -3844,6 +3879,54 @@ void TuningOverlay::onScaleRescaledAbsolute(double riTo)
         t.cents *= scale;
     }
     recalculateScaleText();
+}
+
+void TuningOverlay::onScaleRotated(int degree, bool invert)
+{
+    if (!storage || mtsMode)
+        return;
+
+    editor->undoManager()->pushTuning(storage->currentTuning);
+
+    storage->currentScale = Surge::Tuning::rotateScale(storage->currentScale, degree, invert);
+    recalculateScaleText();
+}
+
+void TuningOverlay::showRotationMenu(int degree)
+{
+    if (!storage || mtsMode || !editor)
+        return;
+
+    auto menu = juce::PopupMenu();
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(
+        SurgeGUIEditor::helpURLForSpecial(storage, "tun-menu"));
+    auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Scale", hurl);
+
+    tcomp->setSkin(skin, associatedBitmapStore);
+
+    auto hment = tcomp->getTitle();
+
+    menu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+    menu.addSeparator();
+
+    menu.addItem(Surge::GUI::toOSCase("Invert Scale"), [this]() { onScaleRotated(0, true); });
+
+    /*
+     * Rotating to the root, or to the degree which closes the scale, leaves it exactly where
+     * it started, so those degrees offer the mirror on its own.
+     */
+    if (degree > 0 && degree < storage->currentScale.count)
+    {
+        menu.addSeparator();
+
+        menu.addItem(Surge::GUI::toOSCase(fmt::format("Rotate Scale to Degree {}", degree)),
+                     [this, degree]() { onScaleRotated(degree, false); });
+        menu.addItem(
+            Surge::GUI::toOSCase(fmt::format("Rotate and Invert Scale to Degree {}", degree)),
+            [this, degree]() { onScaleRotated(degree, true); });
+    }
+
+    menu.showMenuAsync(editor->popupMenuOptions());
 }
 
 void TuningOverlay::onToneStringChanged(int tone, const std::string &newStringValue)
