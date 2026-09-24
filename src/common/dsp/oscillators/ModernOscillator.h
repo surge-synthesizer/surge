@@ -82,8 +82,8 @@ class ModernOscillator : public Oscillator
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;
 
-    lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
-        subdpbase, subdspbase, detune, pitchlag, fmdepth;
+    lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, detune, fmdepth;
+    lipol_os<double, true> dpbase[MAX_UNISON], dspbase[MAX_UNISON], subdpbase, subdspbase;
 
     // character filter
     Surge::Oscillator::CharacterFilter<double> charFilt;
