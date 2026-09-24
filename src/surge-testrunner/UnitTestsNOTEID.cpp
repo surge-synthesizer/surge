@@ -812,6 +812,100 @@ TEST_CASE("Note ID 0 Is Valid", "[noteid]")
     }
 }
 
+TEST_CASE("Note IDs Across a Patch Change", "[noteid]") // #8438
+{
+    SECTION("A Held Note Keeps Its ID And Is Never Ended")
+    {
+        auto surge = Surge::Headless::createSurge(48000);
+        surge->storage.retriggerHeldNotesOnPatchChange = true;
+
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 127, 0, 1423);
+        for (int i = 0; i < 5; ++i)
+        {
+            surge->process();
+            REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
+        }
+
+        void *d = nullptr;
+        surge->populateDawExtraState();
+        auto sz = surge->saveRaw(&d);
+        surge->enqueuePatchForLoad(d, (int)sz);
+
+        /*
+         * The patch change tears the voice down and the replay puts it straight back
+         * carrying the same ID, so the host is never told the note ended. Announcing an
+         * end and then reusing the ID would be out of spec, which is why the notification
+         * is held back over the load rather than sent and taken back.
+         */
+        for (int i = 0; i < 20; ++i)
+        {
+            surge->process();
+            REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
+        }
+
+        REQUIRE(!surge->voices[0].empty());
+        for (auto v : surge->voices[0])
+        {
+            REQUIRE(v->host_note_id == 1423);
+            REQUIRE(v->originating_host_channel == 0);
+            REQUIRE(v->originating_host_key == 60);
+        }
+
+        // and because the ID came back, the host's note off still finds its voice
+        surge->releaseNote(0, 60, 127, 1423);
+        while (!surge->voices[0].empty())
+        {
+            surge->process();
+        }
+
+        REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
+        REQUIRE(surge->endedHostNoteIds[0] == 1423);
+        REQUIRE(surge->endedHostNoteOriginalChannel[0] == 0);
+        REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+    }
+
+    SECTION("A Note Released During the Load Still Gets Its End")
+    {
+        auto surge = Surge::Headless::createSurge(48000);
+        surge->storage.retriggerHeldNotesOnPatchChange = true;
+
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 127, 0, 1423);
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+        REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
+
+        // drive the load window by hand so something can happen inside it
+        surge->beginPatchChangeNoteRetrigger();
+        surge->halt_engine = true;
+        surge->stopSound();
+
+        // the key was still down, so the note end was held back rather than sent
+        REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
+
+        surge->releaseNote(0, 60, 127, 1423);
+
+        surge->halt_engine = false;
+        surge->process();
+
+        // nothing left to replay, so the end we held back has to be delivered after all,
+        // otherwise the host would wait forever on a voice which no longer exists
+        REQUIRE(surge->voices[0].empty());
+        REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
+        REQUIRE(surge->endedHostNoteIds[0] == 1423);
+        REQUIRE(surge->endedHostNoteOriginalChannel[0] == 0);
+        REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+
+        surge->process();
+        REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
+    }
+}
+
 // TODO
 // mono and poly dual mix
 // mpe poly

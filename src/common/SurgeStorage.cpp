@@ -569,6 +569,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     transposeByTuningPeriod = (bool)Surge::Storage::getUserDefaultValue(
         this, Surge::Storage::DefaultTransposeByTuningPeriod, 0);
 
+    retriggerHeldNotesOnPatchChange = (bool)Surge::Storage::getUserDefaultValue(
+        this, Surge::Storage::RetriggerHeldNotesOnPatchChange, 0);
+
     for (int s = 0; s < n_scenes; ++s)
     {
         getPatch().scene[s].drift.set_extend_range(true);
