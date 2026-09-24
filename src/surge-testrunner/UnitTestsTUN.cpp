@@ -27,6 +27,7 @@
 #include "HeadlessUtils.h"
 #include "MTSESPTuning.h"
 #include "Player.h"
+#include "ScaleRotation.h"
 #include "Tunings.h"
 
 #include "catch2/catch_amalgamated.hpp"
@@ -2250,4 +2251,198 @@ TEST_CASE("Tuning From MTS-ESP Data", "[tun]")
         checkReproduces(info, t);
         REQUIRE(t.scale.count == 127);
     }
+}
+
+namespace
+{
+/*
+ * The tones of a scale written the way an SCL file would write them, which is the form the
+ * tuning editor hands back to storage, and so the form worth asserting on.
+ */
+std::vector<std::string> sclTones(const Tunings::Scale &s)
+{
+    std::vector<std::string> res;
+
+    for (const auto &t : s.tones)
+    {
+        if (t.type == Tunings::Tone::kToneRatio)
+        {
+            res.push_back(std::to_string(t.ratio_n) + "/" + std::to_string(t.ratio_d));
+        }
+        else
+        {
+            std::ostringstream oss;
+
+            oss << std::fixed << std::setprecision(3) << t.cents;
+            res.push_back(oss.str());
+        }
+    }
+
+    return res;
+}
+
+Tunings::Scale jiMajorScale()
+{
+    return Tunings::parseSCLData(R"SCL(! ji-major.scl
+!
+Ptolemy's intense diatonic, the just intonation major scale
+ 7
+!
+ 9/8
+ 5/4
+ 4/3
+ 3/2
+ 5/3
+ 15/8
+ 2/1
+)SCL");
+}
+} // namespace
+
+TEST_CASE("Rotating the just intonation major scale to degree 4 gives Mixolydian", "[tun]")
+{
+    auto rotated = Surge::Tuning::rotateScale(jiMajorScale(), 4, false);
+
+    REQUIRE(rotated.count == 7);
+    REQUIRE(sclTones(rotated) ==
+            std::vector<std::string>{"10/9", "5/4", "4/3", "3/2", "5/3", "16/9", "2/1"});
+}
+
+TEST_CASE("Inverting the just intonation major scale gives Phrygian", "[tun]")
+{
+    auto inverted = Surge::Tuning::rotateScale(jiMajorScale(), 0, true);
+
+    REQUIRE(inverted.count == 7);
+    REQUIRE(sclTones(inverted) ==
+            std::vector<std::string>{"16/15", "6/5", "4/3", "3/2", "8/5", "16/9", "2/1"});
+}
+
+TEST_CASE("Rotating a scale and rotating it back returns the original", "[tun]")
+{
+    auto original = jiMajorScale();
+    auto there = Surge::Tuning::rotateScale(original, 4, false);
+    auto back = Surge::Tuning::rotateScale(there, original.count - 4, false);
+
+    REQUIRE(sclTones(back) == sclTones(original));
+}
+
+TEST_CASE("Inverting a scale twice returns the original", "[tun]")
+{
+    auto original = jiMajorScale();
+    auto once = Surge::Tuning::rotateScale(original, 0, true);
+    auto twice = Surge::Tuning::rotateScale(once, 0, true);
+
+    REQUIRE(sclTones(twice) == sclTones(original));
+}
+
+TEST_CASE("Every rotation of an equal temperament is the same equal temperament", "[tun]")
+{
+    auto et = Tunings::evenTemperament12NoteScale();
+
+    for (int degree = 0; degree < et.count; ++degree)
+    {
+        INFO("rotating to degree " << degree);
+
+        auto rotated = Surge::Tuning::rotateScale(et, degree, false);
+
+        REQUIRE(rotated.count == et.count);
+
+        for (int i = 0; i < et.count; ++i)
+        {
+            REQUIRE(rotated.tones[i].cents == Approx(100.0 * (i + 1)).margin(1e-6));
+        }
+    }
+}
+
+TEST_CASE("Rotation preserves a scale's period when it is not an octave", "[tun]")
+{
+    auto tritave = Tunings::parseSCLData(R"SCL(! tritave.scl
+!
+Three tones repeating at the twelfth rather than the octave
+ 3
+!
+ 5/3
+ 7/3
+ 3/1
+)SCL");
+
+    auto rotated = Surge::Tuning::rotateScale(tritave, 1, false);
+
+    REQUIRE(sclTones(rotated) == std::vector<std::string>{"7/5", "9/5", "3/1"});
+}
+
+TEST_CASE("A scale holding any cents tone rotates to cents throughout", "[tun]")
+{
+    auto mixed = Tunings::parseSCLData(R"SCL(! mixed.scl
+!
+A ratio, a cents value and an octave
+ 3
+!
+ 9/8
+ 350.0
+ 2/1
+)SCL");
+
+    auto rotated = Surge::Tuning::rotateScale(mixed, 1, false);
+
+    REQUIRE(sclTones(rotated) == std::vector<std::string>{"146.090", "996.090", "1200.000"});
+}
+
+TEST_CASE("Every rotation survives the trip through SCL text", "[tun]")
+{
+    /*
+     * The tuning editor writes the rotated scale out as an SCL file and reads it back, and
+     * swallows a parse error if one comes of it, so a tone this function cannot express
+     * would revert the edit in silence rather than complain.
+     */
+    auto asSCL = [](const Tunings::Scale &s) {
+        std::ostringstream oss;
+
+        oss << "! rotated.scl\n" << s.description << "\n" << s.count << "\n!\n";
+
+        for (const auto &t : s.tones)
+        {
+            if (t.type == Tunings::Tone::kToneRatio)
+            {
+                oss << t.ratio_n << "/" << t.ratio_d << "\n";
+            }
+            else
+            {
+                oss << std::fixed << std::setprecision(5) << t.cents << "\n";
+            }
+        }
+
+        return oss.str();
+    };
+
+    auto original = jiMajorScale();
+
+    for (int degree = 0; degree < original.count; ++degree)
+    {
+        for (auto invert : {false, true})
+        {
+            INFO("degree " << degree << (invert ? " inverted" : ""));
+
+            auto rotated = Surge::Tuning::rotateScale(original, degree, invert);
+
+            REQUIRE_NOTHROW(Tunings::parseSCLData(asSCL(rotated)));
+            REQUIRE(sclTones(Tunings::parseSCLData(asSCL(rotated))) == sclTones(rotated));
+        }
+    }
+}
+
+TEST_CASE("Rotating a single tone scale leaves it alone", "[tun]")
+{
+    auto octave = Tunings::parseSCLData(R"SCL(! octave.scl
+!
+One tone, the octave
+ 1
+!
+ 2/1
+)SCL");
+
+    REQUIRE(sclTones(Surge::Tuning::rotateScale(octave, 1, false)) ==
+            std::vector<std::string>{"2/1"});
+    REQUIRE(sclTones(Surge::Tuning::rotateScale(octave, 0, true)) ==
+            std::vector<std::string>{"2/1"});
 }
