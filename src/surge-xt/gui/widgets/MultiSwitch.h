@@ -156,6 +156,18 @@ struct MultiSwitch : public juce::Component,
     void setAccessibleCellLabels(const std::vector<std::string> &l) { accessibleCellLabels = l; }
 
     void setupAccessibility();
+
+    // Bounds of one accessibility cell. Rounds the cell edges rather than the origin and
+    // size, so the cells tile the switch exactly instead of each inheriting the truncation
+    // error of an integer width / columns.
+    juce::Rectangle<int> cellBounds(int row, int col) const;
+
+    // Our bounds can be set after setupAccessibility() runs, so reposition the cells on
+    // resize. This relayouts rather than rebuilds, since rebuilding would destroy a cell
+    // currently holding keyboard focus.
+    void layoutAccessibilityCells();
+    void resized() override { layoutAccessibilityCells(); }
+
     std::vector<std::unique_ptr<juce::Component>> selectionComponents;
     juce::Component *getCurrentAccessibleSelectionComponent() override;
     void updateAccessibleStateOnUserValueChange() override;
