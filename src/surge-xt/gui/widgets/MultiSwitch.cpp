@@ -28,6 +28,8 @@
 #include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 
+#include <cmath>
+
 namespace Surge
 {
 namespace Widgets
@@ -442,6 +444,41 @@ template <juce::AccessibilityRole ROLE> struct MultiSwitchAccOverlayButton : pub
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchAccOverlayButton);
 };
 
+juce::Rectangle<int> MultiSwitch::cellBounds(int row, int col) const
+{
+    if (rows < 1 || columns < 1)
+    {
+        return {};
+    }
+
+    auto dr = 1.f * getHeight() / rows;
+    auto dc = 1.f * getWidth() / columns;
+
+    auto x0 = (int)std::round(col * dc), x1 = (int)std::round((col + 1) * dc);
+    auto y0 = (int)std::round(row * dr), y1 = (int)std::round((row + 1) * dr);
+
+    return {x0, y0, x1 - x0, y1 - y0};
+}
+
+void MultiSwitch::layoutAccessibilityCells()
+{
+    if (selectionComponents.size() != (size_t)(rows * columns))
+    {
+        return;
+    }
+
+    // Same traversal order as setupAccessibility(), so cell N keeps the bounds it was built with
+    int sel = 0;
+
+    for (int c = 0; c < columns; ++c)
+    {
+        for (int r = 0; r < rows; ++r)
+        {
+            selectionComponents[sel++]->setBounds(cellBounds(r, c));
+        }
+    }
+}
+
 void MultiSwitch::setupAccessibility()
 {
     if (rows * columns <= 1) // I use an alternate handler below
@@ -466,8 +503,6 @@ void MultiSwitch::setupAccessibility()
         return;
     }
 
-    float dr = getHeight() / rows;
-    float dc = getWidth() / columns;
     int sel = 0;
 
     for (int c = 0; c < columns; ++c)
@@ -507,7 +542,7 @@ void MultiSwitch::setupAccessibility()
 
             sel++;
             ac->getProperties().set("ControlGroup", (int)(c * columns + rows));
-            ac->setBounds(juce::Rectangle<int>(c * dc, r * dr, dc, dr));
+            ac->setBounds(cellBounds(r, c));
             ac->setAccessible(true);
             addAndMakeVisible(*ac);
             selectionComponents.push_back(std::move(ac));

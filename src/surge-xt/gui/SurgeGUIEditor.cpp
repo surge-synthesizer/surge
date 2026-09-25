@@ -4734,7 +4734,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setFrameOffset(std::atoi(frameoffset.c_str()));
 
             setAccessibilityInformationByParameter(hsw.get(), p, "Select");
-            hsw->setupAccessibility();
 
             hsw->setSwitchDrawable(std::get<0>(drawables));
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
@@ -4770,6 +4769,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
 
             hsw->setBounds(rect);
+            // Must follow setBounds, since the cells are sized off our own bounds
+            hsw->setupAccessibility();
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
 
             if (p)
