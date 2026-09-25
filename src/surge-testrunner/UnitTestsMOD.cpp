@@ -1516,3 +1516,132 @@ TEST_CASE("Enumerate Modulations From A Source", "[mod]")
         REQUIRE(fromB[0].second == 3);
     }
 }
+
+TEST_CASE("Scene LFO Retrigger On New Note", "[mod]")
+{
+    // a keytrigger scene LFO starting at phase zero, so the phase tells us if it attacked
+    auto setup = [](int retriggerMode) {
+        auto surge = surgeOnSine();
+        auto &lfo = surge->storage.getPatch().scene[0].lfo[n_lfos_voice];
+
+        lfo.shape.val.i = lt_sine;
+        lfo.trigmode.val.i = lm_keytrigger;
+        lfo.trigmode.deform_type = retriggerMode;
+        lfo.start_phase.val.f = 0.f;
+        lfo.rate.val.f = 4.f;
+
+        return surge;
+    };
+
+    auto phaseOf = [](const std::shared_ptr<SurgeSynthesizer> &surge, int which) {
+        auto lms = dynamic_cast<LFOModulationSource *>(
+            surge->storage.getPatch().scene[0].modsources[ms_slfo1 + which]);
+        REQUIRE(lms);
+
+        return lms->getPhase();
+    };
+
+    SECTION("First Note Attacks Either Way")
+    {
+        for (auto mode : {lrm_first_note_only, lrm_every_new_note})
+        {
+            auto surge = setup(mode);
+
+            for (int i = 0; i < 10; ++i)
+            {
+                surge->process();
+            }
+
+            surge->playNote(0, 60, 100, 0);
+
+            REQUIRE(phaseOf(surge, 0) == Approx(0.f).margin(1e-5));
+        }
+    }
+
+    SECTION("Added Note Does Not Retrigger By Default")
+    {
+        auto surge = setup(lrm_first_note_only);
+
+        surge->playNote(0, 60, 100, 0);
+
+        for (int i = 0; i < 30; ++i)
+        {
+            surge->process();
+        }
+
+        auto advanced = phaseOf(surge, 0);
+
+        REQUIRE(advanced > 0.2f);
+
+        surge->playNote(0, 64, 100, 0);
+
+        REQUIRE(phaseOf(surge, 0) == Approx(advanced));
+    }
+
+    SECTION("Added Note Retriggers When Engaged")
+    {
+        auto surge = setup(lrm_every_new_note);
+
+        surge->playNote(0, 60, 100, 0);
+
+        for (int i = 0; i < 30; ++i)
+        {
+            surge->process();
+        }
+
+        REQUIRE(phaseOf(surge, 0) > 0.2f);
+
+        surge->playNote(0, 64, 100, 0);
+
+        REQUIRE(phaseOf(surge, 0) == Approx(0.f).margin(1e-5));
+    }
+
+    SECTION("The Option Is Per LFO")
+    {
+        auto surge = setup(lrm_every_new_note);
+        auto &other = surge->storage.getPatch().scene[0].lfo[n_lfos_voice + 1];
+
+        other.shape.val.i = lt_sine;
+        other.trigmode.val.i = lm_keytrigger;
+        other.trigmode.deform_type = lrm_first_note_only;
+        other.start_phase.val.f = 0.f;
+        other.rate.val.f = 4.f;
+
+        surge->playNote(0, 60, 100, 0);
+
+        for (int i = 0; i < 30; ++i)
+        {
+            surge->process();
+        }
+
+        auto advanced = phaseOf(surge, 1);
+
+        REQUIRE(advanced > 0.2f);
+
+        surge->playNote(0, 64, 100, 0);
+
+        REQUIRE(phaseOf(surge, 0) == Approx(0.f).margin(1e-5));
+        REQUIRE(phaseOf(surge, 1) == Approx(advanced));
+    }
+
+    SECTION("Retrigger State Survives Streaming")
+    {
+        auto surge = setup(lrm_every_new_note);
+
+        void *data = nullptr;
+        auto sz = surge->storage.getPatch().save_xml(&data);
+
+        REQUIRE(sz > 0);
+        REQUIRE(data);
+
+        auto dest = surgeOnSine();
+
+        dest->storage.getPatch().load_xml(data, sz, false);
+        free(data);
+
+        REQUIRE(dest->storage.getPatch().scene[0].lfo[n_lfos_voice].trigmode.deform_type ==
+                lrm_every_new_note);
+        REQUIRE(dest->storage.getPatch().scene[0].lfo[n_lfos_voice + 1].trigmode.deform_type ==
+                lrm_first_note_only);
+    }
+}

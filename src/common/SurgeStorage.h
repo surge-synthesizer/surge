@@ -269,6 +269,14 @@ const char lfo_trigger_mode_names[n_lfo_trigger_modes][16] = {
     "Random",
 };
 
+enum lfo_retrigger_mode
+{
+    lrm_first_note_only = 0,
+    lrm_every_new_note,
+
+    n_lfo_retrigger_modes,
+};
+
 enum character_mode
 {
     cm_warm = 0,

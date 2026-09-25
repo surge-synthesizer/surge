@@ -2050,6 +2050,30 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         });
                     }
                 }
+
+                if (p->ctrltype == ct_lfotrigmode)
+                {
+                    auto q = modsource_editor[current_scene];
+
+                    // voice LFOs already attack on every note, so this is scene LFOs only
+                    if (q >= ms_slfo1 && q <= ms_slfo6)
+                    {
+                        contextMenu.addSeparator();
+
+                        bool isChecked = (p->deform_type == lrm_every_new_note);
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Retrigger on New Note"), true, isChecked,
+                            [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, p->deform_type == lrm_every_new_note
+                                                          ? lrm_first_note_only
+                                                          : lrm_every_new_note);
+                                synth->storage.getPatch().isDirty = true;
+                            });
+                    }
+                }
+
                 // adds the menu to all vt_int controlls
                 contextMenu.addSeparator();
                 createMIDILearnMenuEntries(contextMenu, param_cc, p->id, control);

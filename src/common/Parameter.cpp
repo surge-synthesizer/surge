@@ -371,6 +371,7 @@ bool Parameter::has_deformoptions() const
     case ct_percent_with_string_deform_hook:
     case ct_percent_bipolar_with_string_filter_hook:
     case ct_lfodeform:
+    case ct_lfotrigmode:
     case ct_modern_trimix:
     case ct_alias_mask:
     case ct_tape_drive:
