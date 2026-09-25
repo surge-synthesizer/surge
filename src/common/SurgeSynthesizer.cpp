@@ -752,22 +752,29 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     if (override_hostchan >= 0)
         host_originating_channel = override_hostchan;
 
-    if (getNonReleasedVoices(scene) == 0)
+    const bool sceneIsSounding = getNonReleasedVoices(scene) > 0;
+
+    for (int l = 0; l < n_lfos_scene; l++)
     {
-        for (int l = 0; l < n_lfos_scene; l++)
+        auto &lfodata = storage.getPatch().scene[scene].lfo[n_lfos_voice + l];
+
+        // See issue #2462
+        if (sceneIsSounding && lfodata.trigmode.deform_type != lrm_every_new_note)
         {
-            if (storage.getPatch().scene[scene].lfo[n_lfos_voice + l].shape.val.i == lt_formula)
-            {
-                auto lms = dynamic_cast<LFOModulationSource *>(
-                    storage.getPatch().scene[scene].modsources[ms_slfo1 + l]);
-                if (lms)
-                {
-                    Surge::Formula::setupEvaluatorStateFrom(lms->formulastate, storage.getPatch(),
-                                                            scene);
-                }
-            }
-            storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->attack();
+            continue;
         }
+
+        if (lfodata.shape.val.i == lt_formula)
+        {
+            auto lms = dynamic_cast<LFOModulationSource *>(
+                storage.getPatch().scene[scene].modsources[ms_slfo1 + l]);
+            if (lms)
+            {
+                Surge::Formula::setupEvaluatorStateFrom(lms->formulastate, storage.getPatch(),
+                                                        scene);
+            }
+        }
+        storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->attack();
     }
 
     for (int i = ms_random_bipolar; i <= ms_alternate_unipolar; ++i)
