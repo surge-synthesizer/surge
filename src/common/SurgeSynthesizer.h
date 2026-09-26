@@ -191,6 +191,47 @@ class alignas(16) SurgeSynthesizer
     int16_t nextBlockEndedHostNoteOriginalKey[MAX_VOICES << 3];
     int16_t nextBlockEndedHostNoteOriginalChannel[MAX_VOICES << 3];
 
+    /*
+     * A patch change stops all sound, but the notes which were sounding when it started
+     * are replayed into the new patch once it has loaded (#8438). Two things have to
+     * survive the load for that to work.
+     *
+     * The first is the keyboard state. While a patch change is in flight stopSound()
+     * leaves channelState alone, so the keys which are down, the pedals, and the
+     * sostenuto capture set are all still there to be replayed afterwards. Note ons are
+     * dropped while the engine is halted but note offs are not, so a key released during
+     * the load correctly removes itself and does not come back.
+     *
+     * The second is the host note IDs. Freeing a voice normally tells the host the note
+     * has ended, and reusing an ID after that is out of spec - so for voices whose key is
+     * still sounding we hold that notification back instead, and the replay reuses the ID.
+     * Whatever the replay does not reuse gets its note end delivered then, so the host
+     * never ends up waiting on a voice which no longer exists.
+     */
+    bool preserveKeyStateOnStopSound{false};
+    std::atomic<bool> retriggerHeldNotesPending{false};
+
+    struct SuppressedNoteEnd
+    {
+        int32_t note_id;
+        int16_t key, channel;
+    };
+    std::array<SuppressedNoteEnd, MAX_VOICES << 1> suppressedNoteEnds;
+    int suppressedNoteEndCount{0};
+
+    struct RetriggerNote
+    {
+        int16_t channel, key;
+        int64_t order;
+        // captured before the replay, which sets keyIsDown on every key it plays
+        bool wasKeyDown;
+    };
+    std::array<RetriggerNote, 16 * 128> retriggerNotes;
+
+    // returns whether the replay was armed, which the user can turn off entirely
+    bool beginPatchChangeNoteRetrigger();
+    void retriggerHeldNotesAfterPatchLoad();
+
   public:
     /*
      * So when surge was pre-juce we contemplated writing our own ID remapping between

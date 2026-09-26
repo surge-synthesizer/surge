@@ -121,6 +121,9 @@ std::string defaultKeyToString(DefaultKey k)
     case RetainPatchSearchboxAfterLoad:
         r = "retainPatchSearchboxAfterLoad";
         break;
+    case RetriggerHeldNotesOnPatchChange:
+        r = "retriggerHeldNotesOnPatchChange";
+        break;
     case OverrideTuningOnPatchLoad:
         r = "overrideTuningOnPatchLoad";
         break;

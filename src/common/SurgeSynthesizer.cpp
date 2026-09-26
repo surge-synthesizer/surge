@@ -673,7 +673,27 @@ void SurgeSynthesizer::freeVoice(SurgeVoice *v)
         }
         if (!used_away)
         {
-            notifyEndedNote(v->host_note_id, v->originating_host_key, v->originating_host_channel);
+            /*
+             * If a patch change is tearing this voice down but its key is still sounding,
+             * the note is coming back on the other side of the load carrying this same ID.
+             * Telling the host the note ended and then reusing the ID would be out of spec,
+             * so hold the notification back - retriggerHeldNotesAfterPatchLoad() delivers
+             * it after all for any ID the replay does not actually reuse.
+             */
+            const bool keyStillSounding =
+                preserveKeyStateOnStopSound &&
+                channelState[v->state.channel].keyState[v->state.key].keystate > 0;
+
+            if (keyStillSounding && suppressedNoteEndCount < (int)suppressedNoteEnds.size())
+            {
+                suppressedNoteEnds[suppressedNoteEndCount++] = {
+                    v->host_note_id, v->originating_host_key, v->originating_host_channel};
+            }
+            else
+            {
+                notifyEndedNote(v->host_note_id, v->originating_host_key,
+                                v->originating_host_channel);
+            }
         }
     }
 
@@ -2700,18 +2720,33 @@ void SurgeSynthesizer::purgeDuplicateHeldVoicesInPolyMode(int scene, int channel
 
 void SurgeSynthesizer::stopSound()
 {
-    for (int i = 0; i < 16; i++)
+    /*
+     * A patch change wants the keyboard state to outlive the load so that the notes
+     * which were sounding can be replayed into the new patch, so it asks us to leave
+     * channelState alone. Note that this has to happen before the voices are freed
+     * below, since freeVoice() consults keystate to decide whether to hold back the
+     * note end for an ID the replay is going to reuse.
+     *
+     * Requiring halt_engine as well keeps that narrow: the state is only ever spared
+     * while the engine is explicitly halted for a load, so a stopSound() from anywhere
+     * else - the host suspending us, the bypass parameter - still clears everything
+     * even if a patch change is somehow in flight.
+     */
+    if (!preserveKeyStateOnStopSound || !halt_engine)
     {
-        channelState[i].hold = false;
-        channelState[i].sostenuto = false;
-
-        for (int k = 0; k < 128; k++)
+        for (int i = 0; i < 16; i++)
         {
-            channelState[i].keyState[k].keystate = 0;
-            channelState[i].keyState[k].lastdetune = 0;
-            channelState[i].keyState[k].lastNoteIdForKey = -1;
-            channelState[i].keyState[k].keyIsDown = false;
-            channelState[i].keyState[k].sostenutoCaptured = false;
+            channelState[i].hold = false;
+            channelState[i].sostenuto = false;
+
+            for (int k = 0; k < 128; k++)
+            {
+                channelState[i].keyState[k].keystate = 0;
+                channelState[i].keyState[k].lastdetune = 0;
+                channelState[i].keyState[k].lastNoteIdForKey = -1;
+                channelState[i].keyState[k].keyIsDown = false;
+                channelState[i].keyState[k].sostenutoCaptured = false;
+            }
         }
     }
 
@@ -2745,6 +2780,128 @@ void SurgeSynthesizer::stopSound()
     }
 
     memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
+}
+
+bool SurgeSynthesizer::beginPatchChangeNoteRetrigger()
+{
+    if (!storage.retriggerHeldNotesOnPatchChange)
+    {
+        return false;
+    }
+
+    preserveKeyStateOnStopSound = true;
+    suppressedNoteEndCount = 0;
+
+    /*
+     * Arm the replay now rather than when the load finishes. process() returns before it
+     * looks at this while the engine is halted, so the earliest it can fire is the first
+     * block of the new patch - and arming it up front means there is no window where the
+     * new patch is playing but the notes which were being held have not come back yet.
+     */
+    retriggerHeldNotesPending = true;
+
+    return true;
+}
+
+void SurgeSynthesizer::retriggerHeldNotesAfterPatchLoad()
+{
+    /*
+     * Clear these first: from here on we are making ordinary note ons, and any voice
+     * they steal should report its note end to the host in the usual way. Clearing the
+     * pending flag matters for the loads which run inline on the audio thread, which call
+     * us directly rather than waiting for process() to notice.
+     */
+    preserveKeyStateOnStopSound = false;
+    retriggerHeldNotesPending = false;
+
+    int n = 0;
+
+    for (int ch = 0; ch < 16; ++ch)
+    {
+        for (int k = 0; k < 128; ++k)
+        {
+            /*
+             * keystate, not keyIsDown: a note whose key came up while a pedal was down is
+             * still sounding, and since the pedals were preserved across the load too it
+             * is still ours to replay.
+             */
+            if (channelState[ch].keyState[k].keystate > 0 && n < (int)retriggerNotes.size())
+            {
+                retriggerNotes[n++] = {(int16_t)ch, (int16_t)k,
+                                       channelState[ch].keyState[k].voiceOrder,
+                                       channelState[ch].keyState[k].keyIsDown};
+            }
+        }
+    }
+
+    /*
+     * Replay in the order the notes were originally played, so that the mono modes land
+     * on the same note they would have if the chord had been played into the new patch
+     * by hand, and so that the earlier keys stay in the mono fallback pool.
+     */
+    std::sort(retriggerNotes.begin(), retriggerNotes.begin() + n,
+              [](const auto &a, const auto &b) { return a.order < b.order; });
+
+    for (int i = 0; i < n; ++i)
+    {
+        const auto ch = retriggerNotes[i].channel;
+        const auto k = retriggerNotes[i].key;
+        const auto &ks = channelState[ch].keyState[k];
+
+        playNote((char)ch, (char)k, (char)ks.keystate, ks.lastdetune, ks.lastNoteIdForKey);
+    }
+
+    /*
+     * Now let go of the keys which were not actually down, so that the notes a pedal was
+     * holding are held by that pedal again rather than by a key nobody is pressing. Going
+     * through releaseNote() rather than rebuilding the hold buffer by hand is what keeps
+     * the pedal, sostenuto and mono-fallback rules identical to the first time around.
+     *
+     * The original release velocity is not part of the keyboard state, so these replayed
+     * releases use zero. It only reaches a note which is still pedalled down, and only
+     * matters to the release velocity modulator, so it is not worth a wider struct.
+     */
+    for (int i = 0; i < n; ++i)
+    {
+        const auto ch = retriggerNotes[i].channel;
+        const auto k = retriggerNotes[i].key;
+
+        if (!retriggerNotes[i].wasKeyDown)
+        {
+            releaseNote((char)ch, (char)k, 0, channelState[ch].keyState[k].lastNoteIdForKey);
+        }
+    }
+
+    /*
+     * Finally, account for every note end we held back while the patch was loading. If a
+     * replayed voice picked the ID back up the host still sees one unbroken note; if not
+     * - the key was released during the load, or the new patch simply did not give it a
+     * voice - the host has to be told the note ended after all.
+     */
+    for (int i = 0; i < suppressedNoteEndCount; ++i)
+    {
+        const auto &sne = suppressedNoteEnds[i];
+        bool stillLive = false;
+
+        for (int sc = 0; sc < n_scenes && !stillLive; ++sc)
+        {
+            for (auto *v : voices[sc])
+            {
+                if (v->host_note_id == sne.note_id)
+                {
+                    stillLive = true;
+                    break;
+                }
+            }
+        }
+
+        if (!stillLive)
+        {
+            notifyEndedNote(sne.note_id, sne.key, sne.channel);
+        }
+    }
+
+    suppressedNoteEndCount = 0;
 }
 
 void SurgeSynthesizer::setSamplerate(float sr)
@@ -4440,6 +4597,9 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
 
         auto lg = std::lock_guard<std::mutex>(patchLoadSpawnMutex);
 
+        const bool retriggerArmed =
+            (patchid_queue >= 0 || has_patchid_file) && beginPatchChangeNoteRetrigger();
+
         // if the audio processing is inactive, patchloading should occur anyway
         if (patchid_queue >= 0)
         {
@@ -4484,6 +4644,11 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
         loadOscalgos();
 
         storage.perform_queued_wtloads();
+
+        if (retriggerArmed)
+        {
+            retriggerHeldNotesAfterPatchLoad();
+        }
     }
 }
 
@@ -4775,7 +4940,13 @@ void SurgeSynthesizer::process()
         mech::clear_block<BLOCK_SIZE>(output[1]);
         return;
     }
-    else if (patchid_queue >= 0 || has_patchid_file)
+
+    if (retriggerHeldNotesPending.exchange(false))
+    {
+        retriggerHeldNotesAfterPatchLoad();
+    }
+
+    if (patchid_queue >= 0 || has_patchid_file)
     {
         masterfade = max(0.f, masterfade - 0.05f);
         mfade = masterfade * masterfade;
@@ -4784,8 +4955,11 @@ void SurgeSynthesizer::process()
         {
             std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
             // spawn patch-loading thread
-            stopSound();
+            // halt first, so that stopSound() knows this is a patch change and can spare
+            // the keyboard state for the retrigger on the far side of the load
+            beginPatchChangeNoteRetrigger();
             halt_engine = true;
+            stopSound();
 
             /*
              * In theory, since we only spawn under a lock and the loading thread
