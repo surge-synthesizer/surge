@@ -117,6 +117,11 @@ enum wtflags
     wtf_int16_is_16 = 8,      // and in this case, range 0-2^16 if with above
     wtf_has_metadata = 0x10,  // null term xml at end of file
     wtf_user_modified = 0x20, // re-sliced at runtime, so it no longer matches its source
+    // When set, the unison voice count is read as a sample play count instead, and the
+    // oscillator collapses to a single voice. This is how samples have always behaved, so
+    // the bit is set on patches predating it; a fresh load leaves it clear and gets real
+    // unison, with wtf_loop_sample deciding whether the sample repeats forever.
+    wtf_unison_is_loop_count = 0x40,
 };
 
 #endif // SURGE_SRC_COMMON_DSP_WAVETABLE_H
