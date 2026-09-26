@@ -1660,7 +1660,7 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
     std::string iport =
         (processor.oscPortIn == 0) ? "not used" : std::to_string(processor.oscPortIn);
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Input Port (current: " + iport + ")..."),
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Set OSC Input Port (current: " + iport + ")..."),
                        [w = juce::Component::SafePointer(this), iport]() {
                            if (!w)
                                return;
