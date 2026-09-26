@@ -776,3 +776,72 @@ TEST_CASE("Chow DSP Delay", "[dsp]")
         }
     }
 }
+TEST_CASE("Invalid Sample Rates Are Ignored", "[dsp]") // See issue 8240
+{
+    SECTION("Nonsensical Rates Leave The Previous Rate In Place")
+    {
+        const float badRates[] = {0.f,
+                                  -48000.f,
+                                  1.f,
+                                  1e9f,
+                                  std::numeric_limits<float>::infinity(),
+                                  std::numeric_limits<float>::quiet_NaN()};
+
+        for (auto sr : badRates)
+        {
+            auto surge = Surge::Headless::createSurge(48000);
+            REQUIRE(surge);
+
+            INFO("Sample rate " << sr);
+            surge->setSamplerate(sr);
+
+            REQUIRE(surge->storage.samplerate == 48000);
+            REQUIRE(surge->storage.dsamplerate_os_inv == Approx(1.0 / 96000.0).margin(1e-12));
+
+            surge->playNote(0, 60, 100, 0);
+            for (int i = 0; i < 200; ++i)
+            {
+                surge->process();
+                for (int s = 0; s < BLOCK_SIZE; ++s)
+                {
+                    REQUIRE(std::isfinite(surge->output[0][s]));
+                    REQUIRE(std::isfinite(surge->output[1][s]));
+                }
+            }
+        }
+    }
+
+    SECTION("Valid Rates Are Still Applied")
+    {
+        auto surge = Surge::Headless::createSurge(48000);
+        REQUIRE(surge);
+
+        surge->setSamplerate(96000);
+        REQUIRE(surge->storage.samplerate == 96000);
+    }
+}
+
+TEST_CASE("Audio Input Is Cleared When Not Processing Input", "[dsp]") // See issue 8240
+{
+    auto surge = Surge::Headless::createSurge(48000);
+    REQUIRE(surge);
+
+    for (int c = 0; c < 2; ++c)
+    {
+        std::fill(surge->storage.audio_in[c], surge->storage.audio_in[c] + BLOCK_SIZE_OS, 1.f);
+        std::fill(surge->storage.audio_in_nonOS[c], surge->storage.audio_in_nonOS[c] + BLOCK_SIZE,
+                  1.f);
+    }
+
+    surge->process_input = false;
+    surge->process();
+
+    for (int c = 0; c < 2; ++c)
+    {
+        INFO("Channel " << c);
+        for (int s = 0; s < BLOCK_SIZE_OS; ++s)
+            REQUIRE(surge->storage.audio_in[c][s] == 0.f);
+        for (int s = 0; s < BLOCK_SIZE; ++s)
+            REQUIRE(surge->storage.audio_in_nonOS[c][s] == 0.f);
+    }
+}
