@@ -22,9 +22,13 @@
 
 #include <iostream>
 #include <algorithm>
+#include <functional>
+#include <vector>
 
 #include "HeadlessUtils.h"
 #include "Player.h"
+#include "Oscillator.h"
+#include "ModernOscillator.h"
 
 #include "catch2/catch_amalgamated.hpp"
 
@@ -775,4 +779,204 @@ TEST_CASE("Chow DSP Delay", "[dsp]")
             REQUIRE(dR == 0.f);
         }
     }
+}
+
+/*
+ * Modern oscillator pitch tracking, covering both halves of #7224.
+ *
+ * Modern's saw component is a direct linear readout of the oscillator phase:
+ * with saw mix at 1.0 the mono output is exactly (phase - dphase - 0.5), so
+ * differencing the output recovers the per-sample phase increment - the
+ * quantity the pitch smoothing actually acts on. Both properties under test are
+ * therefore measurable from output[] alone: how quickly a pitch step is
+ * tracked, and whether the increment stays continuous across block boundaries
+ * when pitch moves a long way every single block.
+ */
+namespace
+{
+std::vector<float> renderModernSaw(int nBlocks, const std::function<float(int)> &pitchAt)
+{
+    auto surge = Surge::Headless::createSurge(48000);
+    REQUIRE(surge);
+
+    auto storage = &surge->storage;
+    auto oscdata = &(storage->getPatch().scene[0].osc[0]);
+
+    unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
+
+    auto o = spawn_osc(ot_modern, storage, oscdata, storage->getPatch().scenedata[0],
+                       storage->getPatch().scenedataOrig[0], oscbuffer);
+    o->init_ctrltypes();
+    o->init_default_values();
+    o->init_extra_config();
+
+    oscdata->p[ModernOscillator::mo_saw_mix].val.f = 1.f;
+    oscdata->p[ModernOscillator::mo_pulse_mix].val.f = 0.f;
+    oscdata->p[ModernOscillator::mo_tri_mix].val.f = 0.f;
+    oscdata->p[ModernOscillator::mo_tri_mix].deform_type = 0;
+    oscdata->p[ModernOscillator::mo_sync].val.f = 0.f;
+    oscdata->p[ModernOscillator::mo_unison_voices].val.i = 1;
+    oscdata->retrigger.val.b = true;
+    storage->getPatch().character.val.i = 1; // neutral, so the character filter is a passthrough
+
+    storage->getPatch().copy_scenedata(storage->getPatch().scenedata[0],
+                                       storage->getPatch().scenedataOrig[0], 0);
+
+    o->init(pitchAt(0), false, false);
+
+    std::vector<float> res;
+    res.reserve((size_t)nBlocks * BLOCK_SIZE_OS);
+
+    for (int b = 0; b < nBlocks; ++b)
+    {
+        o->process_block(pitchAt(b), 0.f, false, false, 0.f);
+
+        for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+        {
+            res.push_back(o->output[i]);
+        }
+    }
+
+    o->~Oscillator();
+
+    return res;
+}
+
+/*
+ * Per-sample phase increment recovered from that saw readout. Samples within
+ * three of a phase wrap are marked invalid - that is where the DPW correction
+ * shapes the step, so the output is not a plain phase ramp there.
+ */
+struct RecoveredPhase
+{
+    std::vector<double> dphase;
+    std::vector<char> valid;
+};
+
+RecoveredPhase recoverPhase(const std::vector<float> &o)
+{
+    RecoveredPhase r;
+    auto n = (int)o.size() - 1;
+
+    r.dphase.resize(n);
+    r.valid.assign(n, 1);
+
+    for (int i = 0; i < n; ++i)
+    {
+        auto d = (double)o[i + 1] - (double)o[i];
+
+        if (d < -0.25)
+        {
+            d += 1.0;
+
+            for (int k = std::max(0, i - 3); k < std::min(n, i + 4); ++k)
+            {
+                r.valid[k] = 0;
+            }
+        }
+
+        r.dphase[i] = d;
+    }
+
+    return r;
+}
+} // namespace
+
+TEST_CASE("Modern Oscillator Tracks Pitch Steps", "[osc]")
+{
+    constexpr int stepBlock = 20;
+    constexpr int totalBlocks = 80;
+
+    auto data = renderModernSaw(totalBlocks, [](int b) { return b < stepBlock ? 60.f : 72.f; });
+    auto rec = recoverPhase(data);
+
+    // Steady state a long way after the step is the target increment.
+    double target = 0;
+    int targetN = 0;
+
+    for (int i = 70 * BLOCK_SIZE_OS; i < (int)rec.dphase.size(); ++i)
+    {
+        if (rec.valid[i])
+        {
+            target += rec.dphase[i];
+            targetN++;
+        }
+    }
+
+    REQUIRE(targetN > 0);
+    target /= targetN;
+
+    const int stepAt = stepBlock * BLOCK_SIZE_OS;
+    int settledAt = stepAt;
+
+    for (int i = stepAt; i < (int)rec.dphase.size(); ++i)
+    {
+        if (rec.valid[i] && std::fabs(rec.dphase[i] - target) > 0.02 * target)
+        {
+            settledAt = i + 1;
+        }
+    }
+
+    /*
+     * The increment is interpolated across exactly the block in which the new
+     * pitch arrives, so it is on target by the end of that block. Before #7224
+     * this took some 800 samples, which is the audible portamento the issue
+     * reports at a portamento time of zero.
+     */
+    INFO("settled after " << (settledAt - stepAt) << " samples of " << BLOCK_SIZE_OS);
+    REQUIRE(settledAt - stepAt <= BLOCK_SIZE_OS);
+}
+
+TEST_CASE("Modern Oscillator Phase Increment Is Block Continuous", "[osc]")
+{
+    // An audio-rate modulator on oscillator pitch arrives as a large pitch
+    // change every single block, so alternate an octave up and down per block.
+    constexpr int totalBlocks = 200;
+
+    auto data = renderModernSaw(totalBlocks, [](int b) { return (b % 2) ? 60.f : 48.f; });
+    auto rec = recoverPhase(data);
+
+    double worst = 0;
+    int worstAt = -1;
+    double smallest = 1e9, largest = 0;
+
+    for (int i = 4 * BLOCK_SIZE_OS; i < (int)rec.dphase.size(); ++i)
+    {
+        if (!rec.valid[i] || !rec.valid[i - 1])
+        {
+            continue;
+        }
+
+        smallest = std::min(smallest, rec.dphase[i]);
+        largest = std::max(largest, rec.dphase[i]);
+
+        auto j = std::fabs(rec.dphase[i] - rec.dphase[i - 1]);
+
+        if (j > worst)
+        {
+            worst = j;
+            worstAt = i;
+        }
+    }
+
+    const auto dphaseFor = [](double pitch) {
+        return Tunings::MIDI_0_FREQ * std::pow(2.0, pitch / 12.0) / (48000.0 * OSC_OVERSAMPLING);
+    };
+    const auto span = dphaseFor(60.0) - dphaseFor(48.0);
+
+    // The modulation has to actually arrive. A smoother slow enough to swallow a
+    // per-block octave would pass the continuity check below trivially.
+    INFO("increment range " << smallest << " .. " << largest << ", expected span " << span);
+    REQUIRE(largest - smallest >= 0.85 * span);
+
+    /*
+     * Within a block the increment moves by span / BLOCK_SIZE_OS per sample, and
+     * at a boundary that slope can reverse, so a few multiples of it is the
+     * honest ceiling. An interpolator sized for the wrong block length overshoots
+     * and snaps back by the whole span instead, which is what made the first
+     * attempt at #7224 pop on patches modulating pitch at audio rate.
+     */
+    INFO("worst increment step " << worst << " at " << worstAt << ", block offset "
+                                 << (worstAt % BLOCK_SIZE_OS));
+    REQUIRE(worst < 8.0 * span / BLOCK_SIZE_OS);
 }
