@@ -644,9 +644,14 @@ void Parameter::set_type(int ctrltype)
         moverate = 0.5f;
         val_default.f = 0;
         break;
+    case ct_freq_audible_fm3_extendable:
+        valtype = vt_float;
+        val_min.f = -60;   // 8.18 Hz
+        val_max.f = 70;    // 14917.24 Hz
+        val_default.f = 0; // 261.63 Hz
+        break;
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
-    case ct_freq_audible_fm3_extendable:
     case ct_freq_audible_with_tunability:
         valtype = vt_float;
         val_min.f = -60;   // 13.75 Hz
@@ -2222,7 +2227,7 @@ void Parameter::set_extend_range(bool er)
         break;
         case ct_freq_audible_fm3_extendable:
         {
-            val_min.f = -60; // 13.75 Hz
+            val_min.f = -60; // 8.18 Hz
 
             if (val.f < val_min.f)
             {
@@ -2318,7 +2323,7 @@ void Parameter::set_extend_range(bool er)
         break;
         case ct_freq_audible_fm3_extendable:
         {
-            val_min.f = -117.3763; // 0.5 Hz
+            val_min.f = -117.3763; // 0.30 Hz
         }
         break;
         case ct_freq_reson_band1:

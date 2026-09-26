@@ -224,7 +224,7 @@ void SurgeGUIEditor::makeMpeTimbreMenu(juce::PopupMenu &menu, const bool asSubMe
         entries.addItem("Unipolar", true, mpeTimbreUnipolar, [setter]() { setter(true); });
         entries.addItem("Bipolar", true, !mpeTimbreUnipolar, [setter]() { setter(false); });
 
-        menu.addSubMenu(Surge::GUI::toOSCase("MPE Timbre Value Range"), entries);
+        menu.addSubMenu(Surge::GUI::toOSCase("MPE Timbre Range"), entries);
     }
     else
     {
@@ -251,7 +251,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
 
     mpeSubMenu.addSeparator();
 
-    auto str = fmt::format("Change MPE Pitch Bend Range (Current: {} Semitones)",
+    auto str = fmt::format("Set MPE Pitch Bend Range (Current: {} Semitones)",
                            synth->storage.mpePitchBendRange);
 
     mpeSubMenu.addItem(Surge::GUI::toOSCase(str), [this, where]() {
@@ -267,7 +267,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
 
     const int def = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                         Surge::Storage::MPEPitchBendRange, 48);
-    str = fmt::format("Change Default MPE Pitch Bend Range (Current: {} Semitones)", def);
+    str = fmt::format("Set Default MPE Pitch Bend Range (Current: {} Semitones)", def);
 
     mpeSubMenu.addItem(Surge::GUI::toOSCase(str), [this, where]() {
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
@@ -1574,24 +1574,23 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         skinSubMenu.addItem(Surge::GUI::toOSCase(m),
                             [this, pxres]() { this->showAboutScreen(pxres); });
 
-        skinSubMenu.addItem(
-            Surge::GUI::toOSCase("Change Layout Grid Resolution..."), [this, pxres]() {
-                this->promptForMiniEdit(
-                    std::to_string(pxres), "Enter a new value:", "Layout Grid Resolution",
-                    juce::Point<int>{400, 400},
-                    [this](const std::string &s) {
-                        auto val = std::atoi(s.c_str());
+        skinSubMenu.addItem(Surge::GUI::toOSCase("Set Layout Grid Resolution..."), [this, pxres]() {
+            this->promptForMiniEdit(
+                std::to_string(pxres), "Enter a new value:", "Layout Grid Resolution",
+                juce::Point<int>{400, 400},
+                [this](const std::string &s) {
+                    auto val = std::atoi(s.c_str());
 
-                        if (val < 4)
-                        {
-                            val = 4;
-                        }
+                    if (val < 4)
+                    {
+                        val = 4;
+                    }
 
-                        Surge::Storage::updateUserDefaultValue(
-                            &(this->synth->storage), Surge::Storage::LayoutGridResolution, val);
-                    },
-                    mainMenu);
-            });
+                    Surge::Storage::updateUserDefaultValue(
+                        &(this->synth->storage), Surge::Storage::LayoutGridResolution, val);
+                },
+                mainMenu);
+        });
 
         skinSubMenu.addSeparator();
     }
