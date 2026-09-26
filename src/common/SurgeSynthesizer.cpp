@@ -4381,6 +4381,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     if (synth->has_patchid_file)
     {
         ppath = string_to_path(synth->patchid_file);
+        const auto asPreset = synth->patchid_file_isPreset.exchange(true);
         synth->has_patchid_file = false;
         had_patchid_file = true;
         synth->stopSound();
@@ -4401,7 +4402,9 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         }
         else
         {
-            synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath).c_str());
+            // The stem, not the whole path: this is the name the patch will be displayed under.
+            synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath.stem()).c_str(),
+                                   asPreset);
         }
     }
 
@@ -4453,6 +4456,7 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
         {
             auto p(string_to_path(patchid_file));
             auto s = path_to_string(p.stem());
+            const auto asPreset = patchid_file_isPreset.exchange(true);
             has_patchid_file = false;
 
             int ptid = -1, ct = 0;
@@ -4472,7 +4476,7 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
             }
             else
             {
-                loadPatchByPath(patchid_file, -1, s.c_str());
+                loadPatchByPath(patchid_file, -1, s.c_str(), asPreset);
                 storage.lastLoadedPatch = p;
             }
             patchid_file[0] = 0;
