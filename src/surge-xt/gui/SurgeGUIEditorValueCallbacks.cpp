@@ -3873,7 +3873,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if (synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i ==
             sst::filters::FilterType::fut_cytomic_svf)
         {
-            nn = sst::filters::FilterSubType::st_cytomic_allpass;
+            nn = sst::filters::FilterSubType::st_cytomic_allpass + 1;
         }
         if (a >= nn)
             a = 0;
