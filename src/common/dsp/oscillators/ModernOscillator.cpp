@@ -268,10 +268,6 @@ inline double dpwMultiComp(double p, double dp, bool forceNumeric)
 
 void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
-    // we need a tiny little portamento since the derivative is pretty
-    // unstable under super big pitch changes
-    pitchlag.setRate(0.5);
-    pitchlag.startValue(pitch);
     pwidth.setRate(0.001); // 4x slower
     sync.setRate(0.001 * BLOCK_SIZE_OS);
 
@@ -328,7 +324,13 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
 
     float ud = oscdata->p[mo_unison_detune].get_extended(
         localcopy[oscdata->p[mo_unison_detune].param_id_in_scene].f);
-    pitchlag.startValue(pitch);
+    /*
+     * Pitch is used as given. Smoothing it here would only duplicate the block
+     * interpolation the phase increments below already do, and any extra
+     * smoothing shows up as portamento that the patch never asked for (#7224).
+     */
+    const double basePitch = pitch;
+
     sync.newValue(std::max(0.f, localcopy[oscdata->p[mo_sync].param_id_in_scene].f));
 
     float absOff = 0.f;
@@ -345,18 +347,18 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
         auto lfodetune = drift * dval;
 
         dpbase[u].newValue(std::min(
-            0.5, pitch_to_dphase_with_absolute_offset(
-                     pitchlag.v + lfodetune + ud * unisonOffsets[u], absOff * unisonOffsets[u])));
+            0.5, pitch_to_dphase_with_absolute_offset(basePitch + lfodetune + ud * unisonOffsets[u],
+                                                      absOff * unisonOffsets[u])));
         dspbase[u].newValue(
-            std::min(0.5, pitch_to_dphase_with_absolute_offset(pitchlag.v + lfodetune + sync.v +
+            std::min(0.5, pitch_to_dphase_with_absolute_offset(basePitch + lfodetune + sync.v +
                                                                    ud * unisonOffsets[u],
                                                                absOff * unisonOffsets[u])));
     }
 
     auto subdt = drift * driftLFO[0].val();
 
-    subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
-    subdspbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
+    subdpbase.newValue(std::min(0.5, pitch_to_dphase(basePitch + subdt) * submul));
+    subdspbase.newValue(std::min(0.5, pitch_to_dphase(basePitch + subdt + sync.v) * submul));
     sync.process();
 
     // Let people modulate outside the sliders a bit. but not catastrophically
@@ -371,7 +373,6 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     // Since we always use this multiplied by 2, put the mul here to save it later
     pwidth.newValue(2 * limit_range(1.f - localcopy[oscdata->p[mo_pulse_width].param_id_in_scene].f,
                                     0.01f, 0.99f));
-    pitchlag.process();
 
     double fv = 16 * FMdepth * FMdepth * FMdepth;
     fmdepth.newValue(fv);
