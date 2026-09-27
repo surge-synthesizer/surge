@@ -280,6 +280,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void loadModulatorPresetFrom(const fs::path &path, int scene, int lfoId);
 
+    void update_deform_type(Parameter *p, int type);
+    // Only updates a single bitfield. Does not check values.
+    void update_deform_type_bit(Parameter *p, int type, int bit);
+
   private:
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();
@@ -296,10 +300,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int lastTSNum = 0, lastTSDen = 0;
     int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
-
-    void update_deform_type(Parameter *p, int type);
-    // Only updates a single bitfield. Does not check values.
-    void update_deform_type_bit(Parameter *p, int type, int bit);
 
     struct patchdata
     {

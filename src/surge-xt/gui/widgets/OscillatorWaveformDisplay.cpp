@@ -707,19 +707,46 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
                                 // Looping is meaningless back in wavetable playback
                                 f &= ~(wtf_is_sample | wtf_loop_sample);
                                 queueWavetableReslice(-1, -1, f);
+                                this->sge->queue_refresh = true;
                             });
 
         contextMenu.addItem(Surge::GUI::toOSCase("Play as Oneshot Sample"), true, isSampleOneshot,
                             [this]() {
                                 auto f = oscdata->wt.flags | wtf_is_sample;
+                                f &= ~wtf_loop_sample;
                                 queueWavetableReslice(-1, -1, f);
+                                this->sge->queue_refresh = true;
                             });
 
         contextMenu.addItem(Surge::GUI::toOSCase("Play as Looped Sample"), true, isSampleLooped,
                             [this]() {
                                 auto f = oscdata->wt.flags | wtf_is_sample | wtf_loop_sample;
                                 queueWavetableReslice(-1, -1, f);
+                                this->sge->queue_refresh = true;
                             });
+
+        // The Unison Voices parameter's deform decides whether its count is unison or a
+        // sample play count. It is offered on that parameter's own menu too, but repeated
+        // here next to the playback modes it belongs with, since that is where it is
+        // actually looked for. Only meaningful on a sample that is not looping, because
+        // the loop flag overrides the count entirely.
+        if (isSampleOneshot)
+        {
+            auto *p = &oscdata->p[WavetableOscillator::wt_unison_voices];
+            const bool isLoopCount = p->deform_type == WavetableOscillator::SAMPLE_PLAY_COUNT;
+
+            contextMenu.addSeparator();
+
+            contextMenu.addItem(Surge::GUI::toOSCase("Use Unison Voices as Loop Count"), true,
+                                isLoopCount, [this, p, isLoopCount]() {
+                                    this->sge->undoManager()->pushParameterChange(p->id, p, p->val);
+                                    this->sge->update_deform_type(
+                                        p, isLoopCount ? WavetableOscillator::UNISON_VOICES
+                                                       : WavetableOscillator::SAMPLE_PLAY_COUNT);
+                                    this->sge->synth->storage.getPatch().isDirty = true;
+                                    this->sge->queue_refresh = true;
+                                });
+        }
 
         contextMenu.addSeparator();
     }

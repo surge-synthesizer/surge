@@ -37,6 +37,34 @@ template <typename valtype>
 using CharacterFilter = sst::basic_blocks::dsp::CharacterFilter<valtype, SurgeStorage>;
 
 template <typename valtype> using UnisonSetup = sst::basic_blocks::dsp::UnisonSetup<valtype>;
+
+/*
+ * The Wavetable and Window oscillators share a unison voices parameter whose meaning flips
+ * with its own deform: on a sample, SAMPLE_PLAY_COUNT makes the count a play count and the
+ * oscillator collapses to one voice. Both the parameter label and the unison detune control
+ * have to follow that, and neither is a parameter value, so the two hooks below read the
+ * deform and the oscillator's wavetable flags directly. They are shared rather than
+ * duplicated per oscillator because the two behave identically here; the instances live in
+ * Oscillator.cpp.
+ */
+struct SampleUnisonDynamicName : public ParameterDynamicNameFunction
+{
+    const char *getName(const Parameter *p) const override;
+};
+
+struct SampleUnisonDetuneDeact : public ParameterDynamicDeactivationFunction
+{
+    bool getValue(const Parameter *p) const override;
+};
+
+extern SampleUnisonDynamicName sampleUnisonDynamicName;
+extern SampleUnisonDetuneDeact sampleUnisonDetuneDeact;
+
+// True when this parameter belongs to an oscillator whose wavetable is a sample, which is
+// the only case where the play count deform means anything. The menu that offers the deform
+// uses it to decide whether to show the choice at all.
+bool wavetableIsSample(const Parameter *p);
+
 } // namespace Oscillator
 } // namespace Surge
 
