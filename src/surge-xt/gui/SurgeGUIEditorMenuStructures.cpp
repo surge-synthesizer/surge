@@ -1321,6 +1321,18 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                            !patchStickySearchbox);
                    });
 
+    bool retriggerHeldNotes = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::RetriggerHeldNotesOnPatchChange, false);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Retrigger Held Notes on Patch Load"), true,
+                   retriggerHeldNotes, [this, retriggerHeldNotes]() {
+                       this->synth->storage.retriggerHeldNotesOnPatchChange = !retriggerHeldNotes;
+
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::RetriggerHeldNotesOnPatchChange,
+                           !retriggerHeldNotes);
+                   });
+
     int patchDirtyCheck = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, ALWAYS);
 

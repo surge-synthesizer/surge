@@ -450,8 +450,15 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
         }
         std::lock_guard<std::mutex> g(rawLoadQueueMutex);
         rawLoadEnqueued = false;
+        const bool retriggerArmed = beginPatchChangeNoteRetrigger();
+
         loadRaw(enqueuedLoadData.get(), enqueuedLoadSize);
         loadFromDawExtraState();
+
+        if (retriggerArmed)
+        {
+            retriggerHeldNotesAfterPatchLoad();
+        }
 
         rawLoadNeedsUIDawExtraState = true;
         refresh_editor = true;

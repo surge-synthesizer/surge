@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <chrono>
 
 #include "HeadlessUtils.h"
 #include "Player.h"
@@ -2189,5 +2190,256 @@ TEST_CASE("Sostenuto Pedal", "[midi]")
                 REQUIRE(gatedCount(surge) == 0);
             }
         }
+    }
+}
+
+TEST_CASE("Held Notes Are Retriggered Across a Patch Change", "[midi]") // #8438
+{
+    auto gatedCount = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        int ct = 0;
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate)
+                ct++;
+        }
+        return ct;
+    };
+
+    auto gatedKeys = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        std::vector<int> res;
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate)
+                res.push_back(v->state.key);
+        }
+        std::sort(res.begin(), res.end());
+        return res;
+    };
+
+    auto step = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        for (int i = 0; i < 25; ++i)
+            surge->process();
+    };
+
+    auto makeSurge = [](int polymode) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+        surge->storage.getPatch().scene[0].polymode.val.i = polymode;
+        // off by default, so every section which expects a replay has to ask for one
+        surge->storage.retriggerHeldNotesOnPatchChange = true;
+        return surge;
+    };
+
+    /*
+     * Swap in a patch the way a patch change does at runtime, so that the held note replay
+     * runs. Taking the patch from a second synth lets a test load something different from
+     * what is playing, which is how the poly into mono case below is set up.
+     */
+    auto swapPatchFrom = [](std::shared_ptr<SurgeSynthesizer> surge,
+                            std::shared_ptr<SurgeSynthesizer> source) {
+        void *d = nullptr;
+        source->populateDawExtraState();
+        auto sz = source->saveRaw(&d);
+        surge->enqueuePatchForLoad(d, (int)sz);
+        surge->process();
+    };
+
+    /*
+     * The other half of the tests need something to happen while the patch is loading, so
+     * they drive the load window by hand. This is the same sequence the loader performs,
+     * with the patch load itself left out.
+     */
+    auto beginLoad = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        surge->beginPatchChangeNoteRetrigger();
+        surge->halt_engine = true;
+        surge->stopSound();
+    };
+
+    auto endLoad = [](std::shared_ptr<SurgeSynthesizer> surge) { surge->halt_engine = false; };
+
+    SECTION("Nothing Is Retriggered Unless the Option Is On")
+    {
+        auto surge = makeSurge(pm_poly);
+        surge->storage.retriggerHeldNotesOnPatchChange = false;
+
+        surge->playNote(0, 60, 120, 0);
+        surge->playNote(0, 64, 120, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64});
+
+        swapPatchFrom(surge, surge);
+        step(surge);
+
+        // the long standing behavior: a patch change is a hard cut
+        REQUIRE(surge->voices[0].empty());
+        REQUIRE(surge->channelState[0].keyState[60].keystate == 0);
+        REQUIRE(surge->channelState[0].keyState[64].keystate == 0);
+    }
+
+    SECTION("A Held Chord Comes Back")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        surge->playNote(0, 64, 120, 0);
+        surge->playNote(0, 67, 120, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64, 67});
+
+        swapPatchFrom(surge, surge);
+        step(surge);
+
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64, 67});
+    }
+
+    SECTION("Released Notes Do Not Come Back")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 0);
+
+        swapPatchFrom(surge, surge);
+        step(surge);
+
+        REQUIRE(surge->voices[0].empty());
+    }
+
+    SECTION("A Key Released During the Load Does Not Come Back")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        surge->playNote(0, 64, 120, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64});
+
+        beginLoad(surge);
+
+        // note ons are dropped while the engine is halted, but note offs are not, so
+        // letting go of a key mid-load has to take it out of the replay
+        surge->releaseNote(0, 64, 0);
+
+        endLoad(surge);
+        step(surge);
+
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60});
+    }
+
+    SECTION("The Sustain Pedal And What It Is Holding Both Survive")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->channelController(0, 64, 127);
+        step(surge);
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        // the key is up but the pedal is holding the note
+        REQUIRE(gatedCount(surge) == 1);
+
+        swapPatchFrom(surge, surge);
+        step(surge);
+
+        REQUIRE(gatedCount(surge) == 1);
+        REQUIRE(surge->isSustainPedalDown(0));
+
+        // and the note is still the pedal's to release, not a phantom key's
+        surge->channelController(0, 64, 0);
+        step(surge);
+
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("The Sostenuto Pedal And Its Capture Set Both Survive")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->channelController(0, 66, 127);
+        step(surge);
+        surge->releaseNote(0, 60, 0);
+        step(surge);
+
+        REQUIRE(gatedCount(surge) == 1);
+
+        swapPatchFrom(surge, surge);
+        step(surge);
+
+        REQUIRE(gatedCount(surge) == 1);
+
+        surge->channelController(0, 66, 0);
+        step(surge);
+
+        REQUIRE(gatedCount(surge) == 0);
+    }
+
+    SECTION("The Background Load Path Retriggers Too")
+    {
+        auto surge = makeSurge(pm_poly);
+
+        surge->playNote(0, 60, 120, 0);
+        surge->playNote(0, 64, 120, 0);
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64});
+
+        /*
+         * The sections above load synchronously. This is the route a patch change really
+         * takes in a host: the audio thread fades out, hands the load to a background
+         * thread, and picks the replay back up once the new patch is in place.
+         */
+        strncpy(surge->patchid_file, "resources/test-data/patches/TestInitSine.fxp",
+                FILENAME_MAX - 1);
+        surge->has_patchid_file = true;
+
+        // the load runs off-thread and reads from disk, so wait on the clock rather than
+        // on a block count, which is no bound on how long that takes
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+
+        while (
+            (surge->has_patchid_file || surge->halt_engine || surge->retriggerHeldNotesPending) &&
+            std::chrono::steady_clock::now() < deadline)
+        {
+            surge->process();
+        }
+
+        REQUIRE(!surge->has_patchid_file);
+        REQUIRE(!surge->halt_engine);
+        REQUIRE(!surge->retriggerHeldNotesPending);
+
+        step(surge);
+        REQUIRE(gatedKeys(surge) == std::vector<int>{60, 64});
+    }
+
+    SECTION("A Chord Into a Mono Patch Lands On the Last Note Played")
+    {
+        auto surge = makeSurge(pm_poly);
+        auto monoPatch = makeSurge(pm_mono);
+
+        surge->playNote(0, 60, 120, 0);
+        step(surge);
+        surge->playNote(0, 64, 120, 0);
+        step(surge);
+        surge->playNote(0, 67, 120, 0);
+        step(surge);
+        REQUIRE(gatedCount(surge) == 3);
+
+        swapPatchFrom(surge, monoPatch);
+        step(surge);
+
+        // replaying in the order the keys were pressed leaves mono on the last one
+        REQUIRE(gatedKeys(surge) == std::vector<int>{67});
+
+        // and the rest of the chord is still in the fallback pool
+        surge->releaseNote(0, 67, 0);
+        step(surge);
+
+        REQUIRE(gatedKeys(surge) == std::vector<int>{64});
     }
 }

@@ -2087,6 +2087,13 @@ class alignas(16) SurgeStorage
     int subtypeMemory[n_scenes][n_filterunits_per_scene][sst::filters::num_filter_types];
     MonoPedalMode monoPedalMode = HOLD_ALL_NOTES;
 
+    /*
+     * Whether a patch change replays the notes which were being held into the new patch
+     * (#8438). Cached off the user default rather than read at load time, since the patch
+     * change decides this on the audio thread.
+     */
+    bool retriggerHeldNotesOnPatchChange = false;
+
   private:
     TiXmlDocument snapshotloader;
     std::vector<Parameter> clipboard_p;

@@ -81,6 +81,7 @@ enum DefaultKey
     ActivateExtraOutputs, // TODO: remove in XT2
     PatchJogWraparound,
     RetainPatchSearchboxAfterLoad,
+    RetriggerHeldNotesOnPatchChange,
     PromptToLoadOverDirtyPatch,
     TabKeyArmsModulators, // TODO: remove in XT2
     UseKeyboardShortcuts_Plugin,
