@@ -26,6 +26,7 @@
 #include "DebugHelpers.h"
 #include "UserDefaults.h"
 #include "PhaserEffect.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
 #include <fmt/core.h>
 
 #if LINUX
@@ -33,6 +34,19 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
+
+namespace
+{
+// Same clipper the synth uses, which also resolves non-finite values by virtue of the
+// intrinsics. Runs on the aligned block buffers, before the result reaches the host.
+void hardclipBlock(float *dataL, float *dataR)
+{
+    namespace sdsp = sst::basic_blocks::dsp;
+
+    sdsp::hardclip_block<BLOCK_SIZE>(dataL, 2.f);
+    sdsp::hardclip_block<BLOCK_SIZE>(dataR, 2.f);
+}
+} // namespace
 
 //==============================================================================
 SurgefxAudioProcessor::SurgefxAudioProcessor()
@@ -432,6 +446,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             if (is_aligned(outL, 16) && is_aligned(outR, 16) && inL == outL && inR == outR)
             {
                 audio_thread_surge_effect->process_ringout(outL, outR, true);
+                hardclipBlock(outL, outR);
             }
             else
             {
@@ -441,6 +456,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 memcpy(bufferR, inR, BLOCK_SIZE * sizeof(float));
 
                 audio_thread_surge_effect->process_ringout(bufferL, bufferR, true);
+                hardclipBlock(bufferL, bufferR);
 
                 memcpy(outL, bufferL, BLOCK_SIZE * sizeof(float));
                 memcpy(outR, bufferR, BLOCK_SIZE * sizeof(float));
@@ -494,6 +510,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 copyGlobaldataSubset(storage_id_start, storage_id_end);
 
                 audio_thread_surge_effect->process_ringout(input_buffer[0], input_buffer[1], true);
+                hardclipBlock(input_buffer[0], input_buffer[1]);
                 memcpy(output_buffer, input_buffer, 2 * BLOCK_SIZE * sizeof(float));
                 input_position = 0;
                 output_position = 0;
@@ -510,20 +527,6 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 outL[smp] = 0;
                 outR[smp] = 0;
             }
-        }
-    }
-
-    // While chasing that mac error put this in
-    bool doHardClip{true};
-    if (doHardClip)
-    {
-        auto outL = mainOutput.getWritePointer(0, 0);
-        auto outR = mainOutput.getWritePointer(1, 0);
-
-        for (int i = 0; i < buffer.getNumSamples(); ++i)
-        {
-            outL[i] = std::clamp(outL[i], -2.f, 2.f);
-            outR[i] = std::clamp(outR[i], -2.f, 2.f);
         }
     }
 

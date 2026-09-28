@@ -2408,7 +2408,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             int tv;
 
-            if (hcs->QueryIntAttribute("global", &tv) == TIXML_SUCCESS)
+            // An unknown mode would match no case when clipping and so disable the clipper
+            auto isValid = [](int m) {
+                return m >= SurgeStorage::HARDCLIP_TO_18DBFS && m <= SurgeStorage::BYPASS_HARDCLIP;
+            };
+
+            if (hcs->QueryIntAttribute("global", &tv) == TIXML_SUCCESS && isValid(tv))
             {
                 storage->hardclipMode = (SurgeStorage::HardClipMode)tv;
             }
@@ -2417,7 +2422,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 auto an = std::string("sc") + std::to_string(sc);
 
-                if (hcs->QueryIntAttribute(an, &tv) == TIXML_SUCCESS)
+                if (hcs->QueryIntAttribute(an, &tv) == TIXML_SUCCESS && isValid(tv))
                 {
                     storage->sceneHardclipMode[sc] = (SurgeStorage::HardClipMode)tv;
                 }
