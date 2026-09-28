@@ -2375,3 +2375,36 @@ TEST_CASE("Sample Play Count Covers The Whole Unison Range", "[dsp]")
         REQUIRE(energyIn(9, false, false, 150, 250) < energyIn(9, true, false, 150, 250) * 0.01f);
     }
 }
+
+TEST_CASE("Sample Wavetables Get Int16 Mipmaps", "[io]")
+{
+    // MipMapWT used to leave the int16 mipmaps of a sample at zero, which is harmless for the
+    // wavetable oscillator since it reads the float tables. Anything reading the int16 ones
+    // and picking a mipmap level from the read rate gets silence above whatever pitch first
+    // selects a level other than zero.
+    Wavetable wt;
+    buildSineWT(&wt, 8, 1024);
+    REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample));
+    REQUIRE(wt.flags & wtf_is_sample);
+    REQUIRE(wt.SourceFrameCount() == 8);
+
+    for (int level = 0; level < 4; ++level)
+    {
+        const int lsize = wt.size >> level;
+        double sum = 0;
+
+        for (int frame = 0; frame < wt.SourceFrameCount(); ++frame)
+        {
+            const short *f = wt.TableI16WeakPointers[level][frame];
+            REQUIRE(f);
+
+            for (int i = 0; i < lsize; ++i)
+            {
+                sum += fabs((double)f[i + FIRoffsetI16]);
+            }
+        }
+
+        INFO("int16 mipmap level " << level);
+        REQUIRE(sum > 0);
+    }
+}
