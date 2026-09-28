@@ -27,6 +27,7 @@
 
 #include "SurgeStorage.h"
 #include "Oscillator.h"
+#include "WavetableOscillator.h"
 #include "SurgeParamConfig.h"
 #include "Effect.h"
 #include "MSEGModulationHelper.h"
@@ -1287,6 +1288,28 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                             {
                                 scene[sc].osc[osc].wt.current_id = i;
                             }
+                        }
+                    }
+
+                    // Before the play count deform existed, a sample in the Wavetable
+                    // oscillator always read the unison voice count as a play count and
+                    // collapsed to one voice. Record that on load so these patches keep
+                    // playing the way they always have; an oscillator saved from here on
+                    // carries its own deform and gets real unison by default.
+                    if (streamingRevision <= 30 && scene[sc].osc[osc].type.val.i == ot_wavetable &&
+                        (scene[sc].osc[osc].wt.flags & wtf_is_sample))
+                    {
+                        scene[sc].osc[osc].p[WavetableOscillator::wt_unison_voices].deform_type =
+                            WavetableOscillator::SAMPLE_PLAY_COUNT;
+
+                        // The old countdown stopped decrementing at 7, so any voice count
+                        // from there up looped forever rather than playing that many times.
+                        // The count now means what it says across its whole range, so the
+                        // patches that were relying on that need the loop flag to keep
+                        // sustaining.
+                        if (scene[sc].osc[osc].p[WavetableOscillator::wt_unison_voices].val.i >= 7)
+                        {
+                            scene[sc].osc[osc].wt.flags |= wtf_loop_sample;
                         }
                     }
 

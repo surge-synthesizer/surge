@@ -23,6 +23,7 @@
 #include "SurgeStorage.h"
 #include "Parameter.h"
 #include "DSPUtils.h"
+#include "WavetableOscillator.h"
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -383,6 +384,7 @@ bool Parameter::has_deformoptions() const
     case ct_filter_feedback:
     case ct_osc_feedback_negative:
     case ct_countedset_percent_extendable_wtdeform:
+    case ct_osccount_or_playcount:
         return true;
     default:
         break;
@@ -991,6 +993,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_osccount:
+    case ct_osccount_or_playcount:
         valtype = vt_int;
         val_min.i = 1;
         val_max.i = 16;
@@ -2107,6 +2110,8 @@ bool Parameter::supportsDynamicName() const
     case ct_pitch_extendable_very_low_minval:
     case ct_freq_audible_very_low_minval:
     case ct_tape_drive:
+    case ct_oscspread:
+    case ct_osccount_or_playcount:
         return true;
     default:
         break;
@@ -3861,6 +3866,32 @@ std::string Parameter::get_display(bool external, float ef) const
         case ct_osccount:
             txt = fmt::format("{:d} voice{:s}", i, (i > 1 ? "s" : ""));
             break;
+        case ct_osccount_or_playcount:
+        {
+            // On the wavetable data oscillators this count doubles as a sample play count
+            // when the deform says so. The deform sits on this parameter, but whether the
+            // wavetable is a sample does not, so the oscillator still has to be reached.
+            bool asPlays = false;
+
+            if (deform_type == WavetableOscillator::SAMPLE_PLAY_COUNT && storage && scene > 0 &&
+                scene <= n_scenes && ctrlgroup == cg_OSC && ctrlgroup_entry >= 0 &&
+                ctrlgroup_entry < n_oscs)
+            {
+                asPlays = storage->getPatch().scene[scene - 1].osc[ctrlgroup_entry].wt.flags &
+                          wtf_is_sample;
+            }
+
+            if (asPlays)
+            {
+                txt = fmt::format("{:d}x", i);
+            }
+            else
+            {
+                txt = fmt::format("{:d} voice{:s}", i, (i > 1 ? "s" : ""));
+            }
+
+            break;
+        }
         case ct_fxtype:
             txt = fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)];
             break;
@@ -4497,6 +4528,7 @@ bool Parameter::can_be_nondestructively_modulated() const
     case ct_bool_retrigger:
     case ct_osctype:
     case ct_osccount:
+    case ct_osccount_or_playcount:
     case ct_pitch_octave:
     case ct_wt2window:
     case ct_ringmod_sineoscmode:

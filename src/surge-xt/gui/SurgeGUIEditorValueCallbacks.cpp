@@ -50,6 +50,7 @@
 #include "overlays/PatchStoreDialog.h"
 #include "overlays/TypeinParamEditor.h"
 #include "WavetableOscillator.h"
+#include "OscillatorCommonFunctions.h"
 
 std::string decodeControllerID(int id)
 {
@@ -2628,6 +2629,43 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
+                        contextMenu.addSeparator();
+
+                        break;
+                    }
+                    case ct_osccount_or_playcount:
+                    {
+                        // The count can only mean plays on a sample - a wavetable always
+                        // runs it as unison voices - so don't offer the choice otherwise
+                        if (!Surge::Oscillator::wavetableIsSample(p))
+                        {
+                            break;
+                        }
+
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "MODE");
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Unison Voices"), true,
+                            dt == WavetableOscillator::UNISON_VOICES, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, WavetableOscillator::UNISON_VOICES);
+                                synth->storage.getPatch().isDirty = true;
+                                synth->refresh_editor = true;
+                            });
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Sample Loop Count"), true,
+                            dt == WavetableOscillator::SAMPLE_PLAY_COUNT, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, WavetableOscillator::SAMPLE_PLAY_COUNT);
+                                synth->storage.getPatch().isDirty = true;
+                                synth->refresh_editor = true;
+                            });
+
                         contextMenu.addSeparator();
 
                         break;

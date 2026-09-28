@@ -48,6 +48,16 @@ class WavetableOscillator : public AbstractBlitOscillator
         XT_14 = 1 << 0
     };
 
+    // Deform on the Unison Voices parameter, deciding what the count means once the
+    // wavetable is a sample. It lives on the oscillator rather than on the wavetable so
+    // that two oscillators pointed at the same table can read it differently, and so the
+    // choice belongs to the patch rather than riding along in the .wt header.
+    enum SampleUnisonDeform
+    {
+        UNISON_VOICES = 0,
+        SAMPLE_PLAY_COUNT = 1
+    };
+
     lipol_ps li_hpf, li_DC, li_integratormult;
     WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy,
                         pdata *localcopyUnmod);
@@ -85,18 +95,30 @@ class WavetableOscillator : public AbstractBlitOscillator
     int mipmap[MAX_UNISON], mipmap_ofs[MAX_UNISON];
     lag<float> FMdepth, hpf_coeff, integrator_mult, l_hskew, l_vskew, l_clip, l_shape;
     float formant_t, formant_last, pitch_last, pitch_t;
-    float tableipol, last_tableipol;
+    // Frame position. Per unison voice because a sample advances each voice through the table
+    // on its own, which is what makes real unison on a sample possible at all; these were
+    // scalars when a sample could only ever run one voice.
+    //
+    // A wavetable still has just one position, taken from Morph and therefore the same for
+    // every voice. process_block works it out once and writes it to each sounding voice, so
+    // the deform functions can index by voice without asking which mode they are in.
+    float tableipol[MAX_UNISON], last_tableipol[MAX_UNISON];
     float hskew, last_hskew;
-    int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant, tableid, last_tableid;
+    int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant;
+    int tableid[MAX_UNISON]; // per voice for the same reason as tableipol above
+    // Read only by the pre-1.4 morph clamp and the init/reset paths, never in sample mode,
+    // so this one stays shared
+    int last_tableid;
     int FMdelay;
     int nointerp;
     float FMmul_inv;
-    // Play count for sample-mode playback, counted down each time the sample wraps. It is
-    // seeded from the unison voice count, which for samples has always doubled as "play the
-    // sample this many times"; at this value or above it stops counting down and the sample
-    // loops forever, which is what wtf_loop_sample pins it to.
-    static constexpr int infinite_sampleloop = 7;
-    int sampleloop;
+    // Play count for sample-mode playback, per voice, counted down each time the sample
+    // wraps. wtf_loop_sample means "never stop" and is represented by the sentinel below:
+    // at that value the countdown is skipped entirely. The sentinel sits above MAX_UNISON
+    // deliberately, so that when the SAMPLE_PLAY_COUNT deform makes the unison voice count
+    // double as the play count, the whole 1..MAX_UNISON range stays a literal play count.
+    static constexpr int infinite_sampleloop = MAX_UNISON + 1;
+    int sampleloop[MAX_UNISON];
 
     pdata *unmodulatedLocalcopy;
     FeatureDeform deformType;
