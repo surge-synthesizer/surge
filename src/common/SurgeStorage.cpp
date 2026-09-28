@@ -655,6 +655,7 @@ void SurgeStorage::initializeUserDataPaths()
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
+    userBackupsPath = userDataPath / "Backups";
 }
 
 void SurgeStorage::createUserDirectory()
