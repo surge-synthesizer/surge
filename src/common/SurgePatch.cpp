@@ -1313,6 +1313,16 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                         }
                     }
 
+                    // The Window oscillator ignored wtf_is_sample entirely until it learned to
+                    // play samples, so a table that arrived flagged was scanned by Morph as an
+                    // ordinary wavetable. Honoring the flag now would turn those patches into
+                    // oneshots, so clear it and leave them sounding as they did.
+                    if (streamingRevision <= 30 && scene[sc].osc[osc].type.val.i == ot_window &&
+                        (scene[sc].osc[osc].wt.flags & wtf_is_sample))
+                    {
+                        scene[sc].osc[osc].wt.flags &= ~(wtf_is_sample | wtf_loop_sample);
+                    }
+
                     dr += ph->wtsize[sc][osc];
                 }
             }

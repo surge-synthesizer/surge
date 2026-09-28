@@ -72,6 +72,17 @@ class WindowOscillator : public Oscillator
         unsigned int DispatchDelay[MAX_UNISON];
         Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 
+        // Sample playback state. In sample mode the frame a grain reads is not the one Morph
+        // points at: it advances by one per grain, so the table plays through as a sequence
+        // of windowed grains rather than being scanned by hand. All three are per voice, so
+        // unison works on samples here without the frame state having to be shared.
+        int Frame[MAX_UNISON];
+        // Plays remaining, counted down each time the sample wraps. wtf_loop_sample pins
+        // this to WavetableOscillator::infinite_sampleloop, at which the countdown is skipped.
+        int SampleLoop[MAX_UNISON];
+        // Set on a voice that has run out of plays; it stops being mixed in
+        bool Done[MAX_UNISON];
+
         int FMRatio[MAX_UNISON][BLOCK_SIZE_OS];
     } Window alignas(16);
 
@@ -86,6 +97,10 @@ class WindowOscillator : public Oscillator
     float OutAttenuation;
     float DetuneBias, DetuneOffset;
     int NumUnison;
+    // Frames of real content, i.e. excluding the silent padding BuildWT appends to a sample.
+    // Cached at init() because SourceFrameCount() scans the table for trailing silence, which
+    // is far too expensive to repeat per note on, let alone per grain.
+    int SampleFrames;
 };
 
 #endif // SURGE_SRC_COMMON_DSP_OSCILLATORS_WINDOWOSCILLATOR_H
