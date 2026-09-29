@@ -187,6 +187,7 @@ enum ctrltypes
     ct_freq_reson_band3,
     ct_reson_mode,
     ct_envtime_linkable_delay,
+    ct_envtime_delay_line_mode,
     ct_reson_res_extendable,
     ct_chow_ratio,
     ct_nimbusmode,

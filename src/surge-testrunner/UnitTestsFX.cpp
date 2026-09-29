@@ -34,6 +34,7 @@
 
 #include "UnitTestUtilities.h"
 #include "AudioInputEffect.h"
+#include "DelayEffect.h"
 #include "DistortionEffect.h"
 
 using namespace Surge::Test;
@@ -1224,5 +1225,397 @@ TEST_CASE("Stopping Sound Clears Poisoned FX State", "[fx]") // See issue 8240
                 }
             }
         }
+    }
+}
+
+namespace
+{
+struct DelayLineModeProbe
+{
+    int lineModeLeft{0};
+    int lineModeRight{0};
+    bool linkRight{false};
+    float startSeconds{0.1f};
+    float endSeconds{0.2f};
+    float modRate{0.f};
+    float modDepth{0.f};
+    int channel{0};
+
+    static constexpr int sampleRate{44100};
+
+    std::shared_ptr<SurgeSynthesizer> makeDelay() const
+    {
+        auto surge = Surge::Headless::createSurge(sampleRate);
+        REQUIRE(surge);
+
+        Surge::Test::setFX(surge, 0, fxt_delay);
+
+        auto &patch = surge->storage.getPatch();
+        auto *fx = &(patch.fx[0]);
+
+        fx->p[DelayEffect::dly_time_left].val.f = std::log2(startSeconds);
+        fx->p[DelayEffect::dly_time_right].val.f = std::log2(startSeconds);
+        fx->p[DelayEffect::dly_time_right].deactivated = linkRight;
+        fx->p[DelayEffect::dly_time_left].deform_type = lineModeLeft;
+        fx->p[DelayEffect::dly_time_right].deform_type = lineModeRight;
+        fx->p[DelayEffect::dly_feedback].val.f = 0.f;
+        fx->p[DelayEffect::dly_crossfeed].val.f = 0.f;
+        fx->p[DelayEffect::dly_mod_rate].val.f = modRate;
+        fx->p[DelayEffect::dly_mod_depth].val.f = modDepth;
+        fx->p[DelayEffect::dly_input_channel].val.f = 0.f;
+        fx->p[DelayEffect::dly_mix].val.f = 1.f;
+        fx->p[DelayEffect::dly_width].val.f = 0.f;
+        fx->p[DelayEffect::dly_lowcut].deactivated = true;
+        fx->p[DelayEffect::dly_highcut].deactivated = true;
+
+        patch.copy_globaldata(patch.globaldata);
+        surge->fx[0]->init();
+
+        return surge;
+    }
+
+    /*
+     * Render an impulse through a 100% wet, feedback free Dual Delay whose delay time
+     * changes from startSeconds to endSeconds in the same block the impulse arrives in,
+     * and report the sample index at which the delayed impulse comes back out.
+     */
+    int impulseReturnIndex() const
+    {
+        auto surge = makeDelay();
+        auto &patch = surge->storage.getPatch();
+        auto *fx = &(patch.fx[0]);
+
+        float dataL alignas(16)[BLOCK_SIZE], dataR alignas(16)[BLOCK_SIZE];
+
+        auto runBlock = [&](bool impulse) {
+            std::fill(dataL, dataL + BLOCK_SIZE, 0.f);
+            std::fill(dataR, dataR + BLOCK_SIZE, 0.f);
+
+            if (impulse)
+            {
+                dataL[0] = 1.f;
+                dataR[0] = 1.f;
+            }
+
+            surge->fx[0]->process(dataL, dataR);
+        };
+
+        for (int b = 0; b < 100; ++b)
+        {
+            runBlock(false);
+        }
+
+        fx->p[DelayEffect::dly_time_left].val.f = std::log2(endSeconds);
+        fx->p[DelayEffect::dly_time_right].val.f = std::log2(endSeconds);
+        patch.copy_globaldata(patch.globaldata);
+
+        int peakIndex = -1;
+        float peakValue = 0.f;
+
+        for (int b = 0, n = 0; b < sampleRate / BLOCK_SIZE; ++b)
+        {
+            runBlock(b == 0);
+
+            for (int k = 0; k < BLOCK_SIZE; ++k, ++n)
+            {
+                auto v = std::fabs(channel == 0 ? dataL[k] : dataR[k]);
+
+                if (v > peakValue)
+                {
+                    peakValue = v;
+                    peakIndex = n;
+                }
+            }
+        }
+
+        INFO("Delayed impulse peaked at " << peakValue);
+        REQUIRE(peakValue > 0.05f);
+
+        return peakIndex;
+    }
+
+    /*
+     * Feed a steady sine through the same delay and report the largest sample to sample
+     * step in the output, once while the delay time is held and once across the change
+     * from startSeconds to endSeconds. A tap that is repositioned without a crossfade
+     * splices two unrelated phases of the sine together, which shows up here as a step
+     * far larger than the sine's own slope.
+     */
+    std::pair<float, float> sineStepDiscontinuity() const
+    {
+        auto surge = makeDelay();
+        auto &patch = surge->storage.getPatch();
+        auto *fx = &(patch.fx[0]);
+
+        // deliberately not a whole number of cycles per delay time, so that the two taps
+        // are out of phase with each other
+        constexpr double twoPi{6.283185307179586};
+        const double dPhase = twoPi * 437.0 / sampleRate;
+        double phase = 0.0;
+
+        float dataL alignas(16)[BLOCK_SIZE], dataR alignas(16)[BLOCK_SIZE];
+        float previous = 0.f;
+        bool havePrevious = false;
+
+        auto runBlock = [&](float *maxDelta) {
+            for (int k = 0; k < BLOCK_SIZE; ++k)
+            {
+                dataL[k] = (float)std::sin(phase);
+                dataR[k] = dataL[k];
+                phase += dPhase;
+            }
+
+            surge->fx[0]->process(dataL, dataR);
+
+            for (int k = 0; k < BLOCK_SIZE; ++k)
+            {
+                if (havePrevious && maxDelta)
+                {
+                    *maxDelta = std::max(*maxDelta, std::fabs(dataL[k] - previous));
+                }
+
+                previous = dataL[k];
+                havePrevious = true;
+            }
+        };
+
+        for (int b = 0; b < 400; ++b)
+        {
+            runBlock(nullptr);
+        }
+
+        float held = 0.f;
+
+        for (int b = 0; b < 200; ++b)
+        {
+            runBlock(&held);
+        }
+
+        fx->p[DelayEffect::dly_time_left].val.f = std::log2(endSeconds);
+        fx->p[DelayEffect::dly_time_right].val.f = std::log2(endSeconds);
+        patch.copy_globaldata(patch.globaldata);
+
+        float changing = 0.f;
+
+        for (int b = 0; b < 200; ++b)
+        {
+            runBlock(&changing);
+        }
+
+        return {held, changing};
+    }
+
+    /*
+     * A crossfade between two taps holding correlated material cannot be made
+     * transparent: the taps can land in antiphase and cancel at the midpoint whatever
+     * the fade length. So the thing Clean mode controls is how OFTEN it pays that cost.
+     *
+     * Sweep the delay time continuously the way host automation would, through a 100%
+     * wet, feedback free delay carrying a steady tone, and count the resulting dropouts.
+     * Each retime shows up as a dip in the tone's level; a delay that chases the
+     * automation block by block produces one every fade length, which is what gets heard
+     * as the time being chewed rather than swept.
+     */
+    int retimeEventsDuringSweep(float toneHz, float fromSeconds, float toSeconds,
+                                float sweepSeconds) const
+    {
+        auto surge = makeDelay();
+        auto &patch = surge->storage.getPatch();
+        auto *fx = &(patch.fx[0]);
+
+        constexpr double twoPi{6.283185307179586};
+        const double dPhase = twoPi * toneHz / sampleRate;
+        double phase = 0.0;
+
+        float dataL alignas(16)[BLOCK_SIZE], dataR alignas(16)[BLOCK_SIZE];
+        std::vector<float> captured;
+
+        auto runBlock = [&](bool keep) {
+            for (int k = 0; k < BLOCK_SIZE; ++k)
+            {
+                dataL[k] = (float)std::sin(phase);
+                dataR[k] = dataL[k];
+                phase += dPhase;
+            }
+
+            surge->fx[0]->process(dataL, dataR);
+
+            if (keep)
+            {
+                captured.insert(captured.end(), dataL, dataL + BLOCK_SIZE);
+            }
+        };
+
+        // fill the line and settle
+        for (int b = 0; b < (int)(2.5 * sampleRate / BLOCK_SIZE); ++b)
+        {
+            runBlock(false);
+        }
+
+        auto blocks = (int)(sweepSeconds * sampleRate / BLOCK_SIZE);
+        auto from = std::log2(fromSeconds), to = std::log2(toSeconds);
+
+        for (int b = 0; b < blocks; ++b)
+        {
+            auto v = (float)(from + (to - from) * b / (double)blocks);
+
+            fx->p[DelayEffect::dly_time_left].val.f = v;
+            fx->p[DelayEffect::dly_time_right].val.f = v;
+            patch.copy_globaldata(patch.globaldata);
+
+            runBlock(true);
+        }
+
+        // level per period of the tone, so the tone's own ripple is averaged away
+        auto frame = (int)std::round(sampleRate / toneHz);
+        std::vector<float> level;
+
+        for (size_t i = 0; i + frame <= captured.size(); i += frame)
+        {
+            double s = 0;
+
+            for (int k = 0; k < frame; ++k)
+            {
+                s += (double)captured[i + k] * captured[i + k];
+            }
+
+            level.push_back((float)std::sqrt(s / frame));
+        }
+
+        REQUIRE(level.size() > 50);
+
+        std::vector<float> sorted(level);
+        std::sort(sorted.begin(), sorted.end());
+        auto steady = sorted[sorted.size() * 3 / 4];
+        auto threshold = steady * 0.7f; // about 3 dB down
+
+        int events = 0;
+        bool inDip = false;
+
+        for (auto v : level)
+        {
+            if (v < threshold && !inDip)
+            {
+                ++events;
+                inDip = true;
+            }
+            else if (v >= threshold)
+            {
+                inDip = false;
+            }
+        }
+
+        return events;
+    }
+};
+} // namespace
+
+TEST_CASE("Dual Delay Line Modes", "[fx]")
+{
+    SECTION("Tape mode glides to the new delay time")
+    {
+        DelayLineModeProbe probe;
+        probe.lineModeLeft = DelayEffect::dly_line_tape;
+        probe.lineModeRight = DelayEffect::dly_line_tape;
+
+        auto idx = probe.impulseReturnIndex();
+
+        INFO("Impulse returned at sample " << idx);
+        // The tap is still gliding when the impulse catches up with it, so the impulse
+        // comes back out well before the newly requested 0.2s
+        REQUIRE(idx > 0.1 * DelayLineModeProbe::sampleRate);
+        REQUIRE(idx < 0.2 * DelayLineModeProbe::sampleRate - 1000);
+    }
+
+    SECTION("Clean mode applies the new delay time immediately")
+    {
+        DelayLineModeProbe probe;
+        probe.lineModeLeft = DelayEffect::dly_line_clean;
+        probe.lineModeRight = DelayEffect::dly_line_clean;
+
+        auto idx = probe.impulseReturnIndex();
+
+        INFO("Impulse returned at sample " << idx);
+        REQUIRE(idx == Approx(0.2 * DelayLineModeProbe::sampleRate).margin(64));
+    }
+
+    SECTION("Clean mode crossfades to the new delay time rather than splicing")
+    {
+        DelayLineModeProbe probe;
+        probe.lineModeLeft = DelayEffect::dly_line_clean;
+        probe.lineModeRight = DelayEffect::dly_line_clean;
+
+        auto [held, changing] = probe.sineStepDiscontinuity();
+
+        INFO("Largest output step was " << held << " while held and " << changing
+                                        << " across the change");
+        REQUIRE(changing < 3 * held);
+    }
+
+    SECTION("Clean mode keeps the mod LFO gliding so Rate and Depth still chorus")
+    {
+        DelayLineModeProbe unmodulated;
+        unmodulated.lineModeLeft = DelayEffect::dly_line_clean;
+        unmodulated.lineModeRight = DelayEffect::dly_line_clean;
+
+        auto modulated = unmodulated;
+        // a fast, deep vibrato, so the LFO never settles and every block asks the tap to
+        // move by a meaningful amount
+        modulated.modRate = 5.f;
+        modulated.modDepth = 2.f;
+
+        auto flat = unmodulated.sineStepDiscontinuity().first;
+        auto chorused = modulated.sineStepDiscontinuity().first;
+
+        INFO("Largest output step was " << flat << " unmodulated and " << chorused << " modulated");
+        // pitch modulation raises the sine's own slope a little, but a tap that stepped
+        // at block rate instead of gliding would be several times worse
+        REQUIRE(chorused < 2 * flat);
+    }
+
+    SECTION("Clean mode retimes sparingly while the delay time is swept")
+    {
+        DelayLineModeProbe probe;
+        probe.lineModeLeft = DelayEffect::dly_line_clean;
+        probe.lineModeRight = DelayEffect::dly_line_clean;
+        probe.startSeconds = 1.f;
+
+        auto events = probe.retimeEventsDuringSweep(250.f, 1.f, 0.05f, 2.f);
+
+        INFO("Dropped out " << events << " times across the sweep");
+        // only the retimes whose taps land near antiphase actually dip, so this counts
+        // audible dropouts rather than retimes. Spacing them by half a lap of the line
+        // measures 10 here, which is also what Replika's Modern mode measures on
+        // comparable material; shortening the fade tenfold, so that retimes come ten
+        // times as often, measures 50
+        REQUIRE(events < 20);
+    }
+
+    SECTION("A linked Right channel follows the Left channel's line mode")
+    {
+        DelayLineModeProbe probe;
+        probe.lineModeLeft = DelayEffect::dly_line_clean;
+        probe.lineModeRight = DelayEffect::dly_line_tape;
+        probe.linkRight = true;
+        probe.channel = 1;
+
+        auto idx = probe.impulseReturnIndex();
+
+        INFO("Impulse returned at sample " << idx);
+        REQUIRE(idx == Approx(0.2 * DelayLineModeProbe::sampleRate).margin(64));
+    }
+
+    SECTION("An unlinked Right channel keeps its own line mode")
+    {
+        DelayLineModeProbe probe;
+        probe.lineModeLeft = DelayEffect::dly_line_clean;
+        probe.lineModeRight = DelayEffect::dly_line_tape;
+        probe.linkRight = false;
+        probe.channel = 1;
+
+        auto idx = probe.impulseReturnIndex();
+
+        INFO("Impulse returned at sample " << idx);
+        REQUIRE(idx < 0.2 * DelayLineModeProbe::sampleRate - 1000);
     }
 }

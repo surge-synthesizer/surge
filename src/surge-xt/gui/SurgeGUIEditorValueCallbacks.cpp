@@ -28,6 +28,7 @@
 
 #include "fmt/core.h"
 
+#include "DelayEffect.h"
 #include "ModernOscillator.h"
 #include "StringOscillator.h"
 
@@ -2406,6 +2407,80 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                         undoManager()->pushParameterChange(p->id, p,
                                                                                            p->val);
                                                     update_deform_type(p, i);
+                                                    if (!isChecked)
+                                                    {
+                                                        synth->storage.getPatch().isDirty = true;
+                                                    }
+                                                });
+                        }
+
+                        break;
+                    }
+                    case ct_envtime_delay_line_mode:
+                    case ct_envtime_linkable_delay:
+                    {
+                        /*
+                         * The right channel follows the left channel's mode whenever it is
+                         * linked, so edit the left parameter from either slider and write
+                         * both, rather than leaving the right one holding a mode the user
+                         * never chose for it to reveal when they unlink.
+                         */
+                        auto *owner = p;
+                        Parameter *mirror = nullptr;
+                        auto &patch = synth->storage.getPatch();
+
+                        if (p->ctrltype == ct_envtime_linkable_delay && p->deactivated && p->id > 0)
+                        {
+                            auto *left = patch.param_ptr[p->id - 1];
+
+                            if (left && left->ctrltype == ct_envtime_delay_line_mode)
+                            {
+                                owner = left;
+                                mirror = p;
+                            }
+                        }
+                        else if (p->ctrltype == ct_envtime_delay_line_mode &&
+                                 p->id + 1 < n_total_params)
+                        {
+                            auto *right = patch.param_ptr[p->id + 1];
+
+                            if (right && right->ctrltype == ct_envtime_linkable_delay &&
+                                right->deactivated)
+                            {
+                                mirror = right;
+                            }
+                        }
+
+                        contextMenu.addSeparator();
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "MODE");
+
+                        // done this way to support adding further delay modes we'd want to reorg
+                        const std::vector<std::pair<int, std::string>> delayLineModes = {
+                            {DelayEffect::dly_line_clean, "Clean"},
+                            {DelayEffect::dly_line_tape, "Tape"},
+                        };
+
+                        jassert(delayLineModes.size() == DelayEffect::num_dly_line_modes);
+
+                        for (const auto &[mode, label] : delayLineModes)
+                        {
+                            bool isChecked = owner->deform_type == mode;
+
+                            contextMenu.addItem(Surge::GUI::toOSCase(label), true, isChecked,
+                                                [this, isChecked, owner, mirror, mode = mode]() {
+                                                    if (owner->deform_type != mode)
+                                                        undoManager()->pushParameterChange(
+                                                            owner->id, owner, owner->val);
+
+                                                    update_deform_type(owner, mode);
+
+                                                    if (mirror)
+                                                    {
+                                                        update_deform_type(mirror, mode);
+                                                    }
+
                                                     if (!isChecked)
                                                     {
                                                         synth->storage.getPatch().isDirty = true;
