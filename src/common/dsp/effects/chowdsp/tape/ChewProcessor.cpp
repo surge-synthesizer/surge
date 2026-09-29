@@ -19,6 +19,7 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+#include "SurgeRandom.h"
 #include "ChewProcessor.h"
 #include <random>
 
@@ -27,7 +28,7 @@ namespace chowdsp
 
 ChewProcessor::ChewProcessor()
 {
-    std::random_device rd;
+    Surge::AudioRandomDevice rd;
     auto gen02 = std::minstd_rand(rd());
     std::uniform_real_distribution<float> distro02(0.0f, 2.0f);
     urng02 = std::bind(distro02, gen02);

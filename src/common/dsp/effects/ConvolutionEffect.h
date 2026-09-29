@@ -29,11 +29,13 @@
 #include <sst/filters/CytomicTilt.h>
 #include <vembertech/lipol.h>
 
-#include <fft_convolve.hpp>
+#include "ConvolutionKernel.h"
 
 class ConvolutionEffect : public Effect
 {
   public:
+    static constexpr float minimumSize = .5f, maximumSize = 2.f;
+    static constexpr float maximumStart = .9f, maximumReverse = .5f;
     enum convolution_params
     {
         convolution_delay = 0,
@@ -50,6 +52,7 @@ class ConvolutionEffect : public Effect
     bool initialized;
 
     ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    ~ConvolutionEffect() override;
 
     const char *get_effectname() override;
     const char *group_label(int id) override;
@@ -60,14 +63,36 @@ class ConvolutionEffect : public Effect
     void init_default_values() override;
     int get_ringout_decay() override;
     void process(float *dataL, float *dataR) override;
+    void rebindParameterStorage(FxStorage *parameters, pdata *values) override;
+    // Control-thread preparation without decoding/resampling/building an IR.
+    void prepareProcessingState();
+    // Engine owner only. The fresh replacement must not own an old kernel.
+    void adoptPreparedKernel(std::unique_ptr<ConvolutionKernel> &prepared)
+    {
+        assert(!kernel_);
+        kernel_.swap(prepared);
+        initialized = bool(kernel_);
+        rememberKernelSettings();
+    }
+#if SURGE_WEB
+    // Engine owner only, under fxSpawnMutex immediately before effect replacement.
+    std::unique_ptr<ConvolutionKernel> &browserKernel() { return kernel_; }
+    void browserDetachForRetirement();
+#endif
 
   private:
     void prep_ir();
     void set_params();
+    void rememberKernelSettings();
+#if SURGE_WEB
+    void updateBrowserKernel();
+    int browserSlot_{-1};
+    uint64_t browserRequest_{0};
+    float requestedRate_{}, requestedSize_{}, requestedStart_{}, requestedReverse_{};
+    bool requestedReverseDeactivated_{};
+#endif
 
-    pffft::TwoStageConvolver convolverL_;
-    pffft::TwoStageConvolver convolverR_;
-    std::size_t irSize_;
+    std::unique_ptr<ConvolutionKernel> kernel_;
     alignas(16) std::array<float, BLOCK_SIZE> workL_;
     alignas(16) std::array<float, BLOCK_SIZE> workR_;
     alignas(16) std::array<float, BLOCK_SIZE> delayedL_;

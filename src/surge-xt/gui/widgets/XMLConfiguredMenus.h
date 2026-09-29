@@ -255,7 +255,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void jogBy(int dir) override;
 
     void loadByIndex(const std::string &name, int index) override;
-    void loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p);
+    bool loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p);
 
     SurgeImage *bg{}, *bgHover{};
     void setBackgroundDrawable(SurgeImage *b) { bg = b; };

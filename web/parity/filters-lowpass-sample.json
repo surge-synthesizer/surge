@@ -1,0 +1,1177 @@
+{
+  "schema": 1,
+  "status": "diagnostic",
+  "complete": false,
+  "selectionComplete": true,
+  "inventory": {
+    "schema": 1,
+    "source": "libs/sst/sst-filters/include/sst/filters/FilterConfiguration.h",
+    "sourceSha256": "6eeb8ee16b68f06edf8b6d2ac1ee5559c608aedc741b3532529b3f936a42b97c",
+    "scope": "Public filter type and subtype selectors. Zero-subtype types use subtype 0. This matrix is unverified: it does not prove DSP or UI parity. Internal subtype masks, morph parameters, cutoff/resonance ranges, routing, modulation and live edits need additional coverage.",
+    "rates": [
+      44100,
+      48000
+    ],
+    "types": [
+      {
+        "id": 0,
+        "symbol": "fut_none",
+        "name": "Off",
+        "subtypeCount": 0
+      },
+      {
+        "id": 1,
+        "symbol": "fut_lp12",
+        "name": "LP 12 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 2,
+        "symbol": "fut_lp24",
+        "name": "LP 24 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 3,
+        "symbol": "fut_lpmoog",
+        "name": "LP Legacy Ladder",
+        "subtypeCount": 4
+      },
+      {
+        "id": 4,
+        "symbol": "fut_hp12",
+        "name": "HP 12 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 5,
+        "symbol": "fut_hp24",
+        "name": "HP 24 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 6,
+        "symbol": "fut_bp12",
+        "name": "BP 12 dB",
+        "subtypeCount": 5
+      },
+      {
+        "id": 7,
+        "symbol": "fut_notch12",
+        "name": "N 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 8,
+        "symbol": "fut_comb_pos",
+        "name": "FX Comb +",
+        "subtypeCount": 2
+      },
+      {
+        "id": 9,
+        "symbol": "fut_SNH",
+        "name": "FX Sample & Hold",
+        "subtypeCount": 0
+      },
+      {
+        "id": 10,
+        "symbol": "fut_vintageladder",
+        "name": "LP Vintage Ladder",
+        "subtypeCount": 6
+      },
+      {
+        "id": 11,
+        "symbol": "fut_obxd_2pole_lp",
+        "name": "LP OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 12,
+        "symbol": "fut_obxd_4pole",
+        "name": "LP OB-Xd 24 dB",
+        "subtypeCount": 5
+      },
+      {
+        "id": 13,
+        "symbol": "fut_k35_lp",
+        "name": "LP K35",
+        "subtypeCount": 5
+      },
+      {
+        "id": 14,
+        "symbol": "fut_k35_hp",
+        "name": "HP K35",
+        "subtypeCount": 5
+      },
+      {
+        "id": 15,
+        "symbol": "fut_diode",
+        "name": "LP Diode Ladder",
+        "subtypeCount": 4
+      },
+      {
+        "id": 16,
+        "symbol": "fut_cutoffwarp_lp",
+        "name": "LP Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 17,
+        "symbol": "fut_cutoffwarp_hp",
+        "name": "HP Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 18,
+        "symbol": "fut_cutoffwarp_n",
+        "name": "N Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 19,
+        "symbol": "fut_cutoffwarp_bp",
+        "name": "BP Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 20,
+        "symbol": "fut_obxd_2pole_hp",
+        "name": "HP OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 21,
+        "symbol": "fut_obxd_2pole_n",
+        "name": "N OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 22,
+        "symbol": "fut_obxd_2pole_bp",
+        "name": "BP OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 23,
+        "symbol": "fut_bp24",
+        "name": "BP 24 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 24,
+        "symbol": "fut_notch24",
+        "name": "N 24 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 25,
+        "symbol": "fut_comb_neg",
+        "name": "FX Comb -",
+        "subtypeCount": 2
+      },
+      {
+        "id": 26,
+        "symbol": "fut_apf",
+        "name": "FX Allpass",
+        "subtypeCount": 0
+      },
+      {
+        "id": 27,
+        "symbol": "fut_cutoffwarp_ap",
+        "name": "FX Cutoff Warp AP",
+        "subtypeCount": 12
+      },
+      {
+        "id": 28,
+        "symbol": "fut_resonancewarp_lp",
+        "name": "LP Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 29,
+        "symbol": "fut_resonancewarp_hp",
+        "name": "HP Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 30,
+        "symbol": "fut_resonancewarp_n",
+        "name": "N Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 31,
+        "symbol": "fut_resonancewarp_bp",
+        "name": "BP Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 32,
+        "symbol": "fut_resonancewarp_ap",
+        "name": "FX Res Warp AP",
+        "subtypeCount": 8
+      },
+      {
+        "id": 33,
+        "symbol": "fut_tripole",
+        "name": "MULTI Tri-pole",
+        "subtypeCount": 12
+      },
+      {
+        "id": 34,
+        "symbol": "fut_cytomic_svf",
+        "name": "MULTI Fast SVF",
+        "subtypeCount": 9
+      },
+      {
+        "id": 35,
+        "symbol": "fut_obxd_xpander",
+        "name": "MULTI Xpander",
+        "subtypeCount": 15
+      }
+    ],
+    "modes": [
+      {
+        "type": 0,
+        "subtype": 0
+      },
+      {
+        "type": 1,
+        "subtype": 0
+      },
+      {
+        "type": 1,
+        "subtype": 1
+      },
+      {
+        "type": 1,
+        "subtype": 2
+      },
+      {
+        "type": 2,
+        "subtype": 0
+      },
+      {
+        "type": 2,
+        "subtype": 1
+      },
+      {
+        "type": 2,
+        "subtype": 2
+      },
+      {
+        "type": 3,
+        "subtype": 0
+      },
+      {
+        "type": 3,
+        "subtype": 1
+      },
+      {
+        "type": 3,
+        "subtype": 2
+      },
+      {
+        "type": 3,
+        "subtype": 3
+      },
+      {
+        "type": 4,
+        "subtype": 0
+      },
+      {
+        "type": 4,
+        "subtype": 1
+      },
+      {
+        "type": 4,
+        "subtype": 2
+      },
+      {
+        "type": 5,
+        "subtype": 0
+      },
+      {
+        "type": 5,
+        "subtype": 1
+      },
+      {
+        "type": 5,
+        "subtype": 2
+      },
+      {
+        "type": 6,
+        "subtype": 0
+      },
+      {
+        "type": 6,
+        "subtype": 1
+      },
+      {
+        "type": 6,
+        "subtype": 2
+      },
+      {
+        "type": 6,
+        "subtype": 3
+      },
+      {
+        "type": 6,
+        "subtype": 4
+      },
+      {
+        "type": 7,
+        "subtype": 0
+      },
+      {
+        "type": 7,
+        "subtype": 1
+      },
+      {
+        "type": 8,
+        "subtype": 0
+      },
+      {
+        "type": 8,
+        "subtype": 1
+      },
+      {
+        "type": 9,
+        "subtype": 0
+      },
+      {
+        "type": 10,
+        "subtype": 0
+      },
+      {
+        "type": 10,
+        "subtype": 1
+      },
+      {
+        "type": 10,
+        "subtype": 2
+      },
+      {
+        "type": 10,
+        "subtype": 3
+      },
+      {
+        "type": 10,
+        "subtype": 4
+      },
+      {
+        "type": 10,
+        "subtype": 5
+      },
+      {
+        "type": 11,
+        "subtype": 0
+      },
+      {
+        "type": 11,
+        "subtype": 1
+      },
+      {
+        "type": 12,
+        "subtype": 0
+      },
+      {
+        "type": 12,
+        "subtype": 1
+      },
+      {
+        "type": 12,
+        "subtype": 2
+      },
+      {
+        "type": 12,
+        "subtype": 3
+      },
+      {
+        "type": 12,
+        "subtype": 4
+      },
+      {
+        "type": 13,
+        "subtype": 0
+      },
+      {
+        "type": 13,
+        "subtype": 1
+      },
+      {
+        "type": 13,
+        "subtype": 2
+      },
+      {
+        "type": 13,
+        "subtype": 3
+      },
+      {
+        "type": 13,
+        "subtype": 4
+      },
+      {
+        "type": 14,
+        "subtype": 0
+      },
+      {
+        "type": 14,
+        "subtype": 1
+      },
+      {
+        "type": 14,
+        "subtype": 2
+      },
+      {
+        "type": 14,
+        "subtype": 3
+      },
+      {
+        "type": 14,
+        "subtype": 4
+      },
+      {
+        "type": 15,
+        "subtype": 0
+      },
+      {
+        "type": 15,
+        "subtype": 1
+      },
+      {
+        "type": 15,
+        "subtype": 2
+      },
+      {
+        "type": 15,
+        "subtype": 3
+      },
+      {
+        "type": 16,
+        "subtype": 0
+      },
+      {
+        "type": 16,
+        "subtype": 1
+      },
+      {
+        "type": 16,
+        "subtype": 2
+      },
+      {
+        "type": 16,
+        "subtype": 3
+      },
+      {
+        "type": 16,
+        "subtype": 4
+      },
+      {
+        "type": 16,
+        "subtype": 5
+      },
+      {
+        "type": 16,
+        "subtype": 6
+      },
+      {
+        "type": 16,
+        "subtype": 7
+      },
+      {
+        "type": 16,
+        "subtype": 8
+      },
+      {
+        "type": 16,
+        "subtype": 9
+      },
+      {
+        "type": 16,
+        "subtype": 10
+      },
+      {
+        "type": 16,
+        "subtype": 11
+      },
+      {
+        "type": 17,
+        "subtype": 0
+      },
+      {
+        "type": 17,
+        "subtype": 1
+      },
+      {
+        "type": 17,
+        "subtype": 2
+      },
+      {
+        "type": 17,
+        "subtype": 3
+      },
+      {
+        "type": 17,
+        "subtype": 4
+      },
+      {
+        "type": 17,
+        "subtype": 5
+      },
+      {
+        "type": 17,
+        "subtype": 6
+      },
+      {
+        "type": 17,
+        "subtype": 7
+      },
+      {
+        "type": 17,
+        "subtype": 8
+      },
+      {
+        "type": 17,
+        "subtype": 9
+      },
+      {
+        "type": 17,
+        "subtype": 10
+      },
+      {
+        "type": 17,
+        "subtype": 11
+      },
+      {
+        "type": 18,
+        "subtype": 0
+      },
+      {
+        "type": 18,
+        "subtype": 1
+      },
+      {
+        "type": 18,
+        "subtype": 2
+      },
+      {
+        "type": 18,
+        "subtype": 3
+      },
+      {
+        "type": 18,
+        "subtype": 4
+      },
+      {
+        "type": 18,
+        "subtype": 5
+      },
+      {
+        "type": 18,
+        "subtype": 6
+      },
+      {
+        "type": 18,
+        "subtype": 7
+      },
+      {
+        "type": 18,
+        "subtype": 8
+      },
+      {
+        "type": 18,
+        "subtype": 9
+      },
+      {
+        "type": 18,
+        "subtype": 10
+      },
+      {
+        "type": 18,
+        "subtype": 11
+      },
+      {
+        "type": 19,
+        "subtype": 0
+      },
+      {
+        "type": 19,
+        "subtype": 1
+      },
+      {
+        "type": 19,
+        "subtype": 2
+      },
+      {
+        "type": 19,
+        "subtype": 3
+      },
+      {
+        "type": 19,
+        "subtype": 4
+      },
+      {
+        "type": 19,
+        "subtype": 5
+      },
+      {
+        "type": 19,
+        "subtype": 6
+      },
+      {
+        "type": 19,
+        "subtype": 7
+      },
+      {
+        "type": 19,
+        "subtype": 8
+      },
+      {
+        "type": 19,
+        "subtype": 9
+      },
+      {
+        "type": 19,
+        "subtype": 10
+      },
+      {
+        "type": 19,
+        "subtype": 11
+      },
+      {
+        "type": 20,
+        "subtype": 0
+      },
+      {
+        "type": 20,
+        "subtype": 1
+      },
+      {
+        "type": 21,
+        "subtype": 0
+      },
+      {
+        "type": 21,
+        "subtype": 1
+      },
+      {
+        "type": 22,
+        "subtype": 0
+      },
+      {
+        "type": 22,
+        "subtype": 1
+      },
+      {
+        "type": 23,
+        "subtype": 0
+      },
+      {
+        "type": 23,
+        "subtype": 1
+      },
+      {
+        "type": 23,
+        "subtype": 2
+      },
+      {
+        "type": 24,
+        "subtype": 0
+      },
+      {
+        "type": 24,
+        "subtype": 1
+      },
+      {
+        "type": 25,
+        "subtype": 0
+      },
+      {
+        "type": 25,
+        "subtype": 1
+      },
+      {
+        "type": 26,
+        "subtype": 0
+      },
+      {
+        "type": 27,
+        "subtype": 0
+      },
+      {
+        "type": 27,
+        "subtype": 1
+      },
+      {
+        "type": 27,
+        "subtype": 2
+      },
+      {
+        "type": 27,
+        "subtype": 3
+      },
+      {
+        "type": 27,
+        "subtype": 4
+      },
+      {
+        "type": 27,
+        "subtype": 5
+      },
+      {
+        "type": 27,
+        "subtype": 6
+      },
+      {
+        "type": 27,
+        "subtype": 7
+      },
+      {
+        "type": 27,
+        "subtype": 8
+      },
+      {
+        "type": 27,
+        "subtype": 9
+      },
+      {
+        "type": 27,
+        "subtype": 10
+      },
+      {
+        "type": 27,
+        "subtype": 11
+      },
+      {
+        "type": 28,
+        "subtype": 0
+      },
+      {
+        "type": 28,
+        "subtype": 1
+      },
+      {
+        "type": 28,
+        "subtype": 2
+      },
+      {
+        "type": 28,
+        "subtype": 3
+      },
+      {
+        "type": 28,
+        "subtype": 4
+      },
+      {
+        "type": 28,
+        "subtype": 5
+      },
+      {
+        "type": 28,
+        "subtype": 6
+      },
+      {
+        "type": 28,
+        "subtype": 7
+      },
+      {
+        "type": 29,
+        "subtype": 0
+      },
+      {
+        "type": 29,
+        "subtype": 1
+      },
+      {
+        "type": 29,
+        "subtype": 2
+      },
+      {
+        "type": 29,
+        "subtype": 3
+      },
+      {
+        "type": 29,
+        "subtype": 4
+      },
+      {
+        "type": 29,
+        "subtype": 5
+      },
+      {
+        "type": 29,
+        "subtype": 6
+      },
+      {
+        "type": 29,
+        "subtype": 7
+      },
+      {
+        "type": 30,
+        "subtype": 0
+      },
+      {
+        "type": 30,
+        "subtype": 1
+      },
+      {
+        "type": 30,
+        "subtype": 2
+      },
+      {
+        "type": 30,
+        "subtype": 3
+      },
+      {
+        "type": 30,
+        "subtype": 4
+      },
+      {
+        "type": 30,
+        "subtype": 5
+      },
+      {
+        "type": 30,
+        "subtype": 6
+      },
+      {
+        "type": 30,
+        "subtype": 7
+      },
+      {
+        "type": 31,
+        "subtype": 0
+      },
+      {
+        "type": 31,
+        "subtype": 1
+      },
+      {
+        "type": 31,
+        "subtype": 2
+      },
+      {
+        "type": 31,
+        "subtype": 3
+      },
+      {
+        "type": 31,
+        "subtype": 4
+      },
+      {
+        "type": 31,
+        "subtype": 5
+      },
+      {
+        "type": 31,
+        "subtype": 6
+      },
+      {
+        "type": 31,
+        "subtype": 7
+      },
+      {
+        "type": 32,
+        "subtype": 0
+      },
+      {
+        "type": 32,
+        "subtype": 1
+      },
+      {
+        "type": 32,
+        "subtype": 2
+      },
+      {
+        "type": 32,
+        "subtype": 3
+      },
+      {
+        "type": 32,
+        "subtype": 4
+      },
+      {
+        "type": 32,
+        "subtype": 5
+      },
+      {
+        "type": 32,
+        "subtype": 6
+      },
+      {
+        "type": 32,
+        "subtype": 7
+      },
+      {
+        "type": 33,
+        "subtype": 0
+      },
+      {
+        "type": 33,
+        "subtype": 1
+      },
+      {
+        "type": 33,
+        "subtype": 2
+      },
+      {
+        "type": 33,
+        "subtype": 3
+      },
+      {
+        "type": 33,
+        "subtype": 4
+      },
+      {
+        "type": 33,
+        "subtype": 5
+      },
+      {
+        "type": 33,
+        "subtype": 6
+      },
+      {
+        "type": 33,
+        "subtype": 7
+      },
+      {
+        "type": 33,
+        "subtype": 8
+      },
+      {
+        "type": 33,
+        "subtype": 9
+      },
+      {
+        "type": 33,
+        "subtype": 10
+      },
+      {
+        "type": 33,
+        "subtype": 11
+      },
+      {
+        "type": 34,
+        "subtype": 0
+      },
+      {
+        "type": 34,
+        "subtype": 1
+      },
+      {
+        "type": 34,
+        "subtype": 2
+      },
+      {
+        "type": 34,
+        "subtype": 3
+      },
+      {
+        "type": 34,
+        "subtype": 4
+      },
+      {
+        "type": 34,
+        "subtype": 5
+      },
+      {
+        "type": 34,
+        "subtype": 6
+      },
+      {
+        "type": 34,
+        "subtype": 7
+      },
+      {
+        "type": 34,
+        "subtype": 8
+      },
+      {
+        "type": 35,
+        "subtype": 0
+      },
+      {
+        "type": 35,
+        "subtype": 1
+      },
+      {
+        "type": 35,
+        "subtype": 2
+      },
+      {
+        "type": 35,
+        "subtype": 3
+      },
+      {
+        "type": 35,
+        "subtype": 4
+      },
+      {
+        "type": 35,
+        "subtype": 5
+      },
+      {
+        "type": 35,
+        "subtype": 6
+      },
+      {
+        "type": 35,
+        "subtype": 7
+      },
+      {
+        "type": 35,
+        "subtype": 8
+      },
+      {
+        "type": 35,
+        "subtype": 9
+      },
+      {
+        "type": 35,
+        "subtype": 10
+      },
+      {
+        "type": 35,
+        "subtype": 11
+      },
+      {
+        "type": 35,
+        "subtype": 12
+      },
+      {
+        "type": 35,
+        "subtype": 13
+      },
+      {
+        "type": 35,
+        "subtype": 14
+      }
+    ]
+  },
+  "selection": {
+    "modes": [
+      {
+        "type": 1,
+        "subtype": 0
+      },
+      {
+        "type": 1,
+        "subtype": 1
+      },
+      {
+        "type": 1,
+        "subtype": 2
+      }
+    ],
+    "rates": [
+      48000
+    ]
+  },
+  "binaries": {
+    "native": "cb60db1b25c4467e66fcb4c48236b836af9402ca5767c30843a78ac080be540c",
+    "wasm": "f65727d80be95436eec70524fbac00eec8c3dc7cec54c75036f1739b6dc3ec93"
+  },
+  "createdAt": "2026-09-28T06:50:34.226Z",
+  "relativeRmsTolerance": 0.00001,
+  "scope": "Serial 1, filter 1 only, cutoff 3, resonance 0.35, deterministic stereo Audio Input. Repeatability, mute and bypass controls. No claim about other routing, modulation, parameter extremes or real-time deadlines.",
+  "cases": [
+    {
+      "type": 1,
+      "subtype": 0,
+      "name": "LP 12 dB",
+      "rate": 48000,
+      "fixtureSha256": "03ac69a4dfd5103150bfef559e0128993dd27e891ac0778c536208b078eb5d54",
+      "comparison": {
+        "energy": 19.49424673156528,
+        "error": 3.910214704326825e-18,
+        "relativeRMS": 4.4786494714778283e-10
+      },
+      "nativeRepeat": {
+        "energy": 19.49424673156528,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 19.494246731614695,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 25.564941998860007,
+        "relativeRMS": 0.7620570851319479
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 1,
+      "subtype": 1,
+      "name": "LP 12 dB",
+      "rate": 48000,
+      "fixtureSha256": "3889582618d53f55df105d7a5c26add32df634e8ddf1bfca7b22313ac4492e07",
+      "comparison": {
+        "energy": 39.400481303122845,
+        "error": 2.731437511048827e-20,
+        "relativeRMS": 2.6329636969087322e-11
+      },
+      "nativeRepeat": {
+        "energy": 39.400481303122845,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 39.40048130312361,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 29.234345342734002,
+        "relativeRMS": 0.8149140129542587
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 1,
+      "subtype": 2,
+      "name": "LP 12 dB",
+      "rate": 48000,
+      "fixtureSha256": "fd7ee6eb26eaf646bc80fa5e63ad76d984f3c3fd4d90ef5a5c5c38c835ab3f40",
+      "comparison": {
+        "energy": 19.889955541450764,
+        "error": 9.825749832684073e-19,
+        "relativeRMS": 2.2226237213856975e-10
+      },
+      "nativeRepeat": {
+        "energy": 19.889955541450764,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 19.889955541440038,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 33.54151455300895,
+        "relativeRMS": 0.8728838009847635
+      },
+      "status": "matched-fixture"
+    }
+  ],
+  "chrome": "153.0.8010.53"
+}

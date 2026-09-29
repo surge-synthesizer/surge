@@ -675,7 +675,13 @@ template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
 
     {
     }
-    void showMenu() { comp->menu.showMenuAsync(juce::PopupMenu::Options()); }
+    void showMenu()
+    {
+        // Match mouse activation: commands such as Paste depend on the current
+        // clipboard, and the selected effect/preset may have changed since paint.
+        comp->populate();
+        comp->menu.showMenuAsync(juce::PopupMenu::Options());
+    }
 
     T *comp;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(XMLMenuAH);
@@ -767,6 +773,11 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     {
         sge->undoManager()->pushFX(current_fx);
     }
+#if SURGE_WEB
+    std::unique_lock<std::mutex> fxGuard;
+    if (sge) fxGuard = std::unique_lock<std::mutex>(sge->synth->fxSpawnMutex);
+    if (sge) sge->synth->browserIRReloadEdits[current_fx].finish();
+#endif
     selectedUserPresetFile = "";
 
     if (type > -1)
@@ -870,11 +881,40 @@ static void clearChainUserPresetFiles(SurgeGUIEditor *sge, int current_fx)
     }
 }
 
+// Called after all chain buffers are ready, while the browser writer owns
+// fxSpawnMutex. Same-type replacements need explicit reload flags too.
+static void publishChainReload(SurgeGUIEditor *sge, int current_fx,
+                               const std::string names[n_fx_per_chain])
+{
+    const int base = fxSlotToChain(current_fx) * n_fx_per_chain;
+    for (int i = 0; i < n_fx_per_chain; ++i)
+    {
+        const auto slot = fxslot_order[base + i];
+#if SURGE_WEB
+        sge->synth->browserIRReloadEdits[slot].finish();
+#endif
+        sge->synth->fx_reload[slot] = true;
+        sge->synth->fx_reload_mod[slot] = false;
+        sge->fxPresetName[slot] = names[i];
+    }
+    clearChainUserPresetFiles(sge, current_fx);
+    sge->synth->load_fx_needed = true;
+}
+
 /////////////////
 
 void FxMenu::populateForContext(bool isCalledInEffectChooser)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    // The chooser changes selection immediately, but rebuilding the editor is
+    // deferred. Bind this menu before capturing the destination in callbacks.
+    if (sge && isCalledInEffectChooser)
+    {
+        setCurrentFx(sge->current_fx);
+        setFxStorage(&sge->synth->storage.getPatch().fx[current_fx]);
+        setFxBuffer(&sge->synth->fxsync[current_fx]);
+    }
 
     // Are there any user presets?
     storage->fxUserPreset->doPresetRescan(storage);
@@ -1053,24 +1093,38 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
                 }
 
                 chainSubmenu.addItem(cp.name, [this, cp, sge, cur_fx]() {
-                    // Push undo for all slots in the chain at once.
-                    // If a per-chain undo push exists use that; otherwise
-                    // push each slot individually.
-
-                    int chainIdx = fxSlotToChain(cur_fx);
-
-                    for (int i = 0; i < n_fx_per_chain; ++i)
-                        sge->undoManager()->pushFX(fxslot_order[(chainIdx * n_fx_per_chain) + i]);
-
+#if SURGE_WEB
+                    std::unique_lock<std::mutex> fxGuard(sge->synth->fxSpawnMutex);
+#endif
+                    const int chainIdx = fxSlotToChain(cur_fx);
                     FxStorage *slots[n_fx_per_chain];
                     FxStorage *bufs[n_fx_per_chain];
                     std::string names[n_fx_per_chain];
                     buildChainSlotPtrs(sge, cur_fx, slots, bufs, names);
-
-                    storage->fxChainUserPreset->loadPresetOnto(cp, storage, bufs);
-                    clearChainUserPresetFiles(sge, cur_fx);
-
-                    sge->synth->load_fx_needed = true;
+                    std::vector<FxStorage> candidates;
+                    candidates.reserve(n_fx_per_chain);
+                    for (auto *buf : bufs) candidates.push_back(*buf);
+#if SURGE_WEB
+                    fxGuard.unlock();
+#endif
+                    FxStorage *prepared[n_fx_per_chain];
+                    for (int i = 0; i < n_fx_per_chain; ++i) prepared[i] = &candidates[i];
+                    if (!storage->fxChainUserPreset->loadPresetOnto(cp, storage, prepared))
+                        return;
+#if SURGE_WEB
+                    fxGuard.lock();
+#endif
+                    // Record edits only after all file-backed slots have decoded.
+                    for (int i = 0; i < n_fx_per_chain; ++i)
+                    {
+                        sge->undoManager()->pushFX(fxslot_order[chainIdx * n_fx_per_chain + i]);
+                        *bufs[i] = std::move(candidates[i]);
+                    }
+                    for (int i = 0; i < n_fx_per_chain; ++i) names[i] = cp.slots[i].presetName;
+                    publishChainReload(sge, cur_fx, names);
+#if SURGE_WEB
+                    fxGuard.unlock();
+#endif
                     storage->getPatch().isDirty = true;
                     sge->queueRebuildUI();
                 });
@@ -1136,17 +1190,39 @@ Surge::FxClipboard::Clipboard FxMenu::fxClipboard;
 
 void FxMenu::copyFX()
 {
+#if SURGE_WEB
+    std::unique_lock<std::mutex> fxGuard;
+    if (auto sge = firstListenerOfType<SurgeGUIEditor>())
+    {
+        fxGuard = std::unique_lock<std::mutex>(sge->synth->fxSpawnMutex);
+    }
+#endif
     Surge::FxClipboard::copyFx(storage, fx, fxClipboard);
+#if !SURGE_WEB
     *fxbuffer = *fx;
+#endif
+    // In the browser a reload may still be preparing. Copy is read-only: do not
+    // replace its candidate or invalidate the pending parameter-edit baseline.
 }
 
 void FxMenu::pasteFX()
 {
+#if SURGE_WEB
+    std::unique_lock<std::mutex> fxGuard;
+    if (auto sge = firstListenerOfType<SurgeGUIEditor>())
+    {
+        fxGuard = std::unique_lock<std::mutex>(sge->synth->fxSpawnMutex);
+        sge->synth->browserIRReloadEdits[current_fx].finish();
+    }
+#endif
     Surge::FxClipboard::pasteFx(storage, fxbuffer, fxClipboard);
 
     selectedName = std::string("Copied ") + fx_type_shortnames[fxbuffer->type.val.i];
     selectedUserPresetFile = "";
 
+#if SURGE_WEB
+    if (fxGuard.owns_lock()) fxGuard.unlock();
+#endif
     notifyValueChanged();
 }
 
@@ -1244,6 +1320,9 @@ void FxMenu::copyChain()
 
     if (!sge)
         return;
+#if SURGE_WEB
+    std::lock_guard<std::mutex> fxGuard(sge->synth->fxSpawnMutex);
+#endif
 
     FxStorage *slots[n_fx_per_chain];
     FxStorage *bufs[n_fx_per_chain];
@@ -1258,8 +1337,14 @@ void FxMenu::pasteChain()
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    if (!sge)
+    if (!sge || !Surge::FxClipboard::isChainPasteAvailable(fxChainClipboard))
         return;
+#if SURGE_WEB
+    std::unique_lock<std::mutex> fxGuard(sge->synth->fxSpawnMutex);
+#endif
+    const int base = fxSlotToChain(current_fx) * n_fx_per_chain;
+    for (int i = 0; i < n_fx_per_chain; ++i)
+        sge->undoManager()->pushFX(fxslot_order[base + i]);
 
     FxStorage *slots[n_fx_per_chain];
     FxStorage *bufs[n_fx_per_chain];
@@ -1268,7 +1353,11 @@ void FxMenu::pasteChain()
     buildChainSlotPtrs(sge, current_fx, slots, bufs, names);
 
     Surge::FxClipboard::pasteFxChain(storage, bufs, fxChainClipboard);
-    clearChainUserPresetFiles(sge, current_fx);
+    for (int i = 0; i < n_fx_per_chain; ++i) names[i] = fxChainClipboard.slots[i].presetName;
+    publishChainReload(sge, current_fx, names);
+#if SURGE_WEB
+    fxGuard.unlock();
+#endif
 
     storage->getPatch().isDirty = true;
     sge->queueRebuildUI();
@@ -1281,70 +1370,91 @@ void FxMenu::saveChain()
     if (!sge)
         return;
 
+#if SURGE_WEB
+    std::unique_lock<std::mutex> fxGuard(sge->synth->fxSpawnMutex);
+#endif
     FxStorage *slots[n_fx_per_chain];
     FxStorage *bufs[n_fx_per_chain];
     std::string names[n_fx_per_chain];
 
     buildChainSlotPtrs(sge, current_fx, slots, bufs, names);
 
-    sge->promptForMiniEdit(
-        "", "Enter the FX chain name:", "Save FX Chain", juce::Point<int>{},
-        [this, sge, slots, names](const std::string &presetName) {
-            // Build SlotData array from live FxStorage + selectedName
-            Surge::Storage::FxChainUserPreset::Preset::SlotData sd[n_fx_per_chain];
+    // Capture the selected chain before opening an asynchronous name dialog.
+    std::array<Surge::Storage::FxChainUserPreset::Preset::SlotData, n_fx_per_chain> sd;
 
-            for (int i = 0; i < n_fx_per_chain; ++i)
+    for (int i = 0; i < n_fx_per_chain; ++i)
+    {
+        FxStorage *fx = slots[i];
+        sd[i].type = fx->type.val.i;
+        sd[i].presetName = names[i];
+
+        for (int p = 0; p < n_fx_params; ++p)
+        {
+            switch (fx->p[p].valtype)
             {
-                FxStorage *fx = slots[i];
-                sd[i].type = fx->type.val.i;
-                sd[i].presetName = names[i];
-
-                for (int p = 0; p < n_fx_params; ++p)
-                {
-                    switch (fx->p[p].valtype)
-                    {
-                    case vt_float:
-                        sd[i].p[p] = fx->p[p].val.f;
-                        break;
-                    case vt_int:
-                        sd[i].p[p] = (float)fx->p[p].val.i;
-                        break;
-                    default:
-                        break;
-                    }
-
-                    sd[i].ts[p] = fx->p[p].can_temposync() && fx->p[p].temposync;
-                    sd[i].er[p] = fx->p[p].can_extend_range() && fx->p[p].extend_range;
-                    sd[i].da[p] = fx->p[p].can_deactivate() && fx->p[p].deactivated;
-                    sd[i].dt[p] = fx->p[p].has_deformoptions() ? fx->p[p].deform_type : -1;
-                }
-
-                if (fx->user_data.contains("filename"))
-                    sd[i].filename = fx->by_key("filename").to_string();
+            case vt_float:
+                sd[i].p[p] = fx->p[p].val.f;
+                break;
+            case vt_int:
+                sd[i].p[p] = (float)fx->p[p].val.i;
+                break;
+            default:
+                break;
             }
 
-            storage->fxChainUserPreset->saveChainPresetIn(storage, sd, presetName);
+            sd[i].ts[p] = fx->p[p].can_temposync() && fx->p[p].temposync;
+            sd[i].er[p] = fx->p[p].can_extend_range() && fx->p[p].extend_range;
+            sd[i].da[p] = fx->p[p].can_deactivate() && fx->p[p].deactivated;
+            sd[i].dt[p] = fx->p[p].has_deformoptions() ? fx->p[p].deform_type : -1;
+        }
+
+        if (fx->user_data.contains("filename"))
+            sd[i].filename = fx->by_key("filename").to_string();
+    }
+
+#if SURGE_WEB
+    fxGuard.unlock();
+#endif
+    sge->promptForMiniEdit(
+        "", "Enter the FX chain name:", "Save FX Chain", juce::Point<int>{},
+        [this, sd](const std::string &presetName) {
+            storage->fxChainUserPreset->saveChainPresetIn(storage, sd.data(), presetName);
         },
         this);
 }
 
 //////////
 
-void FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
+bool FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
-    if (sge)
-    {
-        sge->undoManager()->pushFX(current_fx);
-    }
+    auto candidate = [&]() {
+#if SURGE_WEB
+        std::unique_lock<std::mutex> fxGuard;
+        if (sge) fxGuard = std::unique_lock<std::mutex>(sge->synth->fxSpawnMutex);
+#endif
+        return *fxbuffer;
+    }();
+    // File decoding and error dialogs must not hold the engine publication lock.
+    if (!storage->fxUserPreset->loadPresetOnto(p, storage, &candidate))
+        return false;
 
-    this->storage->fxUserPreset->loadPresetOnto(p, storage, fxbuffer);
+    if (sge) sge->undoManager()->pushFX(current_fx);
+    {
+#if SURGE_WEB
+        std::unique_lock<std::mutex> fxGuard;
+        if (sge) fxGuard = std::unique_lock<std::mutex>(sge->synth->fxSpawnMutex);
+        if (sge) sge->synth->browserIRReloadEdits[current_fx].finish();
+#endif
+        *fxbuffer = std::move(candidate);
+    }
 
     selectedIdx = -1;
     selectedName = p.name;
     selectedUserPresetFile = p.isFactory ? "" : p.file;
 
-    notifyValueChanged();
+    // loadByIndex publishes once, after it has assigned the selected index.
+    return true;
 }
 
 void FxMenu::scanExtraPresets()
@@ -1356,7 +1466,7 @@ void FxMenu::scanExtraPresets()
         {
             // So let's run all presets until we find the first item with type tp.first
             auto alit = allPresets.begin();
-            while (alit->itemType != tp.first && alit != allPresets.end())
+            while (alit != allPresets.end() && alit->itemType != tp.first)
                 alit++;
             if (alit == allPresets.end())
                 continue;
@@ -1408,7 +1518,8 @@ void FxMenu::loadByIndex(const std::string &name, int index)
     }
     else
     {
-        loadUserPreset(q.fxPreset);
+        if (!loadUserPreset(q.fxPreset))
+            return;
     }
     selectedIdx = index;
     if (getControlListener())

@@ -46,6 +46,8 @@ class Wavetable
     Wavetable();
     ~Wavetable();
     void Copy(Wavetable *wt);
+    // Exchange prepared sample data without allocation; caller owns synchronization.
+    void swapData(Wavetable &other) noexcept;
     bool BuildWT(void *wdata, wt_header &wh, bool AppendSilence);
     void MipMapWT();
 
@@ -77,14 +79,14 @@ class Wavetable
 
   public:
     bool everBuilt = false;
-    int size;
+    int size{0};
     // Frames actually populated from the build data, excluding any silence BuildWT
     // appended. FlattenSource needs this because n_tables counts the padding.
     int data_n_tables{0};
-    unsigned int n_tables;
-    int size_po2;
-    int flags;
-    float dt;
+    unsigned int n_tables{0};
+    int size_po2{0};
+    int flags{0};
+    float dt{0};
     float *TableF32WeakPointers[max_mipmap_levels][max_subtables];
     short *TableI16WeakPointers[max_mipmap_levels][max_subtables];
 

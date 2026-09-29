@@ -724,8 +724,11 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         if (blockPos == 0)
         {
             surge->process();
-            surge->time_data.ppqPos +=
-                (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
+#if SURGE_WEB
+            if (surge->time_data.isPlaying)
+#endif
+                surge->time_data.ppqPos +=
+                    (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
         }
 
         if (inputIsLatent && incL && incR)
@@ -781,7 +784,11 @@ void SurgeSynthProcessor::processBlockPlayhead()
 {
     auto playhead = getPlayHead();
 
-    if (playhead && !(wrapperType == wrapperType_Standalone))
+    if (playhead
+#if !SURGE_WEB
+        && !(wrapperType == wrapperType_Standalone)
+#endif
+    )
     {
         juce::AudioPlayHead::CurrentPositionInfo cp;
         playhead->getCurrentPosition(cp);
@@ -789,10 +796,15 @@ void SurgeSynthProcessor::processBlockPlayhead()
         surge->time_data.isPlaying = cp.isPlaying;
 
         // isRecording should always imply isPlaying but better safe than sorry
+#if SURGE_WEB
+        // Browser rewind also takes effect while stopped.
+        surge->time_data.ppqPos = cp.ppqPosition;
+#else
         if (cp.isPlaying || cp.isRecording)
         {
             surge->time_data.ppqPos = cp.ppqPosition;
         }
+#endif
 
         surge->time_data.timeSigNumerator = cp.timeSigNumerator;
         surge->time_data.timeSigDenominator = cp.timeSigDenominator;
@@ -1206,8 +1218,11 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
                 inR += BLOCK_SIZE;
             }
             surge->process();
-            surge->time_data.ppqPos +=
-                (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
+#if SURGE_WEB
+            if (surge->time_data.isPlaying)
+#endif
+                surge->time_data.ppqPos +=
+                    (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
 
             if (surge->hostNoteEndedDuringBlockCount > 0)
             {

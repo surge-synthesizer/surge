@@ -104,7 +104,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                 if (!s)
                     goto badPreset;
 
-                if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
+                if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS || t < 0 || t >= n_fx_types)
                     goto badPreset;
 
                 preset.type = t;
@@ -118,7 +118,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                     rpath = f.first.lexically_relative(storage->userFXPath).parent_path();
 
                 auto startCatPath = rpath.begin();
-                if (*(startCatPath) == fx_type_shortnames[t])
+                if (startCatPath != rpath.end() && *startCatPath == fx_type_shortnames[t])
                 {
                     startCatPath++;
                 }
@@ -392,8 +392,14 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     }
 }
 
-void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
+bool FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *destination)
 {
+    if (p.type < 0 || p.type >= n_fx_types)
+        return false;
+
+    // Decode file-backed data into a private candidate before publishing any edit.
+    auto candidate = *destination;
+    auto fxbuffer = &candidate;
     fxbuffer->type.val.i = p.type;
     // Special userdata bits.
     fxbuffer->user_data.clear();
@@ -401,7 +407,14 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
         fxbuffer->user_data.emplace("filename", ArbitraryBlockStorage::from_string(path_to_string(
                                                     storage->resolvePathTokens(p.filename))));
 
-    Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
+    std::unique_ptr<Effect> t_fx(spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, nullptr));
+    if (p.type != fxt_off && !t_fx)
+        return false;
+    // The convolution constructor reports the file error. Do not queue another
+    // construction, replace the current effect, or add a failed edit to undo.
+    if (p.type == fxt_convolution && !p.filename.empty() &&
+        !fxbuffer->user_data.contains("left"))
+        return false;
 
     if (t_fx)
     {
@@ -446,9 +459,10 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
         {
             t_fx->handleStreamingMismatches(p.streamingVersion, ff_revision);
         }
-
-        delete t_fx;
     }
+    t_fx.reset();
+    *destination = std::move(candidate);
+    return true;
 }
 
 void FxChainUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
@@ -556,7 +570,8 @@ bool FxChainUserPreset::readFromXMLSnapshot(Preset &preset, TiXmlElement *s)
         auto &sd = preset.slots[slot];
 
         int t = 0;
-        fxEl->QueryIntAttribute("type", &t);
+        if (fxEl->QueryIntAttribute("type", &t) != TIXML_SUCCESS || t < 0 || t >= n_fx_types)
+            return false;
         sd.type = t;
 
         if (fxEl->Attribute("preset_name"))
@@ -624,7 +639,10 @@ void FxChainUserPreset::saveChainPresetIn(SurgeStorage *storage,
 
         fs::create_directories(storagePath);
 
-        auto doSave = [this, outputPath, storage, slots, fnp]() {
+        // An overwrite confirmation may run after the caller's stack array has
+        // gone away. Keep the complete captured chain alive through the dialog.
+        std::vector<Preset::SlotData> capturedSlots(slots, slots + n_fx_per_chain);
+        auto doSave = [this, outputPath, storage, capturedSlots, fnp]() {
             std::ofstream pfile(outputPath, std::ios::out);
             if (!pfile.is_open())
             {
@@ -650,7 +668,7 @@ void FxChainUserPreset::saveChainPresetIn(SurgeStorage *storage,
 
             for (int slot = 0; slot < n_fx_per_chain; ++slot)
             {
-                const auto &sd = slots[slot];
+                const auto &sd = capturedSlots[slot];
 
                 std::string pn = sd.presetName;
                 fixupChars(pn);
@@ -723,59 +741,35 @@ void FxChainUserPreset::saveChainPresetIn(SurgeStorage *storage,
     }
 }
 
-void FxChainUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage,
-                                       FxStorage *fxbuffer[n_fx_per_chain])
+bool FxChainUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage,
+                                     FxStorage *fxbuffer[n_fx_per_chain])
 {
+    // Prepare the entire chain privately. A failed file in a later slot must
+    // not publish the earlier slots or discard their current sample ownership.
+    std::vector<FxStorage> candidates;
+    candidates.reserve(n_fx_per_chain);
+    FxUserPreset loader;
     for (int slot = 0; slot < n_fx_per_chain; ++slot)
     {
+        candidates.push_back(*fxbuffer[slot]);
         const auto &sd = p.slots[slot];
-        FxStorage *buf = fxbuffer[slot];
-
-        buf->type.val.i = sd.type;
-        buf->user_data.clear();
-
-        if (!sd.filename.empty())
-            buf->user_data.emplace("filename", ArbitraryBlockStorage::from_string(path_to_string(
-                                                   storage->resolvePathTokens(sd.filename))));
-
-        // Establish ctrltype metadata before writing param values
-        // exactly as FxUserPreset::loadPresetOnto does.
-        Effect *t_fx = spawn_effect(buf->type.val.i, storage, buf, 0);
-        if (t_fx)
-        {
-            t_fx->init_ctrltypes();
-            t_fx->init_default_values();
-        }
-
-        for (int i = 0; i < n_fx_params; ++i)
-        {
-            switch (buf->p[i].valtype)
-            {
-            case vt_float:
-                buf->p[i].val.f = sd.p[i];
-                break;
-            case vt_int:
-                buf->p[i].val.i = (int)sd.p[i];
-                break;
-            default:
-                break;
-            }
-
-            buf->p[i].temposync = (int)sd.ts[i];
-            buf->p[i].set_extend_range((int)sd.er[i]);
-            buf->p[i].deactivated = (int)sd.da[i];
-
-            if (sd.dt[i] >= 0)
-                buf->p[i].deform_type = sd.dt[i];
-        }
-
-        if (t_fx)
-        {
-            if (p.streamingVersion != ff_revision)
-                t_fx->handleStreamingMismatches(p.streamingVersion, ff_revision);
-            delete t_fx;
-        }
+        FxUserPreset::Preset single;
+        single.type = sd.type;
+        single.streamingVersion = p.streamingVersion;
+        single.filename = sd.filename;
+        single.userdata = sd.userdata;
+        single.name = sd.presetName;
+        std::copy(std::begin(sd.p), std::end(sd.p), single.p);
+        std::copy(std::begin(sd.ts), std::end(sd.ts), single.ts);
+        std::copy(std::begin(sd.er), std::end(sd.er), single.er);
+        std::copy(std::begin(sd.da), std::end(sd.da), single.da);
+        std::copy(std::begin(sd.dt), std::end(sd.dt), single.dt);
+        if (!loader.loadPresetOnto(single, storage, &candidates.back()))
+            return false;
     }
+    for (int slot = 0; slot < n_fx_per_chain; ++slot)
+        *fxbuffer[slot] = std::move(candidates[slot]);
+    return true;
 }
 
 } // namespace Storage

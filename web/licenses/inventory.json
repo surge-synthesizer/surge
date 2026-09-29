@@ -1,0 +1,1943 @@
+{
+  "schema": 1,
+  "status": "partial-audit",
+  "scope": "Known standalone and reviewed embedded notice documents for linked and header dependencies; this is not a complete distribution notice bundle or a license compatibility determination. Original source documents remain authoritative.",
+  "notices": [
+    {
+      "component": "Surge XT",
+      "source": "LICENSE",
+      "sha256": "d4c0fe570b3750d909691ce5f494c9cd11ee047bbbedda9a5d75cc548e4df06b",
+      "bytes": 35116
+    },
+    {
+      "component": "JUCE",
+      "source": "libs/JUCE/LICENSE.md",
+      "sha256": "2633539bb26d244f0966fbc4df59400ea99bdf575fa96291851c1c3ff3456146",
+      "bytes": 4971
+    },
+    {
+      "component": "fmt",
+      "source": "libs/fmt/LICENSE",
+      "sha256": "07580f2a3b35709ce703d523f447b242f6dfec7582a8c0df102c7fa2849375f8",
+      "bytes": 1431
+    },
+    {
+      "component": "Lua",
+      "source": "cmake/vendor/Lua-LICENSE.txt",
+      "sha256": "ee5e3e82af1e1b543c4f216e399d7c8cfee797711913f349e385101c4ae60a79",
+      "bytes": 1528
+    },
+    {
+      "component": "Lua BitOp",
+      "source": "cmake/vendor/BitOp-LICENSE.txt",
+      "sha256": "729ce7361c0a32b91de45d038316ed7b6b8c43377b424de56d70d5f795a707fd",
+      "bytes": 1306
+    },
+    {
+      "component": "zstd BSD",
+      "source": "libs/zstd/LICENSE",
+      "sha256": "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8",
+      "bytes": 1549
+    },
+    {
+      "component": "zstd GPL option",
+      "source": "libs/zstd/COPYING",
+      "sha256": "f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505",
+      "bytes": 18091
+    },
+    {
+      "component": "Airwindows",
+      "source": "libs/airwindows/LICENSE",
+      "sha256": "b4f5719b00ba3fecf8c0ce651e843651bd80f08a10cf4cf1f00e673a5bcaf23b",
+      "bytes": 1070
+    },
+    {
+      "component": "binn",
+      "source": "libs/binn/LICENSE",
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+      "bytes": 11358
+    },
+    {
+      "component": "SIMDe",
+      "source": "libs/simde/COPYING",
+      "sha256": "75ce0a8c5a7bff42fbd6f8f3b469b518132132c4f4948fb8d02b1ccb5d0df9d8",
+      "bytes": 1077
+    },
+    {
+      "component": "SST C++ utilities",
+      "source": "libs/sst/sst-cpputils/LICENSE.md",
+      "sha256": "a8995bab79c290f4fa6eab0192694ba47fe31441027e9f74e9dc95da46ccd1c7",
+      "bytes": 1096
+    },
+    {
+      "component": "SST plugin infrastructure GPL",
+      "source": "libs/sst/sst-plugininfra/LICENSE.md",
+      "sha256": "012770edfc14a78d1512c8c3a8e64a622e577a27b22bbdf5c986126778579325",
+      "bytes": 322
+    },
+    {
+      "component": "SST plugin infrastructure MIT portions",
+      "source": "libs/sst/sst-plugininfra/LICENSE_MIT.md",
+      "sha256": "ee3bd73591efbb9272e28d066fc430790a1e9eeb75b6658864f4377fe79dc558",
+      "bytes": 1059
+    },
+    {
+      "component": "SST filters",
+      "source": "libs/sst/sst-filters/LICENSE.md",
+      "sha256": "d4c0fe570b3750d909691ce5f494c9cd11ee047bbbedda9a5d75cc548e4df06b",
+      "bytes": 35116
+    },
+    {
+      "component": "SST waveshapers",
+      "source": "libs/sst/sst-waveshapers/LICENSE.md",
+      "sha256": "d4c0fe570b3750d909691ce5f494c9cd11ee047bbbedda9a5d75cc548e4df06b",
+      "bytes": 35116
+    },
+    {
+      "component": "SST basic blocks",
+      "source": "libs/sst/sst-basic-blocks/LICENSE.md",
+      "sha256": "d4c0fe570b3750d909691ce5f494c9cd11ee047bbbedda9a5d75cc548e4df06b",
+      "bytes": 35116
+    },
+    {
+      "component": "SST effects",
+      "source": "libs/sst/sst-effects/LICENSE.md",
+      "sha256": "d4c0fe570b3750d909691ce5f494c9cd11ee047bbbedda9a5d75cc548e4df06b",
+      "bytes": 35116
+    },
+    {
+      "component": "Tuning Library",
+      "source": "libs/tuning-library/LICENSE.md",
+      "sha256": "ee3bd73591efbb9272e28d066fc430790a1e9eeb75b6658864f4377fe79dc558",
+      "bytes": 1059
+    },
+    {
+      "component": "PEGTL",
+      "source": "libs/PEGTL/LICENSE",
+      "sha256": "8dd848eff55d8f925ad676daf6cba065c4ef7b85698ae1fbdc6603ae4fa32cba",
+      "bytes": 1104
+    },
+    {
+      "component": "r8brain",
+      "source": "libs/r8brain-free-src/LICENSE",
+      "sha256": "47d63efab697a1b90e643ba6dfb53ab51529fb4a9aea6fa053c59409b043972e",
+      "bytes": 1076
+    },
+    {
+      "component": "ghc filesystem",
+      "source": "libs/sst/sst-plugininfra/libs/filesystem/ghc-filesystem/LICENSE",
+      "sha256": "1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc",
+      "bytes": 1086
+    },
+    {
+      "component": "miniz",
+      "source": "libs/sst/sst-plugininfra/libs/miniz/LICENSE",
+      "sha256": "0115478d567121238cf6cc1c0c361926cf07a49d9e4c9e66da97fac6a01646b3",
+      "bytes": 1184
+    },
+    {
+      "component": "elliptic BLEP",
+      "source": "libs/sst/sst-basic-blocks/libs/elliptic-blep/LICENSE.txt",
+      "sha256": "078888a0ff1e59cbd620b30482a0bbee12cd134566b7c196b4cfd25c94cb621a",
+      "bytes": 1085
+    },
+    {
+      "component": "stmlib",
+      "source": "libs/eurorack/eurorack/stmlib/LICENSE",
+      "sha256": "6fde7600ac71ff9e4bdc28b642063d1a65e195f28bb07fb52a9b476efb5aa791",
+      "bytes": 2746
+    },
+    {
+      "component": "Lato fonts",
+      "source": "resources/fonts/OFL.txt",
+      "sha256": "7d0a6c233c518d60264d50cfe51c1f8e56e32e3c96825485ded2c1afafd20e1e",
+      "bytes": 4400
+    },
+    {
+      "component": "PFFFT / FFTPACK",
+      "source": "libs/pffft/pffft.c",
+      "sha256": "ad6f8bd2eed0ace6a7a5c13f51fd0e5460e63db8e970b16750233d3b1561ac02",
+      "bytes": 66445,
+      "extract": {
+        "startByte": 0,
+        "endByte": 2241,
+        "sha256": "02af535f170c3a3ec58ea74f7f0368a4f5ae554ce3243927c059624a26b4decf"
+      }
+    },
+    {
+      "component": "SQLite",
+      "source": "libs/sqlite-3.23.3/sqlite3.h",
+      "sha256": "a6bcd10d55181d80051e1c747e28dee35081ab8f86e42b7e628f7e1494ce1024",
+      "bytes": 581196,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1484,
+        "sha256": "cc65d76f325d884dd49e319acf3764d5513920f34ad18e34347b8dedc6ddd2ec"
+      }
+    },
+    {
+      "component": "tinyxml",
+      "source": "libs/sst/sst-plugininfra/libs/tinyxml/include/tinyxml/tinyxml.h",
+      "sha256": "e7b2b4ea58fb108f4cd58959aeb2f0fe6719da6cc058f100bbb767b004ec3231",
+      "bytes": 71878,
+      "extract": {
+        "startByte": 0,
+        "endByte": 906,
+        "sha256": "7fcd437c3fc1c5e36dcbe8f3635311f942ba28dcc78ec47d8b2ab5016374334b"
+      }
+    },
+    {
+      "component": "strnatcmp",
+      "source": "libs/sst/sst-plugininfra/libs/strnatcmp/sst/plugininfra/strnatcmp.h",
+      "sha256": "fc119e7c3e5535cd9f80b9410660c13aa698608dd8c2bb3aa9432bcd0cb37066",
+      "bytes": 1287,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1022,
+        "sha256": "0b27b25846d5bcf72fdf5d4e52621f7a106715a3d9c69be42722c55fbcebb2a1"
+      }
+    },
+    {
+      "component": "FiraMono-Regular font metadata",
+      "source": "resources/fonts/FiraMono-Regular.ttf",
+      "sha256": "8c86f2963208a353c3435e28ecb38a99ab68f14d7433ba00c1822cef9a9c1b44",
+      "bytes": 174632,
+      "extracts": [
+        {
+          "startByte": 156803,
+          "endByte": 156963,
+          "sha256": "e1fff50c8450016625e205ec7fa6265c3d5e4eb51a3f394b91ef1bf6070e2026",
+          "encoding": "utf-16-be",
+          "nameId": 0
+        },
+        {
+          "startByte": 157477,
+          "endByte": 157593,
+          "sha256": "93e735cbb0164cf63aa38593b8cc67f09e4f61032da5ae56968ad5c179cc4ecd",
+          "encoding": "utf-16-be",
+          "nameId": 13
+        },
+        {
+          "startByte": 157593,
+          "endByte": 157645,
+          "sha256": "a2bdbc6b27ca3cfc00aac086caee01c9c6a921b24d95388457b0e3d9e38e5503",
+          "encoding": "utf-16-be",
+          "nameId": 14
+        }
+      ]
+    },
+    {
+      "component": "IndieFlower font metadata",
+      "source": "resources/fonts/IndieFlower.ttf",
+      "sha256": "36c373b22ba6d9e000855ca46d82bc63ff259e3408d93ae6635b1c4e7764e831",
+      "bytes": 61556,
+      "extracts": [
+        {
+          "startByte": 45670,
+          "endByte": 45786,
+          "sha256": "1f58771a39cce5b964204e1c3377dc940be80b6fefb12d01a76a92136c75b60b",
+          "encoding": "utf-16-be",
+          "nameId": 0
+        },
+        {
+          "startByte": 46339,
+          "endByte": 55155,
+          "sha256": "899f9e72b5092fe051ff50144bee482dd6061893476e7888e37028248553912e",
+          "encoding": "utf-16-be",
+          "nameId": 13
+        },
+        {
+          "startByte": 59566,
+          "endByte": 59620,
+          "sha256": "555fed66a09ea75523fee19cc5c2ed649b12c8f28b4b052da0110789b494ce46",
+          "encoding": "utf-16-be",
+          "nameId": 14
+        }
+      ]
+    },
+    {
+      "component": "Lato-Bold font metadata",
+      "source": "resources/fonts/Lato-Bold.ttf",
+      "sha256": "bf1b8130069b44b9148eeece35e5423bedac49777ba746615b826b8276574a7b",
+      "bytes": 657188,
+      "extracts": [
+        {
+          "startByte": 434190,
+          "endByte": 434580,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 0
+        },
+        {
+          "startByte": 437444,
+          "endByte": 437834,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 13
+        },
+        {
+          "startByte": 437834,
+          "endByte": 437886,
+          "sha256": "a2bdbc6b27ca3cfc00aac086caee01c9c6a921b24d95388457b0e3d9e38e5503",
+          "encoding": "utf-16-be",
+          "nameId": 14
+        }
+      ]
+    },
+    {
+      "component": "Lato-BoldItalic font metadata",
+      "source": "resources/fonts/Lato-BoldItalic.ttf",
+      "sha256": "e2f9244fdcd20840f2480f91370cea885bf99230c49d153199fa64853ad74b69",
+      "bytes": 699008,
+      "extracts": [
+        {
+          "startByte": 477237,
+          "endByte": 477627,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 0
+        },
+        {
+          "startByte": 480545,
+          "endByte": 480935,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 13
+        },
+        {
+          "startByte": 480935,
+          "endByte": 480987,
+          "sha256": "a2bdbc6b27ca3cfc00aac086caee01c9c6a921b24d95388457b0e3d9e38e5503",
+          "encoding": "utf-16-be",
+          "nameId": 14
+        }
+      ]
+    },
+    {
+      "component": "Lato-Italic font metadata",
+      "source": "resources/fonts/Lato-Italic.ttf",
+      "sha256": "8c863f833b12bc8486671d26e3a58b13b0f9eaff1d6b10398e7c107a9b7ee05a",
+      "bytes": 723544,
+      "extracts": [
+        {
+          "startByte": 501666,
+          "endByte": 502056,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 0
+        },
+        {
+          "startByte": 504936,
+          "endByte": 505326,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 13
+        },
+        {
+          "startByte": 505326,
+          "endByte": 505378,
+          "sha256": "a2bdbc6b27ca3cfc00aac086caee01c9c6a921b24d95388457b0e3d9e38e5503",
+          "encoding": "utf-16-be",
+          "nameId": 14
+        }
+      ]
+    },
+    {
+      "component": "Lato-Regular font metadata",
+      "source": "resources/fonts/Lato-Regular.ttf",
+      "sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+      "bytes": 657212,
+      "extracts": [
+        {
+          "startByte": 433578,
+          "endByte": 433968,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 0
+        },
+        {
+          "startByte": 436856,
+          "endByte": 437246,
+          "sha256": "cc59dd41f3042866c494692e236606a75f7a502ea3f9d859a24754df0da7226b",
+          "encoding": "utf-16-be",
+          "nameId": 13
+        },
+        {
+          "startByte": 437246,
+          "endByte": 437298,
+          "sha256": "a2bdbc6b27ca3cfc00aac086caee01c9c6a921b24d95388457b0e3d9e38e5503",
+          "encoding": "utf-16-be",
+          "nameId": 14
+        }
+      ]
+    },
+    {
+      "component": "eurorack / clouds/drivers/debug_pin.h",
+      "source": "libs/eurorack/eurorack/clouds/drivers/debug_pin.h",
+      "sha256": "ce4bb1645135f4580283975568a3fb69a04daa3004f1e9f921b0869de989edd2",
+      "bytes": 2364,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1366,
+        "sha256": "81761f1cad710d12a4a985f411e8de8e16bfbd5d58de65af8d1dcf4e407ce97b"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/audio_buffer.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/audio_buffer.h",
+      "sha256": "110c63276ec84cbb211f98a5897d075307471da25ae1845da82dac504d052657",
+      "bytes": 8891,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1370,
+        "sha256": "dc664f6b14298826dad3cf788a740e4602166e5d7e904db550de314fbba9d1c6"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/correlator.cc",
+      "source": "libs/eurorack/eurorack/clouds/dsp/correlator.cc",
+      "sha256": "f2b929b8cbd92031f207c377aa862a46ec910ce2520549eb5fa1be8c5dc134fb",
+      "bytes": 2871,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1399,
+        "sha256": "9c1cc48bb345b39f3e28a498e515e0c5f2853bb62f17960937a1bb673129bd3e"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/correlator.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/correlator.h",
+      "sha256": "b0f5ed2d1c3816d961e8a5af13feb5cef2e5d38ee1eee4d6a75fb3ae1f219bae",
+      "bytes": 2701,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1532,
+        "sha256": "88aa3fc12a50c0748d1f34d258b9c4cd3738f17d5f79991a61af34a2d240d9a3"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/frame.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/frame.h",
+      "sha256": "203a758cd626f7d5ca0d3bd70457ba15b36d2ddc9fea5a2c56eab3cdd15ec3b4",
+      "bytes": 1684,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1356,
+        "sha256": "0d3e8be69646e8379bdbc4e1944387125acdb6700ad937441bcbe99cb3a100f9"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/fx/diffuser.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/fx/diffuser.h",
+      "sha256": "e411e3fd0df62d556942286b3c957ab594c5d45e1b16ec416cd6b21e09d650c9",
+      "bytes": 3284,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1353,
+        "sha256": "be0a53caffaaf3d9d9ebc9acf0030faaed39da3a371079ece246a1318adc3ebf"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/fx/fx_engine.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/fx/fx_engine.h",
+      "sha256": "8bd367622b97247a371f70871446971b63191df51b7d2a4e06163c86f3408641",
+      "bytes": 7885,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1364,
+        "sha256": "06492032ffd4b1449096392a942c8e641f7aa30c02ab4e29cf92be93ec1a8f46"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/fx/pitch_shifter.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/fx/pitch_shifter.h",
+      "sha256": "ef2e082d95105946941b56905a4c62966374f9b5dc1f99610fd2cb9ce3d10a9b",
+      "bytes": 3279,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1346,
+        "sha256": "c85cb6b75d934857daf53939fe9f313cedd3012a85629030d5139e34715452e3"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/fx/reverb.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/fx/reverb.h",
+      "sha256": "0073b0535623a008d0619f508e4e813ac6087ebd9a02f22d856f49ac2ce458be",
+      "bytes": 5034,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1339,
+        "sha256": "3f7054a8d96082c7b70987d4866e355f01f51a0bae7bf296b2bbe148edba3091"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/grain.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/grain.h",
+      "sha256": "8903aaab67b1fe5672e38dd4e4611396e678a81e203be39af2cee46dc4597ff1",
+      "bytes": 6040,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1355,
+        "sha256": "c7287266bf8d075045d34f78b40cab7c133f260a46d2761fbdc2b53e0dda7ae5"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/granular_processor.cc",
+      "source": "libs/eurorack/eurorack/clouds/dsp/granular_processor.cc",
+      "sha256": "b269442f850c344b4598424c7ccc3750f1ca090979d975af3af6e2e96ecd8d88",
+      "bytes": 15864,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1354,
+        "sha256": "bac8be08307ac8055321ebb80ed0a2098ff0fa75040f7c2bd8cec419fc38d1b8"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/granular_processor.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/granular_processor.h",
+      "sha256": "193ec74cf3d3eef3f072f181ddcf1688c8b9de0ea8fdbfce3cdab395ffd9e568",
+      "bytes": 5940,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1354,
+        "sha256": "bac8be08307ac8055321ebb80ed0a2098ff0fa75040f7c2bd8cec419fc38d1b8"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/granular_sample_player.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/granular_sample_player.h",
+      "sha256": "1cabcbe9d39b5d9eeeaf31d9c71783d9349bf63f0ec9e92167ee181ccd22a406",
+      "bytes": 8448,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1378,
+        "sha256": "1c7c6f19ef7c8ecd9de8969f388b336fa75de40007a446e912e798016298bbde"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/looping_sample_player.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/looping_sample_player.h",
+      "sha256": "09e9fc5a9697edb0d4bd354a037d593c232c54282896ca4005b55476bb32de65",
+      "bytes": 6511,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1375,
+        "sha256": "ef2a5c012d5819c6f95caf4469762c9bd11ab22047998081b70a63a068ffe3d8"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/mu_law.cc",
+      "source": "libs/eurorack/eurorack/clouds/dsp/mu_law.cc",
+      "sha256": "8bc0c3ff12760bd1bc839c5f862f4190ecf1bf54fe219081aaba9549573d2b20",
+      "bytes": 3577,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1348,
+        "sha256": "a67ad0e53da936e433e1cd1ca93b16d3f8becf6da2070ee203c15aa980ebd7e9"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/mu_law.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/mu_law.h",
+      "sha256": "9c79d3ad8680cef63db102f70f54c00fb2a94077c880dc8b6250de058a138666",
+      "bytes": 2611,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1348,
+        "sha256": "a67ad0e53da936e433e1cd1ca93b16d3f8becf6da2070ee203c15aa980ebd7e9"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/parameters.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/parameters.h",
+      "sha256": "1d41ec7d86063204ef8f2301ee62170df0cf5933a955545be37e9ab400c46e64",
+      "bytes": 2037,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1366,
+        "sha256": "2af3324da07bac430edd72a91d22c49e54a923af2d27d29e1dd89df091f4662b"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/pvoc/frame_transformation.cc",
+      "source": "libs/eurorack/eurorack/clouds/dsp/pvoc/frame_transformation.cc",
+      "sha256": "fb8b7d9fcd83be693de27055e26a99cc3cc2034bf4719e618086ea6e25044b92",
+      "bytes": 11233,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1379,
+        "sha256": "689f6405aa53e882d6eaa4bec57a2bb2b2de3c1fb2a7ec1260c801d3187661a3"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/pvoc/frame_transformation.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/pvoc/frame_transformation.h",
+      "sha256": "ecdf17d9f0d585d165ec578f33f0318c13def2465789fafea49fabc9bb618e8a",
+      "bytes": 3189,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1379,
+        "sha256": "689f6405aa53e882d6eaa4bec57a2bb2b2de3c1fb2a7ec1260c801d3187661a3"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/pvoc/phase_vocoder.cc",
+      "source": "libs/eurorack/eurorack/clouds/dsp/pvoc/phase_vocoder.cc",
+      "sha256": "131998e77aa157a6364fb5bd300b7200e305a0abb58be1f217b04bb8d43d1047",
+      "bytes": 3499,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1352,
+        "sha256": "4d97b5e3399dd01e908ea946c2bbe140b79cebc7768d0a293f024a1ecb6e248a"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/pvoc/phase_vocoder.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/pvoc/phase_vocoder.h",
+      "sha256": "1b88908fc19f037db4db51015a461ec8616b7c2d97e4225eee070d271f925982",
+      "bytes": 2307,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1352,
+        "sha256": "4d97b5e3399dd01e908ea946c2bbe140b79cebc7768d0a293f024a1ecb6e248a"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/pvoc/stft.cc",
+      "source": "libs/eurorack/eurorack/clouds/dsp/pvoc/stft.cc",
+      "sha256": "ba437b924c33eee0933670fadeb1cf21830cf5056614bef75b94ee7c3f215961",
+      "bytes": 5910,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1354,
+        "sha256": "4cee06c946ff583f66d023166ea4b1f6c9484a116f67198a55c13e3d8e85231d"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/pvoc/stft.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/pvoc/stft.h",
+      "sha256": "919fc70c6aea1276f867785e915de54e9074ebb2d7cfb39bc1cd99a482a41fa3",
+      "bytes": 2909,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1354,
+        "sha256": "4cee06c946ff583f66d023166ea4b1f6c9484a116f67198a55c13e3d8e85231d"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/sample_rate_converter.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/sample_rate_converter.h",
+      "sha256": "e5da3a3133556709cc6263b75a4e9797d9fc8546d24e0847a752f7931f0793c3",
+      "bytes": 3221,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1353,
+        "sha256": "d01efa47fc31366be6e2a4dc71ff66fc5baca03fe75a8f101467bac4a2169d72"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/window.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/window.h",
+      "sha256": "d2d20dace4686c108e4c1c3c8216364f7e51125505e86dd49ed2e3d2169c2dbf",
+      "bytes": 3592,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1374,
+        "sha256": "940b3d0c81319bd255e0b75d0ac7a3a8f0c0618498257792a9b984143e116f45"
+      }
+    },
+    {
+      "component": "eurorack / clouds/dsp/wsola_sample_player.h",
+      "source": "libs/eurorack/eurorack/clouds/dsp/wsola_sample_player.h",
+      "sha256": "17599b3c7c4632ca7d92c6ef7b88f582a71127734674412002ad822f76e0eff6",
+      "bytes": 8460,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1347,
+        "sha256": "636ad844d332fd4252dcecef232709d2b4f93b3d8eea1b280ac2aaa423cd5496"
+      }
+    },
+    {
+      "component": "eurorack / clouds/resources.cc",
+      "source": "libs/eurorack/eurorack/clouds/resources.cc",
+      "sha256": "167b5371080dfd1c8c493cdbb9ea8170cada7153fafea333e6d5657dd70f3568",
+      "bytes": 213152,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1409,
+        "sha256": "a8a41b7a7b1d0d321d80f7d9752d33aad85e242286407b27c058bcae45f8a3bc"
+      }
+    },
+    {
+      "component": "eurorack / clouds/resources.h",
+      "source": "libs/eurorack/eurorack/clouds/resources.h",
+      "sha256": "5935cca20a9e4df6cfd73b93fd40477154e761e724901fc42d4853eb0945b634",
+      "bytes": 2962,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1409,
+        "sha256": "a8a41b7a7b1d0d321d80f7d9752d33aad85e242286407b27c058bcae45f8a3bc"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/drums/analog_bass_drum.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/drums/analog_bass_drum.h",
+      "sha256": "46e03e356685b20e7444b6979ad61579d962f4a4a08a748142fdc497ecaa23ea",
+      "bytes": 5771,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1363,
+        "sha256": "85e979288afe01a0e56872626174fc4e6ee4a68dbe65621be29ae7b75359c742"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/drums/analog_snare_drum.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/drums/analog_snare_drum.h",
+      "sha256": "44e3523959df5781c52185b72da73a96a33ab88af94b7d93d898cde0470f9fcd",
+      "bytes": 6202,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1364,
+        "sha256": "e23ab09e9f73b16039b88bf0e58132bc919ea37525701ef482fc8ef7e3635881"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/drums/hi_hat.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/drums/hi_hat.h",
+      "sha256": "e9c7a9298f4a97562cea7623255a368680b89f56e6702aa68b8c69a82aede413",
+      "bytes": 7508,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1565,
+        "sha256": "ca5df2be0a63c5bb6a6bc308b09874ad5c8520ad572992c8507d412be24695cb"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/drums/synthetic_bass_drum.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/drums/synthetic_bass_drum.h",
+      "sha256": "b257324a0f361d128337184224e36546d0903b9597e98b10052d1e153fe795b8",
+      "bytes": 6934,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1422,
+        "sha256": "a0b68f8265348a26f8ffea0990e45d736d4f5aebdaafe0f3b0165d89ebcc4ff7"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/drums/synthetic_snare_drum.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/drums/synthetic_snare_drum.h",
+      "sha256": "94a83683e912c1de4fbb31a04d75df5c3d8f572b190e53c3fddf60eae3952049",
+      "bytes": 6619,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1625,
+        "sha256": "272714c39caae78c429db708e84fca4a6a7ffc0745400dcf51b430b9b9653ae8"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/dsp.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/dsp.h",
+      "sha256": "9d47fe26dc5db9c38efbc049b6ed0d1e2e1e02f7c1b43fdb8a1e6147f538a8b9",
+      "bytes": 2183,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1350,
+        "sha256": "b6ca2d7eb6c86ce092058910c96f0ca6c6d717215eb322d451aee7dd1358ef89"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/additive_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/additive_engine.cc",
+      "sha256": "a08931b3f15bd0e42728aa50a734d42eb32c08a693e469e8733ccac7eb39b2c8",
+      "bytes": 4537,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1368,
+        "sha256": "f1008975e046cda726678b649be6d64499af67afd44f5bb72866f63c5d3fe62d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/additive_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/additive_engine.h",
+      "sha256": "9cac97c7a4420af094bf85e68f415dc89ad19b3f2aba313b58df3b1777e34903",
+      "bytes": 2481,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1370,
+        "sha256": "58e17634ad2a10a64fbef66a9330ef43c74f14827df200bbf05191d99c2b4516"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/bass_drum_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/bass_drum_engine.cc",
+      "sha256": "e48f5f50c85d797abfbf108d288e741082a06402c36ffec7edbe702ba7626c63",
+      "bytes": 2986,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1371,
+        "sha256": "9749dc06d08e1b86ff7da8a9a57cbb467dbcee1ecd7d0384f087e4171c02524f"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/bass_drum_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/bass_drum_engine.h",
+      "sha256": "19a23ac2758ead286ec74b81403ded10a6f8501049024456a8b6c888d5764c4e",
+      "bytes": 2269,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1371,
+        "sha256": "9749dc06d08e1b86ff7da8a9a57cbb467dbcee1ecd7d0384f087e4171c02524f"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/chord_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/chord_engine.cc",
+      "sha256": "46b623ed655da651e97914a9e8cd186d31fed44992b5c32919488f00099d6b8d",
+      "bytes": 9066,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1387,
+        "sha256": "a88464f948c2b3d5081704a8e8c54f425373cb7df261be564ad0ca8f1fde8dcb"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/chord_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/chord_engine.h",
+      "sha256": "50d584589807d662770881ed6cd4bd060b8b19b57bb13db86f5cf7fc107bdfd5",
+      "bytes": 2838,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1387,
+        "sha256": "a88464f948c2b3d5081704a8e8c54f425373cb7df261be564ad0ca8f1fde8dcb"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/engine.h",
+      "sha256": "1aeda485ca501d308c355483b74d1de21efd7d50356d49b14f7918febff7096a",
+      "bytes": 3855,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1359,
+        "sha256": "77fcb751116558cade09a7ba53e56023debd1492d1203daf3d3282ba9f5c242a"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/fm_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/fm_engine.cc",
+      "sha256": "f34ad94436253385cdf334dd808eca429bbbb17c99e07420e3e698ef5679f6e5",
+      "bytes": 5413,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1384,
+        "sha256": "067b0ce5a2d15692132cc7aa183ea2e887fc16b76af5b59bdd4d987d8fa81d57"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/fm_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/fm_engine.h",
+      "sha256": "0cfbc5618096eef16fbdb146d0d8bdaa6a05651491d3e540b306f92ae927771b",
+      "bytes": 2296,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1388,
+        "sha256": "c5088af983155fba6a1f9fb20af99948ad066e08e5f973c9c36b676b63fc4732"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/grain_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/grain_engine.cc",
+      "sha256": "d6a46e24f55c1b76cabb8a948e9ef2ff9f90b5d05b0c3f15910749714805de72",
+      "bytes": 3082,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1355,
+        "sha256": "a3328f9f23a90f85351a2d613021e3cb72a14379df54b20cc2d3543f800dfd21"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/grain_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/grain_engine.h",
+      "sha256": "4a97d30c1beb64cb0d33562809ef28ee9f2806eac9626ce8ff29b5fd724d3941",
+      "bytes": 2299,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1355,
+        "sha256": "a3328f9f23a90f85351a2d613021e3cb72a14379df54b20cc2d3543f800dfd21"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/hi_hat_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/hi_hat_engine.cc",
+      "sha256": "960170b1f2aedadcc54f3490c3949cf0ceeb098fbe60e2f5b6cd3bba6ab36799",
+      "bytes": 2597,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1427,
+        "sha256": "2ef74bda5d2cbe78b952cb7190ffcc876e8226264938d5d0d42e87d5e72e0fe5"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/hi_hat_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/hi_hat_engine.h",
+      "sha256": "fddb9e06644e9365d748415ef39429dfe4bad6e79aca53fa1c4fdf4ef534221f",
+      "bytes": 2183,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1427,
+        "sha256": "2ef74bda5d2cbe78b952cb7190ffcc876e8226264938d5d0d42e87d5e72e0fe5"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/modal_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/modal_engine.cc",
+      "sha256": "6fb8374b32378bd7b99cd4cc7421b12af681ce973de03a7148ae901c99c71a7a",
+      "bytes": 2298,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1361,
+        "sha256": "f3251d90336dd979ae6d77cd08e27975bc6a1940de8ad9c7ffcffa8b6ebd5c66"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/modal_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/modal_engine.h",
+      "sha256": "8b1706610f49eb06d3f9d63673e7a002a76583c949b18b7efe03440cad610bfc",
+      "bytes": 2071,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1361,
+        "sha256": "f3251d90336dd979ae6d77cd08e27975bc6a1940de8ad9c7ffcffa8b6ebd5c66"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/noise_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/noise_engine.cc",
+      "sha256": "f57b326e51961fc05977a8c7141628d0414ea26e93aea8060790cb3fefdd4fd7",
+      "bytes": 3743,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1378,
+        "sha256": "6c7f820c82e339c94c9cfacc870e8ffeea2c22abfd0e84cf3762cef0e3d707d7"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/noise_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/noise_engine.h",
+      "sha256": "33b5c85e8cb6c1ed1169631aef46121e904dcc6c0ae672f7043ddbfee35f5281",
+      "bytes": 2252,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1378,
+        "sha256": "6c7f820c82e339c94c9cfacc870e8ffeea2c22abfd0e84cf3762cef0e3d707d7"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/particle_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/particle_engine.cc",
+      "sha256": "437cff79fbbb8f2d1df7e826b6bf013c3055d8c57988c614d57c2fc5ce1e8f21",
+      "bytes": 3272,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1368,
+        "sha256": "fe16253ddd083b8411e6c265db2cd97c2093a91e2a892c5a1f60071f957cf15e"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/particle_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/particle_engine.h",
+      "sha256": "4a47303b02df29071adf3b83caefe560afab0372fde1a55728f380c6e11aa9ef",
+      "bytes": 2154,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1355,
+        "sha256": "de63cec89ec358d250d8b1a4f7ff73c15f79e974e6f8b069cd97e2c84713f10a"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/snare_drum_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/snare_drum_engine.cc",
+      "sha256": "a522f9a20b739070e401cbeab193718e7fc7a4cfd99c15d10f62a278c0a62508",
+      "bytes": 2425,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1372,
+        "sha256": "28637a59721c8c63a841cde130828212143fc28a74415f5ca01fa1bdee44cf7d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/snare_drum_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/snare_drum_engine.h",
+      "sha256": "560fd94c3894a2b9724d99de854148c7c6daa47c469faa26c0ea9c3a5f7fa10e",
+      "bytes": 2172,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1372,
+        "sha256": "28637a59721c8c63a841cde130828212143fc28a74415f5ca01fa1bdee44cf7d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/speech_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/speech_engine.cc",
+      "sha256": "92bc282d55adf208c4016917cf844474f014ac26b0b5c53ebe76d40749800771",
+      "bytes": 4331,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1369,
+        "sha256": "f55ad60ad07134766f398e2919c29f4120c2e60f8862ea94af96fa50fda1419b"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/speech_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/speech_engine.h",
+      "sha256": "8846b66e018f7933afe576a40916b3c3a21b4ca324310d71eefc64a016daf104",
+      "bytes": 2649,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1369,
+        "sha256": "f55ad60ad07134766f398e2919c29f4120c2e60f8862ea94af96fa50fda1419b"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/string_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/string_engine.cc",
+      "sha256": "b054d0a0e2dcee7a4ddd28728dd17ae9f372498030d8646857104f139ba7a266",
+      "bytes": 2943,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1365,
+        "sha256": "004ded0ae7a45e0b3e779f082598a65cf2d1b208a96d973bb693c8c21eec0a6d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/string_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/string_engine.h",
+      "sha256": "1021d0a8218d139884198564b8e60f732550e5ee2dc4832c6bace3e9bb963205",
+      "bytes": 2183,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1365,
+        "sha256": "004ded0ae7a45e0b3e779f082598a65cf2d1b208a96d973bb693c8c21eec0a6d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/swarm_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/swarm_engine.cc",
+      "sha256": "76807a2efd69af2720fe0bbe09031152b5fd23a58fc5592ecf553b8d93fb51d8",
+      "bytes": 2792,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1361,
+        "sha256": "8171e13323c66c5de50472c93810f3efbd4723d5e29794cc1e8271ce49ff2ce1"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/swarm_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/swarm_engine.h",
+      "sha256": "55da53563eb04c8f8c21b2214a283b7fc40c2dfd163647cef3f3a19d95e15ee3",
+      "bytes": 6773,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1361,
+        "sha256": "8171e13323c66c5de50472c93810f3efbd4723d5e29794cc1e8271ce49ff2ce1"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/virtual_analog_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/virtual_analog_engine.cc",
+      "sha256": "af21a730482862d1cd332bccbe7652e2b91533bf8dafcfcc206e64c56a6d161e",
+      "bytes": 8069,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1391,
+        "sha256": "31b58898d62090a05cf76a84acaa6bf24b85f197c4447bbf4f2b94517ddc5405"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/virtual_analog_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/virtual_analog_engine.h",
+      "sha256": "3cb4f4c5cfb2cb2b03d93c7651c95d85745d471aa8ac5f4a1686318ac7f54619",
+      "bytes": 2446,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1387,
+        "sha256": "b2e6038b84c4a759e52a3bd24f9539f5c72b2874f189f7733e87dab7d1e4b571"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/waveshaping_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/waveshaping_engine.cc",
+      "sha256": "947e7c7580cb572cf254fcdc4762d9b61590256e26d95c148e7ab3bda5c52291",
+      "bytes": 4917,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1366,
+        "sha256": "0464dc416de9276b77e70f8d69ae10febe02ac573e7a2da50d517f95000d010b"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/waveshaping_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/waveshaping_engine.h",
+      "sha256": "706698e131dbd6a20d94920a97569e9fefeb8258574679806830adf8bda8db7c",
+      "bytes": 2182,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1366,
+        "sha256": "0464dc416de9276b77e70f8d69ae10febe02ac573e7a2da50d517f95000d010b"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/wavetable_engine.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/wavetable_engine.cc",
+      "sha256": "aab9fd7c81fb5a8925941c1361d2a8d98d358b5c666235e84032404c4b313e08",
+      "bytes": 6043,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1351,
+        "sha256": "6d93c83ad7448c5faa185fa1b2a8468516d866f75cdf82500d4a95d20d9567ba"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/engine/wavetable_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/engine/wavetable_engine.h",
+      "sha256": "f4f1469df328cc6db9f8d8ad5b5f0463b2cf3116e9b692f191064aab35629472",
+      "bytes": 2310,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1351,
+        "sha256": "6d93c83ad7448c5faa185fa1b2a8468516d866f75cdf82500d4a95d20d9567ba"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/envelope.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/envelope.h",
+      "sha256": "857c432a7e2422b01abb0aee1053d1fd7b5fe1678706a8c56a33e1363e9ea719",
+      "bytes": 3583,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1362,
+        "sha256": "f81fe9f33bec8996c58557c4d71560583ef858c1c45335dba3086a2b79a6b7c9"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/fx/diffuser.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/fx/diffuser.h",
+      "sha256": "aac6eefa60fc83f55f54bf5b7aa6160ac13873e05294fb71b692f8376c58e266",
+      "bytes": 3238,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1350,
+        "sha256": "65f80a9889cba03865b9c5c8f069fcb0ccbea888a87f84bea467307b15bfe91c"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/fx/fx_engine.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/fx/fx_engine.h",
+      "sha256": "b361a6550794a04d5bcb4872349d1fcd0429da0662d80fd553656043adc04b73",
+      "bytes": 7863,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1364,
+        "sha256": "06492032ffd4b1449096392a942c8e641f7aa30c02ab4e29cf92be93ec1a8f46"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/fx/low_pass_gate.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/fx/low_pass_gate.h",
+      "sha256": "4f3bf8b57a809827df05c88d934b505005d9a526a1b426349bd18b62b39cf5b9",
+      "bytes": 2937,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1360,
+        "sha256": "32c69a8e0ab889c62d28c9c2ea28824bc16f54124c231fa22df7785d38625a81"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/fx/overdrive.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/fx/overdrive.h",
+      "sha256": "eeb6bf977cdcecd150e981886228531dbc659a842b9716936ef953ead40da20a",
+      "bytes": 2680,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1353,
+        "sha256": "1770dadda0eed1a2868e3af085b8dcec6a46283566ee5fb18953fe3ec2e75cd4"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/fx/sample_rate_reducer.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/fx/sample_rate_reducer.h",
+      "sha256": "8334481bd2b3ac4c092386908401003a32cb1f2062aba8679b2d4073e0cf0291",
+      "bytes": 4608,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1352,
+        "sha256": "8916606a597260539393f9fb978357e34df2b91bf116a89d73d3935a59fab10f"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/noise/clocked_noise.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/noise/clocked_noise.h",
+      "sha256": "dfe2b344b3fee9922474701587e69cae554c31d7e056e678383214671a4d6c70",
+      "bytes": 3244,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1399,
+        "sha256": "5b5f842ab6de5e8be9bdfb4d043f252f0307a10e5ef575d42334dacb8f4ecfb4"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/noise/dust.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/noise/dust.h",
+      "sha256": "2adb64c7368c5a459db23c71503a63c237b6936a281408a9ca16c7e661626107",
+      "bytes": 1745,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1357,
+        "sha256": "fcf5f0e5866018062cf4850c0cced2cc8261695b0e4a2440a5e091aded35e12f"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/noise/particle.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/noise/particle.h",
+      "sha256": "b366d733e8be9586eaaab17b7acf809f25b8e13e1b34908d440dcbf30db4b810",
+      "bytes": 2902,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1384,
+        "sha256": "8454344834213eb20516cb1f80e1943b3622192ceaa4799354ba4b9fb1499a6b"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/grainlet_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/grainlet_oscillator.h",
+      "sha256": "76450fb1fccc69dfa538bcad72345e5a4e5d5268a2ddc3dc3d867cf5bcd6b6ce",
+      "bytes": 6034,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1451,
+        "sha256": "e1c1eba1efbf3b04ab243ce92314eda887a2f7aa36ec9b6480e82b4c69f63816"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/harmonic_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/harmonic_oscillator.h",
+      "sha256": "fc86aed9b3c09bfb0669d02540258ad17049eddc1fc8f96fdba27fafe1e8371a",
+      "bytes": 3809,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1537,
+        "sha256": "38279d2bed981ad77fb5e1e11b59f09a10ec59ffe40ebbb2912cb6d521cdd39e"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/oscillator.h",
+      "sha256": "635fa2d1b53b9ea789f4022f2c7865d9d5b6908a5ab4be68ae20842d74a02d15",
+      "bytes": 8766,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1457,
+        "sha256": "3b22ae3c6e2e877095065c3ddb45c726e6e0e6d92f14ed240cdfe0d747bf56c7"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/sine_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/sine_oscillator.h",
+      "sha256": "ca7609580536a2584ca72e937e531a6f2690308dfe4a6371e0495ef3e15b0347",
+      "bytes": 5713,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1499,
+        "sha256": "42d787594ec530cdcbc4df61b074b6da4bdc2ba78f3dcad7e6102e72ac33e391"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/string_synth_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/string_synth_oscillator.h",
+      "sha256": "1ed1459ba07c9a2163428b417d95d41c61d072de5c2173a6636ff3f961cf3827",
+      "bytes": 5958,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1799,
+        "sha256": "5817196267a847a61a28a8fbc0ecd9af5c565b7df384dbd2b5808f90bd63f6ef"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/variable_saw_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/variable_saw_oscillator.h",
+      "sha256": "9043ecf46a7c51ec0ad4187eae2b2ea8e87935fea14fa9e6090898ae21350ee2",
+      "bytes": 5275,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1364,
+        "sha256": "c202af1a6e51a53fd8dfc571620c5071e00b1972c400d66b9fd3f44a9a52cf3d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/variable_shape_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/variable_shape_oscillator.h",
+      "sha256": "8b0273f528ffab85373c6ad6fc0e036b5bf7890223e6bd8bf88f872fcb786ee3",
+      "bytes": 7246,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1522,
+        "sha256": "861812cf7b378710602163754b3db90a26b0d3cd1ad81d5565c234119ad78e46"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/vosim_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/vosim_oscillator.h",
+      "sha256": "757d4c909f28e4a325dfa57d1d313716611d300cda160b1a38ecd33708ccf57b",
+      "bytes": 4539,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1385,
+        "sha256": "0d785752d36bd58bcd272fd9b08b3b36652683413da7b34b45395cd7b6ef581b"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/wavetable_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/wavetable_oscillator.h",
+      "sha256": "60c0889ab3a46cc9c5e51f7d3e673e20ae71c343f756eb7c73923b96b87d7741",
+      "bytes": 5324,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1363,
+        "sha256": "87eeea1cd315335840521d89addc00754498caeefe7567388ee3da467c69c467"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/oscillator/z_oscillator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/oscillator/z_oscillator.h",
+      "sha256": "9365d6ae59f894aec5f8415034a1a25aa040452e9b9aa4c672ff8b124b9f0934",
+      "bytes": 6172,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1380,
+        "sha256": "65ecd666f8d3d6802088f7f07a577eef557b96f692ad0a11f86d1e099dd825e5"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/delay_line.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/delay_line.h",
+      "sha256": "626a4c24e72220ecdc12fe3babbac1e5f0e16a63f1e22115a540fa9ee3ba9a52",
+      "bytes": 3335,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1409,
+        "sha256": "caa334a6e51f522502af6756fc1372e2fdf300e85b5938896a7edaf995459e9d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/modal_voice.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/modal_voice.cc",
+      "sha256": "c3e5ab1fd540f92e56ea62150a28304ff401930c1db243b2ebb42a5417660fec",
+      "bytes": 3321,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1524,
+        "sha256": "352cfd0ee631cf6d42f21b04f75e0515fdb7eb34cddd2af10509bbc02cbd4e56"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/modal_voice.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/modal_voice.h",
+      "sha256": "0a068c46c82986ece0b2c178e67eeb3ab9500ef8e40609f1dfc3c1589f7c2e86",
+      "bytes": 2226,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1524,
+        "sha256": "352cfd0ee631cf6d42f21b04f75e0515fdb7eb34cddd2af10509bbc02cbd4e56"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/resonator.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/resonator.cc",
+      "sha256": "6b51c987acd069f97b526a53ba431ece3e447981385dc193ebbe4557ff76fc6a",
+      "bytes": 4178,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1390,
+        "sha256": "3fb9ed5393b5882497c610e5798dc42ccd9d2f903a92957f67f1f942c999202d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/resonator.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/resonator.h",
+      "sha256": "0e674524bc13793d1ade9ff7bc5a4a96945f6bf82f1067b86bba5f95051effd0",
+      "bytes": 3974,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1390,
+        "sha256": "3fb9ed5393b5882497c610e5798dc42ccd9d2f903a92957f67f1f942c999202d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/string.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/string.cc",
+      "sha256": "290cf726aab4265e5dafaa730316c1404bd3ebaaceade898fc29a89193d36b09",
+      "bytes": 6426,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1408,
+        "sha256": "1c4f0229da9b628a7c742019a34b1d28027e92a52d132ed9ebc272a1d6769aec"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/string.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/string.h",
+      "sha256": "807b982762f661958cf28216c68fd5fa70116fcb13ad79210d30406c832e111e",
+      "bytes": 2894,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1408,
+        "sha256": "1c4f0229da9b628a7c742019a34b1d28027e92a52d132ed9ebc272a1d6769aec"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/string_voice.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/string_voice.cc",
+      "sha256": "5e18234d34e057b5cb3d8f56989005c47faccbaf4f3a5cc435abfce9a856ad85",
+      "bytes": 3624,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1390,
+        "sha256": "b305cd7cbc0eae07835d6d5c97f259b4cebf3da9d9ec0cae3a05c1cdba0404fc"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/physical_modelling/string_voice.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/physical_modelling/string_voice.h",
+      "sha256": "9b1c64502b34ad7686e2676cedff9c32ecf211e21066edd6eac20815f6983d78",
+      "bytes": 2216,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1390,
+        "sha256": "b305cd7cbc0eae07835d6d5c97f259b4cebf3da9d9ec0cae3a05c1cdba0404fc"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth.cc",
+      "sha256": "83be3c9136717351a6bb04d309df8c3fe7efb5bef1a27d0147e640dff8b2715d",
+      "bytes": 5629,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1351,
+        "sha256": "477255433823951a45325b197eda90f77ddf1640d43638e79c3028568e97993d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth.h",
+      "sha256": "f3e7db24d8db2d98d53d0e802e7f2405e4d39379bee0cdfbe0f578007744115b",
+      "bytes": 2988,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1351,
+        "sha256": "477255433823951a45325b197eda90f77ddf1640d43638e79c3028568e97993d"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth_controller.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth_controller.cc",
+      "sha256": "1fac561210b670d5c6f6335439d058f3d8a44a5a76e72bbdeef82f7bacb3d695",
+      "bytes": 10010,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1368,
+        "sha256": "1ff01ef3ed1a419f173b69c25f6e66a3abae9a23e5ec63d3217385e94cd27c7f"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth_controller.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth_controller.h",
+      "sha256": "4f8b5a45915e0c08a57487a0c830f3cf0bd6d24b564257759a19f8b682b74025",
+      "bytes": 5248,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1371,
+        "sha256": "35c02a77667876a494b8d317bf3f0542c73f8e0b02abcdaa7193639e1e542e69"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth_phonemes.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth_phonemes.cc",
+      "sha256": "3885114e9dd3e736c91975b5e8dab580c733064111fe285f8a306e155985a2a5",
+      "bytes": 2848,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1444,
+        "sha256": "f2e5a5e1f4c1b67ad3abe7f864eb9f6b65aaceb158ea82561cca351bd23af8b2"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth_words.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth_words.cc",
+      "sha256": "db7851396c86f3048d7ba3b84849c8d39c93d7d9bf6f7db3fdc526e6ee2b0cb3",
+      "bytes": 71719,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1383,
+        "sha256": "40f3e62b878df8008c440b117130d5c56b82a884a8b21e807ca56fd62c0d0454"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/lpc_speech_synth_words.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/lpc_speech_synth_words.h",
+      "sha256": "353e02fc00eb21a84b16837af69b521bfb02e7fcdd30d2eb9b7bc33948db6135",
+      "bytes": 1946,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1383,
+        "sha256": "40f3e62b878df8008c440b117130d5c56b82a884a8b21e807ca56fd62c0d0454"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/naive_speech_synth.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/naive_speech_synth.cc",
+      "sha256": "2b0656e6ce6acb3093744e9a7ff99ef53a94cd3b1238aee917d79c7bc0c6db70",
+      "bytes": 6061,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1434,
+        "sha256": "ec9542f4500cea71b5805a7335e7146fe38613cd2dc72c897b11965599804aa6"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/naive_speech_synth.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/naive_speech_synth.h",
+      "sha256": "5c05b028fad447ed5ffc0acc5869b1fbecd7517b159b52e460c0c4bc439a1d02",
+      "bytes": 2587,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1434,
+        "sha256": "ec9542f4500cea71b5805a7335e7146fe38613cd2dc72c897b11965599804aa6"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/sam_speech_synth.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/sam_speech_synth.cc",
+      "sha256": "6aeda25c64b336b91f3d51b39644c3a0e15f8429bd08d60e7521eac3a7dc83c3",
+      "bytes": 6169,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1393,
+        "sha256": "9a95bda2ccc1de4454ce567a07ef85ddb9a63fb0780530e2992a2dfb898f8210"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/speech/sam_speech_synth.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/speech/sam_speech_synth.h",
+      "sha256": "a562de7d57bb69f4e0fca588ef300a6c7cf918138be3977970f789fc8af10e36",
+      "bytes": 2645,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1393,
+        "sha256": "9a95bda2ccc1de4454ce567a07ef85ddb9a63fb0780530e2992a2dfb898f8210"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/voice.cc",
+      "source": "libs/eurorack/eurorack/plaits/dsp/voice.cc",
+      "sha256": "34736e7e0104225cda05122453e094fa5c6d06aa82fe6b782adaf6e4948dd7dd",
+      "bytes": 7863,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1353,
+        "sha256": "b848ed2bdb698bc0d340cddcad104cb3f0cb7485826a566324f1ae63d8a96546"
+      }
+    },
+    {
+      "component": "eurorack / plaits/dsp/voice.h",
+      "source": "libs/eurorack/eurorack/plaits/dsp/voice.h",
+      "sha256": "a35c6e64d5f24d2d98ddb1c2cf1efbb8d374ba65cc1e241cc820cfc9fce07f5b",
+      "bytes": 6388,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1353,
+        "sha256": "b848ed2bdb698bc0d340cddcad104cb3f0cb7485826a566324f1ae63d8a96546"
+      }
+    },
+    {
+      "component": "eurorack / plaits/resources.cc",
+      "source": "libs/eurorack/eurorack/plaits/resources.cc",
+      "sha256": "86e4048e8eea58a93326e3c0c14564f0b0acc3d645a8d858dcd33ba789a03611",
+      "bytes": 494273,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1409,
+        "sha256": "231c4f3c0d0dcd5ae07f5ffc78091923f57ab93d26c534149436f2bee4a7eec2"
+      }
+    },
+    {
+      "component": "eurorack / plaits/resources.h",
+      "source": "libs/eurorack/eurorack/plaits/resources.h",
+      "sha256": "5801faf55b4c9bde42f518c63f5af14e960378f52b11cec58bd1a89384f44a3d",
+      "bytes": 3158,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1409,
+        "sha256": "231c4f3c0d0dcd5ae07f5ffc78091923f57ab93d26c534149436f2bee4a7eec2"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/atan.cc",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/atan.cc",
+      "sha256": "2bca8c181f004136a30ff24bcdc8f9b8a0765d513e9f0fd77e1dbbac8da718d1",
+      "bytes": 5547,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1358,
+        "sha256": "f421dab35d9c850e06532f60544fe5d55b7a72bf736fa7494d1be8b9ef22a43f"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/atan.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/atan.h",
+      "sha256": "e386018f41ddb81acda4c56503dd38eee45a5e7d54c7328dbe07ebf362f2b333",
+      "bytes": 3024,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1358,
+        "sha256": "f421dab35d9c850e06532f60544fe5d55b7a72bf736fa7494d1be8b9ef22a43f"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/cosine_oscillator.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/cosine_oscillator.h",
+      "sha256": "d9e30f117d87f14807968c43241a4e57717946af9bbe97e5142264362b90717e",
+      "bytes": 2933,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1414,
+        "sha256": "c12b2844d9a24b289596cfcd13f14a7f9b14ef5d01b4083e5b5f0808a45bff35"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/dsp.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/dsp.h",
+      "sha256": "756219ce25649d28e03faddcf2f5d6a072d8a72e774b39374a82d80f644ac3f6",
+      "bytes": 4551,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1353,
+        "sha256": "28ecca475d583decce7709ae2a2bd1770eaf3a945d784aa24ab552d52bdef3bb"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/filter.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/filter.h",
+      "sha256": "ef109de81e6a1d5ccb166dfec0f6e1289efaecf6c603a506a549802ddba5c677",
+      "bytes": 19333,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1393,
+        "sha256": "53f9741d5c66722b58afd24c5fbc5dc54821fb1e354240aa2c7ec8cd803a4cda"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/hysteresis_quantizer.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/hysteresis_quantizer.h",
+      "sha256": "460b516286fc1c19b829ea670f32852e2dddd056ae1fd618a360aeeb55c7a687",
+      "bytes": 2692,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1456,
+        "sha256": "b1a1af321fcc4659de240998da95a409ce6bffa79f2e8549518d096254a622ab"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/limiter.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/limiter.h",
+      "sha256": "8bc07631029b720eec415c118496211f222ec52fa942cf97373182b266b653a1",
+      "bytes": 2021,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1340,
+        "sha256": "6000bc75b0509f329452cd6b821c2738a0d279d31aa5f7434bda5ceb1e66f06b"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/parameter_interpolator.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/parameter_interpolator.h",
+      "sha256": "4b05028c320e6946418a36e9662a4e5a142e5bfab0423835a77d074d9c7fc217",
+      "bytes": 2391,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1386,
+        "sha256": "3e5974ce1ef0c02bcf2451cf3d982f74d8e0e2f4d3e327ea9d9dbb162e9f9b72"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/polyblep.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/polyblep.h",
+      "sha256": "b36025a8a9b2e9a37156e45cfdee937451f788529089b51b9f490da1a5b0063b",
+      "bytes": 2009,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1417,
+        "sha256": "c63d441a04e592ecd08b0df025cf71ba83fe65521dbce1da360d4b0f36b53a54"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/rsqrt.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/rsqrt.h",
+      "sha256": "a827501522f85d7045783619404366eb0fb338ede3cb1480650cf5f038d68c91",
+      "bytes": 2627,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1372,
+        "sha256": "ab141888129f01ccd2cb23a9bf081cb563d2ab6a60ac4e5d563bf553272f0399"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/units.cc",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/units.cc",
+      "sha256": "0acbe230ffaa2d181ba285fce54f2fd0b2339b3ec163a1dd00c946e6bf82ea4a",
+      "bytes": 11336,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1377,
+        "sha256": "7b1fce16b9be28e1acbba9df2ba216e6813555483302bee05790c875517ae72d"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/dsp/units.h",
+      "source": "libs/eurorack/eurorack/stmlib/dsp/units.h",
+      "sha256": "be38219743728af8e081373371153eab8a3461d8d01128f81b0dfee2be7bff2d",
+      "bytes": 1906,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1377,
+        "sha256": "7b1fce16b9be28e1acbba9df2ba216e6813555483302bee05790c875517ae72d"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/fft/shy_fft.h",
+      "source": "libs/eurorack/eurorack/stmlib/fft/shy_fft.h",
+      "sha256": "f0ccd195405fa34eec6c604e713f8ea95a82377dac40fda7d6df5da13cd85146",
+      "bytes": 19596,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1717,
+        "sha256": "7e2efa4aca9e2505aa9c84cb93cdbf3f063a90e697341906482c6b48ae738bdf"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/stmlib.h",
+      "source": "libs/eurorack/eurorack/stmlib/stmlib.h",
+      "sha256": "3afc8589a951e882d9eea16b3eda8623dd6fb0079dd11dfbce817e65be6cfba9",
+      "bytes": 3142,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1241,
+        "sha256": "76554518c4c43d100c70099611cf50f9de2c7c646baa0d3ac885a931ad6d826e"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/utils/buffer_allocator.h",
+      "source": "libs/eurorack/eurorack/stmlib/utils/buffer_allocator.h",
+      "sha256": "8fc8c7be95f2ed8b010e56d69576ae36dac2223dee926967d3f9a36a07d2f8ea",
+      "bytes": 2414,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1364,
+        "sha256": "e767436ec0707a382f5648a2103da463fb4e8a2dc30d5b792e7bac8fa46eaeaa"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/utils/dsp.h",
+      "source": "libs/eurorack/eurorack/stmlib/utils/dsp.h",
+      "sha256": "c0fad7f6b5b20f053d184614a35baf595e41f1394db53f80ac742d7467dbbe1b",
+      "bytes": 5891,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1436,
+        "sha256": "332a8c70c6d99fbfdce037ae8c6ad0b24b6ce600a557d08d615857d0967c28f8"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/utils/random.cc",
+      "source": "libs/eurorack/eurorack/stmlib/utils/random.cc",
+      "sha256": "145c4d7a30e373d001fd664ce6f97a475458f7dc8286252d24ca6f592e0cdb93",
+      "bytes": 1483,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1356,
+        "sha256": "d770ea1fc0f8d26bc8331a04f981bd6d51b32f717c3585d7de526d24c72a14d9"
+      }
+    },
+    {
+      "component": "eurorack / stmlib/utils/random.h",
+      "source": "libs/eurorack/eurorack/stmlib/utils/random.h",
+      "sha256": "423f01e905fa279864878f34e42136ad1eb37a33dad58739affaaab06b793e5d",
+      "bytes": 2086,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1375,
+        "sha256": "bfcf579efc999fe817f41380553cdab50dbd5815bdaa8bef07aa424361197a17"
+      }
+    },
+    {
+      "component": "HarfBuzz",
+      "source": "libs/JUCE/modules/juce_graphics/fonts/harfbuzz/COPYING",
+      "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64",
+      "bytes": 1971
+    },
+    {
+      "component": "SheenBidi Apache license",
+      "source": "libs/JUCE/modules/juce_graphics/unicode/sheenbidi/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358
+    },
+    {
+      "component": "JUCE embedded PNG",
+      "source": "libs/JUCE/modules/juce_graphics/image_formats/pnglib/LICENSE",
+      "sha256": "bf5e22b9dce8464064ae17a48ea1133c3369ac9e1d80ef9e320e5219aa14ea9b",
+      "bytes": 5345
+    },
+    {
+      "component": "JUCE embedded zlib",
+      "source": "libs/JUCE/modules/juce_core/zip/zlib/LICENSE",
+      "sha256": "8545e90fe8d2bc6b8b8e9f4caecd2d9215727dbd1c153c7adeedfbaaea51f38b",
+      "bytes": 1312
+    },
+    {
+      "component": "Independent JPEG Group",
+      "source": "libs/JUCE/modules/juce_graphics/image_formats/jpglib/README",
+      "sha256": "8802105e93b079f950844e412daab05156b5ef30acc6cbd0a59a287e6cd6cb7d",
+      "bytes": 19093
+    },
+    {
+      "component": "Ogg Vorbis",
+      "source": "libs/JUCE/modules/juce_audio_formats/codecs/oggvorbis/Ogg Vorbis Licence.txt",
+      "sha256": "62d5ce5c59484dc99e462ec8f815bfc76f64a2e4759500c14beaf3772a7d1181",
+      "bytes": 2477
+    },
+    {
+      "component": "libvorbis",
+      "source": "libs/JUCE/modules/juce_audio_formats/codecs/oggvorbis/libvorbis-1.3.7/COPYING",
+      "sha256": "ec1815db59fcd302846df949d7424876cb2e2dc5ed1606c5fb0b36787b1cf43a",
+      "bytes": 1470
+    },
+    {
+      "component": "FLAC",
+      "source": "libs/JUCE/modules/juce_audio_formats/codecs/flac/all.h",
+      "sha256": "8adf65215539ca8b0afbd0cdef0461c8b05e4c53d10ab647317c97fb743ee809",
+      "bytes": 20405,
+      "extract": {
+        "startByte": 0,
+        "endByte": 1671,
+        "sha256": "3854f7d95aeae6874282278cc54ac34bb02ff020f98be0902936b0bfdd02ef22"
+      }
+    },
+    {
+      "component": "SheenBidi copyright",
+      "source": "libs/JUCE/modules/juce_graphics/unicode/sheenbidi/Source/SheenBidi.c",
+      "sha256": "8114a80e0a02d2cd06792689046d4a3a3dde3bfb311c45a4f4a2ce52d8b8958c",
+      "bytes": 1324,
+      "extract": {
+        "startByte": 0,
+        "endByte": 614,
+        "sha256": "f30104d711e47a01f8a33311572856932993d20d6142bbcf37f90bc7cd45209f"
+      }
+    },
+    {
+      "component": "PFFFT public API",
+      "source": "libs/pffft/pffft.h",
+      "sha256": "f8c510426af5431c11f5a541f1902b3af3bf4d5343e36c84d3035516b73bda47",
+      "bytes": 6899,
+      "extract": {
+        "sha256": "4cf208bbbb2008e9576d6a7607f3a1c5f9d349d3266176c60d3ab71de331e720",
+        "startByte": 0,
+        "endByte": 2026
+      }
+    },
+    {
+      "component": "PFFFT convolution implementation",
+      "source": "libs/pffft/fft_convolve.cpp",
+      "sha256": "2b25b3318d4c2b68cf7fe4315690a4a89f501f07eda67c385547052535b8bd93",
+      "bytes": 11554,
+      "extract": {
+        "sha256": "cbf60934365db99ea674c4d332e2cf4ba228980d103990424f6282586f09f8a5",
+        "startByte": 0,
+        "endByte": 1210
+      }
+    },
+    {
+      "component": "PFFFT convolution API",
+      "source": "libs/pffft/fft_convolve.hpp",
+      "sha256": "b998ea0ff73dd11ebc10a35830a322dfa0f4d92f34d995f99660fb8452d4ade0",
+      "bytes": 5126,
+      "extract": {
+        "sha256": "ca58d3d828d437c64224c0e6cf1b89b4b22769089199f3016a59e66094077611",
+        "startByte": 0,
+        "endByte": 1209
+      }
+    },
+    {
+      "component": "ChowDSP omega functions",
+      "source": "src/common/dsp/effects/chowdsp/shared/omega.h",
+      "sha256": "764d4c7bdd6aacf9811a04227ea617b53833f17d647b21a6296cc879963442a2",
+      "bytes": 5306,
+      "extract": {
+        "sha256": "bd404c1f026c8c3ce9791d8e4777c21cc977886db9dd677d0d9cf66547a125de",
+        "startByte": 0,
+        "endByte": 1188
+      }
+    },
+    {
+      "component": "Pink noise attribution",
+      "source": "libs/sst/sst-basic-blocks/include/sst/basic-blocks/dsp/PinkNoise.h",
+      "sha256": "fbb2a765489267e519dfb7f023875a2b8932769580a5dc6f4dc34a8ab0db6b62",
+      "bytes": 9844,
+      "extract": {
+        "sha256": "69a36017d5ff3c7b0bf34496fc9898a4a8b415104030164a828e15ff8be555a7",
+        "startByte": 0,
+        "endByte": 1607
+      }
+    },
+    {
+      "component": "Vintage ladder Miller Puckette notice",
+      "source": "libs/sst/sst-filters/include/sst/filters/VintageLadders.h",
+      "sha256": "aeb84916be1ba4ba900904621bea5badc4247db0893b13ac8ec23ca80e5e6e0b",
+      "bytes": 18222,
+      "extract": {
+        "sha256": "5f138d36191c77e5bcf9eca8242c9354b4d1e8943c31b65f232e6121b92843fd",
+        "startByte": 1496,
+        "endByte": 4000
+      }
+    },
+    {
+      "component": "Voxengo impulse terms",
+      "source": "resources/data/impulses_3rdparty/Voxengo/license.txt",
+      "sha256": "62bb49cc94c72a49b6d9d7174e027a6c8cbd7652338a407a8a1c235750030796",
+      "bytes": 1925
+    },
+    {
+      "component": "Lato font distribution notice",
+      "source": "resources/fonts/README.txt",
+      "sha256": "e6a71e5f63f5d6204c3294e72cb95fa60ace33750567e2e8a0102044fbef2c3e",
+      "bytes": 3311
+    },
+    {
+      "component": "Indie Flower font distribution notice",
+      "source": "resources/fonts/README-IndieFlower.txt",
+      "sha256": "ea0bf8e29700880c87a2271b0c9757d56532fb53f84f17f87f4e60626d156d41",
+      "bytes": 144
+    },
+    {
+      "component": "Fira Mono font distribution notice",
+      "source": "resources/fonts/README-FiraMono.txt",
+      "sha256": "42ec7179165552ca775964a87323da5caea863e74ba168ecdb3a2fdbe2206813",
+      "bytes": 142
+    }
+  ],
+  "remaining": [
+    "Audit other embedded DSP implementations. Leading MIT notices for every eurorack source/header observed in the current Wasm compiler dependency files are indexed; future dependency coverage must be rechecked.",
+    "Finish JUCE per-file/special-case notice audit and audit Emscripten runtime and ports including FreeType. Primary HarfBuzz, SheenBidi, PNG, JPEG, zlib, Ogg/Vorbis and FLAC notices are indexed.",
+    "Audit factory asset notices. Copyright/license metadata for all six bundled fonts is indexed, alongside the complete OFL text.",
+    "Verify actual compiled/header dependencies against the complete notice set and integrate notices into versioned static packaging."
+  ]
+}

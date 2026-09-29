@@ -20,6 +20,10 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#if SURGE_WEB
+extern "C" int surge_browser_transport_tempo(double);
+#endif
+
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
 #include "SurgeImageStore.h"
@@ -230,6 +234,9 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     suspedal = std::move(sp);
 
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
+#if SURGE_WEB
+    tempoTypein->setTitle("Tempo");
+#endif
     tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
     tempoTypein->setInputRestrictions(3, "0123456789");
     tempoTypein->setSelectAllWhenFocused(true);
@@ -237,8 +244,12 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
         // this is thread sloppy
         float newT = std::atof(tempoTypein->getText().toRawUTF8());
 
+#if SURGE_WEB
+        surge_browser_transport_tempo(newT);
+#else
         processor.standaloneTempo = newT;
         processor.surge->storage.unstreamedTempo = newT;
+#endif
         tempoTypein->giveAwayKeyboardFocus();
     };
 
@@ -316,13 +327,20 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
 
         for (auto i : search->second)
         {
+            i = virtualKeyboardKeyCode(i);
             // Don't bind accessible action keys to the keyboard
             if (Surge::GUI::allowKeyboardEdits(&processor.surge->storage))
             {
                 // Don't know why we have high bit set on the keys? Do both to be sure
                 auto b1 = Surge::Widgets::isAccessibleKey((juce::KeyPress)i);
+#if SURGE_WEB
+                // Browser OEM codes are not high-bit-encoded characters.
+                // In particular, 221 is ']', while 221 - 128 is Context Menu.
+                auto b2 = false;
+#else
                 auto b2 =
                     (i > 128) ? Surge::Widgets::isAccessibleKey((juce::KeyPress)(i - 128)) : false;
+#endif
 
                 if (b1 || b2)
                 {
@@ -370,7 +388,13 @@ void SurgeSynthEditor::idle()
 
     sge->idle();
 
-    if (processor.surge->refresh_vkb)
+    if (processor.surge->refresh_vkb
+#if SURGE_WEB
+        // A queued engine refresh must not replace an in-progress DOM or
+        // canvas edit. Keep it pending until the editor releases focus.
+        && !tempoTypein->hasKeyboardFocus(true)
+#endif
+    )
     {
         const int curTypeinBPM = std::atoi(tempoTypein->getText().toStdString().c_str());
         const int curBPM = std::round(processor.surge->time_data.tempo);
@@ -847,13 +871,21 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
                 switch (action)
                 {
                 case Surge::GUI::VKB_OCTAVE_DOWN:
-                    midiKeyboardOctave = std::clamp(midiKeyboardOctave - 1, 0, 9);
-                    keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
-                    return true;
                 case Surge::GUI::VKB_OCTAVE_UP:
-                    midiKeyboardOctave = std::clamp(midiKeyboardOctave + 1, 0, 9);
+                {
+                    const auto octave = std::clamp(midiKeyboardOctave +
+                        (action == Surge::GUI::VKB_OCTAVE_UP ? 1 : -1), 0, 9);
+#if SURGE_WEB
+                    // JUCE scans only the new mapped range after an octave
+                    // change. Release owned notes in the old range first so
+                    // their eventual key-up cannot leave them sounding.
+                    if (octave != midiKeyboardOctave)
+                        keyboard->focusLost(juce::Component::focusChangedDirectly);
+#endif
+                    midiKeyboardOctave = octave;
                     keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
                     return true;
+                }
                 case Surge::GUI::VKB_VELOCITY_DOWN_10PCT:
                     midiKeyboardVelocity = std::clamp(midiKeyboardVelocity - 0.1f, 0.f, 1.f);
                     keyboard->setVelocity(midiKeyboardVelocity, true);
@@ -879,6 +911,16 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
 
 bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originatingComponent)
 {
+#if SURGE_WEB
+    if (!isKeyDown && (!sge->getShowVirtualKeyboard() || !sge->shouldForwardKeysToVKB()))
+    {
+        // Canvas-to-text focus transfer clears browser key state after the
+        // editor disables note forwarding. Release only the keyboard's owned
+        // notes; rescanning held text-entry keys here could start new notes.
+        keyboard->focusLost(juce::Component::focusChangedDirectly);
+        return false;
+    }
+#endif
     if (sge->getShowVirtualKeyboard() && sge->shouldForwardKeysToVKB() &&
         originatingComponent != keyboard.get())
     {

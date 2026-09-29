@@ -23,6 +23,7 @@
 #ifndef SURGE_SRC_COMMON_MODULATIONSOURCE_H
 #define SURGE_SRC_COMMON_MODULATIONSOURCE_H
 
+#include "SurgeRandom.h"
 #include <random>
 #include <cassert>
 
@@ -652,7 +653,7 @@ class RandomModulationSource : public ModulationSource
   public:
     RandomModulationSource(bool bp) : bipolar(bp)
     {
-        std::random_device rd;
+        Surge::AudioRandomDevice rd;
         gen = std::minstd_rand(rd());
         if (bp)
         {

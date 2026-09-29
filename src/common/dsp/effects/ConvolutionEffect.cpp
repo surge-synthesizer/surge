@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "ConvolutionEffect.h"
+#include "ConvolutionKernelWorker.h"
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -27,6 +28,12 @@
 
 #include <CDSPResampler.h>
 #include "sst/basic-blocks/tables/SincTableProvider.h"
+
+#if SURGE_WEB
+static thread_local bool browserRealtimeConvolution = false;
+void surge_set_convolution_realtime(bool enabled) { browserRealtimeConvolution = enabled; }
+bool surge_convolution_is_realtime() { return browserRealtimeConvolution; }
+#endif
 
 namespace
 {
@@ -62,6 +69,10 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
       delayL_(storage->sinctable), delayR_(storage->sinctable), delayTime_(.001)
 {
     mix_.set_blocksize(BLOCK_SIZE);
+#if SURGE_WEB
+    for (int slot = 0; slot < n_fx_slots; ++slot)
+        if (fxdata == &storage->getPatch().fx[slot]) browserSlot_ = slot;
+#endif
 
     // If our userdata contains a filename but no actual channels, that means
     // we should load it here. Keep in mind this operation could take time.
@@ -96,6 +107,35 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
     }
 }
 
+ConvolutionEffect::~ConvolutionEffect()
+{
+#if SURGE_WEB
+    if (browserSlot_ >= 0) storage->browserConvolutionWorker->cancel(browserSlot_);
+#endif
+}
+
+void ConvolutionEffect::rebindParameterStorage(FxStorage *parameters, pdata *values)
+{
+#if SURGE_WEB
+    browserDetachForRetirement();
+    browserRequest_ = 0;
+#endif
+    Effect::rebindParameterStorage(parameters, values);
+#if SURGE_WEB
+    for (int slot = 0; slot < n_fx_slots; ++slot)
+        if (parameters == &storage->getPatch().fx[slot]) browserSlot_ = slot;
+#endif
+}
+
+#if SURGE_WEB
+void ConvolutionEffect::browserDetachForRetirement()
+{
+    if (browserSlot_ >= 0) storage->browserConvolutionWorker->cancel(browserSlot_);
+    // A delayed destructor must not cancel the replacement's request lane.
+    browserSlot_ = -1;
+}
+#endif
+
 const char *ConvolutionEffect::get_effectname() { return "convolution"; }
 
 const char *ConvolutionEffect::group_label(int id)
@@ -128,6 +168,10 @@ int ConvolutionEffect::group_label_ypos(int id)
 
 void ConvolutionEffect::init()
 {
+#if SURGE_WEB
+    if (browserSlot_ >= 0) storage->browserConvolutionWorker->cancel(browserSlot_);
+    browserRequest_ = 0;
+#endif
     if (!(fxdata->user_data.contains("irname") && fxdata->user_data.contains("samplerate") &&
           fxdata->user_data.contains("left")))
         return;
@@ -135,7 +179,11 @@ void ConvolutionEffect::init()
         return;
 
     prep_ir();
+    prepareProcessingState();
+}
 
+void ConvolutionEffect::prepareProcessingState()
+{
     lc_.coeff_HP(lc_.calc_omega(*pd_float[convolution_locut_freq] / 12.0), Q);
     hc_.coeff_LP(lc_.calc_omega(*pd_float[convolution_hicut_freq] / 12.0), Q);
     lc_.coeff_instantize();
@@ -186,21 +234,21 @@ void ConvolutionEffect::init_ctrltypes()
 
     fxdata->p[convolution_size].set_name("Size");
     fxdata->p[convolution_size].set_type(ct_percent);
-    fxdata->p[convolution_size].val_min.f = 0.5f;
-    fxdata->p[convolution_size].val_max.f = 2.f;
+    fxdata->p[convolution_size].val_min.f = minimumSize;
+    fxdata->p[convolution_size].val_max.f = maximumSize;
     fxdata->p[convolution_size].val_default.f = 1.f;
     fxdata->p[convolution_size].modulateable = false;
     fxdata->p[convolution_size].posy_offset = 3;
 
     fxdata->p[convolution_start].set_name("Start");
     fxdata->p[convolution_start].set_type(ct_percent);
-    fxdata->p[convolution_start].val_max.f = 0.9f;
+    fxdata->p[convolution_start].val_max.f = maximumStart;
     fxdata->p[convolution_start].modulateable = false;
     fxdata->p[convolution_start].posy_offset = 3;
 
     fxdata->p[convolution_reverse].set_name("Reverse From");
     fxdata->p[convolution_reverse].set_type(ct_percent_deactivatable);
-    fxdata->p[convolution_reverse].val_max.f = 0.5f;
+    fxdata->p[convolution_reverse].val_max.f = maximumReverse;
     fxdata->p[convolution_reverse].modulateable = false;
     fxdata->p[convolution_reverse].posy_offset = 3;
 
@@ -248,7 +296,7 @@ int ConvolutionEffect::get_ringout_decay()
     if (!initialized)
         return 0;
 
-    return std::ceil(static_cast<float>(irSize_ + delayTime_.v) / static_cast<float>(BLOCK_SIZE));
+    return std::ceil(static_cast<float>(kernel_->size + delayTime_.v) / static_cast<float>(BLOCK_SIZE));
 }
 
 void ConvolutionEffect::process(float *dataL, float *dataR)
@@ -287,8 +335,8 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
         std::copy(dataR, dataR + BLOCK_SIZE, delayedR_.begin());
     }
 
-    convolverL_.process(delayedL_, workL_);
-    convolverR_.process(delayedR_, workR_);
+    kernel_->left.process(delayedL_, workL_);
+    kernel_->right.process(delayedR_, workR_);
     if (!fxdata->p[convolution_tilt_center].deactivated)
         tilt_.processBlock<BLOCK_SIZE>(workL_.data(), workR_.data(), workL_.data(), workR_.data());
     if (!fxdata->p[convolution_locut_freq].deactivated)
@@ -298,18 +346,20 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     mix_.fade_2_blocks_inplace(dataL, workL_.data(), dataR, workR_.data());
 }
 
-void ConvolutionEffect::prep_ir()
+std::unique_ptr<ConvolutionKernel> ConvolutionKernel::prepare(
+    std::span<const float> L, std::span<const float> R,
+    float inputRate, float outputRate, float start, float reverse, bool reverseDeactivated)
 {
+    if (L.empty() || (!R.empty() && R.size() != L.size()) ||
+        !std::isfinite(inputRate) || inputRate <= 0 ||
+        !std::isfinite(outputRate) || outputRate <= 0 ||
+        !std::isfinite(start) || start < 0 || start >= 1 ||
+        !std::isfinite(reverse) || reverse < 0 || reverse > 1 ||
+        !std::all_of(L.begin(), L.end(), [](float v) { return std::isfinite(v); }) ||
+        !std::all_of(R.begin(), R.end(), [](float v) { return std::isfinite(v); }))
+        return nullptr;
+    auto result = std::make_unique<ConvolutionKernel>();
     bool s = true;
-    // Get the IR ready. Resample it to match the synth sample rate, and
-    // normalize it so the overall magnitude is 1.
-    const float inputRate = fxdata->by_key("samplerate").to_float();
-    const float outputRate = storage->samplerate * fxdata->p[convolution_size].val.f;
-    const float ratio = outputRate / inputRate;
-
-    // Left channel (or mono).
-    auto L = fxdata->by_key("left").as<float>();
-
     r8b::CDSPResampler resampler(inputRate, outputRate, L.size());
 
     using ir_t = sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>>;
@@ -323,9 +373,8 @@ void ConvolutionEffect::prep_ir()
     resampler.oneshot(in.data(), in.size(), out.data(), out.size());
     std::copy(out.begin(), out.end(), irL.begin());
 
-    if (fxdata->user_data.contains("right"))
+    if (!R.empty())
     {
-        auto R = fxdata->by_key("right").as<float>();
         std::copy(R.begin(), R.end(), in.begin());
         resampler.oneshot(in.data(), in.size(), out.data(), out.size());
         std::copy(out.begin(), out.end(), irR.begin());
@@ -337,26 +386,26 @@ void ConvolutionEffect::prep_ir()
 
     std::span<float> irLsub = irL;
     std::span<float> irRsub = irR;
-    if (!fxdata->p[convolution_reverse].deactivated)
+    if (!reverseDeactivated)
     {
         irLsub = irLsub.subspan(
-            0, irLsub.size() - std::floor(irLsub.size() * fxdata->p[convolution_start].val.f));
+            0, irLsub.size() - std::floor(irLsub.size() * start));
         irRsub = irRsub.subspan(
-            0, irRsub.size() - std::floor(irRsub.size() * fxdata->p[convolution_start].val.f));
+            0, irRsub.size() - std::floor(irRsub.size() * start));
 
         std::size_t d = std::floor(std::distance(irLsub.begin(), irLsub.end()) *
-                                   fxdata->p[convolution_reverse].val.f);
+                                   reverse);
         std::reverse(irLsub.begin() + d, irLsub.end());
         std::reverse(irRsub.begin() + d, irRsub.end());
     }
     else
     {
-        irLsub = irLsub.subspan(std::floor(irLsub.size() * fxdata->p[convolution_start].val.f));
-        irRsub = irRsub.subspan(std::floor(irRsub.size() * fxdata->p[convolution_start].val.f));
+        irLsub = irLsub.subspan(std::floor(irLsub.size() * start));
+        irRsub = irRsub.subspan(std::floor(irRsub.size() * start));
     }
 
     normalize(irLsub, irRsub);
-    irSize_ = irLsub.size();
+    result->size = irLsub.size();
     // Experimentally: in very very long reverbs, 16k tail / 128 head matches
     // the CPU usage of ReaVerb (without using background threads) for very long
     // reverbs. For shorter reverbs we're probably about 1.5 - 1.75x worse which
@@ -368,23 +417,40 @@ void ConvolutionEffect::prep_ir()
     for (int i = 1; i <= 14; i++)
     {
         tl_size = 1 << i; // maxes out at 16384
-        const int div = irSize_ / tl_size;
+        const int div = result->size / tl_size;
         if (div <= 8)
             break;
     }
     hd_size = tl_size / 64;
     hd_size = std::max(hd_size, std::max(BLOCK_SIZE, 16));
-    s = s && convolverL_.init(hd_size, tl_size, irLsub);
-    s = s && convolverR_.init(hd_size, tl_size, irRsub);
-    if (!s)
+    s = s && result->left.init(hd_size, tl_size, irLsub);
+    s = s && result->right.init(hd_size, tl_size, irRsub);
+    return s ? std::move(result) : nullptr;
+}
+
+void ConvolutionEffect::prep_ir()
+{
+    auto right = fxdata->user_data.contains("right") ? fxdata->by_key("right").as<float>()
+                                                   : std::span<const float>{};
+    auto prepared = ConvolutionKernel::prepare(
+        fxdata->by_key("left").as<float>(), right,
+        fxdata->by_key("samplerate").to_float(),
+        storage->samplerate * fxdata->p[convolution_size].val.f,
+        fxdata->p[convolution_start].val.f, fxdata->p[convolution_reverse].val.f,
+        fxdata->p[convolution_reverse].deactivated);
+    if (!prepared)
     {
-        storage->reportError(
-            "Error initializing the convolution engine. The effect will not process audio!",
-            "Convolution Error");
+        storage->reportError("Error initializing the convolution engine.",
+                             "Convolution Error");
         return;
     }
-
+    kernel_ = std::move(prepared);
     initialized = true;
+    rememberKernelSettings();
+}
+
+void ConvolutionEffect::rememberKernelSettings()
+{
     old_samplerate_ = storage->samplerate;
     old_convolution_size_ = fxdata->p[convolution_size].val.f;
     old_start_ = fxdata->p[convolution_start].val.f;
@@ -407,6 +473,20 @@ void ConvolutionEffect::set_params()
     delayTime_.newValue(delay_samples);
     delayTime_.process();
 
+#if SURGE_WEB
+    if (browserRealtimeConvolution && browserSlot_ >= 0)
+    {
+        updateBrowserKernel();
+        return;
+    }
+    // Offline/control-thread reinitialization stays synchronous and deterministic.
+    if (browserRequest_)
+    {
+        storage->browserConvolutionWorker->cancel(browserSlot_);
+        browserRequest_ = 0;
+    }
+#endif
+
     // Do we need a reload for non-modulatable parameter changes?
     if (storage->samplerate != old_samplerate_ ||
         fxdata->p[convolution_size].val.f != old_convolution_size_ ||
@@ -417,3 +497,62 @@ void ConvolutionEffect::set_params()
         prep_ir();
     }
 }
+
+#if SURGE_WEB
+void ConvolutionEffect::updateBrowserKernel()
+{
+    auto &worker = *storage->browserConvolutionWorker;
+    const auto rate = storage->samplerate;
+    const auto size = fxdata->p[convolution_size].val.f;
+    const auto start = fxdata->p[convolution_start].val.f;
+    const auto reverse = fxdata->p[convolution_reverse].val.f;
+    const auto deactivated = fxdata->p[convolution_reverse].deactivated;
+    const bool current = browserRequest_ && rate == requestedRate_ && size == requestedSize_ &&
+                         start == requestedStart_ && reverse == requestedReverse_ &&
+                         deactivated == requestedReverseDeactivated_;
+    const auto result = worker.take(browserSlot_, current ? browserRequest_ : 0, kernel_);
+    if (result != ConvolutionKernelWorker::Result::pending)
+    {
+        browserRequest_ = 0;
+        if (result == ConvolutionKernelWorker::Result::applied ||
+            result == ConvolutionKernelWorker::Result::failed)
+        {
+            // Also remember a failed request, avoiding an endless retry on every
+            // block. A subsequent edit retries; the previous kernel stays active.
+            old_samplerate_ = rate;
+            old_convolution_size_ = size;
+            old_start_ = start;
+            old_reverse_ = reverse;
+            old_reverse_deactivated_ = deactivated;
+            if (result == ConvolutionKernelWorker::Result::failed)
+                storage->browserConvolutionErrors.fetch_or(1u << browserSlot_,
+                                                           std::memory_order_relaxed);
+        }
+    }
+    if (rate == old_samplerate_ && size == old_convolution_size_ && start == old_start_ &&
+        reverse == old_reverse_ && deactivated == old_reverse_deactivated_)
+        return;
+    // An outstanding request owns this slot until consumed/retired. Never queue
+    // copies for every automation step; retry the latest settings next block.
+    if (browserRequest_) return;
+    ConvolutionKernelWorker::Request request;
+    request.generation = ++storage->browserConvolutionGeneration;
+    request.left = fxdata->user_data.at("left");
+    if (auto right = fxdata->user_data.find("right"); right != fxdata->user_data.end())
+        request.right = right->second;
+    request.inputRate = fxdata->by_key("samplerate").to_float();
+    request.outputRate = rate * size;
+    request.start = start;
+    request.reverse = reverse;
+    request.reverseDeactivated = deactivated;
+    if (worker.submit(browserSlot_, request))
+    {
+        browserRequest_ = request.generation;
+        requestedRate_ = rate;
+        requestedSize_ = size;
+        requestedStart_ = start;
+        requestedReverse_ = reverse;
+        requestedReverseDeactivated_ = deactivated;
+    }
+}
+#endif

@@ -46,6 +46,9 @@ struct PatchStoreDialog : public OverlayComponent,
                           public Surge::GUI::SkinConsumingComponent,
                           public juce::Button::Listener,
                           public juce::TextEditor::Listener
+#if SURGE_WEB
+                          , private juce::Timer
+#endif
 {
     PatchStoreDialog();
     ~PatchStoreDialog();
@@ -94,6 +97,13 @@ struct PatchStoreDialog : public OverlayComponent,
     void onSkinChanged() override;
     void textEditorFocusLost(juce::TextEditor &) override;
     void buttonClicked(juce::Button *button) override;
+#if SURGE_WEB
+    void timerCallback() override;
+    void cancelDeferredSave();
+    bool browserSavePending{false}, browserSaveFactory{false}, browserSaveSkipOverwrite{false};
+    unsigned browserSavePatchGeneration{0}, browserSaveFailures{0};
+    double browserSaveStarted{0};
+#endif
     std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, licenseEd, tagEd, commentEd;
     std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, licenseEdL, tagEdL, commentEdL;
     std::unique_ptr<Widgets::SurgeTextButton> okButton, okOverButton, cancelButton;

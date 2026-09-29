@@ -34,6 +34,7 @@
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 #include "sst/plugininfra/misc_platform.h"
 #include "PatchFileHeaderStructs.h"
+#include "PatchFileValidation.h"
 
 namespace mech = sst::basic_blocks::mechanics;
 
@@ -242,69 +243,16 @@ void SurgeSynthesizer::loadPatch(int id)
 bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName,
                                        bool forceIsPreset)
 {
+    std::vector<char> data;
+    std::string error;
+    if (!Surge::PatchStorage::readValidatedPatch(string_to_path(fxpPath), data, error))
+    {
+        storage.reportError("Unable to load patch: " + error, "Load Error");
+        return false;
+    }
     storage.getPatch().dawExtraState.editor.clearAllFormulaStates();
     storage.getPatch().dawExtraState.editor.clearAllWTSEStates();
     storage.getPatch().dawExtraState.editor.clearAllModulationSourceButtonStates();
-
-    using namespace sst::io;
-
-    std::filebuf f;
-    if (!f.open(string_to_path(fxpPath), std::ios::binary | std::ios::in))
-    {
-        auto msg = sst::plugininfra::misc_platform::getLastSystemError();
-
-        storage.reportError(std::string() + "Unable to open file '" + std::string(fxpPath) +
-                                "'.\n\n" + msg,
-                            "Load Error");
-        return false;
-    }
-    fxChunkSetCustom fxp;
-    auto read = f.sgetn(reinterpret_cast<char *>(&fxp), sizeof(fxp));
-    // FIXME - error if read != chunk size
-    if ((mech::endian_read_int32BE(fxp.chunkMagic) != 'CcnK') ||
-        (mech::endian_read_int32BE(fxp.fxMagic) != 'FPCh') ||
-        (mech::endian_read_int32BE(fxp.fxID) != 'cjs3'))
-    {
-        f.close();
-        auto cm = mech::endian_read_int32BE(fxp.chunkMagic);
-        auto fm = mech::endian_read_int32BE(fxp.fxMagic);
-        auto id = mech::endian_read_int32BE(fxp.fxID);
-
-        std::ostringstream oss;
-        oss << "Unable to load " << patchName << ".fxp!";
-        // if( cm != 'CcnK' )
-        //{
-        //   oss << "ChunkMagic is not 'CcnK'. ";
-        //}
-        // if( fm != 'FPCh' )
-        //{
-        //   oss << "FxMagic is not 'FPCh'. ";
-        //}
-        // if( id != 'cjs3' )
-        //{
-        //   union {
-        //      char c[4];
-        //      int id;
-        //   } q;
-        //   q.id = id;
-        //   oss << "Synth ID is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected
-        //   'cjs3'. ";
-        //}
-        oss << "Loaded file has unknown FXP file format. This error usually occurs when you "
-               "attempt to load an .fxp that belongs to another plugin into Surge XT.";
-        storage.reportError(oss.str(), "Load Error");
-        return false;
-    }
-
-    int cs = mech::endian_read_int32BE(fxp.chunkSize);
-    std::unique_ptr<char[]> data{new char[cs]};
-
-    if (f.sgetn(data.get(), cs) != cs)
-    {
-        perror("Error while loading patch!");
-    }
-
-    f.close();
 
     storage.getPatch().comment = "";
     storage.getPatch().author = "";
@@ -321,8 +269,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     current_category_id = categoryId;
     storage.getPatch().name = patchName;
 
-    loadRaw(data.get(), cs, forceIsPreset);
-    data.reset();
+    loadRaw(data.data(), static_cast<int>(data.size()), forceIsPreset);
 
     // OK so at this point we may have loaded a patch with a tuning override
     if (storage.getPatch().patchTuning.tuningStoredInPatch)
@@ -461,6 +408,13 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
 void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 {
     halt_engine = true;
+#if SURGE_WEB
+    browserPatchGeneration.fetch_add(1, std::memory_order_release);
+    {
+        std::lock_guard<std::mutex> lock(storage.waveTableDataMutex);
+        for (auto &token : storage.wtGenPublishToken) ++token;
+    }
+#endif
     stopSound();
     for (int s = 0; s < n_scenes; s++)
         for (int i = 0; i < n_customcontrollers; i++)
@@ -494,6 +448,11 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
         }
     }
     Surge::Formula::requestSharedDataWipe(&storage);
+#if SURGE_WEB
+    // The loader owns the halted engine here. Compile without running script
+    // bodies; new evaluators retain the original shared-state and init timing.
+    Surge::Formula::preparePatchCompilation(&storage);
+#endif
 
     storage.getPatch().isDirty = false;
 
@@ -555,7 +514,7 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
     }
 }
 
-#if MAC || LINUX
+#if MAC || LINUX || SURGE_WEB
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif

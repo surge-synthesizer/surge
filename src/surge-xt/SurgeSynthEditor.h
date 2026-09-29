@@ -80,6 +80,16 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     bool keyStateChanged(bool isKeyDown, juce::Component *originatingComponent) override;
 
     void setVKBLayout(const std::string layout);
+    static int virtualKeyboardKeyCode(int key)
+    {
+#if SURGE_WEB
+        // Layouts mix character literals with platform key codes. Chrome uses
+        // OEM codes for these punctuation keys; '.' must not alias Delete (46).
+        if (key == ',') return 188;
+        if (key == '.') return 190;
+#endif
+        return key;
+    }
 
     void reapplySurgeComponentColours();
 

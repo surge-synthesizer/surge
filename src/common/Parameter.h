@@ -380,6 +380,12 @@ class Parameter
 {
   public:
     Parameter();
+    Parameter(const Parameter &) = default;
+    Parameter &operator=(const Parameter &) = default;
+    // The virtual destructor suppresses implicit moves. Preserve ownership
+    // transfer for strings and optional metadata during prepared FX adoption.
+    Parameter(Parameter &&) = default;
+    Parameter &operator=(Parameter &&) = default;
 
   private:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,

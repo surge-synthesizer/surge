@@ -870,6 +870,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             contextMenu.addSeparator();
 
             contextMenu.addItem(Surge::GUI::toOSCase("Copy Scene"), [this]() {
+#if SURGE_WEB
+                std::lock_guard<std::mutex> fxGuard(synth->fxSpawnMutex);
+#endif
                 synth->storage.clipboard_copy(cp_scene, current_scene, -1);
             });
 
@@ -878,6 +881,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 synth->storage.get_clipboard_type() == cp_scene, // enabled
                 false, [this]() {
                     undoManager()->pushPatch();
+#if SURGE_WEB
+                    std::lock_guard<std::mutex> fxGuard(synth->fxSpawnMutex);
+#endif
                     synth->storage.clipboard_paste(
                         cp_scene, current_scene, -1, ms_original,
                         [this](int p, modsources m) {
@@ -885,6 +891,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             return res;
                         },
                         [this](std::unique_ptr<Surge::FxClipboard::Clipboard> &f, int cge) {
+#if SURGE_WEB
+                            synth->browserIRReloadEdits[cge].finish();
+#endif
                             Surge::FxClipboard::pasteFx(&(synth->storage), &synth->fxsync[cge], *f);
                             synth->fx_reload[cge] = true;
                         });

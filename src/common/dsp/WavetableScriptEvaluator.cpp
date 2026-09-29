@@ -316,7 +316,7 @@ struct LuaWTEvaluator::Details
             LOG("creating Lua State ");
 
             L = luaL_newstate();
-            luaL_openlibs(L);
+            Surge::LuaSupport::openLibraries(L);
 
             auto wg = Surge::LuaSupport::SGLD("WavetableScript::prelude", L);
 
@@ -545,12 +545,12 @@ LuaWTEvaluator::populateWavetable(const std::function<bool()> &canceled, bool pr
 }
 
 #if HAS_LUA
-static void loadWtscriptSnapshots(const void *compData, size_t blobSize, SurgeStorage *storage,
+static bool loadWtscriptSnapshots(const void *compData, size_t blobSize, SurgeStorage *storage,
                                   OscillatorStorage *oscdata, std::string *errorOut)
 {
     auto decompressedSize = ZSTD_getFrameContentSize(compData, blobSize);
     if (decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN || decompressedSize == ZSTD_CONTENTSIZE_ERROR)
-        return;
+        return false;
 
     // the size is a claim in the frame header, not a measurement, so bound it before allocating
     if (decompressedSize > maxArbitraryBlockStorageSize)
@@ -562,24 +562,26 @@ static void loadWtscriptSnapshots(const void *compData, size_t blobSize, SurgeSt
                               "not be loaded!",
                               decompressedSize, maxArbitraryBlockStorageSize / (1024 * 1024)),
                   "Load Error");
-        return;
+        return false;
     }
 
     std::vector<std::uint8_t> decompressed(decompressedSize);
     decompressedSize = ZSTD_decompress(decompressed.data(), decompressedSize, compData, blobSize);
     if (ZSTD_isError(decompressedSize))
-        return;
+        return false;
 
     if (decompressedSize < sizeof(binn_struct))
-        return;
+        return false;
 
     int sz = decompressedSize;
     if (!binn_is_valid_ex(decompressed.data(), NULL, NULL, &sz))
-        return;
+        return false;
 
     binn *b = binn_open_ex(decompressed.data(), sz);
+    if (!b) return false;
     SurgePatch::readOscSnapshotsFromBinn(b, *oscdata, storage);
     binn_free(b);
+    return true;
 }
 #endif
 
@@ -640,7 +642,14 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
         }
 
         const void *compData = fileData.data() + xmlOffset + xmlSize;
-        loadWtscriptSnapshots(compData, blobSize, storage, oscdata, errorOut);
+        std::string snapshotError;
+        if (!loadWtscriptSnapshots(compData, blobSize, storage, oscdata, &snapshotError))
+        {
+            emitError(errorOut, storage,
+                      snapshotError.empty() ? "Invalid wavetable script snapshot data!" : snapshotError,
+                      "Load Error");
+            return std::nullopt;
+        }
     }
 
     // Parse only the XML portion
@@ -704,16 +713,11 @@ bool LuaWTEvaluator::loadWtscriptMetadata(const fs::path &filename, SurgeStorage
                                           OscillatorStorage *oscdata, std::string *errorOut)
 {
 #if HAS_LUA
-    {
-        std::lock_guard<std::mutex> g(storage->wtSnapshotMutex);
-        for (auto &snap : oscdata->wtSnapshots)
-        {
-            snap.reset();
-        }
-        oscdata->wtSnapshotsVersion++;
-    }
-
-    auto data = parseWtscript(filename, storage, oscdata, errorOut);
+    // Parsing binary files may populate snapshots before XML validation ends.
+    // Stage the entire import so a rejected file cannot clear or partially
+    // replace the oscillator's existing snapshot inputs.
+    auto candidate = std::make_unique<OscillatorStorage>();
+    auto data = parseWtscript(filename, storage, candidate.get(), errorOut);
     if (!data)
     {
         return false;
@@ -721,7 +725,12 @@ bool LuaWTEvaluator::loadWtscriptMetadata(const fs::path &filename, SurgeStorage
 
     oscdata->wavetable_script_nframes = data->nframes;
     oscdata->wavetable_script_res_base = data->res_base;
-    oscdata->wavetable_script = data->script;
+    oscdata->wavetable_script = std::move(data->script);
+    {
+        std::lock_guard<std::mutex> g(storage->wtSnapshotMutex);
+        oscdata->wtSnapshots = std::move(candidate->wtSnapshots);
+        oscdata->wtSnapshotsVersion++;
+    }
     return true;
 #else
     return false;

@@ -549,6 +549,25 @@ WavetableSnapshotMenuComponent::WavetableSnapshotMenuComponent(const std::string
 
     setAccessible(true);
     setTitle(label);
+#if SURGE_WEB
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    for (int i = 0; i <= n_oscs; ++i)
+    {
+        auto title = i < n_oscs ? "Capture " + sceneName + " Osc " + std::to_string(i + 1)
+                               : std::string("Load .wav/.wt");
+        auto action = i < n_oscs ? static_cast<Action>(i) : Action::LoadFromFile;
+        auto button = std::make_unique<juce::TextButton>(title);
+        button->setTitle(title);
+        button->setAlpha(0.f);
+        button->setInterceptsMouseClicks(false, false);
+        button->onClick = [this, action]() {
+            callback(action);
+            triggerMenuItem();
+        };
+        addAndMakeVisible(*button);
+        browserActions[i] = std::move(button);
+    }
+#endif
 }
 
 void WavetableSnapshotMenuComponent::getIdealSize(int &idealWidth, int &idealHeight)
@@ -606,6 +625,9 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
         int w = SST_STRING_WIDTH_INT(boldFt, oscLabel);
         auto box = bottomRow.withLeft(x).withWidth(w);
         oscHitBoxes[i] = box;
+#if SURGE_WEB
+        browserActions[i]->setBounds(box);
+#endif
         x += w + 6;
 
         if (hoveredOsc == i)
@@ -627,6 +649,9 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
         int w = SST_STRING_WIDTH_INT(boldFt, fileLabel) + 4;
         auto box = bottomRow.withLeft(x).withWidth(w);
         loadFileHitBox = box;
+#if SURGE_WEB
+        browserActions[n_oscs]->setBounds(box);
+#endif
 
         if (hoveredFile)
         {

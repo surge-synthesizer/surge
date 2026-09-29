@@ -86,10 +86,12 @@ class AliasOscillator : public Oscillator
     virtual void init_default_values();
     virtual void init_extra_config()
     {
-        oscdata->extraConfig.nData = 16;
-        for (auto i = 0; i < oscdata->extraConfig.nData; ++i)
-            oscdata->extraConfig.data[i] = 1.f / (i + 1);
+        auto extra = oscdata->extraConfig.edit();
+        extra->nData = 16;
+        for (auto i = 0; i < extra->nData; ++i)
+            extra->data[i] = 1.f / (i + 1);
     }
+    bool displayInstance{false};
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
     template <bool do_FM, bool do_bitcrush, AliasOscillator::ao_waves wavetype>

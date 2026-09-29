@@ -221,11 +221,15 @@ class GotoLine : public TextfieldPopup
     virtual void show() override;
     virtual void hide() override;
     void focusLost(FocusChangeType) override;
+#if SURGE_WEB
+    void textEditorTextChanged(juce::TextEditor &) override;
+#endif
     int currentLine;
     int getCurrentLine();
     virtual void onClick(std::unique_ptr<TextfieldButton> &btn) override;
 
   private:
+    void updateCaretFromText();
     int startScroll;
     juce::CodeDocument::Position startCaretPosition;
 };

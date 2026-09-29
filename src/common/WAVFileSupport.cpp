@@ -684,6 +684,7 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
         unsigned int tableSize = nChannels * bitsPerSample / 8 * wt->n_tables * wt->size;
         unsigned int dataSize = 4 +                 // 'WAVE'
                                 4 + 4 + 18 +        // fmt chunk
+                                4 + 4 + 4 +         // fact chunk
                                 4 + 4 + tableSize + // data chunk
                                 4 + 4 + 8;          // srgo/srge chunk
 
@@ -696,24 +697,29 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
                 << "<!>" << wt->size << " 10000000" // Flag set for linear interpolation
                 << " wavetable Surge-XT"; // No space and hyphen to keep string length even
             clm_string = clm_string_stream.str();
-            dataSize += 4 + 4 + clm_string.length() + 1; // null term
+            dataSize += 4 + 4 + clm_string.length() + 1 + ((clm_string.length() + 1) % 2); // null and padding
         }
 
         if (!metadata.empty())
-            dataSize += 4 + 4 + metadata.length() + 1; // null term
+            dataSize += 4 + 4 + metadata.length() + 1 + ((metadata.length() + 1) % 2); // null and padding
 
         w4i(dataSize);
         wfp.sputn("WAVE", 4);
 
         // OK so format chunk
         wfp.sputn("fmt ", 4);
-        w4i(16);
+        w4i(18);
         w2i(audioFormat);
         w2i(nChannels);
         w4i(sampleRate);
-        w4i(sampleRate * nChannels * bitsPerSample);
-        w2i(bitsPerSample * nChannels);
+        w4i(sampleRate * nChannels * bitsPerSample / 8);
+        w2i(bitsPerSample * nChannels / 8);
         w2i(bitsPerSample);
+        w2i(0); // no format extension
+
+        wfp.sputn("fact", 4);
+        w4i(4);
+        w4i(wt->n_tables * wt->size);
 
         if (!isSample)
         {
@@ -735,6 +741,7 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
             wfp.sputn("clm ", 4);
             w4i(clm_string.length() + 1);
             wfp.sputn(clm_string.c_str(), clm_string.length() + 1);
+            if ((clm_string.length() + 1) % 2) wfp.sputc(0);
         }
 
         wfp.sputn("data", 4);
@@ -751,6 +758,7 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
             wfp.sputn("wtmd", 4);
             w4i(metadata.length() + 1);
             wfp.sputn(metadata.c_str(), metadata.length() + 1);
+            if ((metadata.length() + 1) % 2) wfp.sputc(0);
         }
     }
 

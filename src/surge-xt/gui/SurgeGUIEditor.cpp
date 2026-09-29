@@ -156,10 +156,18 @@ struct DroppedUserDataEntries
     }
 };
 
+#if SURGE_WEB
+#include "../../surge-web/juce/BrowserArchiveImport.h"
+#endif
+
 class DroppedUserDataHandler
 {
     std::unique_ptr<juce::ZipFile> zipFile;
     DroppedUserDataEntries entries;
+    std::string extractionError;
+#if SURGE_WEB
+    std::unique_ptr<BrowserArchiveImport> archiveImport;
+#endif
 
     void initEntries()
     {
@@ -253,6 +261,10 @@ class DroppedUserDataHandler
 
     bool uncompressEntry(int iEntry, fs::path uncompressTo)
     {
+#if SURGE_WEB
+        if (zipFile->getEntry(iEntry)->isSymbolicLink) return false;
+        uncompressTo = archiveImport->stage(uncompressTo);
+#endif
         auto res = zipFile->uncompressEntry(iEntry, juce::File(path_to_string(uncompressTo)));
         if (res.failed())
         {
@@ -286,6 +298,7 @@ class DroppedUserDataHandler
     }
 
     DroppedUserDataEntries getEntries() const { return entries; }
+    const std::string &getExtractionError() const { return extractionError; }
 
     bool extractEntries(SurgeStorage *storage)
     {
@@ -294,6 +307,11 @@ class DroppedUserDataHandler
             return false;
         }
 
+#if SURGE_WEB
+        try
+        {
+            archiveImport = std::make_unique<BrowserArchiveImport>(storage->userDataPath);
+#endif
         for (int iEntry : entries.fxPresets)
         {
             if (!uncompressEntry(iEntry, storage->userFXPath))
@@ -353,6 +371,29 @@ class DroppedUserDataHandler
             }
         }
 
+#if SURGE_WEB
+        // Validate every fully extracted skin before committing any category.
+        // A bad skin in a mixed archive must not replace patches or wavetables.
+        for (const auto &skin : entries.skins)
+        {
+            if (skin.empty()) continue;
+            auto filename = zipFile->getEntry(skin.front())->filename;
+            auto end = filename.indexOfIgnoreCase(".surge-skin") +
+                       static_cast<int>(std::string(".surge-skin").size());
+            auto candidate = archiveImport->stage(storage->userSkinsPath) /
+                             string_to_path(filename.substring(0, end).toStdString());
+            Surge::GUI::SkinDB::get()->validateSkinForImport(candidate);
+        }
+        archiveImport->commit();
+        archiveImport.reset();
+        }
+        catch (const std::exception &error)
+        {
+            extractionError = error.what();
+            archiveImport.reset();
+            return false;
+        }
+#endif
         return true;
     }
 };
@@ -419,6 +460,16 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
         &(this->synth->storage), Surge::Storage::NeverMoveKeyboardFocus, false));
 
     currentSkin = Surge::GUI::SkinDB::get()->defaultSkin(&(this->synth->storage));
+#if SURGE_WEB
+    for (const auto &entry : Surge::GUI::SkinDB::get()->getAvailableSkins())
+        if (entry.rootType == Surge::GUI::FACTORY && entry.matchesSkin(currentSkin))
+        {
+            selectSkinFromEntry(entry);
+            currentSkin = Surge::GUI::SkinDB::get()->getSkin(
+                Surge::GUI::SkinDB::get()->getDefaultSkinEntry());
+            break;
+        }
+#endif
 
     // init the size of the plugin
     initialZoomFactor =
@@ -505,11 +556,16 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     juceEditor->processor.undoManager->resetEditor(this);
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     synth->storage.uiThreadChecksTunings = true;
+#endif
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+#if SURGE_WEB
+    EM_ASM({ if (SurgeFactory.skinRequests.delete($0)) SurgeBrowser.reportFile(""); }, browserSkinRequest);
+#endif
     juce::PopupMenu::dismissAllActiveMenus();
     juce::Desktop::getInstance().removeFocusChangeListener(this);
     synth->removeModulationAPIListener(this);
@@ -518,7 +574,9 @@ SurgeGUIEditor::~SurgeGUIEditor()
     populateDawExtraState(synth); // If I must die, leave my state for future generations
     synth->storage.getPatch().dawExtraState.isPopulated = isPop;
     synth->storage.removeErrorListener(this);
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     synth->storage.uiThreadChecksTunings = false;
+#endif
 }
 
 void SurgeGUIEditor::forceLFODisplayRebuild() { lfoDisplay->repaint(); }
@@ -529,6 +587,25 @@ void SurgeGUIEditor::idle()
     {
         return;
     }
+#if SURGE_WEB
+    if (browserPendingSkin)
+    {
+        auto status = EM_ASM_INT({ return SurgeFactory.skinRequests.get($0) || 0; }, browserSkinRequest);
+        if (status)
+        {
+            auto entry = *browserPendingSkin;
+            browserPendingSkin.reset();
+            EM_ASM({ SurgeFactory.skinRequests.delete($0); }, browserSkinRequest);
+            if (status > 0)
+            {
+                setupSkinFromEntry(entry);
+                synth->refresh_editor = true;
+                Surge::Storage::updateUserDefaultValue(&synth->storage, Surge::Storage::DefaultSkin, entry.name);
+                Surge::Storage::updateUserDefaultValue(&synth->storage, Surge::Storage::DefaultSkinRootType, entry.rootType);
+            }
+        }
+    }
+#endif
 
     if (noProcessingOverlay)
     {
@@ -3950,8 +4027,31 @@ std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
     return lurl;
 }
 
+void SurgeGUIEditor::selectSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
+{
+#if SURGE_WEB
+    EM_ASM({ if (SurgeFactory.skinRequests.delete($0)) SurgeBrowser.reportFile(""); }, browserSkinRequest);
+    browserPendingSkin.reset();
+    if (entry.rootType == Surge::GUI::FACTORY)
+    {
+        browserPendingSkin = entry;
+        auto path = entry.root + entry.name;
+        browserSkinRequest = EM_ASM_INT({ return SurgeFactory.requestSkin(UTF8ToString($0)); }, path.c_str());
+        return;
+    }
+#endif
+    setupSkinFromEntry(entry);
+    synth->refresh_editor = true;
+    Surge::Storage::updateUserDefaultValue(&synth->storage, Surge::Storage::DefaultSkin, entry.name);
+    Surge::Storage::updateUserDefaultValue(&synth->storage, Surge::Storage::DefaultSkinRootType, entry.rootType);
+}
+
 void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
 {
+#if SURGE_WEB
+    EM_ASM({ if (SurgeFactory.skinRequests.delete($0)) SurgeBrowser.reportFile(""); }, browserSkinRequest);
+    browserPendingSkin.reset();
+#endif
     auto *db = Surge::GUI::SkinDB::get();
     auto s = db->getSkin(entry);
     this->currentSkin = s;
@@ -5401,7 +5501,9 @@ bool SurgeGUIEditor::onDrop(const juce::String &fname)
 
         if (entries.totalSize() <= 0)
         {
-            std::cout << "No entries in ZIP file!" << std::endl;
+            synth->storage.reportError(
+                "This ZIP archive is invalid or contains no supported Surge files.",
+                "Archive Import Error");
             return false;
         }
 
@@ -5456,6 +5558,11 @@ bool SurgeGUIEditor::onDrop(const juce::String &fname)
 
             if (!zipHandler->extractEntries(storage))
             {
+                storage->reportError(
+                    zipHandler->getExtractionError().empty()
+                        ? "Unable to finish installing this archive. Check the archive and available storage."
+                        : zipHandler->getExtractionError(),
+                    "Archive Import Error");
                 return;
             }
 
@@ -6075,6 +6182,16 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             topOverlay->onClose();
             return true;
         }
+#if SURGE_WEB
+        // During browser catalog indexing the search field is disabled and
+        // cannot take DOM/JUCE focus. Escape still needs to cancel the visible
+        // search from the editor; indexing continues independently.
+        if (patchSelector && patchSelector->isTypeaheadSearchOn)
+        {
+            patchSelector->toggleTypeAheadSearch(false);
+            return true;
+        }
+#endif
     }
 
     bool triedKey = Surge::Widgets::isAccessibleKey(key);
@@ -7162,7 +7279,12 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
         initialFile = juce::File(path_to_string(path));
         title = "Export Wavetable Frames";
         chooserFlags =
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories;
+#if SURGE_WEB
+            juce::FileBrowserComponent::saveMode |
+#else
+            juce::FileBrowserComponent::openMode |
+#endif
+            juce::FileBrowserComponent::canSelectDirectories;
     }
     else
     {
@@ -7171,9 +7293,41 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
         initialFile = juce::File(defaultFilename.u8string());
     }
 
+    // A browser/native asynchronous picker may stay open across scene and patch
+    // changes. Freeze the selected table and its metadata before handing control
+    // to the picker; never read the replacement oscillator in its callback.
+    namespace WS = Surge::WavetableScript;
+    auto request = std::make_shared<WS::WtGenJobRequest>();
+    std::shared_ptr<Wavetable> selectedTable;
+    const auto metadata = synth->storage.make_wt_metadata(&oscdata);
+    if (!oscdata.wavetable_script.empty())
+    {
+        const int resBase = (exportFormat == SERUM) ? 7
+                            : (exportFormat == VCVRACK) ? 4
+                                                       : oscdata.wavetable_script_res_base;
+        request->scene = current_scene;
+        request->osc = current_osc[current_scene];
+        request->mode = WS::WtGenMode::Generate;
+        request->script = oscdata.wavetable_script;
+        request->resolution = WS::resolutionForResBase(resBase);
+        request->frameCount = oscdata.wavetable_script_nframes;
+        request->snapshot = WS::SnapshotBundle::current(&synth->storage, oscdata);
+    }
+    else
+    {
+        // An undo or clipboard replacement can precede audio-thread adoption.
+        // Capture the authoritative control snapshot, as patch/undo copies do,
+        // rather than the previous buffers still being rendered by audio.
+        selectedTable = std::make_shared<Wavetable>();
+        synth->storage.copyOscillatorWavetable(current_scene, current_osc[current_scene],
+                                               *selectedTable);
+        if (!selectedTable->everBuilt || selectedTable->n_tables == 0 || selectedTable->size <= 0)
+            selectedTable.reset();
+    }
+
     fileChooser = std::make_unique<juce::FileChooser>(title, initialFile);
     fileChooser->launchAsync(
-        chooserFlags, [this, &oscdata, exportFormat, wtName](const juce::FileChooser &c) {
+        chooserFlags, [this, request, selectedTable, metadata, exportFormat, wtName](const juce::FileChooser &c) {
             auto result = c.getResults();
 
             if (result.isEmpty() || result.size() > 1)
@@ -7185,30 +7339,11 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                 return;
             }
 
-            namespace WS = Surge::WavetableScript;
-
-            // Both paths hand off a private Wavetable to export: the generator's own buffer for a
-            // scripted table, or a copy of the live oscillator wavetable for anything else.
-            std::unique_ptr<Wavetable> exportWt;
-
-            if (!oscdata.wavetable_script.empty())
+            std::shared_ptr<Wavetable> exportWt = selectedTable;
+            if (!request->script.empty())
             {
-                int resBase = (exportFormat == SERUM)     ? 7
-                              : (exportFormat == VCVRACK) ? 4
-                                                          : oscdata.wavetable_script_res_base;
-
-                WS::WtGenJobRequest req;
-                req.scene = current_scene;
-                req.osc = current_osc[current_scene];
-                req.mode = WS::WtGenMode::Generate;
-                req.generateTarget = nullptr;
-                req.script = oscdata.wavetable_script;
-                req.resolution = WS::resolutionForResBase(resBase);
-                req.frameCount = oscdata.wavetable_script_nframes;
-                req.snapshot = WS::SnapshotBundle::current(&this->synth->storage, oscdata);
-
                 // Export blocks the message thread, the job inserts before pending jobs.
-                auto r = this->synth->storage.wtGenService->submitBlocking(std::move(req));
+                auto r = this->synth->storage.wtGenService->submitBlocking(std::move(*request));
 
                 if (!r.ok || !r.exportOut)
                 {
@@ -7216,35 +7351,16 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                     {
                         this->synth->storage.reportError(r.error, "Export Error");
                     }
+                    return;
                 }
                 else
                 {
                     exportWt = std::move(r.exportOut);
                 }
             }
-            else
-            {
-                // Copy the live wavetable under waveTableDataMutex so the read can't race a
-                // concurrent BuildWT, then export it lock-free.
-                auto copy = std::make_unique<Wavetable>();
-                {
-                    std::lock_guard<std::mutex> lock(this->synth->storage.waveTableDataMutex);
-                    if (oscdata.wt.everBuilt && oscdata.wt.n_tables > 0 && oscdata.wt.size > 0)
-                    {
-                        copy->Copy(&oscdata.wt);
-                        exportWt = std::move(copy);
-                    }
-                }
-
-                if (!exportWt)
-                {
-                    this->synth->storage.reportError("This wavetable has no frames to export!",
-                                                     "Export Error");
-                }
-            }
-
             if (!exportWt)
             {
+                synth->storage.reportError("This wavetable has no frames to export!", "Export Error");
                 return;
             }
 
@@ -7265,7 +7381,6 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                     fsp.replace_extension(".wav");
                 }
 
-                std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
                 if (exportFormat == WT)
                 {
                     if (!this->synth->storage.export_wt_wt_portable(fsp, exportWt.get(), metadata))
@@ -7288,6 +7403,15 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
 
 void SurgeGUIEditor::loadWavetableScript()
 {
+#if SURGE_WEB
+    std::unique_lock<std::mutex> targetLock(synth->patchLoadSpawnMutex, std::try_to_lock);
+    if (!targetLock.owns_lock() || synth->halt_engine.load(std::memory_order_acquire))
+    {
+        synth->storage.reportError("Wait for the current patch to finish loading, then import the script again.",
+                                   "Script Import Unavailable");
+        return;
+    }
+#endif
     auto wtPath = this->synth->storage.userWavetablesPath / "Scripted";
     wtPath = Surge::Storage::getUserDefaultPath(&this->synth->storage,
                                                 Surge::Storage::LastWavetablePath, wtPath);
@@ -7295,18 +7419,75 @@ void SurgeGUIEditor::loadWavetableScript()
     juce::String fileTypes = "*.wtscript";
 
     auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+#if SURGE_WEB
+    struct ImportTarget
+    {
+        unsigned patchGeneration;
+        int slot, type, frames, resolution;
+        uint64_t wavetableToken, snapshotVersion;
+        std::string script;
+        juce::Component::SafePointer<Surge::Overlays::WavetableScriptEditor> editor;
+        juce::String draft;
+    };
+    const int slot = current_scene * n_oscs + current_osc[current_scene];
+    const auto target = [&]() {
+        std::lock_guard<std::mutex> lock(synth->storage.wtSnapshotMutex);
+        auto result = ImportTarget{synth->browserPatchGeneration.load(std::memory_order_acquire), slot,
+                            oscdata.type.val.i, oscdata.wavetable_script_nframes,
+                            oscdata.wavetable_script_res_base,
+                            synth->storage.wtGenPublishToken[slot].load(std::memory_order_acquire),
+                            oscdata.wtSnapshotsVersion, oscdata.wavetable_script, {}, {}};
+        if (auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR);
+            ol && ol->scene * n_oscs + ol->osc_id == slot)
+        {
+            result.editor = ol;
+            result.draft = ol->mainDocument->getAllContent();
+        }
+        return result;
+    }();
+#endif
 
     fileChooser = std::make_unique<juce::FileChooser>(
         "Select Wavetable script", juce::File(path_to_string(wtPath)), fileTypes);
     fileChooser->launchAsync(
         juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-        [this, &oscdata, wtPath](const juce::FileChooser &c) {
+        [this, &oscdata, wtPath
+#if SURGE_WEB
+         , target
+#endif
+        ](const juce::FileChooser &c) {
             auto ress = c.getResults();
 
             if (ress.size() != 1)
             {
                 return;
             }
+#if SURGE_WEB
+            // A browser picker can remain open while patch loads or subsequent
+            // edits complete. Never apply its result to a replacement target.
+            std::unique_lock<std::mutex> importLock(synth->patchLoadSpawnMutex, std::try_to_lock);
+            bool changed = !importLock.owns_lock() ||
+                synth->halt_engine.load(std::memory_order_acquire) ||
+                synth->browserPatchGeneration.load(std::memory_order_acquire) != target.patchGeneration;
+            if (!changed)
+            {
+                std::lock_guard<std::mutex> snapshotLock(synth->storage.wtSnapshotMutex);
+                changed = oscdata.type.val.i != target.type ||
+                    oscdata.wavetable_script != target.script ||
+                    oscdata.wavetable_script_nframes != target.frames ||
+                    oscdata.wavetable_script_res_base != target.resolution ||
+                    oscdata.wtSnapshotsVersion != target.snapshotVersion ||
+                    (target.editor && target.editor->mainDocument->getAllContent() != target.draft) ||
+                    synth->storage.wtGenPublishToken[target.slot].load(std::memory_order_acquire) != target.wavetableToken;
+            }
+            if (changed)
+            {
+                synth->storage.reportError(
+                    "The oscillator changed while the script picker was open. The current state was retained.",
+                    "Script Import Canceled");
+                return;
+            }
+#endif
 
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
@@ -7466,7 +7647,17 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             std::string xmlStr;
             xmlStr << doc;
 
-            std::ofstream outFile(fullLocation, std::ios::binary);
+#if SURGE_WEB
+            // Keep the previous script intact if writing or compression fails.
+            // The temporary lives beside the destination so rename commits it
+            // within the same browser filesystem after all bytes are closed.
+            juce::TemporaryFile temporary{juce::File(path_to_string(fullLocation))};
+            const auto writeLocation =
+                string_to_path(temporary.getFile().getFullPathName().toStdString());
+#else
+            const auto &writeLocation = fullLocation;
+#endif
+            std::ofstream outFile(writeLocation, std::ios::binary);
             if (!outFile)
             {
                 storage->reportError("Failed to open file for writing.", "Write Error");
@@ -7514,6 +7705,16 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                 return;
             }
 
+#if SURGE_WEB
+            std::error_code commitError;
+            fs::rename(writeLocation, fullLocation, commitError);
+            if (commitError)
+            {
+                storage->reportError("Failed to replace the saved script. The previous file was retained.",
+                                     "Write Error");
+                return;
+            }
+#endif
             storage->refresh_wtlist();
         };
 

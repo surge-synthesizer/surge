@@ -22,6 +22,7 @@
 
 #include "WtGenService.h"
 #include "SurgeStorage.h"
+#include <stdexcept>
 
 namespace Surge
 {
@@ -94,6 +95,12 @@ WtGenService::~WtGenService()
     {
         thread.join();
     }
+#if SURGE_WEB
+    // Deferred tickets refer to this service's status. Fulfill them while that
+    // accounting state is still alive, without requiring another browser tick.
+    std::lock_guard<std::mutex> guard(storage->waveTableDataMutex);
+    for (auto &publication : storage->browserGeneratedWavetables) publication.reset();
+#endif
 }
 
 int WtGenService::denseIdx(int scene, int osc) { return scene * n_oscs + osc; }
@@ -213,16 +220,61 @@ void WtGenService::runThread()
 
                 if (req.mode == WtGenMode::Generate && req.generateTarget)
                 {
-                    // Live-osc publish: BuildWT into the target under waveTableDataMutex. Only the
-                    // buffers cross here; current_id/queue_type/display name are poller-owned.
-                    // Re-check the publish token inside the lock: if the osc was replaced since
-                    // submit, skip.
-                    std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
-                    if (storage->wtGenPublishToken[idx] == req.publishToken)
+#if SURGE_WEB
+                    if (storage->browserManagesWavetables)
                     {
-                        req.generateTarget->wt.BuildWT(gen.samples.get(), gen.header,
-                                                       gen.header.flags & wtf_is_sample);
-                        resp.published = true;
+                        using Publication = SurgeStorage::BrowserGeneratedWavetable;
+                        auto publication = std::make_shared<Publication>();
+                        publication->table = std::make_unique<Wavetable>();
+                        publication->publishToken = req.publishToken;
+                        if (!publication->table->BuildWT(gen.samples.get(), gen.header,
+                                                         gen.header.flags & wtf_is_sample))
+                            throw std::runtime_error("Unable to build generated wavetable.");
+                        // Retain the response and accounting ticket until the control
+                        // thread retires this publication. The worker remains free to run
+                        // previews and synchronous export jobs while audio is stopped.
+                        struct Deferred
+                        {
+                            WtGenJobResponse response;
+                            std::promise<WtGenJobResponse> promise;
+                            WtGenStatus::Ticket ticket;
+                        };
+                        auto deferred = std::make_shared<Deferred>();
+                        deferred->response = std::move(resp);
+                        deferred->response.ok = true;
+                        publication->complete = [deferred, owner = storage, idx,
+                                                 token = req.publishToken](bool published) {
+                            // A patch may change after the swap but before retirement.
+                            // Do not let its late result relabel the replacement oscillator.
+                            deferred->response.published = published &&
+                                owner->wtGenPublishToken[idx].load(std::memory_order_acquire) == token;
+                            deferred->promise.set_value(std::move(deferred->response));
+                        };
+                        {
+                            std::lock_guard<std::mutex> guard(storage->waveTableDataMutex);
+                            const bool valid = storage->wtGenPublishToken[idx] == req.publishToken && !cancelPred();
+                            deferred->promise = std::move(qj.promise);
+                            deferred->ticket = std::move(qj.ticket);
+                            if (valid) storage->browserGeneratedWavetables[idx] = publication;
+                            else publication->state.store(Publication::cancelled);
+                        }
+                        evaluator.setErrorOut(nullptr);
+                        continue;
+                    }
+                    else
+#endif
+                    {
+                        // Live-osc publish: BuildWT into the target under waveTableDataMutex. Only the
+                        // buffers cross here; current_id/queue_type/display name are poller-owned.
+                        // Re-check the publish token inside the lock: if the osc was replaced since
+                        // submit, skip.
+                        std::lock_guard<std::mutex> g(storage->waveTableDataMutex);
+                        if (storage->wtGenPublishToken[idx] == req.publishToken)
+                        {
+                            req.generateTarget->wt.BuildWT(gen.samples.get(), gen.header,
+                                                           gen.header.flags & wtf_is_sample);
+                            resp.published = true;
+                        }
                     }
                 }
                 else if (req.mode == WtGenMode::Generate)

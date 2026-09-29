@@ -31,7 +31,9 @@ set(ZSTD_BUILD_STATIC ON)
 set(ZSTD_BUILD_SHARED OFF)
 surge_add_lib_subdirectory(zstd)
 
-if(NOT SURGE_SKIP_LUA)
+if(SURGE_PORTABLE_LUA)
+  include(${CMAKE_SOURCE_DIR}/cmake/portable-lua.cmake)
+elseif(NOT SURGE_SKIP_LUA)
   surge_add_lib_subdirectory(luajitlib)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
 else()
@@ -45,6 +47,9 @@ set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases f
 surge_add_lib_subdirectory(sst/sst-basic-blocks)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
+if(EMSCRIPTEN)
+  include(${CMAKE_SOURCE_DIR}/cmake/wasm-dsp-overlay.cmake)
+endif()
 surge_add_lib_subdirectory(sst/sst-waveshapers)
 
 target_compile_definitions(sst-waveshapers INTERFACE SURGE_XT_1X_WST=1)
@@ -97,6 +102,7 @@ add_library(${PROJECT_NAME}
   SkinModelImpl.cpp
   StringOps.h
   SurgeParamConfig.h
+  PatchFileValidation.cpp
   SurgePatch.cpp
   SurgeStorage.cpp
   SurgeStorage.h
@@ -135,6 +141,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/ConditionerEffect.cpp
   dsp/effects/ConditionerEffect.h
   dsp/effects/ConvolutionEffect.cpp
+  dsp/effects/ConvolutionKernelWorker.cpp
+  dsp/effects/EffectRetirementWorker.cpp
   dsp/effects/ConvolutionEffect.h
   dsp/effects/DelayEffect.cpp
   dsp/effects/DelayEffect.h
@@ -274,7 +282,10 @@ add_library(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SURGE_COMPILE_BLOCK_SIZE=${SURGE_COMPILE_BLOCK_SIZE})
 
-if(APPLE)
+if(EMSCRIPTEN)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC SURGE_WEB=1)
+  target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
+elseif(APPLE)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MAC=1)
   target_link_libraries(${PROJECT_NAME}
     PUBLIC surge::simde

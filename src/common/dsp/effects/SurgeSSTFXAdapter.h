@@ -172,6 +172,13 @@ template <typename T> struct SurgeSSTFXBase : T
 {
     SurgeSSTFXBase(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : T(storage, fxdata, pd) {}
 
+    void rebindParameterStorage(FxStorage *parameters, pdata *values) override
+    {
+        Effect::rebindParameterStorage(parameters, values);
+        T::fxStorage = parameters;
+        T::valueStorage = values;
+    }
+
     void init() override
     {
         // the values are not copied to the modulation array in all cases at init.

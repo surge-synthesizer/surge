@@ -480,6 +480,9 @@ class SkinDB : public juce::DeletedAtShutdown
     }
 
     std::optional<Entry> installSkinFromPathToUserDirectory(SurgeStorage *, const fs::path &from);
+#if SURGE_WEB
+    void validateSkinForImport(const fs::path &from);
+#endif
 
   private:
     SkinDB();

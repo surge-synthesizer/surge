@@ -45,7 +45,19 @@
 
 inline vFloat vLoad1(float f) { return SIMD_MM(load1_ps)(&f); }
 
+#if SURGE_WEB
+#include "VocoderEnvelope.h"
+inline vFloat vSqrtFast(vFloat v)
+{
+    alignas(16) float lanes[4];
+    SIMD_MM(store_ps)(lanes, v);
+    for (auto &lane : lanes)
+        lane = Surge::DSP::vocoderEnvelopeRoot(lane);
+    return SIMD_MM(load_ps)(lanes);
+}
+#else
 inline vFloat vSqrtFast(vFloat v) { return SIMD_MM(rcp_ps)(SIMD_MM(rsqrt_ps)(v)); }
+#endif
 
 inline float vSum(vFloat x)
 {

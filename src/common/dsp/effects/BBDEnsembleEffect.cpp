@@ -29,6 +29,21 @@
 namespace mech = sst::basic_blocks::mechanics;
 using namespace sst::waveshapers;
 
+namespace
+{
+inline float ensembleDelayTime(float scale1, float value1, float scale2, float value2, float center)
+{
+#if SURGE_WEB
+    // Match the native ARM64 fmadd followed by fadd. Rounding here controls
+    // which BBD clock steps fall within the current audio sample.
+    return std::fma(scale1, value1, scale2 * value2) + center;
+#else
+    return scale1 * value1 + scale2 * value2 + center;
+#endif
+}
+} // namespace
+
+
 std::string ensemble_stage_name(int i)
 {
     switch (i)
@@ -252,9 +267,9 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
         delR.write(R[s]);
 
         // OK so look at the diagram in #3743
-        float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
-        float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
-        float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
+        float t1 = ensembleDelayTime(del1, modlfos[0][0].value(), del2, modlfos[1][0].value(), del0);
+        float t2 = ensembleDelayTime(del1, modlfos[0][1].value(), del2, modlfos[1][1].value(), del0);
+        float t3 = ensembleDelayTime(del1, modlfos[0][2].value(), del2, modlfos[1][2].value(), del0);
 
         float ltap1 = t1;
         float ltap2 = t2;
@@ -363,9 +378,9 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             R[s] = storage->lookup_waveshape(WaveshaperType::wst_soft, R[s] + fbStateR);
 
             // OK so look at the diagram in #3743
-            float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
-            float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
-            float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
+            float t1 = ensembleDelayTime(del1, modlfos[0][0].value(), del2, modlfos[1][0].value(), del0);
+            float t2 = ensembleDelayTime(del1, modlfos[0][1].value(), del2, modlfos[1][1].value(), del0);
+            float t3 = ensembleDelayTime(del1, modlfos[0][2].value(), del2, modlfos[1][2].value(), del0);
 
             delL1.setDelayTime(t1);
             delL2.setDelayTime(t2);

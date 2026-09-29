@@ -1326,7 +1326,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
     }
 }
 
-unsigned int SurgePatch::save_patch(void **data)
+unsigned int SurgePatch::save_patch(void **data, bool forUndo)
 {
     using namespace sst::io;
 
@@ -1336,7 +1336,7 @@ unsigned int SurgePatch::save_patch(void **data)
     patch_header header;
     std::vector<std::uint8_t> arbdata;
 
-    arbdata = save_arbitrary_block_storage();
+    arbdata = save_arbitrary_block_storage(forUndo);
     if (arbdata.size() > std::numeric_limits<int32_t>::max())
     {
         claimedArbitraryBlockStorageSize = 0;
@@ -1534,7 +1534,7 @@ bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc,
     return any;
 }
 
-std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
+std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage(bool forUndo)
 {
     binn *map = binn_object();
     for (int fx = 0; fx < n_fx_slots; fx++)
@@ -1549,8 +1549,16 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
         binn_free(fxmap);
     }
 
-    // User opt-in for patch files, always include for DAW state saves.
-    if (snapshotsStoredInPatch || (dawExtraState.isPopulated && hasAnySnapshots()))
+    // Undo captures working state independently of the user's file-export preference.
+    if (forUndo)
+    {
+        binn *state = binn_object();
+        binn_object_set_bool(state, "store_snapshots", snapshotsStoredInPatch);
+        binn_object_set_object(map, "undo_state", state);
+        binn_free(state);
+    }
+    // User opt-in for patch files, always include for DAW and undo state saves.
+    if (forUndo || snapshotsStoredInPatch || (dawExtraState.isPopulated && hasAnySnapshots()))
     {
         for (int sc = 0; sc < n_scenes; sc++)
         {
@@ -1735,6 +1743,12 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
         }
     }
 
+    // Loading embedded undo snapshots must not opt the user into exporting them.
+    binn undoState;
+    BOOL storeSnapshots;
+    if (binn_object_get_value(b, "undo_state", &undoState) && undoState.type == BINN_OBJECT &&
+        binn_object_get_bool(&undoState, "store_snapshots", &storeSnapshots))
+        snapshotsStoredInPatch = storeSnapshots;
     binn_free(b);
     return sz;
 }
@@ -2933,7 +2947,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     }
                 }
 
-                auto ec = &(scene[ssc].osc[sos].extraConfig);
+                auto ec = scene[ssc].osc[sos].extraConfig.edit();
                 int ti;
                 double tf;
 
@@ -4263,7 +4277,8 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                                 scene[sc].osc[os].wavetable_script_res_base);
             }
 
-            auto ec = &(scene[sc].osc[os].extraConfig);
+            const auto extra = scene[sc].osc[os].extraConfig.read();
+            const auto ec = &extra;
             on.SetAttribute("extra_n", ec->nData);
 
             for (auto q = 0; q < ec->nData; ++q)

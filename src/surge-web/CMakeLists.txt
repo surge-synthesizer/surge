@@ -1,0 +1,56 @@
+add_library(surge-web-engine STATIC Engine.cpp)
+target_link_libraries(surge-web-engine PUBLIC surge::surge-common)
+target_include_directories(surge-web-engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+if(EMSCRIPTEN)
+  # Development-only check of browser ownership before any audio consumer runs.
+  add_executable(surge-wavetable-snapshot-check WavetableSnapshotCheck.cpp)
+  target_link_libraries(surge-wavetable-snapshot-check PRIVATE surge::surge-common)
+  set_target_properties(surge-wavetable-snapshot-check PROPERTIES SUFFIX .cjs
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/checks)
+  target_link_options(surge-wavetable-snapshot-check PRIVATE -sENVIRONMENT=node
+    -sINITIAL_MEMORY=536870912 -sSTACK_SIZE=2097152 -sPTHREAD_POOL_SIZE=4 -sEXIT_RUNTIME=1)
+  add_executable(surge-web Worklet.cpp)
+  target_link_libraries(surge-web PRIVATE surge-web-engine)
+  set_target_properties(surge-web PROPERTIES SUFFIX .js RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/web)
+  target_link_options(surge-web PRIVATE
+    -sAUDIO_WORKLET=1 -sWASM_WORKERS=1 -sMODULARIZE=1 -sEXPORT_ES6=1
+    -sEXPORT_NAME=createSurge -sENVIRONMENT=web,worker -sALLOW_MEMORY_GROWTH=0
+    -sINITIAL_MEMORY=536870912 -sSTACK_SIZE=2097152 -sPTHREAD_POOL_SIZE=4
+    -sNO_EXIT_RUNTIME=1 -sFORCE_FILESYSTEM=1
+    "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS','UTF8ToString','getValue','setValue','emscriptenGetAudioObject']"
+    "-sEXPORTED_FUNCTIONS=['_malloc','_free']"
+    --no-entry)
+else()
+  find_package(Threads REQUIRED)
+  add_executable(surge-control-snapshot-check ControlSnapshotCheck.cpp)
+  target_compile_features(surge-control-snapshot-check PRIVATE cxx_std_17)
+  target_include_directories(surge-control-snapshot-check PRIVATE ${CMAKE_SOURCE_DIR}/src/common)
+  target_link_libraries(surge-control-snapshot-check PRIVATE Threads::Threads)
+  add_executable(surge-oscillator-extra-configuration-check OscillatorExtraConfigurationCheck.cpp)
+  target_compile_features(surge-oscillator-extra-configuration-check PRIVATE cxx_std_17)
+  target_include_directories(surge-oscillator-extra-configuration-check PRIVATE ${CMAKE_SOURCE_DIR}/src/common)
+  target_link_libraries(surge-oscillator-extra-configuration-check PRIVATE Threads::Threads)
+  add_executable(surge-engine-reference Reference.cpp LuaCompilationCheck.cpp)
+  target_link_libraries(surge-engine-reference PRIVATE surge-web-engine)
+  add_executable(surge-convolution-worker-check ConvolutionWorkerCheck.cpp)
+  target_link_libraries(surge-convolution-worker-check PRIVATE surge::surge-common)
+  add_executable(surge-effect-retirement-check EffectRetirementCheck.cpp)
+  target_link_libraries(surge-effect-retirement-check PRIVATE surge::surge-common)
+  add_executable(surge-effect-binding-check EffectBindingCheck.cpp)
+  target_link_libraries(surge-effect-binding-check PRIVATE surge::surge-common)
+  add_executable(surge-airwindows-selection-check AirwindowsSelectionCheck.cpp)
+  target_link_libraries(surge-airwindows-selection-check PRIVATE surge::surge-common)
+  add_executable(surge-airwindows-lifecycle-check AirwindowsLifecycleCheck.cpp)
+  target_link_libraries(surge-airwindows-lifecycle-check PRIVATE surge::surge-common)
+  add_executable(surge-fx-modulation-check FxModulationCheck.cpp)
+  target_link_libraries(surge-fx-modulation-check PRIVATE surge::surge-common)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64|ARM64)$")
+    add_executable(surge-vocoder-envelope-check VocoderEnvelopeCheck.cpp)
+    target_compile_features(surge-vocoder-envelope-check PRIVATE cxx_std_17)
+    target_include_directories(surge-vocoder-envelope-check PRIVATE ${CMAKE_SOURCE_DIR}/src/common)
+    target_link_libraries(surge-vocoder-envelope-check PRIVATE surge::simde)
+  endif()
+endif()
+if(EMSCRIPTEN)
+  add_subdirectory(juce)
+endif()

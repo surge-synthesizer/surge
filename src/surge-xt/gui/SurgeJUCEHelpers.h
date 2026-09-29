@@ -131,7 +131,7 @@ inline void addMenuItemWithShortcut(juce::PopupMenu &m, const std::string &lab,
 
 inline void addRevealFile(juce::PopupMenu &m, const fs::path &p)
 {
-#if LINUX
+#if LINUX || SURGE_WEB
     return;
 #else
     try

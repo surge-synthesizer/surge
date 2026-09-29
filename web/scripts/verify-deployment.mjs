@@ -1,0 +1,82 @@
+// Verify the public static deployment using real desktop Chrome and AudioWorklet.
+import {chromium, expect} from '@playwright/test';
+import {mkdirSync,writeFileSync} from 'node:fs';
+const [url,output='/tmp/surge-deployment-check']=process.argv.slice(2);
+if(!url?.startsWith('https://'))throw Error('Pass the deployed HTTPS origin');
+mkdirSync(output,{recursive:true});
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--disable-audio-output']});
+const context=await browser.newContext({viewport:{width:1280,height:1000}});
+const page=await context.newPage();
+const errors=[],failedResponses=[];
+page.on('pageerror',error=>errors.push(error.message));
+page.on('response',response=>{if(response.status()>=400)failedResponses.push({url:response.url(),status:response.status()});});
+const report={url,chrome:browser.version(),physicalAudioVerified:false};
+try {
+  const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});
+  expect(response.status()).toBe(200);
+  expect(response.headers()['cross-origin-opener-policy']).toBe('same-origin');
+  expect(response.headers()['cross-origin-embedder-policy']).toBe('require-corp');
+  expect(await page.evaluate(()=>crossOriginIsolated)).toBe(true);
+  await expect(page.getByRole('button',{name:'Main Menu',exact:true})).toBeAttached({timeout:90000});
+  const patch=()=>page.evaluate(()=>Module.ccall('surge_browser_patch_name','string',[],[]));
+  await expect.poll(patch,{timeout:30000}).toBe('Init Saw');
+  report.factoryPatches=await page.evaluate(()=>Module._surge_browser_patch_count());
+  expect(report.factoryPatches).toBe(3561);
+  await page.getByRole('button',{name:'Enable audio',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>Module._surge_browser_audio_status()),{timeout:30000}).toBe(2);
+  await page.evaluate(()=>{
+    const {context,node}=SurgeAudioInput.input.graph;
+    const analyser=context.createAnalyser();analyser.fftSize=2048;node.connect(analyser);
+    globalThis.deploymentProbe={context,node,analyser};
+  });
+  const canvas=page.locator('canvas').first();await canvas.focus();await page.keyboard.press('Alt+k');
+  await page.keyboard.down('a');
+  await expect.poll(()=>page.evaluate(()=>{
+    const samples=new Float32Array(deploymentProbe.analyser.fftSize);
+    deploymentProbe.analyser.getFloatTimeDomainData(samples);
+    return Math.max(...samples.map(Math.abs));
+  })).toBeGreaterThan(.001);
+  report.keyboardAudio=true;
+  await page.keyboard.up('a');
+  await expect.poll(()=>page.evaluate(()=>Module._surge_browser_active_voices())).toBe(0);
+  await page.getByRole('button',{name:'Open patch search',exact:true}).dispatchEvent('click');
+  const search=page.getByRole('textbox',{name:'Patch select',exact:true});
+  await expect(search).toBeAttached();await search.fill('Init FM2');
+  await search.press('ArrowDown');
+  await expect(page.getByRole('list',{name:'Patch select',exact:true})).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect.poll(patch,{timeout:30000}).toBe('Init FM2');
+  report.patchSearchAndSwitch=true;
+  await page.evaluate(()=>deploymentProbe.context.suspend());
+  await expect.poll(()=>page.evaluate(()=>Module._surge_browser_audio_status())).toBe(4);
+  await page.getByRole('button',{name:'Enable audio',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>Module._surge_browser_audio_status())).toBe(2);
+  expect(await page.evaluate(()=>SurgeAudioInput.input.graph.node===deploymentProbe.node)).toBe(true);
+  report.suspendResume=true;
+  await page.getByRole('button',{name:'Save Patch',exact:true}).dispatchEvent('click');
+  await page.getByRole('textbox',{name:'patch name',exact:true}).fill('Deployment verification');
+  await page.getByRole('textbox',{name:'patch category',exact:true}).fill('Browser Tests');
+  await page.getByRole('button',{name:'OK',exact:true}).dispatchEvent('click');
+  const saved='/user/Patches/Browser Tests/Deployment verification.fxp';
+  await expect.poll(()=>page.evaluate(path=>Module.FS.analyzePath(path).exists,saved)).toBe(true);
+  await page.evaluate(()=>SurgeBrowser.flush());
+  await page.reload({waitUntil:'domcontentloaded'});
+  await expect(page.getByRole('button',{name:'Main Menu',exact:true})).toBeAttached({timeout:60000});
+  await expect.poll(patch).toBe('Init Saw');
+  expect(await page.evaluate(path=>Module.FS.analyzePath(path).exists,saved)).toBe(true);
+  await page.evaluate(path=>Module.ccall('surge_browser_request_patch','number',['string'],[path]),saved);
+  await expect.poll(patch).toBe('Deployment verification');
+  report.saveReload=true;
+  await page.screenshot({path:output+'/app.png',fullPage:true});
+  expect(errors).toEqual([]);expect(failedResponses).toEqual([]);
+  report.status='passed';
+} catch(error) {
+  report.status='failed';report.error=String(error);
+  await page.screenshot({path:output+'/failure.png',fullPage:true}).catch(()=>{});
+  throw error;
+} finally {
+  report.errors=errors;report.failedResponses=failedResponses;
+  writeFileSync(output+'/report.json',JSON.stringify(report,null,2)+'\n');
+  console.log(JSON.stringify(report,null,2));
+  await browser.close();
+}

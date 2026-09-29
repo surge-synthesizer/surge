@@ -110,3 +110,14 @@ Testing/
 installer-tmp/
 .junie/
 .claude/
+# Browser development and parity captures
+web/node_modules/
+web/dist/
+web/public/engine/
+web/public/library/
+web/test-results/
+web/playwright-report/
+web/profiles/
+.toolchains/
+build-web/
+build-reference/

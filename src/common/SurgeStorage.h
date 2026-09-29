@@ -26,6 +26,7 @@
 #include "Parameter.h"
 #include "ModulationSource.h"
 #include "Wavetable.h"
+#include "dsp/OscillatorExtraConfiguration.h"
 
 #include "tinyxml/tinyxml.h"
 #include "filesystem/import.h"
@@ -729,6 +730,8 @@ struct ArbitraryBlockStorage
     static std::shared_ptr<std::vector<std::uint8_t>> from_string(const std::string &s);
 };
 
+class ConvolutionKernelWorker;
+
 namespace Surge
 {
 namespace WavetableScript
@@ -766,12 +769,12 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     void *queue_xmldata;
     int queue_type;
 
-    struct ExtraConfigurationData
-    {
-        static constexpr size_t max_config = 64;
-        int nData = 0;
-        float data[max_config];
-    } extraConfig;
+    using ExtraConfigurationData = OscillatorExtraConfiguration;
+#if SURGE_WEB
+    BrowserOscillatorExtraConfiguration extraConfig;
+#else
+    ExtraConfigurationData extraConfig;
+#endif
 
     virtual int getCountedSetSize() const { return wt.n_tables; }
 };
@@ -1336,8 +1339,8 @@ class SurgePatch
     unsigned int load_arbitrary_block_storage(const void *data, std::size_t remainder);
     void load_arbitrary_block_storage_xml(const TiXmlElement *patch);
     bool hasAnySnapshots() const;
-    unsigned int save_patch(void **data);
-    std::vector<std::uint8_t> save_arbitrary_block_storage();
+    unsigned int save_patch(void **data, bool forUndo = false);
+    std::vector<std::uint8_t> save_arbitrary_block_storage(bool forUndo = false);
     static bool writeOscSnapshotsToBinn(binn *oscmap, const OscillatorStorage &osc);
     static bool readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc,
                                          SurgeStorage *storage);
@@ -1635,6 +1638,10 @@ class alignas(16) SurgeStorage
 
     std::unique_ptr<Surge::PatchStorage::PatchDB> patchDB;
     bool patchDBInitialized{false};
+#if SURGE_WEB
+    bool browserFavoritesRefreshPending{false};
+    std::vector<std::string> browserFavoritePaths;
+#endif
     void initializePatchDb(bool forcePatchRescan = false);
 
     std::unique_ptr<Surge::Storage::UserDefaultsProvider> userDefaultsProvider;
@@ -1729,6 +1736,10 @@ class alignas(16) SurgeStorage
     std::function<AudioFileInput(std::string)> load_audio_file{nullptr};
 
     void clipboard_copy(int type, int scene, int entry, modsources ms = ms_original);
+    // Control-thread copies honor a pending browser publication as the logical
+    // current value. Replacements retire live buffers off the audio callback.
+    void copyOscillatorWavetable(int scene, int osc, Wavetable &destination);
+    void replaceOscillatorWavetable(int scene, int osc, Wavetable &source);
     // this function is a bit of a hack to stop me having a reference to SurgeSynth here
     // and also to stop me having to move all of isValidModulation and its buddies onto SurgeStorage
     void clipboard_paste(
@@ -1817,11 +1828,39 @@ class alignas(16) SurgeStorage
     // under waveTableDataMutex: bumped whenever an oscillator's wt is replaced outside the
     // WtGenService (patch load, undo/redo, wt load, paste), captured at Generate submit,
     // re-checked by the worker before publishing (skip on mismatch). Indexed scene * n_oscs + osc.
+#if SURGE_WEB
+    std::array<std::atomic<uint64_t>, n_scenes * n_oscs> wtGenPublishToken{};
+    bool browserManagesWavetables{false};
+    struct BrowserGeneratedWavetable
+    {
+        enum State { pending, applying, published, cancelled };
+        std::atomic<State> state{pending};
+        std::unique_ptr<Wavetable> table;
+        uint64_t publishToken{};
+        bool controlReplacement{false};
+        std::function<void(bool)> complete;
+        ~BrowserGeneratedWavetable()
+        {
+            if (complete) complete(state.load(std::memory_order_acquire) == published);
+        }
+    };
+    // Protected by waveTableDataMutex. The worker builds privately; only the
+    // block-boundary consumer swaps live buffers. References retire off audio.
+    std::array<std::shared_ptr<BrowserGeneratedWavetable>, n_scenes * n_oscs>
+        browserGeneratedWavetables;
+#else
     std::array<uint64_t, n_scenes * n_oscs> wtGenPublishToken{};
+#endif
 
     // Background wavetable-script generation worker. Declared after _patch and
     // waveTableDataMutex so ~SurgeStorage destructs (and joins) it before them.
     std::unique_ptr<Surge::WavetableScript::WtGenService> wtGenService;
+#if SURGE_WEB
+    std::unique_ptr<ConvolutionKernelWorker> browserConvolutionWorker;
+    // Accessed only by the serialized audio/patch-loader owner.
+    uint64_t browserConvolutionGeneration{0};
+    std::atomic<uint32_t> browserConvolutionErrors{0};
+#endif
 
     std::recursive_mutex modRoutingMutex;
     Wavetable WindowWT;

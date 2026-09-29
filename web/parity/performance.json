@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "status": "partial-measurements",
+  "captures": [
+    {
+      "capture": "audio-profile-1790541424559-44100",
+      "reportSha256": "101b8265ae4bba483a37229d98dfc036d245977a8308d550c66d687ce49c535b",
+      "traceSha256": "fd1d2c5b2d6a5c8b6a315a8a2486c5b04c35b4a931efd532b38991152834f195",
+      "browser": "153.0.8010.53",
+      "host": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "release": "27.0.0"
+      },
+      "patch": "/factory/patches_factory/Templates/Init FM2.fxp",
+      "rate": 44100,
+      "frames": 128,
+      "requestedSeconds": 60,
+      "requestedNotes": 16,
+      "observedVoiceCounts": [
+        16
+      ],
+      "silentOutputDevice": true,
+      "timing": {
+        "budgetUs": 2902.4943310657595,
+        "wallUs": {
+          "count": 20750,
+          "mean": 117.56366265060241,
+          "p50": 115,
+          "p95": 138,
+          "p99": 148,
+          "max": 474
+        },
+        "threadCpuUs": null,
+        "inconsistentCpuSamples": 15,
+        "observedOverBudget": 0,
+        "capturedAudioSeconds": 60.22675736961451
+      },
+      "uiTimerLatenessMs": {
+        "count": 1205,
+        "mean": 1.18704564319112,
+        "p50": 0,
+        "p95": 7.4049999713897705,
+        "p99": 9.814999997615814,
+        "max": 12.540000021457672
+      },
+      "memory": {
+        "wasmGrowthBytes": 0,
+        "jsUsedHeapChangeBytes": 481160
+      },
+      "pageErrors": []
+    },
+    {
+      "capture": "audio-profile-1790541498553-48000",
+      "reportSha256": "f8a9b28be13508dd89b1b5ed6fa3ac912d174e68f727f337335998f9725f8e64",
+      "traceSha256": "f03c36e083d7e6de83a6424c05d32c8b66148bb7d2db2d5d4642af242abc3b57",
+      "browser": "153.0.8010.53",
+      "host": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "release": "27.0.0"
+      },
+      "patch": "/factory/patches_factory/Templates/Init FM2.fxp",
+      "rate": 48000,
+      "frames": 128,
+      "requestedSeconds": 60,
+      "requestedNotes": 16,
+      "observedVoiceCounts": [
+        16
+      ],
+      "silentOutputDevice": true,
+      "timing": {
+        "budgetUs": 2666.6666666666665,
+        "wallUs": {
+          "count": 22582,
+          "mean": 116.39788326986096,
+          "p50": 115,
+          "p95": 135,
+          "p99": 146,
+          "max": 472
+        },
+        "threadCpuUs": null,
+        "inconsistentCpuSamples": 19,
+        "observedOverBudget": 0,
+        "capturedAudioSeconds": 60.218666666666664
+      },
+      "uiTimerLatenessMs": {
+        "count": 1205,
+        "mean": 0.7616763484923177,
+        "p50": 0,
+        "p95": 5.030000030994415,
+        "p99": 7.534999966621399,
+        "max": 8.5
+      },
+      "memory": {
+        "wasmGrowthBytes": 0,
+        "jsUsedHeapChangeBytes": -339384
+      },
+      "pageErrors": []
+    },
+    {
+      "capture": "audio-profile-1790541580142-44100",
+      "reportSha256": "44120c7ce083461fb1ed5523cdac506923c7e68444598c48b78ce975496f80de",
+      "traceSha256": "3a19613f612b721ce9ed452fe4730570d1e2cd817f137ec5094672212c053da3",
+      "browser": "153.0.8010.53",
+      "host": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "release": "27.0.0"
+      },
+      "patch": "/factory/patches_factory/Polysynths/Mega Mega.fxp",
+      "rate": 44100,
+      "frames": 128,
+      "requestedSeconds": 60,
+      "requestedNotes": 16,
+      "observedVoiceCounts": [
+        16
+      ],
+      "silentOutputDevice": true,
+      "timing": {
+        "budgetUs": 2902.4943310657595,
+        "wallUs": {
+          "count": 20750,
+          "mean": 119.67204819277109,
+          "p50": 118,
+          "p95": 140,
+          "p99": 152,
+          "max": 488
+        },
+        "threadCpuUs": null,
+        "inconsistentCpuSamples": 19,
+        "observedOverBudget": 0,
+        "capturedAudioSeconds": 60.22675736961451
+      },
+      "uiTimerLatenessMs": {
+        "count": 1205,
+        "mean": 0.5695145220182743,
+        "p50": 0,
+        "p95": 3.5450000166893005,
+        "p99": 6.25,
+        "max": 7.175000011920929
+      },
+      "memory": {
+        "wasmGrowthBytes": 0,
+        "jsUsedHeapChangeBytes": -1280436
+      },
+      "pageErrors": []
+    },
+    {
+      "capture": "audio-profile-1790541709537-48000",
+      "reportSha256": "5b2d6184fd39d76250d93b07a2523c1fab94f3013efb49c2a0692a36367e9089",
+      "traceSha256": "592f6eae432410ea8bd99f47ce1ee4bc863959dde58930adecc03b4667cf7774",
+      "browser": "153.0.8010.53",
+      "host": {
+        "platform": "darwin",
+        "arch": "arm64",
+        "release": "27.0.0"
+      },
+      "patch": "/factory/patches_factory/Polysynths/Mega Mega.fxp",
+      "rate": 48000,
+      "frames": 128,
+      "requestedSeconds": 60,
+      "requestedNotes": 16,
+      "observedVoiceCounts": [
+        16
+      ],
+      "silentOutputDevice": true,
+      "timing": {
+        "budgetUs": 2666.6666666666665,
+        "wallUs": {
+          "count": 22612,
+          "mean": 121.06138333628162,
+          "p50": 118,
+          "p95": 147,
+          "p99": 175,
+          "max": 1022
+        },
+        "threadCpuUs": null,
+        "inconsistentCpuSamples": 19,
+        "wholeGraph": {
+          "wallUs": {
+            "count": 22612,
+            "mean": 123.06027772863966,
+            "p50": 119,
+            "p95": 151,
+            "p99": 182,
+            "max": 1026
+          },
+          "observedOverBudget": 0
+        },
+        "observedOverBudget": 0,
+        "capturedAudioSeconds": 60.29866666666667
+      },
+      "uiTimerLatenessMs": {
+        "count": 1206,
+        "mean": 1.180534825544452,
+        "p50": 0,
+        "p95": 6.684999942779541,
+        "p99": 7.790000021457672,
+        "max": 12.930000007152557
+      },
+      "memory": {
+        "wasmGrowthBytes": 0,
+        "jsUsedHeapChangeBytes": -3267924
+      },
+      "pageErrors": []
+    }
+  ],
+  "limitations": [
+    "Historical captures are not bound to runtime binary hashes and do not certify the current build.",
+    "Raw reports and compressed traces are retained locally under ignored web/profiles; hashes identify those artifacts, but this summary does not include them.",
+    "These four runs used headless Chrome and a silent output device; physical device underruns remain unmeasured.",
+    "Two sustained patches do not cover all synthesis families, expensive configurations, or interactive editor workloads.",
+    "Constant Wasm linear memory size does not prove absence of leaks or callback allocations.",
+    "Patch identity was checked before playback, but these historical captures predate continuous patch-name sampling."
+  ]
+}

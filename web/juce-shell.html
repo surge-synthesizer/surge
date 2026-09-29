@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Surge XT — JUCE browser port</title>
+<style>html,body{margin:0;background:#202328;color:white;font:14px sans-serif}canvas{position:absolute;touch-action:none}#status,#storage-status,#file-status{position:fixed;bottom:40px;right:8px;z-index:1000;padding:8px;background:#202328}#storage-status{bottom:75px;max-width:480px}#file-status{bottom:140px;max-width:480px}#midi-controls{position:fixed;left:8px;bottom:8px;z-index:1000;background:#202328;padding:4px}#midi-controls [role=status]{display:block;max-width:620px}#transport-controls{position:fixed;left:8px;bottom:66px;z-index:1000;background:#202328;padding:4px}#transport-controls input{width:66px}#transport-controls [role=status]{display:block}#audio-input-controls{position:fixed;right:8px;bottom:66px;z-index:1000;background:#202328;padding:4px;max-width:410px}#audio-input-controls select{max-width:125px}#audio-input-controls [role=status]{display:block}#surge-report{width:min(1000px,90vw);height:85vh;background:#202328;color:white;border:1px solid #888;padding:12px}#surge-report iframe{width:100%;height:calc(100% - 40px);border:0;background:white;margin-top:8px}#surge-report::backdrop{background:#0009}</style>
+</head><body><button id="enable-audio" style="position:fixed;right:8px;bottom:8px;z-index:1000" onclick="Module._surge_enable_audio?.()">Enable audio</button><button id="retry-storage" hidden style="position:fixed;right:8px;bottom:115px;z-index:1000" onclick="SurgeBrowser.flush().catch(()=>{})">Retry saving</button><div id="storage-status" role="alert"></div><div id="file-status" role="alert"></div><div id="status" role="status">Loading JUCE…</div>
+<script>
+var startupError='';
+function showStartupError(message){startupError=message;document.getElementById('status').textContent=message;}
+var Module={
+  setStatus(text){document.getElementById('status').textContent=startupError || text},
+  onAbort(error){showStartupError('Application startup failed: '+String(error)+'. Reload to retry.')},
+  onRuntimeInitialized(){
+    if(startupError)return;
+    document.getElementById('status').textContent='';
+    SurgeAccessibility.attach(Module);SurgeMidi.attach(Module);SurgeTransport.attach(Module);SurgeAudioInput.attach(Module);SurgeUserFiles.attach(Module);
+  }
+};
+addEventListener('error',event=>{
+  if(event.target instanceof HTMLScriptElement && event.target.src){
+    Module.noInitialRun=true;
+    showStartupError('Unable to download application file '+new URL(event.target.src).pathname.split('/').pop()+'. Check the connection and reload to retry.');
+  }
+},true);
+</script>
+<script src="midi.js"></script>
+<script src="transport.js"></script>
+<script src="audio-input.js"></script>
+<script src="audio-lifecycle.js"></script>
+<script src="reports.js"></script>
+<script src="user-files.js"></script>
+<script src="tuning-library.js"></script>
+<script src="archive-recovery.js"></script>
+<script src="clipboard.js"></script>
+<script src="text-input.js"></script>
+<script src="accessibility.js"></script>
+<script src="runtime.js"></script>
+
+{{{ SCRIPT }}}
+</body></html>

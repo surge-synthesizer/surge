@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "scope": "Full-engine Init FM2 voice-LFO MSEG pitch modulation; three segments, 2 Hz, deform 0.2, fixed control points, key trigger and six-semitone routing depth. This does not cover every mode, parameter combination, scene LFO, envelope release or retrigger workflow.",
+  "rates": [
+    44100,
+    48000
+  ],
+  "relativeRmsTolerance": 1e-05,
+  "types": {
+    "LINEAR": {
+      "id": 1,
+      "status": "verified-fixture"
+    },
+    "QUAD_BEZIER": {
+      "id": 2,
+      "status": "verified-fixture"
+    },
+    "SCURVE": {
+      "id": 3,
+      "status": "verified-fixture"
+    },
+    "SINE": {
+      "id": 4,
+      "status": "verified-fixture"
+    },
+    "STAIRS": {
+      "id": 5,
+      "status": "verified-fixture"
+    },
+    "BROWNIAN": {
+      "id": 6,
+      "status": "pending-statistical",
+      "reason": "Native repeated captures are not byte-identical at either sample rate. Statistical native/Wasm comparison remains required; deterministic sample comparison is not a valid Brownian parity gate.",
+      "controlledFixture": {
+        "status": "verified-seeded-fixture",
+        "evidence": "web/tests/seeded-mseg-audio.spec.js",
+        "seeds": [
+          1,
+          17,
+          123456789
+        ],
+        "introHoldDuration": 0.125,
+        "brownianSegments": 3,
+        "scope": "Existing voice RNG seeded after note-on, while a leading Hold prevents evaluation of the Brownian walk. Immediate Brownian note-on remains pending."
+      }
+    },
+    "SQUARE": {
+      "id": 7,
+      "status": "verified-fixture"
+    },
+    "TRIANGLE": {
+      "id": 8,
+      "status": "verified-fixture"
+    },
+    "HOLD": {
+      "id": 9,
+      "status": "verified-fixture"
+    },
+    "SAWTOOTH": {
+      "id": 10,
+      "status": "verified-fixture"
+    },
+    "BUMP": {
+      "id": 12,
+      "status": "verified-fixture"
+    },
+    "SMOOTH_STAIRS": {
+      "id": 13,
+      "status": "verified-fixture"
+    },
+    "RATCHET_1": {
+      "id": 14,
+      "status": "verified-fixture"
+    },
+    "RATCHET_2": {
+      "id": 15,
+      "status": "verified-fixture"
+    },
+    "RATCHET_3": {
+      "id": 16,
+      "status": "verified-fixture"
+    },
+    "RATCHET_4": {
+      "id": 17,
+      "status": "verified-fixture"
+    },
+    "RATCHET_5": {
+      "id": 18,
+      "status": "verified-fixture"
+    },
+    "RATCHET_6": {
+      "id": 19,
+      "status": "verified-fixture"
+    },
+    "RATCHET_7": {
+      "id": 20,
+      "status": "verified-fixture"
+    },
+    "RATCHET_8": {
+      "id": 21,
+      "status": "verified-fixture"
+    }
+  }
+}

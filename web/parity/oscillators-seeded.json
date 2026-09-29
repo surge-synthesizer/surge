@@ -1,0 +1,719 @@
+{
+  "schema": 1,
+  "status": "diagnostic",
+  "complete": true,
+  "inventory": [
+    {
+      "id": 0,
+      "symbol": "ot_classic",
+      "name": "Classic"
+    },
+    {
+      "id": 1,
+      "symbol": "ot_sine",
+      "name": "Sine"
+    },
+    {
+      "id": 2,
+      "symbol": "ot_wavetable",
+      "name": "Wavetable"
+    },
+    {
+      "id": 3,
+      "symbol": "ot_shnoise",
+      "name": "S&H Noise"
+    },
+    {
+      "id": 4,
+      "symbol": "ot_audioinput",
+      "name": "Audio Input"
+    },
+    {
+      "id": 5,
+      "symbol": "ot_FM3",
+      "name": "FM3"
+    },
+    {
+      "id": 6,
+      "symbol": "ot_FM2",
+      "name": "FM2"
+    },
+    {
+      "id": 7,
+      "symbol": "ot_window",
+      "name": "Window"
+    },
+    {
+      "id": 8,
+      "symbol": "ot_modern",
+      "name": "Modern"
+    },
+    {
+      "id": 9,
+      "symbol": "ot_string",
+      "name": "String"
+    },
+    {
+      "id": 10,
+      "symbol": "ot_twist",
+      "name": "Twist"
+    },
+    {
+      "id": 11,
+      "symbol": "ot_alias",
+      "name": "Alias"
+    }
+  ],
+  "rates": [
+    44100,
+    48000
+  ],
+  "relativeRmsTolerance": 1e-05,
+  "scope": "Scene A oscillator 1, original Init Wavetable patch with embedded table and retrigger enabled; original defaults when changing family; Wavetable retains factory template settings; three-second C4 note/release. Audio Input receives identical stereo integer-period saws. Other oscillators receive no external input. Variable browser buffer sizes. Parameter modes, unison, modulation and live performance remain outside this fixture. Storage RNG is explicitly seeded immediately before the note; other RNGs are unchanged.",
+  "createdAt": "2026-09-27T21:30:12.119Z",
+  "binaries": {
+    "native": "848c1489517db89a2ec98bb0eb5a8ea60a0f4c461bb132071a4a78e7226f5188",
+    "wasm": "40a2fe69158b53bc3d2446fdba44f64857859b5792201457a2cb3c678b69b7ac"
+  },
+  "fixtureSha256": "eff5b3ef0b191c8b0de7f2f7e570a5e8b1a3e4a03dd4ae960783af7d41d6e5ed",
+  "cases": [
+    {
+      "id": 0,
+      "symbol": "ot_classic",
+      "name": "Classic",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 103.84011258747661,
+        "error": 7.063193794652764e-10,
+        "peak": 0.14289627969264984,
+        "relativeRMS": 2.608062447642194e-06
+      },
+      "nativeRepeat": {
+        "energy": 103.84011258747661,
+        "error": 0,
+        "peak": 0.14289627969264984,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 103.83990041857399,
+        "error": 0,
+        "peak": 0.14289605617523193,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 1,
+      "symbol": "ot_sine",
+      "name": "Sine",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 617.8307824336682,
+        "error": 1.1853809514484516e-16,
+        "peak": 0.11843449622392654,
+        "relativeRMS": 4.3802026213137154e-10
+      },
+      "nativeRepeat": {
+        "energy": 617.8307824336682,
+        "error": 0,
+        "peak": 0.11843449622392654,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 617.8307824366543,
+        "error": 0,
+        "peak": 0.11843449622392654,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 2,
+      "symbol": "ot_wavetable",
+      "name": "Wavetable",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 612.4367549591439,
+        "error": 1.0465707707069113e-10,
+        "peak": 0.11891235411167145,
+        "relativeRMS": 4.1338401336426934e-07
+      },
+      "nativeRepeat": {
+        "energy": 612.4367549591439,
+        "error": 0,
+        "peak": 0.11891235411167145,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 612.4367524336333,
+        "error": 0,
+        "peak": 0.11891236901283264,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 3,
+      "symbol": "ot_shnoise",
+      "name": "S&H Noise",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 158.78948474546644,
+        "error": 6.250242475553857e-10,
+        "peak": 0.14019964635372162,
+        "relativeRMS": 1.9839812490016606e-06
+      },
+      "nativeRepeat": {
+        "energy": 158.78948474546644,
+        "error": 0,
+        "peak": 0.14019964635372162,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 158.78980432028374,
+        "error": 0,
+        "peak": 0.14019982516765594,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 4,
+      "symbol": "ot_audioinput",
+      "name": "Audio Input",
+      "rate": 44100,
+      "audioInput": true,
+      "comparison": {
+        "energy": 20.273523099631152,
+        "error": 3.743135492783914e-18,
+        "peak": 0.0484900176525116,
+        "relativeRMS": 4.2968793628235545e-10
+      },
+      "nativeRepeat": {
+        "energy": 20.273523099631152,
+        "error": 0,
+        "peak": 0.0484900176525116,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 20.2735230996911,
+        "error": 0,
+        "peak": 0.0484900176525116,
+        "relativeRMS": 0
+      },
+      "inputControl": {
+        "energy": 20.273523099631152,
+        "error": 20.273523099631152,
+        "peak": 0.0484900176525116,
+        "relativeRMS": 1
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 5,
+      "symbol": "ot_FM3",
+      "name": "FM3",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 617.8310836838416,
+        "error": 9.877569146048952e-13,
+        "peak": 0.11843452602624893,
+        "relativeRMS": 3.9984361211064095e-08
+      },
+      "nativeRepeat": {
+        "energy": 617.8310836838416,
+        "error": 0,
+        "peak": 0.11843452602624893,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 617.8310834232045,
+        "error": 0,
+        "peak": 0.11843452602624893,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 6,
+      "symbol": "ot_FM2",
+      "name": "FM2",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 617.8310836838416,
+        "error": 9.877569146048952e-13,
+        "peak": 0.11843452602624893,
+        "relativeRMS": 3.9984361211064095e-08
+      },
+      "nativeRepeat": {
+        "energy": 617.8310836838416,
+        "error": 0,
+        "peak": 0.11843452602624893,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 617.8310834232045,
+        "error": 0,
+        "peak": 0.11843452602624893,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 7,
+      "symbol": "ot_window",
+      "name": "Window",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 131.78959575956856,
+        "error": 9.995592524545383e-19,
+        "peak": 0.06068107858300209,
+        "relativeRMS": 8.708908122746693e-11
+      },
+      "nativeRepeat": {
+        "energy": 131.78959575956856,
+        "error": 0,
+        "peak": 0.06068107858300209,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 131.78959575956452,
+        "error": 0,
+        "peak": 0.06068107858300209,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 8,
+      "symbol": "ot_modern",
+      "name": "Modern",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 25.508687555474374,
+        "error": 3.481025220696701e-17,
+        "peak": 0.0426517128944397,
+        "relativeRMS": 1.1681793576213365e-09
+      },
+      "nativeRepeat": {
+        "energy": 25.508687555474374,
+        "error": 0,
+        "peak": 0.0426517128944397,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 25.508687554926937,
+        "error": 0,
+        "peak": 0.0426517128944397,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 9,
+      "symbol": "ot_string",
+      "name": "String",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 27.19670810699763,
+        "error": 2.832542453462282e-17,
+        "peak": 0.10773791372776031,
+        "relativeRMS": 1.0205400287492851e-09
+      },
+      "nativeRepeat": {
+        "energy": 27.19670810699763,
+        "error": 0,
+        "peak": 0.10773791372776031,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 27.196708107330824,
+        "error": 0,
+        "peak": 0.10773791372776031,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 10,
+      "symbol": "ot_twist",
+      "name": "Twist",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 210.88460899334035,
+        "error": 1.1669523820655457e-22,
+        "peak": 0.08748576790094376,
+        "relativeRMS": 7.438821284783666e-13
+      },
+      "nativeRepeat": {
+        "energy": 210.88460899334035,
+        "error": 0,
+        "peak": 0.08748576790094376,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 210.88460899334035,
+        "error": 0,
+        "peak": 0.08748576790094376,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 11,
+      "symbol": "ot_alias",
+      "name": "Alias",
+      "rate": 44100,
+      "audioInput": false,
+      "comparison": {
+        "energy": 154.45698861975643,
+        "error": 5.551454453373904e-17,
+        "peak": 0.059699494391679764,
+        "relativeRMS": 5.995143858796845e-10
+      },
+      "nativeRepeat": {
+        "energy": 154.45698861975643,
+        "error": 0,
+        "peak": 0.059699494391679764,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 154.45698862134213,
+        "error": 0,
+        "peak": 0.059699494391679764,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 0,
+      "symbol": "ot_classic",
+      "name": "Classic",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 113.1834902901415,
+        "error": 1.023844830052373e-09,
+        "peak": 0.15165090560913086,
+        "relativeRMS": 3.0076377670952236e-06
+      },
+      "nativeRepeat": {
+        "energy": 113.1834902901415,
+        "error": 0,
+        "peak": 0.15165090560913086,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 113.18328937458546,
+        "error": 0,
+        "peak": 0.15165065228939056,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 1,
+      "symbol": "ot_sine",
+      "name": "Sine",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 672.7182087458623,
+        "error": 2.952924848500535e-17,
+        "peak": 0.11846752464771271,
+        "relativeRMS": 2.095123391435144e-10
+      },
+      "nativeRepeat": {
+        "energy": 672.7182087458623,
+        "error": 0,
+        "peak": 0.11846752464771271,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 672.7182087461458,
+        "error": 0,
+        "peak": 0.11846752464771271,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 2,
+      "symbol": "ot_wavetable",
+      "name": "Wavetable",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 666.7457037941531,
+        "error": 1.1561916588752366e-10,
+        "peak": 0.11890686303377151,
+        "relativeRMS": 4.1642309050221886e-07
+      },
+      "nativeRepeat": {
+        "energy": 666.7457037941531,
+        "error": 0,
+        "peak": 0.11890686303377151,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 666.7457025146614,
+        "error": 0,
+        "peak": 0.11890684068202972,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 3,
+      "symbol": "ot_shnoise",
+      "name": "S&H Noise",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 172.94550671406205,
+        "error": 6.954073416927531e-10,
+        "peak": 0.1428137868642807,
+        "relativeRMS": 2.005233697095833e-06
+      },
+      "nativeRepeat": {
+        "energy": 172.94550671406205,
+        "error": 0,
+        "peak": 0.1428137868642807,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 172.9458591122155,
+        "error": 0,
+        "peak": 0.14281395077705383,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 4,
+      "symbol": "ot_audioinput",
+      "name": "Audio Input",
+      "rate": 48000,
+      "audioInput": true,
+      "comparison": {
+        "energy": 22.08948908242794,
+        "error": 1.5108314215974746e-19,
+        "peak": 0.04823460057377815,
+        "relativeRMS": 8.270183936273978e-11
+      },
+      "nativeRepeat": {
+        "energy": 22.08948908242794,
+        "error": 0,
+        "peak": 0.04823460057377815,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 22.089489082424457,
+        "error": 0,
+        "peak": 0.04823460057377815,
+        "relativeRMS": 0
+      },
+      "inputControl": {
+        "energy": 22.08948908242794,
+        "error": 22.08948908242794,
+        "peak": 0.04823460057377815,
+        "relativeRMS": 1
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 5,
+      "symbol": "ot_FM3",
+      "name": "FM3",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 672.7185377303679,
+        "error": 1.1218434324005244e-12,
+        "peak": 0.11846750229597092,
+        "relativeRMS": 4.083658599150182e-08
+      },
+      "nativeRepeat": {
+        "energy": 672.7185377303679,
+        "error": 0,
+        "peak": 0.11846750229597092,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 672.7185375469887,
+        "error": 0,
+        "peak": 0.11846750229597092,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 6,
+      "symbol": "ot_FM2",
+      "name": "FM2",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 672.7185377303679,
+        "error": 1.1218434324005244e-12,
+        "peak": 0.11846750229597092,
+        "relativeRMS": 4.083658599150182e-08
+      },
+      "nativeRepeat": {
+        "energy": 672.7185377303679,
+        "error": 0,
+        "peak": 0.11846750229597092,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 672.7185375469887,
+        "error": 0,
+        "peak": 0.11846750229597092,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 7,
+      "symbol": "ot_window",
+      "name": "Window",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 143.49496202587397,
+        "error": 2.865018210770953e-17,
+        "peak": 0.06069129705429077,
+        "relativeRMS": 4.4683313061164173e-10
+      },
+      "nativeRepeat": {
+        "energy": 143.49496202587397,
+        "error": 0,
+        "peak": 0.06069129705429077,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 143.49496202532953,
+        "error": 0,
+        "peak": 0.06069129705429077,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 8,
+      "symbol": "ot_modern",
+      "name": "Modern",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 27.79733648575865,
+        "error": 7.210755554475239e-21,
+        "peak": 0.04282981902360916,
+        "relativeRMS": 1.6106040783475667e-11
+      },
+      "nativeRepeat": {
+        "energy": 27.79733648575865,
+        "error": 0,
+        "peak": 0.04282981902360916,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 27.797336485758517,
+        "error": 0,
+        "peak": 0.04282981902360916,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 9,
+      "symbol": "ot_string",
+      "name": "String",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 19.54760428082708,
+        "error": 1.0614538382719543e-20,
+        "peak": 0.09375537931919098,
+        "relativeRMS": 2.3302568139892913e-11
+      },
+      "nativeRepeat": {
+        "energy": 19.54760428082708,
+        "error": 0,
+        "peak": 0.09375537931919098,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 19.54760428082723,
+        "error": 0,
+        "peak": 0.09375537931919098,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 10,
+      "symbol": "ot_twist",
+      "name": "Twist",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 229.62264311298838,
+        "error": 1.1102262797823331e-16,
+        "peak": 0.08562429249286652,
+        "relativeRMS": 6.953418932739931e-10
+      },
+      "nativeRepeat": {
+        "energy": 229.62264311298838,
+        "error": 0,
+        "peak": 0.08562429249286652,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 229.62264311519596,
+        "error": 0,
+        "peak": 0.08562429249286652,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "id": 11,
+      "symbol": "ot_alias",
+      "name": "Alias",
+      "rate": 48000,
+      "audioInput": false,
+      "comparison": {
+        "energy": 168.17448750069627,
+        "error": 2.775572316776527e-17,
+        "peak": 0.059382449835538864,
+        "relativeRMS": 4.062526596043062e-10
+      },
+      "nativeRepeat": {
+        "energy": 168.17448750069627,
+        "error": 0,
+        "peak": 0.059382449835538864,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 168.17448750116563,
+        "error": 0,
+        "peak": 0.059382449835538864,
+        "relativeRMS": 0
+      },
+      "status": "matched-default-fixture"
+    }
+  ],
+  "chrome": "153.0.8010.53",
+  "storageSeed": 17
+}

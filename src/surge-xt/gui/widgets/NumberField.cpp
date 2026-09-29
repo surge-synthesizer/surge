@@ -243,6 +243,12 @@ void NumberField::mouseUp(const juce::MouseEvent &event)
 
 void NumberField::mouseDoubleClick(const juce::MouseEvent &event)
 {
+#if SURGE_WEB
+    // mouseDown already opened the popup. A fast reopen after dismissal can
+    // also deliver mouseDoubleClick; opening again leaves a hidden modal menu.
+    if (event.mods.isPopupMenu())
+        return;
+#endif
     if (supressMainFrameMouseEvent(event))
     {
         return;

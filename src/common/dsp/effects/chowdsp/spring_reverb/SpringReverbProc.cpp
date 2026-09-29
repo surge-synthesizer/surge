@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include "SurgeRandom.h"
 #include <random>
 
 #include "SpringReverbProc.h"
@@ -36,7 +37,7 @@ namespace chowdsp
 {
 SpringReverbProc::SpringReverbProc()
 {
-    std::random_device rd;
+    Surge::AudioRandomDevice rd;
     auto gen01 = std::minstd_rand(rd());
     std::uniform_real_distribution<float> distro01(0.0f, 1.0f);
     urng01 = std::bind(distro01, gen01);

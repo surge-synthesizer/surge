@@ -20,6 +20,14 @@ endif()
 
 project(Surge VERSION 1.4.0 LANGUAGES C CXX)
 
+option(SURGE_ENGINE_ONLY "Build the development engine harness without native products" OFF)
+if(EMSCRIPTEN)
+  set(SURGE_ENGINE_ONLY ON)
+  # All objects sharing the AudioWorklet memory must use the same ABI.
+  add_compile_options(-msimd128 -pthread -fexceptions)
+  add_link_options(-msimd128 -pthread -fexceptions)
+endif()
+
 # Banner {{{
 message(STATUS "It's Surge XT version ${PROJECT_VERSION}, folks!")
 message(STATUS "CMake build type is ${CMAKE_BUILD_TYPE}.")
@@ -50,7 +58,7 @@ endif()
 # Fail on 32 bit except on windows {{{
 option(SURGE_BUILD_32BIT_LINUX "Allow non-working Surge XT builds to run on 32-bit Linux" OFF)
 
-if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+if(${CMAKE_SIZEOF_VOID_P} EQUAL 4 AND NOT EMSCRIPTEN)
   if(WIN32)
     message(STATUS "Windows 32-bit build is lightly tested")
   else()

@@ -1,0 +1,1385 @@
+{
+  "src/common/SkinModel.cpp:skin-connector:global.active_scene": {
+    "status": "verified",
+    "sourceDigest": "506b383cb3ec48d4d9214cbe49bcbaf45debfbd3bc0c348e12ff113d40cea611",
+    "browserEquivalent": "Original JUCE scene selector; clicking A/B updates the authoritative engine scene in both directions. This review covers scene selection only.",
+    "evidence": [
+      "web/tests/juce.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditor.h:overlay:OPEN_SOUND_CONTROL_SETTINGS": {
+    "status": "platform-limitation",
+    "sourceDigest": "9a3fbf065cf70f5d7719410bf7325dd8673b73324a3defc34dc1a3ebb5ea375e",
+    "reason": "Direct UDP OSC requires native sockets or an external bridge; the agreed static browser product has neither. The OSC settings entry is hidden.",
+    "portableAlternative": "Web MIDI/MPE and the existing parameter/modulation controls provide portable performance control.",
+    "capability": "udp-osc"
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:TOGGLE_DEBUG_CONSOLE": {
+    "status": "platform-limitation",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "reason": "The native Windows console window is not a browser integration; this shortcut is compiled only on Windows.",
+    "portableAlternative": "Chrome DevTools receives browser logs; the browser diagnostics remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:034adf88b438140c": {
+    "status": "platform-limitation",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "reason": "OS file-manager launch/reveal is a desktop shell integration and is hidden in SURGE_WEB builds.",
+    "portableAlternative": "Patch browsing, browser file/directory import and export, and IndexedDB-backed user content remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:75646f1f4b2a1ba3": {
+    "status": "platform-limitation",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "reason": "OS file-manager launch/reveal is a desktop shell integration and is hidden in SURGE_WEB builds.",
+    "portableAlternative": "Patch browsing, browser file/directory import and export, and IndexedDB-backed user content remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/SurgeJUCEHelpers.h:menu-call:af4cf0f880a99afa": {
+    "status": "platform-limitation",
+    "sourceDigest": "209329ea02d4e7611680de930a75bb40ab19b9f886a239a1e79927b61613f013",
+    "reason": "OS file-manager launch/reveal is a desktop shell integration and is hidden in SURGE_WEB builds.",
+    "portableAlternative": "Patch browsing, browser file/directory import and export, and IndexedDB-backed user content remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/overlays/OpenSoundControlSettings.cpp:editor-implementation:OpenSoundControlSettings": {
+    "status": "platform-limitation",
+    "sourceDigest": "260ff7765ccf240db28027c7ae954aa961c9a2a7e53a86797235e58b8c22d438",
+    "reason": "Direct UDP OSC requires native sockets or an external bridge; the agreed static browser product has neither. The OSC settings entry is hidden.",
+    "portableAlternative": "Web MIDI/MPE and the existing parameter/modulation controls provide portable performance control.",
+    "capability": "udp-osc"
+  },
+  "src/surge-xt/gui/widgets/PatchSelector.cpp:menu-call:4bafe9bce17432d8": {
+    "status": "platform-limitation",
+    "sourceDigest": "2e9f66efcbbafa348259bbf621b2f7104a11b3f02c7e8445bc32ab03bcd923de",
+    "reason": "OS file-manager launch/reveal is a desktop shell integration and is hidden in SURGE_WEB builds.",
+    "portableAlternative": "Patch browsing, browser file/directory import and export, and IndexedDB-backed user content remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/widgets/PatchSelector.cpp:menu-call:5ad741afc65d605c": {
+    "status": "platform-limitation",
+    "sourceDigest": "2e9f66efcbbafa348259bbf621b2f7104a11b3f02c7e8445bc32ab03bcd923de",
+    "reason": "OS file-manager launch/reveal is a desktop shell integration and is hidden in SURGE_WEB builds.",
+    "portableAlternative": "Patch browsing, browser file/directory import and export, and IndexedDB-backed user content remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/widgets/PatchSelector.cpp:menu-call:a552e72622ebc74a": {
+    "status": "platform-limitation",
+    "sourceDigest": "2e9f66efcbbafa348259bbf621b2f7104a11b3f02c7e8445bc32ab03bcd923de",
+    "reason": "OS file-manager launch/reveal is a desktop shell integration and is hidden in SURGE_WEB builds.",
+    "portableAlternative": "Patch browsing, browser file/directory import and export, and IndexedDB-backed user content remain available.",
+    "capability": "os-shell"
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:3578de3712e83acd": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original JUCE Export Patch as Text (All Parameters) opens a sandboxed browser report and downloads its generated HTML. Verified Init Saw patch name, oscillator type and polyphony; other report families remain unreviewed.",
+    "evidence": [
+      "web/tests/reports.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:ee8838b41d5d2625": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Factory Tuning Library command opens a searchable browser catalog with all 200 tuning resources. On-demand downloads retain exact SCL, KBM, and documentation bytes and filenames; failed downloads can be retried. Downloaded tunings use the original import commands. This review covers library browsing and download, not every tuning editor operation.",
+    "evidence": [
+      "web/tests/tuning-library.spec.js",
+      "web/tests/tuning-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:d056fa39925b289f": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original JUCE skin selection menu, including all 11 shipped factory skins and imported user skins. Factory bundles download on demand with checksum verification, cached restoration, retry, write-failure preservation and superseded-selection protection. User selection persists after folder and ZIP import. This review covers selection and delivery; complete native/browser rendering parity at every zoom and display scale remains separate work.",
+    "evidence": [
+      "web/tests/factory-skins.spec.js",
+      "web/tests/skin-import.spec.js",
+      "web/tests/skin-assets.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Surge Classic",
+      "01 Intro to Skins",
+      "02 Changing Images and Colors",
+      "03 Moving your First Control",
+      "04 Control Classes and User Controls",
+      "05 Labels And Modulators",
+      "06 Using PNG",
+      "07 The FX Section",
+      "08 Hiding Controls",
+      "09 Whats New in Surge 1.9",
+      "10 Adding Fonts",
+      "Surge Dark",
+      "Imported user skin names (folder and ZIP fixtures: Browser Test Skin and ZIP Test Skin)"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:7dab997d8043e11d": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG segment-type menu. All 20 runtime entries change the selected segment, leave other segment types unchanged, serialize the selected type, and restore exact state through undo and redo. Labels and streaming IDs are derived from the C++ sources. This review covers single-segment type selection; multi-selection, mouse drawing and DSP parity are separate requirements.",
+    "runtimeExpansion": [
+      "Hold",
+      "Linear",
+      "S-Curve",
+      "Bezier",
+      "Sine",
+      "Triangle",
+      "Sawtooth",
+      "Square",
+      "Bump",
+      "Stairs",
+      "Smooth Stairs",
+      "Brownian Bridge",
+      "Ratchet 1",
+      "Ratchet 2",
+      "Ratchet 3",
+      "Ratchet 4",
+      "Ratchet 5",
+      "Ratchet 6",
+      "Ratchet 7",
+      "Ratchet 8"
+    ],
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:cbfae6fc0c6aaeaa": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE keyboard-context Set Loop Start command uses the exact selected node in envelope/gated-loop mode. Browser tests verify serialized endpoint markers and exact undo/redo across both boundary edits. This entry covers the keyboard cursor branch; the mouse-position branch and loop audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:691126bceb1e8d09": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE keyboard-context Set Loop End command uses the exact selected node in envelope/gated-loop mode. Browser tests verify serialized endpoint markers and exact undo/redo across both boundary edits. This entry covers the keyboard cursor branch; the mouse-position branch and loop audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:cbfae6fc0c6aaeaa:2": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE mouse-context Set Loop Start command. Real Chrome right-clicks in the middle segment set its start boundary in both Loop and Gated Loop envelope modes. Tests require the exact serialized model with only the start marker changed, plus exact undo/redo. This review covers the mouse menu command on nonzero-duration segments, not marker dragging or loop playback.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:691126bceb1e8d09:2": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE mouse-context Set Loop End command. Real Chrome right-clicks select the clicked segment at its midpoint and the preceding segment within its leftmost tenth, in both Loop and Gated Loop envelope modes. Tests require exact serialized models and undo/redo. This review covers the mouse menu command on nonzero-duration segments, not marker dragging, degenerate geometry or loop playback.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:055da237c8d16f24": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Invert Deform Value command. Both toggle directions are checked through the original menu, keyboard shortcut and visible checkbox. Chrome tests compare the complete serialized model with only the selected segment flags changed and require exact undo/redo. This review covers single-segment editing, not group selection or modulation/retrigger audio behavior.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:34b606f6551e6ae5": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Use Deform for Segment command. Both toggle directions are checked through the original menu, keyboard shortcut and visible checkbox. Chrome tests compare the complete serialized model with only the selected segment flags changed and require exact undo/redo. This review covers single-segment editing, not group selection or modulation/retrigger audio behavior.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:59b901167de32381": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Filter EG command. Both toggle directions are checked through the original menu, keyboard shortcut and visible checkbox. Chrome tests compare the complete serialized model with only the selected segment flags changed and require exact undo/redo. This review covers single-segment editing, not group selection or modulation/retrigger audio behavior.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:a8797ce48100bd59": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Nothing command. All enables both envelope retriggers; Nothing clears both, through the original Trigger menu. Chrome tests compare the complete serialized model with only the selected segment flags changed and require exact undo/redo. This review covers single-segment editing, not group selection or modulation/retrigger audio behavior.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:c2bc502639a56a85": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG All command. All enables both envelope retriggers; Nothing clears both, through the original Trigger menu. Chrome tests compare the complete serialized model with only the selected segment flags changed and require exact undo/redo. This review covers single-segment editing, not group selection or modulation/retrigger audio behavior.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:fbadfd807105bd77": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Amp EG command. Both toggle directions are checked through the original menu, keyboard shortcut and visible checkbox. Chrome tests compare the complete serialized model with only the selected segment flags changed and require exact undo/redo. This review covers single-segment editing, not group selection or modulation/retrigger audio behavior.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:278a90701e1dcb61": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Create menu. Every listed runtime entry is exercised from both LFO and Envelope modes. Tests verify segment count, type, duration, starting value, flags, edit/loop modes and loop markers, then exact undo/redo of the whole model. This covers shape creation and editing state; generated-shape audio parity is a separate requirement.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:7a81f2825e50eee0": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Create menu. Every listed runtime entry is exercised from both LFO and Envelope modes. Tests verify segment count, type, duration, starting value, flags, edit/loop modes and loop markers, then exact undo/redo of the whole model. This covers shape creation and editing state; generated-shape audio parity is a separate requirement.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:82d077ba095ef479": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Create menu. Every listed runtime entry is exercised from both LFO and Envelope modes. Tests verify segment count, type, duration, starting value, flags, edit/loop modes and loop markers, then exact undo/redo of the whole model. This covers shape creation and editing state; generated-shape audio parity is a separate requirement.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ],
+    "runtimeExpansion": [
+      "8 Step Sequencer",
+      "16 Step Sequencer",
+      "32 Step Sequencer",
+      "64 Step Sequencer",
+      "128 Step Sequencer"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:9303270831c7b238": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Create menu. Every listed runtime entry is exercised from both LFO and Envelope modes. Tests verify segment count, type, duration, starting value, flags, edit/loop modes and loop markers, then exact undo/redo of the whole model. This covers shape creation and editing state; generated-shape audio parity is a separate requirement.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ],
+    "runtimeExpansion": [
+      "8 Lines Sine",
+      "16 Lines Sine",
+      "32 Lines Sine",
+      "64 Lines Sine",
+      "128 Lines Sine"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:b7b75f83774f0b86": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Create menu. Every listed runtime entry is exercised from both LFO and Envelope modes. Tests verify segment count, type, duration, starting value, flags, edit/loop modes and loop markers, then exact undo/redo of the whole model. This covers shape creation and editing state; generated-shape audio parity is a separate requirement.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ],
+    "runtimeExpansion": [
+      "8 Sawtooth Plucks",
+      "16 Sawtooth Plucks",
+      "32 Sawtooth Plucks"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:de6759b8a29b3067": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Create menu. Every listed runtime entry is exercised from both LFO and Envelope modes. Tests verify segment count, type, duration, starting value, flags, edit/loop modes and loop markers, then exact undo/redo of the whole model. This covers shape creation and editing state; generated-shape audio parity is a separate requirement.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:0aba166f7f691e66": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Distribute Nodes Evenly. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:280771cc33492ea7": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Quantize Nodes to Whole Units. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:330f4b2c973b7826": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Half Duration. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:3326c7382e129bf3": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Flip Vertically. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:6217ae7a9174f764": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Double Duration. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:64de4eb460d73463": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Quantize Nodes to Snap Divisions. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:d137b366c6bebdbc": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG Actions / Flip Horizontally. Browser tests use unequal segment durations and verify resulting durations, starting values, types, flags and exact undo/redo in Envelope and LFO modes where available. Envelope-only actions are absent from the native LFO accessibility menu; Escape dismissal preserves state. Distribution normalizes LFO duration to one cycle. These fixtures use Hold segments; curvature-specific mirror behavior, duration limits and audio parity remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:90d5c3a54ab589d9": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE Settings / Link Edge Nodes, tested in LFO and Envelope modes. Linking synchronizes the final endpoint to the start; editing the linked final node via type-in changes both endpoints. Unlinking permits an independent final-node arrow edit. Tests compare exact serialized models and undo/redo for linking, linked editing and unlinking, and verify the native final-node type-in guidance. Mouse endpoint gestures and audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:48e896696f8192c2": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG control-point X type-in. Tests cover all 19 non-Hold types and both axes for all 10 two-dimensional types through context-menu and Alt+Enter routes. Fractional edits change only the intended property of the selected segment, and undo/redo restores exact serialized models. Hold exposes neither editor and retains the native guidance announcement. This covers type-in editing; mouse gestures, parameter-boundary cases and control-point audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Control Point X: <current value> (Bezier)",
+      "Control Point X: <current value> (Brownian Bridge)",
+      "Control Point X: <current value> (Ratchet 1)",
+      "Control Point X: <current value> (Ratchet 2)",
+      "Control Point X: <current value> (Ratchet 3)",
+      "Control Point X: <current value> (Ratchet 4)",
+      "Control Point X: <current value> (Ratchet 5)",
+      "Control Point X: <current value> (Ratchet 6)",
+      "Control Point X: <current value> (Ratchet 7)",
+      "Control Point X: <current value> (Ratchet 8)"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:48e896696f8192c2:2": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG control-point value type-in. Tests cover all 19 non-Hold types and both axes for all 10 two-dimensional types through context-menu and Alt+Enter routes. Fractional edits change only the intended property of the selected segment, and undo/redo restores exact serialized models. Hold exposes neither editor and retains the native guidance announcement. This covers type-in editing; mouse gestures, parameter-boundary cases and control-point audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Control Point: <current value> (Linear)",
+      "Control Point: <current value> (S-Curve)",
+      "Control Point Y: <current value> (Bezier)",
+      "Control Point: <current value> (Sine)",
+      "Control Point: <current value> (Triangle)",
+      "Control Point: <current value> (Sawtooth)",
+      "Control Point: <current value> (Square)",
+      "Control Point: <current value> (Bump)",
+      "Control Point: <current value> (Stairs)",
+      "Control Point: <current value> (Smooth Stairs)",
+      "Control Point Y: <current value> (Brownian Bridge)",
+      "Control Point Y: <current value> (Ratchet 1)",
+      "Control Point Y: <current value> (Ratchet 2)",
+      "Control Point Y: <current value> (Ratchet 3)",
+      "Control Point Y: <current value> (Ratchet 4)",
+      "Control Point Y: <current value> (Ratchet 5)",
+      "Control Point Y: <current value> (Ratchet 6)",
+      "Control Point Y: <current value> (Ratchet 7)",
+      "Control Point Y: <current value> (Ratchet 8)"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:513e8b42b0a0b80b": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG control-point Y type-in. Tests cover all 19 non-Hold types and both axes for all 10 two-dimensional types through context-menu and Alt+Enter routes. Fractional edits change only the intended property of the selected segment, and undo/redo restores exact serialized models. Hold exposes neither editor and retains the native guidance announcement. This covers type-in editing; mouse gestures, parameter-boundary cases and control-point audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/MSEGEditor.cpp:menu-call:bcbb226315197b3f": {
+    "status": "verified",
+    "sourceDigest": "f81521188b922b48e2684a705436b81499d162588a44a8ad4c6a87139a31aabe",
+    "browserEquivalent": "Original JUCE MSEG control-point X type-in. Tests cover all 19 non-Hold types and both axes for all 10 two-dimensional types through context-menu and Alt+Enter routes. Fractional edits change only the intended property of the selected segment, and undo/redo restores exact serialized models. Hold exposes neither editor and retains the native guidance announcement. This covers type-in editing; mouse gestures, parameter-boundary cases and control-point audio behavior remain separate requirements.",
+    "evidence": [
+      "web/tests/mseg-workflows.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:FIND_PATCH": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original JUCE Find Patch action. Default Control+F and Command+F open the native type-ahead field from the focused application canvas, and Escape closes it. Browser key events are verified as default-prevented. Search result selection and reload behavior are covered separately in the same suite.",
+    "evidence": [
+      "web/tests/patch-selection.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:FAVORITE_PATCH": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original JUCE Favorite Patch action. Default Alt+F toggles a loaded factory patch into and out of Favorites, updates the original button label and persisted database query, and prevents the browser default. The same suite verifies favorite menu selection and persistence of removal across reload.",
+    "evidence": [
+      "web/tests/patch-selection.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:OSC_1": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original JUCE Alt+1 shortcut selects oscillator 1 in both scenes; the browser exposes the corresponding pitch control and retains independent edits when switching away and back. The default binding is tested with canvas focus and browser default suppression; arbitrary remapping remains unverified by this test.",
+    "evidence": [
+      "web/tests/editor-shortcuts.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:OSC_2": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original JUCE Alt+2 shortcut selects oscillator 2 in both scenes; the browser exposes the corresponding pitch control and retains independent edits when switching away and back. The default binding is tested with canvas focus and browser default suppression; arbitrary remapping remains unverified by this test.",
+    "evidence": [
+      "web/tests/editor-shortcuts.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:OSC_3": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original JUCE Alt+3 shortcut selects oscillator 3 in both scenes; the browser exposes the corresponding pitch control and retains independent edits when switching away and back. The default binding is tested with canvas focus and browser default suppression; arbitrary remapping remains unverified by this test.",
+    "evidence": [
+      "web/tests/editor-shortcuts.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:TOGGLE_SCENE": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original JUCE Alt+S shortcut switches the authoritative active scene A/B and restores scene-specific oscillator controls and edits. The default binding is tested with canvas focus and browser default suppression; arbitrary remapping remains unverified by this test.",
+    "evidence": [
+      "web/tests/editor-shortcuts.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:TOGGLE_KEYBIND_EDITOR": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original Alt+B opens the JUCE Keyboard Shortcut Editor. Its Find Patch row learns a custom chord, ignores standalone modifier transitions, cancels edits, saves the mapping and resets it with persistence after reload. Full editor coverage, including conflicts and other virtualized rows, remains a separate requirement.",
+    "evidence": [
+      "web/tests/keybinding-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/KeyBindingsOverlay.cpp:menu-call:31d4516be192a16b": {
+    "status": "verified",
+    "sourceDigest": "f4f7b6c13c11ad4e2e485371e15ef2972e54319a339e429bf935002d7cf25734",
+    "browserEquivalent": "Original Virtual Keyboard Layout menu expands to QWERTY, QWERTY (2 Octave), QWERTZ (German), QWERTZ (Slavic), AZERTY, Dvorak, Colemak and Workman. Tests select and reload every layout, reject the conflicting two-octave choice without replacing the previous choice, then select it after disabling the four conflicting octave/velocity shortcuts. This review covers menu selection and persistence; full physical-key coverage is separate. Dvorak conflict detection is also checked against a learned period binding and an unrelated Delete binding using the same key conversion as note mapping.",
+    "evidence": [
+      "web/tests/keyboard-layout.spec.js"
+    ],
+    "runtimeExpansion": [
+      "QWERTY",
+      "QWERTY (2 Octave)",
+      "QWERTZ (German)",
+      "QWERTZ (Slavic)",
+      "AZERTY",
+      "Dvorak",
+      "Colemak",
+      "Workman"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:VKB_VELOCITY_DOWN_10PCT": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original 9 velocity shortcut adjusts the virtual keyboard through the unchanged JUCE editor handler. Real-worklet tests at 44.1/48 kHz verify attenuation with velocity-sensitive VCA gain, lower/upper clamping, recovery from zero and note release. Zero GUI velocity retains native note-on semantics, distinct from wire MIDI velocity-zero note-off.",
+    "evidence": [
+      "web/tests/keyboard-performance.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:VKB_VELOCITY_UP_10PCT": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original 0 velocity shortcut adjusts the virtual keyboard through the unchanged JUCE editor handler. Real-worklet tests at 44.1/48 kHz verify attenuation with velocity-sensitive VCA gain, lower/upper clamping, recovery from zero and note release. Zero GUI velocity retains native note-on semantics, distinct from wire MIDI velocity-zero note-off.",
+    "evidence": [
+      "web/tests/keyboard-performance.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorKeyboardActions.h:shortcut:TOGGLE_VIRTUAL_KEYBOARD": {
+    "status": "verified",
+    "sourceDigest": "adf626136f917f8eaf48ac489a2f4e9191a9e6e93d931fcff5e467ece4903262",
+    "browserEquivalent": "Original Alt+K toggles the virtual keyboard and resizes the JUCE editor. Real-worklet tests at 44.1/48 kHz verify held-note cleanup, no playing while hidden, restored playing when shown, and persistence of both hidden and visible states through reload. Pointer playing, latching and wheel controls remain separate inventory workflows.",
+    "evidence": [
+      "web/tests/keyboard-performance.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:3d5762e09d01e906": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tempo on Patch Load choice persists after reload and recalls fractional saved tempo through the live worklet at 44.1/48 kHz. Legacy revision-22 patches preserve tempo; revision-23 patches missing tempoOnSave retain the native 120 BPM default.",
+    "evidence": [
+      "web/tests/tempo-recall.spec.js",
+      "web/tests/transport.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:a148168e3abfc17f": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original submenu exposes both tempo-recall policies with the correct checked state before and after browser storage reload. Both choices are exercised against live imported patches at 44.1/48 kHz.",
+    "evidence": [
+      "web/tests/tempo-recall.spec.js",
+      "web/tests/transport.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:c972046a068f88e8": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tempo on Patch Load choice persists after reload and preserves the current fractional tempo during live patch import, including saved-tempo, legacy and missing-tempo patches, at 44.1/48 kHz.",
+    "evidence": [
+      "web/tests/tempo-recall.spec.js",
+      "web/tests/transport.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:147f10e5b2cd4067": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tuning on Patch Load submenu. Both keep/override actions for scale and mapping are exercised independently in all four combinations, persisted through browser reload, and checked in the original tuning editor and real worklet pitch at 44.1/48 kHz. Patches without embedded tuning retain the active scale and mapping.",
+    "evidence": [
+      "web/tests/tuning-recall.spec.js",
+      "web/tests/tuning-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:43cdf9b17a608ca2": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tuning on Patch Load submenu. Both keep/override actions for scale and mapping are exercised independently in all four combinations, persisted through browser reload, and checked in the original tuning editor and real worklet pitch at 44.1/48 kHz. Patches without embedded tuning retain the active scale and mapping.",
+    "evidence": [
+      "web/tests/tuning-recall.spec.js",
+      "web/tests/tuning-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:567eac81f4751824": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tuning on Patch Load submenu. Both keep/override actions for scale and mapping are exercised independently in all four combinations, persisted through browser reload, and checked in the original tuning editor and real worklet pitch at 44.1/48 kHz. Patches without embedded tuning retain the active scale and mapping.",
+    "evidence": [
+      "web/tests/tuning-recall.spec.js",
+      "web/tests/tuning-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:c1c692f9e0474c52": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tuning on Patch Load submenu. Both keep/override actions for scale and mapping are exercised independently in all four combinations, persisted through browser reload, and checked in the original tuning editor and real worklet pitch at 44.1/48 kHz. Patches without embedded tuning retain the active scale and mapping.",
+    "evidence": [
+      "web/tests/tuning-recall.spec.js",
+      "web/tests/tuning-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:d6d4d8e9fcb66835": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings > Tuning on Patch Load submenu. Both keep/override actions for scale and mapping are exercised independently in all four combinations, persisted through browser reload, and checked in the original tuning editor and real worklet pitch at 44.1/48 kHz. Patches without embedded tuning retain the active scale and mapping.",
+    "evidence": [
+      "web/tests/tuning-recall.spec.js",
+      "web/tests/tuning-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:79b5ec5b179a680b": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original menu toggle is exercised on/off/on with persistence after each reload. Save appends the source author only when enabled, retains the original license, and writes the expected author/comment/license metadata. Canceling Save does not alter these defaults or source metadata.",
+    "evidence": [
+      "web/tests/patch-metadata.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:d7ad582f077fb31a": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original mini-edit dialog persists a Unicode default comment across reload, discards canceled edits, and supports clearing the default. Save applies it to a patch with an empty comment, preserves optional original-author attribution, and serializes the displayed value.",
+    "evidence": [
+      "web/tests/patch-metadata.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:f5c9bbd63f1c97f9": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original mini-edit dialog persists a Unicode default author across reload, discards canceled edits, and supports clearing the default. The Save dialog applies the default author and the serialized FXP retains it; clearing restores the original patch author.",
+    "evidence": [
+      "web/tests/patch-metadata.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/SurgeGUIEditorMenuStructures.cpp:menu-call:b9920c6c8e71cad0": {
+    "status": "verified",
+    "sourceDigest": "40dbed59e97a4af21eda7b1583cc5584b632ad4eb5811cd67aeffcf8cf50cd04",
+    "browserEquivalent": "Original Patch Settings command selects factory and saved user startup patches and persists through reload. A same-named user patch in the same category retains its edited oscillator pitch, distinguishing it from the factory patch. Switching back to the factory choice and restoring Init Saw are also verified.",
+    "evidence": [
+      "web/tests/default-patch.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:0be657bb6cc2faa6": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Wavetable Script Menu exports each generated frame through the browser directory picker into a fresh directory. Tests verify every frame sample, preservation of preexisting files and retry directories; interrupted writes report an error and retain generated source files across reload. Picker handles are mocked; physical operating-system picker validation remains a separate delivery check.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:1e6aeda3c8c1c6bd": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Wavetable Script Menu exports compatible floating-point WT files through the browser save picker. Tests verify header, every sample, embedded Lua metadata, and retention of the selected table while patch or generation state changes during the picker. Picker handles are mocked; physical operating-system picker validation remains a separate delivery check.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:b3686dbde71b11bd": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Wavetable Script Menu exports WAV data through the browser save picker. Tests verify RIFF sizes, IEEE-float format, frame counts, every sample, Surge table-size metadata and embedded Lua source. Picker handles are mocked; physical operating-system picker validation remains a separate delivery check.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:ccbdef878fa52ab7": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Wavetable Script Menu exports the Serum-compatible 2048-sample WAV variant. Tests verify every resampled sample, WAV format and sizes, the clm chunk, frame counts and embedded Lua source. Picker handles are mocked; physical operating-system picker validation remains a separate delivery check.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:de897bb0bfcdec92": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Wavetable Script Menu exports the VCV Rack-compatible 256-sample WAV variant. Tests verify every resampled sample, WAV format and sizes, frame counts and embedded Lua source. Picker handles are mocked; physical operating-system picker validation remains a separate delivery check.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:e6640de835ad09fb": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original JUCE context menu opens Find and selects the matching code range in writable Lua code and the read-only formula prelude.",
+    "runtimeExpansion": [
+      "Find..."
+    ],
+    "evidence": [
+      "web/tests/lua-editor-shortcuts.spec.js",
+      "web/tests/formula-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:7ab3778776cde4fa": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original JUCE context menu opens Replace in writable Lua code; Unicode replacement updates the selected match. The read-only prelude omits this action.",
+    "runtimeExpansion": [
+      "Replace..."
+    ],
+    "evidence": [
+      "web/tests/lua-editor-shortcuts.spec.js",
+      "web/tests/formula-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:8237c7234bfa63d9": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original JUCE context menu opens Go to Line and moves the caret to the native line position in writable code and the read-only formula prelude without changing text.",
+    "runtimeExpansion": [
+      "Go to Line..."
+    ],
+    "evidence": [
+      "web/tests/lua-editor-shortcuts.spec.js",
+      "web/tests/formula-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:cb57c4bd71ee8e84": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Read-only prelude context menu copies its selected text through the browser clipboard bridge. The test mocks clipboard writes; physical permission prompts remain a separate verification requirement.",
+    "runtimeExpansion": [
+      "Copy"
+    ],
+    "evidence": [
+      "web/tests/formula-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:d9d74e6686a4bfd7": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Read-only prelude context menu selects the entire original source, verified through the native selection range and subsequent clipboard contents.",
+    "runtimeExpansion": [
+      "Select All"
+    ],
+    "evidence": [
+      "web/tests/formula-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:68a743a192e260d2": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Save as .wtscript writes compatible Unicode XML scripts or binary scripts with snapshot inputs to persistent user storage. Overwrite cancellation and injected write/rename failures preserve existing bytes; successful retry preserves the new source and removes temporary files. Binary reload regenerates exact snapshot samples. Patch changes cancel pending filename and overwrite dialogs; no new file is created or previous file modified, and a fresh save succeeds.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/binary-script.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:ab33b12cfc81890a": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Load .wtscript uses the browser file picker to restore saved Unicode source, dimensions and generated samples. Both XML and binary snapshot files survive persistence and reload; invalid XML retains the current source and live wavetable. Picker handles are mocked; physical picker interaction remains a separate verification requirement. Delayed picker results are rejected after patch replacement, a newer applied script, or new unapplied editor text; each case retains samples/text and allows an explicit fresh import.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/binary-script.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:68a743a192e260d2": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "The original oscillator wavetable menu opens Save as .wtscript and writes the current generated source in the compatible format without changing the live wavetable. Shared save-path checks cover persistence, binary snapshots, cancellation, failed writes/commits and retry.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/binary-script.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:a8ff6b6ebce2d3d8": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Samples and Frames number-field context menus expose all eight resolution stops and fifteen frame-count stops. Tests select every stop, preserve the previous live table until Generate, and verify exact dimensions and frame-dependent boundary samples after generation. Reopening a popup quickly no longer creates duplicate modal menus.",
+    "runtimeExpansion": [
+      "Samples Per Wavetable Frame: 32",
+      "Samples Per Wavetable Frame: 64",
+      "Samples Per Wavetable Frame: 128",
+      "Samples Per Wavetable Frame: 256",
+      "Samples Per Wavetable Frame: 512",
+      "Samples Per Wavetable Frame: 1024",
+      "Samples Per Wavetable Frame: 2048",
+      "Samples Per Wavetable Frame: 4096",
+      "Wavetable Frame Count: 1",
+      "Wavetable Frame Count: 2",
+      "Wavetable Frame Count: 4",
+      "Wavetable Frame Count: 5",
+      "Wavetable Frame Count: 8",
+      "Wavetable Frame Count: 10",
+      "Wavetable Frame Count: 16",
+      "Wavetable Frame Count: 20",
+      "Wavetable Frame Count: 32",
+      "Wavetable Frame Count: 50",
+      "Wavetable Frame Count: 64",
+      "Wavetable Frame Count: 100",
+      "Wavetable Frame Count: 128",
+      "Wavetable Frame Count: 200",
+      "Wavetable Frame Count: 256"
+    ],
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:246d9beb57e666b0": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original frame-count Edit Value menu opens the native type-in with the current count. Tests reject 0, 257, negative and nonnumeric input while retaining editable text and live samples, cancel safely, and generate counts 3, 127 and 255. Preset tests cover both range boundaries; menu labels reflect the current integer count.",
+    "runtimeExpansion": [
+      "Edit Value: 1",
+      "Edit Value: 2",
+      "Edit Value: 3",
+      "Edit Value: 4",
+      "Edit Value: 5",
+      "Edit Value: 6",
+      "Edit Value: 7",
+      "Edit Value: 8",
+      "Edit Value: 9",
+      "Edit Value: 10",
+      "Edit Value: 11",
+      "Edit Value: 12",
+      "Edit Value: 13",
+      "Edit Value: 14",
+      "Edit Value: 15",
+      "Edit Value: 16",
+      "Edit Value: 17",
+      "Edit Value: 18",
+      "Edit Value: 19",
+      "Edit Value: 20",
+      "Edit Value: 21",
+      "Edit Value: 22",
+      "Edit Value: 23",
+      "Edit Value: 24",
+      "Edit Value: 25",
+      "Edit Value: 26",
+      "Edit Value: 27",
+      "Edit Value: 28",
+      "Edit Value: 29",
+      "Edit Value: 30",
+      "Edit Value: 31",
+      "Edit Value: 32",
+      "Edit Value: 33",
+      "Edit Value: 34",
+      "Edit Value: 35",
+      "Edit Value: 36",
+      "Edit Value: 37",
+      "Edit Value: 38",
+      "Edit Value: 39",
+      "Edit Value: 40",
+      "Edit Value: 41",
+      "Edit Value: 42",
+      "Edit Value: 43",
+      "Edit Value: 44",
+      "Edit Value: 45",
+      "Edit Value: 46",
+      "Edit Value: 47",
+      "Edit Value: 48",
+      "Edit Value: 49",
+      "Edit Value: 50",
+      "Edit Value: 51",
+      "Edit Value: 52",
+      "Edit Value: 53",
+      "Edit Value: 54",
+      "Edit Value: 55",
+      "Edit Value: 56",
+      "Edit Value: 57",
+      "Edit Value: 58",
+      "Edit Value: 59",
+      "Edit Value: 60",
+      "Edit Value: 61",
+      "Edit Value: 62",
+      "Edit Value: 63",
+      "Edit Value: 64",
+      "Edit Value: 65",
+      "Edit Value: 66",
+      "Edit Value: 67",
+      "Edit Value: 68",
+      "Edit Value: 69",
+      "Edit Value: 70",
+      "Edit Value: 71",
+      "Edit Value: 72",
+      "Edit Value: 73",
+      "Edit Value: 74",
+      "Edit Value: 75",
+      "Edit Value: 76",
+      "Edit Value: 77",
+      "Edit Value: 78",
+      "Edit Value: 79",
+      "Edit Value: 80",
+      "Edit Value: 81",
+      "Edit Value: 82",
+      "Edit Value: 83",
+      "Edit Value: 84",
+      "Edit Value: 85",
+      "Edit Value: 86",
+      "Edit Value: 87",
+      "Edit Value: 88",
+      "Edit Value: 89",
+      "Edit Value: 90",
+      "Edit Value: 91",
+      "Edit Value: 92",
+      "Edit Value: 93",
+      "Edit Value: 94",
+      "Edit Value: 95",
+      "Edit Value: 96",
+      "Edit Value: 97",
+      "Edit Value: 98",
+      "Edit Value: 99",
+      "Edit Value: 100",
+      "Edit Value: 101",
+      "Edit Value: 102",
+      "Edit Value: 103",
+      "Edit Value: 104",
+      "Edit Value: 105",
+      "Edit Value: 106",
+      "Edit Value: 107",
+      "Edit Value: 108",
+      "Edit Value: 109",
+      "Edit Value: 110",
+      "Edit Value: 111",
+      "Edit Value: 112",
+      "Edit Value: 113",
+      "Edit Value: 114",
+      "Edit Value: 115",
+      "Edit Value: 116",
+      "Edit Value: 117",
+      "Edit Value: 118",
+      "Edit Value: 119",
+      "Edit Value: 120",
+      "Edit Value: 121",
+      "Edit Value: 122",
+      "Edit Value: 123",
+      "Edit Value: 124",
+      "Edit Value: 125",
+      "Edit Value: 126",
+      "Edit Value: 127",
+      "Edit Value: 128",
+      "Edit Value: 129",
+      "Edit Value: 130",
+      "Edit Value: 131",
+      "Edit Value: 132",
+      "Edit Value: 133",
+      "Edit Value: 134",
+      "Edit Value: 135",
+      "Edit Value: 136",
+      "Edit Value: 137",
+      "Edit Value: 138",
+      "Edit Value: 139",
+      "Edit Value: 140",
+      "Edit Value: 141",
+      "Edit Value: 142",
+      "Edit Value: 143",
+      "Edit Value: 144",
+      "Edit Value: 145",
+      "Edit Value: 146",
+      "Edit Value: 147",
+      "Edit Value: 148",
+      "Edit Value: 149",
+      "Edit Value: 150",
+      "Edit Value: 151",
+      "Edit Value: 152",
+      "Edit Value: 153",
+      "Edit Value: 154",
+      "Edit Value: 155",
+      "Edit Value: 156",
+      "Edit Value: 157",
+      "Edit Value: 158",
+      "Edit Value: 159",
+      "Edit Value: 160",
+      "Edit Value: 161",
+      "Edit Value: 162",
+      "Edit Value: 163",
+      "Edit Value: 164",
+      "Edit Value: 165",
+      "Edit Value: 166",
+      "Edit Value: 167",
+      "Edit Value: 168",
+      "Edit Value: 169",
+      "Edit Value: 170",
+      "Edit Value: 171",
+      "Edit Value: 172",
+      "Edit Value: 173",
+      "Edit Value: 174",
+      "Edit Value: 175",
+      "Edit Value: 176",
+      "Edit Value: 177",
+      "Edit Value: 178",
+      "Edit Value: 179",
+      "Edit Value: 180",
+      "Edit Value: 181",
+      "Edit Value: 182",
+      "Edit Value: 183",
+      "Edit Value: 184",
+      "Edit Value: 185",
+      "Edit Value: 186",
+      "Edit Value: 187",
+      "Edit Value: 188",
+      "Edit Value: 189",
+      "Edit Value: 190",
+      "Edit Value: 191",
+      "Edit Value: 192",
+      "Edit Value: 193",
+      "Edit Value: 194",
+      "Edit Value: 195",
+      "Edit Value: 196",
+      "Edit Value: 197",
+      "Edit Value: 198",
+      "Edit Value: 199",
+      "Edit Value: 200",
+      "Edit Value: 201",
+      "Edit Value: 202",
+      "Edit Value: 203",
+      "Edit Value: 204",
+      "Edit Value: 205",
+      "Edit Value: 206",
+      "Edit Value: 207",
+      "Edit Value: 208",
+      "Edit Value: 209",
+      "Edit Value: 210",
+      "Edit Value: 211",
+      "Edit Value: 212",
+      "Edit Value: 213",
+      "Edit Value: 214",
+      "Edit Value: 215",
+      "Edit Value: 216",
+      "Edit Value: 217",
+      "Edit Value: 218",
+      "Edit Value: 219",
+      "Edit Value: 220",
+      "Edit Value: 221",
+      "Edit Value: 222",
+      "Edit Value: 223",
+      "Edit Value: 224",
+      "Edit Value: 225",
+      "Edit Value: 226",
+      "Edit Value: 227",
+      "Edit Value: 228",
+      "Edit Value: 229",
+      "Edit Value: 230",
+      "Edit Value: 231",
+      "Edit Value: 232",
+      "Edit Value: 233",
+      "Edit Value: 234",
+      "Edit Value: 235",
+      "Edit Value: 236",
+      "Edit Value: 237",
+      "Edit Value: 238",
+      "Edit Value: 239",
+      "Edit Value: 240",
+      "Edit Value: 241",
+      "Edit Value: 242",
+      "Edit Value: 243",
+      "Edit Value: 244",
+      "Edit Value: 245",
+      "Edit Value: 246",
+      "Edit Value: 247",
+      "Edit Value: 248",
+      "Edit Value: 249",
+      "Edit Value: 250",
+      "Edit Value: 251",
+      "Edit Value: 252",
+      "Edit Value: 253",
+      "Edit Value: 254",
+      "Edit Value: 255",
+      "Edit Value: 256"
+    ],
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:63473751a14eaa4a": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original Import Wavetable Data submenu exposes both snapshot slots, all three capture sources in both scenes, WT/WAV file loading and populated-slot clear actions. Chrome tests verify exact captured/imported samples after script generation, both slot clears, invalid-file retention, and stale-result rejection after patch replacement, editor closure, draft edits, newer generation or snapshot capture. Browser-accessible actions overlay the unchanged painted links. File-picker handles are mocked; physical picker and screen-reader interaction remain separate delivery checks.",
+    "evidence": [
+      "web/tests/wavetable-scripting.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Snapshot 1: Capture Scene A Osc 1",
+      "Snapshot 1: Capture Scene A Osc 2",
+      "Snapshot 1: Capture Scene A Osc 3",
+      "Snapshot 1: Capture Scene B Osc 1",
+      "Snapshot 1: Capture Scene B Osc 2",
+      "Snapshot 1: Capture Scene B Osc 3",
+      "Snapshot 2: Capture Scene A Osc 1",
+      "Snapshot 2: Capture Scene A Osc 2",
+      "Snapshot 2: Capture Scene A Osc 3",
+      "Snapshot 2: Capture Scene B Osc 1",
+      "Snapshot 2: Capture Scene B Osc 2",
+      "Snapshot 2: Capture Scene B Osc 3",
+      "Snapshot 1: Load .wav/.wt",
+      "Snapshot 1: Clear (when populated)",
+      "Snapshot 2: Load .wav/.wt",
+      "Snapshot 2: Clear (when populated)"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:4a33eacd5fa65f2b": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original wavetable script entries use the standard JUCE menu action in browser builds, retaining text and icons while supporting accessible and keyboard selection. All 13 bundled scripts load their source (with editor line-ending normalization), publish the specified dimensions, and contain finite non-silent sample data. Enter also reselects a checked factory item and restores its source. A script saved through the original editor survives reload, loads from nested user categories with Enter, and regenerates every sample exactly. This review covers menu behavior; it does not claim native/Wasm waveform parity for every factory script or physical screen-reader verification. Undo and redo after script-menu selection restore exact table samples, dimensions, name and editor source.",
+    "evidence": [
+      "web/tests/factory-wavetable-scripts.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Factory/Additive/Hard Sync Saw HQ",
+      "Factory/Additive/Hard Sync Saw",
+      "Factory/Additive/Sine to Saw",
+      "Factory/Additive/Sine to Square",
+      "Factory/Additive/Sine to Triangle",
+      "Factory/Additive/Square PWM HQ",
+      "Factory/Additive/Square PWM",
+      "Factory/Additive/Square to Saw HQ",
+      "Factory/Additive/Square to Saw",
+      "Factory/Additive/Triangle to Saw HQ",
+      "Factory/Additive/Triangle to Saw",
+      "Factory/Additive/Triangle to Square HQ",
+      "Factory/Additive/Triangle to Square",
+      "User/Browser Tests/Nested/User Menu",
+      "Checked current script item"
+    ]
+  },
+  "src/surge-xt/gui/overlays/LuaEditors.cpp:menu-call:d440c09cfe92d1e1": {
+    "status": "verified",
+    "sourceDigest": "cafd7385fd244e7dd7bb1413160df5f77bf8f26bdd4e5787c664379e58db2043",
+    "browserEquivalent": "Original recursive script-category menus expose bundled Additive entries and persistent user subdirectories. Tests navigate Additive for all 13 factory scripts, reopen its checked category for keyboard reselection, and navigate Browser Tests/Nested after saving and reloading user content. Category names remain driven by the indexed library rather than a browser-specific fixed list.",
+    "evidence": [
+      "web/tests/factory-wavetable-scripts.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Additive",
+      "Additive (Checked)",
+      "Browser Tests",
+      "Browser Tests (Checked)",
+      "Nested",
+      "Nested (Checked)"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:4a33eacd5fa65f2b": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original oscillator-menu scripted entries use standard JUCE items with the original icons and actions. Tests select a factory script through accessible press, Enter, and a native pointer click (respecting the standard menu opening guard), then verify source and generated dimensions. Nested user scripts saved by the editor survive reload and generate exact samples when selected through the oscillator menu. Undo and redo restore every sample, dimensions, name and script source. All 13 bundled script sources and dimensions are separately exercised through the script editor using the shared library. This item review does not cover the rest of the oscillator menu or claim full native/Wasm audio parity.",
+    "evidence": [
+      "web/tests/factory-wavetable-scripts.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Factory/Scripted/Additive/Hard Sync Saw HQ",
+      "Factory/Scripted/Additive/Hard Sync Saw",
+      "Factory/Scripted/Additive/Sine to Saw",
+      "Factory/Scripted/Additive/Sine to Square",
+      "Factory/Scripted/Additive/Sine to Triangle",
+      "Factory/Scripted/Additive/Square PWM HQ",
+      "Factory/Scripted/Additive/Square PWM",
+      "Factory/Scripted/Additive/Square to Saw HQ",
+      "Factory/Scripted/Additive/Square to Saw",
+      "Factory/Scripted/Additive/Triangle to Saw HQ",
+      "Factory/Scripted/Additive/Triangle to Saw",
+      "Factory/Scripted/Additive/Triangle to Square HQ",
+      "Factory/Scripted/Additive/Triangle to Square",
+      "User/Scripted/Browser Tests/Nested/User Menu"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:952e5a957779da50": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original oscillator file-import menu uses the browser picker and preserves WT, tagged PCM WAV, float WAV and XML wavetable-script imports. Tests verify exact decoded/generated samples, dimensions and script source. Invalid files, picker cancellation and permission denial retain samples/source and permit a fresh import. Pending results are rejected after newer selection, scene/patch changes, newly typed drafts or applied scripts; unchanged editor state still accepts the requested import. The callback uses a safe component reference and excludes active patch loading while validating its target. Picker handles and permission outcomes are simulated; physical picker/device checks remain separate delivery requirements.",
+    "evidence": [
+      "web/tests/oscillator-file-import.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:7dd872b499a45af7": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Sine command is reached through the harmonic context-menu shortcut. Chrome tests verify every harmonic coefficient against the specified waveform and exact undo/redo restoration. Test setup separates gestures across the native 200 ms undo-coalescing window. Harmonic keyboard input is forwarded to the existing JUCE handler, preserving coarse/fine adjustment, Home/End bounds and Delete reset. This review covers the preset command, not the entire additive editor or audio rendering parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:95b84c527ccdb9ee": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Triangle command is reached through the harmonic context-menu shortcut. Chrome tests verify every harmonic coefficient against the specified waveform and exact undo/redo restoration. Test setup separates gestures across the native 200 ms undo-coalescing window. Harmonic keyboard input is forwarded to the existing JUCE handler, preserving coarse/fine adjustment, Home/End bounds and Delete reset. This review covers the preset command, not the entire additive editor or audio rendering parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:627a093bb56055fb": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Sawtooth command is reached through the harmonic context-menu shortcut. Chrome tests verify every harmonic coefficient against the specified waveform and exact undo/redo restoration. Test setup separates gestures across the native 200 ms undo-coalescing window. Harmonic keyboard input is forwarded to the existing JUCE handler, preserving coarse/fine adjustment, Home/End bounds and Delete reset. This review covers the preset command, not the entire additive editor or audio rendering parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:13c9e6f5c1651585": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Square command is reached through the harmonic context-menu shortcut. Chrome tests verify every harmonic coefficient against the specified waveform and exact undo/redo restoration. Test setup separates gestures across the native 200 ms undo-coalescing window. Harmonic keyboard input is forwarded to the existing JUCE handler, preserving coarse/fine adjustment, Home/End bounds and Delete reset. This review covers the preset command, not the entire additive editor or audio rendering parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:e728bcb82b263f65": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Shift Left command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:757c581726d652b5": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Shift Right command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:11a7f97d9c1add0e": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Keep Positive command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:45cbc2da59d11cd2": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Keep Negative command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:022bc7d312a0819b": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Keep Even Harmonics command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:d32048eb381d4ba9": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Keep Odd Harmonics command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:a965450c19b509ed": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Absolute command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:91a46ea12cf5aea4": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Invert command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:bba746055f3f380a": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Invert Even Harmonics command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:5f0a584052e9d32d": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Invert Odd Harmonics command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:06590d65b5e8af89": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Reverse command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:739f0dad967d6a4d": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Soften command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:3c73637b9fcdee23": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Window (Linear) command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:93572f52a832224f": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Window (Cosine) command is reachable through the harmonic context-menu shortcut. A signed harmonic fixture verifies every transformed coefficient and exact undo/redo restoration. The native harmonic index convention, fundamental handling and window formulas are preserved. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:68ac3538474bc30e": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original Alias additive-editor Random command is reachable through the harmonic context-menu shortcut. Two Random invocations produce bounded finite harmonic values; undo and redo restore the exact realized arrays rather than resampling. Tests separate independent gestures across the native 200 ms undo-coalescing window. This command review does not claim complete editor interaction, audio or visual parity.",
+    "evidence": [
+      "web/tests/alias-editor.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:7c5968b649e63680": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original JUCE Rename Wavetable action changes the display name while preserving every sample. Unicode rename, cancellation, patch save and persistence through page reload pass with audio inactive and running. This does not claim new rename undo behavior.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:95961eee9a89cc1b": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original JUCE refresh action discovers a newly added user WT file, keeps the current name and sample data unchanged, and makes the new category/table selectable with exact sample restoration.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:5281d9556cc3e626": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "The original oscillator wavetable context-menu command opens and closes the JUCE script editor without replacing the current table. This review covers this entry point; the broader scripting workflows remain separately evidenced.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js"
+    ],
+    "runtimeExpansion": [
+      "Wavetable Script Editor..."
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:e210b236e3797e5f": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "Original oscillator context submenu exposes WT, WAV and individual-frame export; Serum and VCV Rack entries appear only for scripted tables. All five routes reach their browser pickers and preserve the selected table.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js",
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/storage.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:1e6aeda3c8c1c6bd": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "The original oscillator menu exports compatible floating-point WT samples and dimensions through the selected browser handle, including native filename-extension normalization. Script metadata, cancellation, picker lifetime and failure recovery are additionally exercised through the shared script-editor export implementation.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js",
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/storage.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:b3686dbde71b11bd": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "The original oscillator menu exports mono float WAV samples, dimensions and script metadata without changing the selected table. Shared export tests verify headers, picker lifetime and retained data after failures.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js",
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/storage.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:0be657bb6cc2faa6": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "The original oscillator menu exports every generated frame into the selected browser directory. Shared frame-export tests verify compatible WAV samples, naming collisions, preservation of existing files and recovery after interrupted writes.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js",
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/storage.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:ccbdef878fa52ab7": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "For scripted tables, the original oscillator submenu exports a 2048-sample-per-frame WAV with Serum clm metadata and embedded Lua metadata. Sample comparisons and current-table preservation pass; the command remains hidden for non-scripted tables.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js",
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/storage.spec.js"
+    ]
+  },
+  "src/surge-xt/gui/widgets/OscillatorWaveformDisplay.cpp:menu-call:de897bb0bfcdec92": {
+    "status": "verified",
+    "sourceDigest": "7745946f054b524e9d4c0b3df9caa6744c10b55bd0bc3622c9eeee3a593f9935",
+    "browserEquivalent": "For scripted tables, the original oscillator submenu exports a 256-sample-per-frame WAV with embedded Lua metadata. Sample comparisons and current-table preservation pass; the command remains hidden for non-scripted tables.",
+    "evidence": [
+      "web/tests/wavetable-context.spec.js",
+      "web/tests/wavetable-scripting.spec.js",
+      "web/tests/storage.spec.js"
+    ]
+  }
+}

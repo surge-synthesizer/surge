@@ -23,6 +23,9 @@
 
 #include "juce_core/juce_core.h"
 #include "UserDefaults.h"
+#if SURGE_WEB
+#include <emscripten.h>
+#endif
 
 #if LINUX
 #include <sys/types.h>
@@ -161,6 +164,13 @@ void constrainPointOnLineWithinRectangle(const juce::Rectangle<float> rect,
 
 bool openFileOrFolder(const std::string &f)
 {
+#if SURGE_WEB
+    if (f == "/factory/tuning_library" || f == "/factory/tuning_library/")
+    {
+        EM_ASM({ SurgeTuningLibrary.show(); });
+        return true;
+    }
+#endif
     auto path = juce::File(f);
 
     if (!path.exists())

@@ -22,6 +22,7 @@
 #ifndef SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_TAPE_DEGRADENOISE_H
 #define SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_TAPE_DEGRADENOISE_H
 
+#include "SurgeRandom.h"
 #include <random>
 #include <functional>
 
@@ -34,7 +35,7 @@ class DegradeNoise
   public:
     DegradeNoise()
     {
-        std::random_device rd;
+        Surge::AudioRandomDevice rd;
         auto gen = std::minstd_rand(rd());
         std::uniform_real_distribution<float> distro(-0.5f, 0.5f);
         urng = std::bind(distro, gen);

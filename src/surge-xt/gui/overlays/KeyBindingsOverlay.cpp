@@ -36,6 +36,21 @@ namespace Surge
 {
 namespace Overlays
 {
+#if SURGE_WEB
+struct KeyBindingLearnButton : public Surge::Widgets::SelfDrawToggleButton
+{
+    explicit KeyBindingLearnButton(KeyBindingsOverlay *owner)
+        : SelfDrawToggleButton("Learn"), overlay(owner) {}
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        // Enter and navigation keys belong to the requested binding while
+        // learning, rather than activating this one-cell toggle again.
+        if (overlay->isLearning) return overlay->keyPressed(key);
+        return SelfDrawToggleButton::keyPressed(key);
+    }
+    KeyBindingsOverlay *overlay;
+};
+#endif
 
 struct KeyBindingsListRow : public juce::Component
 {
@@ -91,7 +106,11 @@ struct KeyBindingsListRow : public juce::Component
 
         addAndMakeVisible(*reset);
 
+#if SURGE_WEB
+        learn = std::make_unique<KeyBindingLearnButton>(overlay);
+#else
         learn = std::make_unique<Surge::Widgets::SelfDrawToggleButton>("Learn");
+#endif
         learn->setSkin(editor->currentSkin);
         learn->setStorage(storage);
         learn->setAccessible(true);
@@ -126,7 +145,17 @@ struct KeyBindingsListRow : public juce::Component
 
     void resetValues()
     {
-        name->setText(Surge::GUI::keyboardActionDescription(action), juce::dontSendNotification);
+        const auto description = Surge::GUI::keyboardActionDescription(action);
+        name->setText(description, juce::dontSendNotification);
+        // ListBox reuses row components while scrolling. Refresh accessible
+        // action names along with the visible label so that each control names
+        // the binding it will actually edit.
+        active->setTitle("Toggle " + description);
+        active->setDescription("Toggle " + description);
+        reset->setTitle("Reset " + description);
+        reset->setDescription("Reset " + description);
+        learn->setTitle("Learn " + description);
+        learn->setDescription("Learn " + description);
 
         auto act = editor->keyMapManager->bindings[action].active;
         active->setToggleState(act, juce::dontSendNotification);
@@ -154,6 +183,9 @@ struct KeyBindingsListRow : public juce::Component
         keyDesc->setText(desc, juce::dontSendNotification);
 
         bool isThisRowLearning = (overlay->isLearning && (int)overlay->learnAction == (int)action);
+#if SURGE_WEB
+        learn->getProperties().set("surgeNativeKeyCapture", isThisRowLearning);
+#endif
 
         learn->setToggleState(isThisRowLearning);
         learn->setValue(isThisRowLearning);
@@ -391,7 +423,8 @@ void KeyBindingsOverlay::changeVKBLayout(const std::string layout)
             // VKB layouts store keycodes as lowercase, but SST keybindings store them as uppercase
             // because of juce::KeyPress::getTextDescription()
             // see keyCodeToString() template instantiation in SurgeGUIEditor.h
-            const auto kp = juce::KeyPress(juce::CharacterFunctions::toUpperCase(key),
+            const auto kp = juce::KeyPress(juce::CharacterFunctions::toUpperCase(
+                                              SurgeSynthEditor::virtualKeyboardKeyCode(key)),
                                            juce::ModifierKeys::noModifiers, 0);
 
             for (auto const &[k, b] : editor->keyMapManager->bindings)

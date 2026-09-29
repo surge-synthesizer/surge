@@ -141,15 +141,18 @@ Effect::Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     // assert(storage);
     this->fxdata = fxdata;
     this->storage = storage;
-    this->pd = pd;
     ringout = 10000000;
-    if (pd)
+    rebindParameterStorage(fxdata, pd);
+}
+
+void Effect::rebindParameterStorage(FxStorage *parameters, pdata *values)
+{
+    fxdata = parameters;
+    pd = values;
+    for (int i = 0; i < n_fx_params; i++)
     {
-        for (int i = 0; i < n_fx_params; i++)
-        {
-            pd_float[i] = &pd[fxdata->p[i].id].f;
-            pd_int[i] = &pd[fxdata->p[i].id].i;
-        }
+        pd_float[i] = values ? &values[parameters->p[i].id].f : nullptr;
+        pd_int[i] = values ? &values[parameters->p[i].id].i : nullptr;
     }
 }
 

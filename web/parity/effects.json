@@ -1,0 +1,1960 @@
+{
+  "schema": 1,
+  "scope": "Three-second Init FM2/C4 fixtures: default effects, explicit parameter edits, and deterministic stereo input. A passing fixture is not full family parity. Measurements below describe the default-effect survey unless otherwise stated.",
+  "rates": [
+    44100,
+    48000
+  ],
+  "relativeRMSThreshold": 1e-05,
+  "effects": {
+    "EQ": {
+      "type": 6,
+      "measurements": {
+        "44100": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 3.97457738473491e-08,
+            "error": 9.523622932225897e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 602.8652867366854,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 4.104716676641646e-08,
+            "error": 1.105987684244004e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 656.4231956802457,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "parameters",
+      "parameterFixtures": [
+        {
+          "header": "ParametricEQ3BandEffect.h",
+          "enum": "eq3_params",
+          "member": "eq3_gain1",
+          "value": 1
+        },
+        {
+          "header": "ParametricEQ3BandEffect.h",
+          "enum": "eq3_params",
+          "member": "eq3_gain2",
+          "value": 1
+        },
+        {
+          "header": "ParametricEQ3BandEffect.h",
+          "enum": "eq3_params",
+          "member": "eq3_gain3",
+          "value": 1
+        }
+      ]
+    },
+    "Exciter": {
+      "type": 19,
+      "measurements": {
+        "44100": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 602.7779859840626,
+            "peak": 0.11698314547538757,
+            "relativeRMS": 4.019990207224208e-08,
+            "error": 9.741085905682514e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 7.913842666179315e-05,
+            "error": 3.7756793239367945e-06
+          },
+          "nativeRepeat": {
+            "energy": 602.7779859840626,
+            "peak": 0.11698314547538757,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 602.777985703269,
+            "peak": 0.11698314547538757,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 656.3277540066,
+            "peak": 0.11701730638742447,
+            "relativeRMS": 4.098544397548416e-08,
+            "error": 1.102503704670433e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 7.927788651758369e-05,
+            "error": 4.125608818250238e-06
+          },
+          "nativeRepeat": {
+            "energy": 656.3277540066,
+            "peak": 0.11701730638742447,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 656.3277537702129,
+            "peak": 0.11701730638742447,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "parameters",
+      "parameterFixtures": [
+        {
+          "header": "chowdsp/ExciterEffect.h",
+          "enum": "exciter_params",
+          "member": "exciter_tone",
+          "value": 0
+        }
+      ]
+    },
+    "Graphic EQ": {
+      "type": 16,
+      "measurements": {
+        "44100": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 3.97457738473491e-08,
+            "error": 9.523622932225897e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 602.8652867366854,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 4.104716676641646e-08,
+            "error": 1.105987684244004e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 656.4231956802457,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "parameters",
+      "parameterFixtures": [
+        {
+          "header": "GraphicEQ11BandEffect.h",
+          "enum": "geq11_params",
+          "member": "geq11_250",
+          "value": 1
+        },
+        {
+          "header": "GraphicEQ11BandEffect.h",
+          "enum": "geq11_params",
+          "member": "geq11_500",
+          "value": 1
+        }
+      ]
+    },
+    "Resonator": {
+      "type": 17,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 10.64035976676833,
+            "peak": 0.03749694302678108,
+            "relativeRMS": 5.273791796152458e-06,
+            "error": 2.9593904838343816e-10
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.9143409248385074,
+            "error": 504.0070314482063
+          },
+          "nativeRepeat": {
+            "energy": 10.64035976676833,
+            "peak": 0.03749694302678108,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 10.640359914098394,
+            "peak": 0.03749694302678108,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 11.521348518605329,
+            "peak": 0.036351967602968216,
+            "relativeRMS": 6.463518310717357e-06,
+            "error": 4.813281714930721e-10
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.913218549059494,
+            "error": 547.4360175759139
+          },
+          "nativeRepeat": {
+            "energy": 11.521348518605329,
+            "peak": 0.036351967602968216,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 11.521368610938193,
+            "peak": 0.03635197505354881,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Bonsai": {
+      "type": 28,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 156.95434850616363,
+            "peak": 0.05936431139707565,
+            "relativeRMS": 8.236470188995209e-07,
+            "error": 1.0647695292519836e-10
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.5224403192982746,
+            "error": 164.548394921483
+          },
+          "nativeRepeat": {
+            "energy": 156.95434850616363,
+            "peak": 0.05936431139707565,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 156.95434733810538,
+            "peak": 0.05936432257294655,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 171.96763853535487,
+            "peak": 0.0595511794090271,
+            "relativeRMS": 7.992326733368202e-07,
+            "error": 1.0984826134868518e-10
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.521006832035732,
+            "error": 178.1848418303697
+          },
+          "nativeRepeat": {
+            "energy": 171.96763853535487,
+            "peak": 0.0595511794090271,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 171.96764012601716,
+            "peak": 0.05955115705728531,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "CHOW": {
+      "type": 18,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 624.4290182083412,
+            "peak": 0.1283995807170868,
+            "relativeRMS": 8.026498374669728e-08,
+            "error": 4.02286372820898e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.17561934288782108,
+            "error": 18.593663780984073
+          },
+          "nativeRepeat": {
+            "energy": 624.4290182083412,
+            "peak": 0.1283995807170868,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 624.429017733662,
+            "peak": 0.1283995807170868,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 679.946874720059,
+            "peak": 0.12843678891658783,
+            "relativeRMS": 7.879549781122029e-08,
+            "error": 4.221606882671676e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.16763381042351916,
+            "error": 18.446210194200013
+          },
+          "nativeRepeat": {
+            "energy": 679.946874720059,
+            "peak": 0.12843678891658783,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 679.9468752619616,
+            "peak": 0.12843678891658783,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Distortion": {
+      "type": 5,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 450.6053795239004,
+            "peak": 0.10090824961662292,
+            "relativeRMS": 6.616367339491213e-08,
+            "error": 1.972584383279371e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.5024364969789026,
+            "error": 1360.8571131258304
+          },
+          "nativeRepeat": {
+            "energy": 450.6053795239004,
+            "peak": 0.10090824961662292,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 450.60537906273174,
+            "peak": 0.10090824961662292,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 490.6995829766017,
+            "peak": 0.10094098746776581,
+            "relativeRMS": 6.455766685048717e-08,
+            "error": 2.0450848977166584e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.5007196200408135,
+            "error": 1478.369656708057
+          },
+          "nativeRepeat": {
+            "energy": 490.6995829766017,
+            "peak": 0.10094098746776581,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 490.699583331026,
+            "peak": 0.10094098746776581,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Neuron": {
+      "type": 15,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 284.10011237300415,
+            "peak": 0.10080017149448395,
+            "relativeRMS": 1.3241295080674013e-07,
+            "error": 4.981181118954199e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.35651365622499603,
+            "error": 76.62537592205052
+          },
+          "nativeRepeat": {
+            "energy": 284.10011237300415,
+            "peak": 0.10080017149448395,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 284.1001120237892,
+            "peak": 0.10080016404390335,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 309.4934943512455,
+            "peak": 0.10134924203157425,
+            "relativeRMS": 1.3099139204262437e-07,
+            "error": 5.3105198835107e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.3537457667684838,
+            "error": 82.1422173629041
+          },
+          "nativeRepeat": {
+            "energy": 309.4934943512455,
+            "peak": 0.10134924203157425,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 309.49349406583485,
+            "peak": 0.10134924203157425,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Tape": {
+      "type": 23,
+      "measurements": {
+        "44100": {
+          "status": "needs-investigation",
+          "comparison": {
+            "energy": 468.9259135007259,
+            "peak": 0.10338279604911804,
+            "relativeRMS": 0.0009373201220992222,
+            "error": 0.00041198377619357793
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.9239780806559683,
+            "error": 514.6874933700435
+          },
+          "nativeRepeat": {
+            "energy": 468.9259135007259,
+            "peak": 0.10338279604911804,
+            "relativeRMS": 0.0009551129831171731,
+            "error": 0.0004277733554052579
+          },
+          "wasmRepeat": {
+            "energy": 468.92568461486326,
+            "peak": 0.10338278859853745,
+            "relativeRMS": 0.010193128811469668,
+            "error": 0.04872132000039908
+          }
+        },
+        "48000": {
+          "status": "needs-investigation",
+          "comparison": {
+            "energy": 510.5531968099015,
+            "peak": 0.10354632139205933,
+            "relativeRMS": 0.0017895685528484839,
+            "error": 0.0016350750022699591
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.9147871909925716,
+            "error": 549.3183022008914
+          },
+          "nativeRepeat": {
+            "energy": 510.5531968099015,
+            "peak": 0.10354632139205933,
+            "relativeRMS": 0.0011654153544897053,
+            "error": 0.0006934297517313166
+          },
+          "wasmRepeat": {
+            "energy": 510.55372573684707,
+            "peak": 0.10354630649089813,
+            "relativeRMS": 0.0016705161136905326,
+            "error": 0.0014247635242891962
+          }
+        }
+      },
+      "fixture": "pending",
+      "reason": "Repeated native and Wasm renders vary; requires stochastic signal comparisons."
+    },
+    "Waveshaper": {
+      "type": 25,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 152.75967957635095,
+            "peak": 0.10678327828645706,
+            "relativeRMS": 1.3399507731956906e-07,
+            "error": 2.742751277635892e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.5038230200519326,
+            "error": 153.0298990094638
+          },
+          "nativeRepeat": {
+            "energy": 152.75967957635095,
+            "peak": 0.10678327828645706,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 152.75967959600075,
+            "peak": 0.10678326338529587,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 166.2908127439307,
+            "peak": 0.10621377825737,
+            "relativeRMS": 1.3041784016234922e-07,
+            "error": 2.8284093430026216e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.5033048512598429,
+            "error": 166.28234949846546
+          },
+          "nativeRepeat": {
+            "energy": 166.2908127439307,
+            "peak": 0.10621377825737,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 166.29081252558484,
+            "peak": 0.10621377825737,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Combulator": {
+      "type": 21,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 3586.341585310297,
+            "peak": 0.26381227374076843,
+            "relativeRMS": 1.9393105295022914e-07,
+            "error": 1.3487962909646504e-10
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.481802172345069,
+            "error": 1323.734025505292
+          },
+          "nativeRepeat": {
+            "energy": 3586.341585310297,
+            "peak": 0.26381227374076843,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 3586.341555429418,
+            "peak": 0.26381227374076843,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 3909.7687245574753,
+            "peak": 0.2638072073459625,
+            "relativeRMS": 4.301663542832845e-07,
+            "error": 7.234756951942543e-10
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.480554780125057,
+            "error": 1438.9075152778553
+          },
+          "nativeRepeat": {
+            "energy": 3909.7687245574753,
+            "peak": 0.2638072073459625,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 3909.7687221620768,
+            "peak": 0.2638072669506073,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Frequency Shifter": {
+      "type": 7,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 603.2207053913855,
+            "peak": 0.1170131266117096,
+            "relativeRMS": 3.330056017645589e-07,
+            "error": 6.68927912999198e-11
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.5452894629555731,
+            "error": 1439.5937894731271
+          },
+          "nativeRepeat": {
+            "energy": 603.2207053913855,
+            "peak": 0.1170131266117096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 603.2207008612659,
+            "peak": 0.1170131266117096,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 656.6238775493912,
+            "peak": 0.11766400188207626,
+            "relativeRMS": 3.3463007423007604e-07,
+            "error": 7.352696011111091e-11
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.6799151442236873,
+            "error": 1852.5016766441565
+          },
+          "nativeRepeat": {
+            "energy": 656.6238775493912,
+            "peak": 0.11766400188207626,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 656.6238775576549,
+            "peak": 0.11766395717859268,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Nimbus": {
+      "type": 22,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 150.5745326355264,
+            "peak": 0.058486029505729675,
+            "relativeRMS": 3.971983158645801e-08,
+            "error": 2.3755617323112845e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.5002679604066302,
+            "error": 150.87790907639317
+          },
+          "nativeRepeat": {
+            "energy": 150.5745326355264,
+            "peak": 0.058486029505729675,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 150.5745325819417,
+            "peak": 0.058486029505729675,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 163.97109584039083,
+            "peak": 0.05849864333868027,
+            "relativeRMS": 4.068377942657159e-08,
+            "error": 2.714000236872949e-13
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.5002322140019727,
+            "error": 164.25826504453568
+          },
+          "nativeRepeat": {
+            "energy": 163.97109584039083,
+            "peak": 0.05849864333868027,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 163.97109576348578,
+            "peak": 0.05849864333868027,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Ring Modulator": {
+      "type": 13,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 391.8326059533753,
+            "peak": 0.11382026225328445,
+            "relativeRMS": 3.3255402440885776e-07,
+            "error": 4.3333621754613605e-11
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.284063923461779,
+            "error": 994.0164387661328
+          },
+          "nativeRepeat": {
+            "energy": 391.8326059533753,
+            "peak": 0.11382026225328445,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 391.8326058107119,
+            "peak": 0.11382026225328445,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 426.5978106441067,
+            "peak": 0.11935646086931229,
+            "relativeRMS": 3.2891439338791695e-07,
+            "error": 4.6151346855861735e-11
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.284121374937918,
+            "error": 1082.4206513311838
+          },
+          "nativeRepeat": {
+            "energy": 426.5978106441067,
+            "peak": 0.11935646086931229,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 426.5978097194028,
+            "peak": 0.11935646086931229,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Treemonster": {
+      "type": 24,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 203.6738083268382,
+            "peak": 0.11148965358734131,
+            "relativeRMS": 1.0910505008992759e-06,
+            "error": 2.424515081887811e-10
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.1564989318244634,
+            "error": 806.3261597256517
+          },
+          "nativeRepeat": {
+            "energy": 203.6738083268382,
+            "peak": 0.11148965358734131,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 203.67373448789724,
+            "peak": 0.11148961633443832,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 221.74092649681648,
+            "peak": 0.11148519814014435,
+            "relativeRMS": 1.1478950780485869e-06,
+            "error": 2.9217983886823673e-10
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.1561011193582955,
+            "error": 877.3554185495532
+          },
+          "nativeRepeat": {
+            "energy": 221.74092649681648,
+            "peak": 0.11148519814014435,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 221.74086832623172,
+            "peak": 0.11148515343666077,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Vocoder": {
+      "type": 10,
+      "measurements": {
+        "44100": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 2.401933934130396e-14,
+            "peak": 3.4289897588024587e-09,
+            "relativeRMS": 5.064525152333501e-07,
+            "error": 6.160820032381401e-27
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1,
+            "error": 602.865287046119
+          },
+          "nativeRepeat": {
+            "energy": 2.401933934130396e-14,
+            "peak": 3.4289897588024587e-09,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 2.4019363532468662e-14,
+            "peak": 3.428991535159298e-09,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 1.3808120193379145e-13,
+            "peak": 7.880617935995815e-09,
+            "relativeRMS": 6.75691131270413e-07,
+            "error": 6.304214710657868e-26
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1,
+            "error": 656.423195962722
+          },
+          "nativeRepeat": {
+            "energy": 1.3808120193379145e-13,
+            "peak": 7.880617935995815e-09,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 1.3808101580628022e-13,
+            "peak": 7.880612606925297e-09,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "input",
+      "parameterFixtures": [
+        {
+          "header": "VocoderEffect.h",
+          "enum": "vocoder_params",
+          "member": "voc_mod_input",
+          "discreteEnum": "vocoder_input_modes",
+          "discreteMember": "vim_left",
+          "audioInput": true
+        },
+        {
+          "header": "VocoderEffect.h",
+          "enum": "vocoder_params",
+          "member": "voc_mod_input",
+          "discreteEnum": "vocoder_input_modes",
+          "discreteMember": "vim_right",
+          "audioInput": true
+        },
+        {
+          "header": "VocoderEffect.h",
+          "enum": "vocoder_params",
+          "member": "voc_mod_input",
+          "discreteEnum": "vocoder_input_modes",
+          "discreteMember": "vim_stereo",
+          "audioInput": true
+        }
+      ]
+    },
+    "Chorus": {
+      "type": 9,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 642.83152473204,
+            "peak": 0.20374861359596252,
+            "relativeRMS": 5.8971655685868444e-08,
+            "error": 2.235547021040031e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.2596330187636193,
+            "error": 956.551485479442
+          },
+          "nativeRepeat": {
+            "energy": 642.83152473204,
+            "peak": 0.20374861359596252,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 642.8315244946012,
+            "peak": 0.20374861359596252,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 703.7402107676214,
+            "peak": 0.20394811034202576,
+            "relativeRMS": 5.958052040977462e-08,
+            "error": 2.4981640324626985e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.2555737620683753,
+            "error": 1034.8285034515325
+          },
+          "nativeRepeat": {
+            "energy": 703.7402107676214,
+            "peak": 0.20394811034202576,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 703.7402107142183,
+            "peak": 0.20394812524318695,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Ensemble": {
+      "type": 20,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 562.7891532168671,
+            "peak": 0.1536131352186203,
+            "relativeRMS": 1.82755491173344e-07,
+            "error": 1.879691546710927e-11
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.2316678942194534,
+            "error": 914.5501380629476
+          },
+          "nativeRepeat": {
+            "energy": 562.7891532168671,
+            "peak": 0.1536131352186203,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 562.7891529344805,
+            "peak": 0.1536131352186203,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 545.974742445908,
+            "peak": 0.1450338512659073,
+            "relativeRMS": 1.760160552838759e-07,
+            "error": 1.6915199317118147e-11
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.1994777754789545,
+            "error": 944.4268605111612
+          },
+          "nativeRepeat": {
+            "energy": 545.974742445908,
+            "peak": 0.1450338512659073,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 545.9747412128092,
+            "peak": 0.1450338512659073,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Flanger": {
+      "type": 12,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 536.3267455323969,
+            "peak": 0.1654045730829239,
+            "relativeRMS": 5.4970632315902584e-08,
+            "error": 1.620656293608395e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.31235146280057874,
+            "error": 58.81760903844118
+          },
+          "nativeRepeat": {
+            "energy": 536.3267455323969,
+            "peak": 0.1654045730829239,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 536.3267453941918,
+            "peak": 0.1654045581817627,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 584.1482046756664,
+            "peak": 0.16542932391166687,
+            "relativeRMS": 5.4201684592565175e-08,
+            "error": 1.716123804847876e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.31217668147854777,
+            "error": 63.97125023911709
+          },
+          "nativeRepeat": {
+            "energy": 584.1482046756664,
+            "peak": 0.16542932391166687,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 584.1482042365309,
+            "peak": 0.16542932391166687,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Phaser": {
+      "type": 3,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 585.6775061012379,
+            "peak": 0.11534848064184189,
+            "relativeRMS": 5.7637854069288635e-08,
+            "error": 1.9456922577761465e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.17051385937187777,
+            "error": 17.528293895516153
+          },
+          "nativeRepeat": {
+            "energy": 585.6775061012379,
+            "peak": 0.11534848064184189,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 585.6775057747232,
+            "peak": 0.11534850299358368,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 637.6856248550991,
+            "peak": 0.11540070176124573,
+            "relativeRMS": 5.8159392294726124e-08,
+            "error": 2.1569811352989813e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.17041979365872292,
+            "error": 19.06443722296202
+          },
+          "nativeRepeat": {
+            "energy": 637.6856248550991,
+            "peak": 0.11540070176124573,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 637.6856248747129,
+            "peak": 0.11540070176124573,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Rotary Speaker": {
+      "type": 4,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 419.73606093863265,
+            "peak": 0.09761720895767212,
+            "relativeRMS": 5.117685278960992e-08,
+            "error": 1.0993182348622878e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.22320508771276834,
+            "error": 30.035056773836324
+          },
+          "nativeRepeat": {
+            "energy": 419.73606093863265,
+            "peak": 0.09761720895767212,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 419.73606100906284,
+            "peak": 0.09761720895767212,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 454.9181341110028,
+            "peak": 0.09744013845920563,
+            "relativeRMS": 5.143980393766808e-08,
+            "error": 1.2037376887449975e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.21266157767432212,
+            "error": 29.68670399684267
+          },
+          "nativeRepeat": {
+            "energy": 454.9181341110028,
+            "peak": 0.09744013845920563,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 454.91813445332275,
+            "peak": 0.09744013845920563,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Convolution": {
+      "type": 31,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 75.57652062135924,
+            "peak": 0.05923434719443321,
+            "relativeRMS": 1.6497841069057475e-07,
+            "error": 2.0570323663292286e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.7574114128586564,
+            "error": 345.846964085924
+          },
+          "nativeRepeat": {
+            "energy": 75.57652062135924,
+            "peak": 0.05923434719443321,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 75.57652006367272,
+            "peak": 0.05923434719443321,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 90.32149365673357,
+            "peak": 0.06497462093830109,
+            "relativeRMS": 1.8096142445326592e-07,
+            "error": 2.9577613073313345e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.7473747452765376,
+            "error": 366.65765462930483
+          },
+          "nativeRepeat": {
+            "energy": 90.32149365673357,
+            "peak": 0.06497462093830109,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 90.32149304941525,
+            "peak": 0.06497462093830109,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "convolution"
+    },
+    "Delay": {
+      "type": 1,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 170.6498997884429,
+            "peak": 0.06190461665391922,
+            "relativeRMS": 5.068057784584036e-08,
+            "error": 4.3831784626953485e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.8079981916634277,
+            "error": 393.58728102776047
+          },
+          "nativeRepeat": {
+            "energy": 170.6498997884429,
+            "peak": 0.06190461665391922,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 170.64989968172983,
+            "peak": 0.06190461665391922,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 185.35555316756205,
+            "peak": 0.06220029294490814,
+            "relativeRMS": 5.123129875634153e-08,
+            "error": 4.864927060575481e-13
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.8082724168908771,
+            "error": 428.8440964808922
+          },
+          "nativeRepeat": {
+            "energy": 185.35555316756205,
+            "peak": 0.06220029294490814,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 185.35555328093142,
+            "peak": 0.06220029294490814,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Floaty Delay": {
+      "type": 30,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 257.8659352574466,
+            "peak": 0.0818939208984375,
+            "relativeRMS": 1.0300762898499273e-07,
+            "error": 2.7361049767565573e-12
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.4741569774725909,
+            "error": 135.53909127121761
+          },
+          "nativeRepeat": {
+            "energy": 257.8659352574466,
+            "peak": 0.0818939208984375,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 257.8659345574059,
+            "peak": 0.0818939208984375,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 276.3886966475608,
+            "peak": 0.08191671222448349,
+            "relativeRMS": 1.0345827590173603e-07,
+            "error": 2.9583581585164586e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.47653118611625433,
+            "error": 149.06187337341356
+          },
+          "nativeRepeat": {
+            "energy": 276.3886966475608,
+            "peak": 0.08191671222448349,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 276.38869584064264,
+            "peak": 0.08191671222448349,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Reverb 1": {
+      "type": 2,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 457.78342585110585,
+            "peak": 0.16049276292324066,
+            "relativeRMS": 1.6325114957002183e-07,
+            "error": 1.2200357624678559e-11
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.9405769086925286,
+            "error": 533.3458289438686
+          },
+          "nativeRepeat": {
+            "energy": 457.78342585110585,
+            "peak": 0.16049276292324066,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 457.7834257814266,
+            "peak": 0.16049277782440186,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 195.47769259009394,
+            "peak": 0.10644682496786118,
+            "relativeRMS": 2.588288114799495e-07,
+            "error": 1.30955107130966e-11
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.0956149345911117,
+            "error": 787.952080313894
+          },
+          "nativeRepeat": {
+            "energy": 195.47769259009394,
+            "peak": 0.10644682496786118,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 195.47769254017012,
+            "peak": 0.10644683241844177,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Reverb 2": {
+      "type": 11,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 214.58408865315343,
+            "peak": 0.08055282384157181,
+            "relativeRMS": 7.926843087908974e-07,
+            "error": 1.3483357164680262e-10
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.46748161913290376,
+            "error": 131.7496156860737
+          },
+          "nativeRepeat": {
+            "energy": 214.58408865315343,
+            "peak": 0.08055282384157181,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 214.58408648368444,
+            "peak": 0.080552838742733,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 235.9080696456788,
+            "peak": 0.08024217188358307,
+            "relativeRMS": 1.948787687882683e-06,
+            "error": 8.959254041174648e-10
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.4588394051721149,
+            "error": 138.1991383980141
+          },
+          "nativeRepeat": {
+            "energy": 235.9080696456788,
+            "peak": 0.08024217188358307,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 235.90806839992683,
+            "peak": 0.08024215698242188,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Spring Reverb": {
+      "type": 27,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 240.5365736097828,
+            "peak": 0.08987736701965332,
+            "relativeRMS": 2.5839308136269133e-07,
+            "error": 1.6059901680950934e-11
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.7805133346865367,
+            "error": 367.26617529591147
+          },
+          "nativeRepeat": {
+            "energy": 240.5365736097828,
+            "peak": 0.08987736701965332,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 240.53657315736376,
+            "peak": 0.08987736701965332,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 412.4137729417362,
+            "peak": 0.10116364806890488,
+            "relativeRMS": 1.9011166033553525e-07,
+            "error": 1.4905641444085283e-11
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.6110784637351876,
+            "error": 245.1195075994375
+          },
+          "nativeRepeat": {
+            "energy": 412.4137729417362,
+            "peak": 0.10116364806890488,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 412.41377134104215,
+            "peak": 0.10116364806890488,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Airwindows": {
+      "type": 14,
+      "measurements": {
+        "44100": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 3.97457738473491e-08,
+            "error": 9.523622932225897e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 602.8652867366854,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 4.104716676641646e-08,
+            "error": 1.105987684244004e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 656.4231956802457,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "airwindows",
+      "coverageNote": "Selected active fixtures and both original retired placeholders are tracked in airwindows.json; unresolved subeffects remain required work."
+    },
+    "Audio Input": {
+      "type": 29,
+      "measurements": {
+        "44100": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 3.97457738473491e-08,
+            "error": 9.523622932225897e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 602.8652867366854,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "needs-fixture",
+          "comparison": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 4.104716676641646e-08,
+            "error": 1.105987684244004e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "nativeRepeat": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 656.4231956802457,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "parameters",
+      "parameterFixtures": [
+        {
+          "header": "AudioInputEffect.h",
+          "enum": "in_params",
+          "member": "in_audio_input_level",
+          "value": 1,
+          "audioInput": true
+        }
+      ]
+    },
+    "Conditioner": {
+      "type": 8,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 150.6248621660274,
+            "peak": 0.05848934128880501,
+            "relativeRMS": 3.8145143521142944e-06,
+            "error": 2.1916700306560048e-09
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 1.0913817435454807,
+            "error": 718.0813499168701
+          },
+          "nativeRepeat": {
+            "energy": 150.6248621660274,
+            "peak": 0.05848934128880501,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 150.62601117151598,
+            "peak": 0.05848956108093262,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 164.0187875500286,
+            "peak": 0.05849925056099892,
+            "relativeRMS": 3.81449113282873e-06,
+            "error": 2.3865295520879336e-09
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 1.2539589532164293,
+            "error": 1032.168403823857
+          },
+          "nativeRepeat": {
+            "energy": 164.0187875500286,
+            "peak": 0.05849925056099892,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 164.02003871534856,
+            "peak": 0.058499474078416824,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    },
+    "Mid-Side Tool": {
+      "type": 26,
+      "measurements": {
+        "44100": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 602.3379553340238,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 3.985022532122744e-08,
+            "error": 9.565370425513416e-13
+          },
+          "dry": {
+            "energy": 602.865287046119,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0.01146126611261196,
+            "error": 0.07919275842791104
+          },
+          "nativeRepeat": {
+            "energy": 602.3379553340238,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 602.3379550028704,
+            "peak": 0.1169913113117218,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        },
+        "48000": {
+          "status": "matched-default-fixture",
+          "comparison": {
+            "energy": 655.9201582792608,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 4.1036839887139624e-08,
+            "error": 1.1045841262848729e-12
+          },
+          "dry": {
+            "energy": 656.423195962722,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0.01040387263622391,
+            "error": 0.07105161815544657
+          },
+          "nativeRepeat": {
+            "energy": 655.9201582792608,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          },
+          "wasmRepeat": {
+            "energy": 655.920158085617,
+            "peak": 0.11702387779951096,
+            "relativeRMS": 0,
+            "error": 0
+          }
+        }
+      },
+      "fixture": "default"
+    }
+  },
+  "evidence": {
+    "createdAt": "2026-09-27T15:59:06.069Z",
+    "chrome": "153.0.8010.53",
+    "binaries": {
+      "native": "f16ed4f3210837e79f2a65e833efd041f02eee9e1b1981ccf0ec02e51f9c283b",
+      "wasm": "4235cf0a7d16d38c617b910b376c000158d4fc7ceabf128e182bc098c94c289e"
+    },
+    "fixture": "30a55236f4b85c4b37978548a9dca70d81b75d5be9787ef6f5675f87b588cf66",
+    "configuration": "c366fe1ada120561f7e355a8010b010c8887a11ad0f2d462b9131a322cd40b2a"
+  }
+}

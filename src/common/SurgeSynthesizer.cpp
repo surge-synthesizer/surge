@@ -21,6 +21,15 @@
  */
 
 #include "SurgeSynthesizer.h"
+#if SURGE_WEB
+#include <emscripten.h>
+#include "dsp/effects/ConvolutionEffect.h"
+#include "dsp/effects/ConvolutionKernelWorker.h"
+#include "dsp/effects/EffectRetirementWorker.h"
+#include "dsp/effects/PreparedEffect.h"
+#include "dsp/effects/airwindows/AirWindowsEffect.h"
+bool surge_convolution_is_realtime();
+#endif
 #include <fmt/core.h>
 #include "DSPUtils.h"
 #include <ctime>
@@ -34,6 +43,7 @@
 
 #include <algorithm>
 #include <thread>
+#include <type_traits>
 #include <set>
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
@@ -57,6 +67,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
       hpB{cutl::make_array<BiquadFilter, n_hpBQ>(&storage)}, _parent(parent), halfbandA(6, true),
       halfbandB(6, true), halfbandIN(6, true), mpeEnabled(storage.mpeEnabled)
 {
+#if SURGE_WEB
+    browserEffectRetirement = std::make_unique<EffectRetirementWorker>();
+#endif
     switch_toggled_queued = false;
     audio_processing_active = false;
     halt_engine = false;
@@ -99,6 +112,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         fxsync[i] = storage.getPatch().fx[i];
         fx_reload[i] = false;
         fx_reload_mod[i] = false;
+#if SURGE_WEB
+        browserAirwindowsWanted[i].store(-1, std::memory_order_relaxed);
+#endif
     }
 
     stopSound();
@@ -274,6 +290,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         (float)Surge::Storage::getUserDefaultValue(&storage, Surge::Storage::MPEPitchBendRange, 48);
     mpeGlobalPitchBendRange = 0;
 
+#if SURGE_WEB
+    browserNeedsFactoryPreparation = fs::is_directory(storage.datapath / ".metadata");
+    storage.browserManagesWavetables = browserNeedsFactoryPreparation;
+#endif
     int pid = 0;
     patchid_queue = -1;
     has_patchid_file = false;
@@ -297,7 +317,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         processAudioThreadOpsWhenAudioEngineUnavailable(true); // DANGER MODE IS ON
     }
 
-    patchid_queue = -1;
+#if SURGE_WEB
+    if (!browserNeedsFactoryPreparation)
+#endif
+        patchid_queue = -1;
     has_patchid_file = false;
 }
 
@@ -313,6 +336,11 @@ SurgeSynthesizer::~SurgeSynthesizer()
             patchLoadThread->join();
     }
 
+#if SURGE_WEB
+    // Processing and the patch loader are stopped; join before destroying any
+    // storage which an effect's owned resources may still reference.
+    browserEffectRetirement.reset();
+#endif
     stopSound();
 
     for (int sc = 0; sc < n_scenes; sc++)
@@ -2874,6 +2902,57 @@ void SurgeSynthesizer::setParameterSmoothed(long index, float value)
 
 bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bool force_integer)
 {
+#if SURGE_WEB
+    if (index >= 0 && index < storage.getPatch().param_ptr.size() &&
+        storage.getPatch().param_ptr[index]->ctrltype == ct_airwindows_fx)
+    {
+        const auto *p = storage.getPatch().param_ptr[index];
+        ReleaseControlInterpolator(index);
+        const auto selected = std::clamp(Parameter::intUnscaledFromFloat(value, p->val_max.i,
+                                                                       p->val_min.i),
+                                         p->val_min.i, p->val_max.i);
+        // The inactive engine's control pump also drains this mailbox. Publishing
+        // only the selector while suspended would leave old processor metadata
+        // until the first resumed audio callback constructed its replacement.
+        browserAirwindowsWanted[p->ctrlgroup_entry].store(selected, std::memory_order_release);
+        storage.getPatch().isDirty = true;
+        if (external) queueForRefresh(index);
+        return false;
+    }
+    if (index >= 0 && index < storage.getPatch().param_ptr.size() &&
+        storage.getPatch().param_ptr[index]->ctrltype == ct_fxtype)
+    {
+        // Control/offline callers publish a complete reload candidate. Do not
+        // temporarily write the live type: the audio thread still processes
+        // the old instance until loadFx can adopt the prepared replacement.
+        std::lock_guard<std::mutex> guard(fxSpawnMutex);
+        ReleaseControlInterpolator(index);
+        const auto *live = storage.getPatch().param_ptr[index];
+        auto requested = *live;
+        requested.set_value_f01(value, force_integer);
+        if (requested.val.i != live->val.i)
+        {
+            const int slot = live->ctrlgroup_entry;
+            auto candidate = fxsync[slot];
+            candidate.type.val.i = requested.val.i;
+            std::unique_ptr<Effect> defaults(
+                spawn_effect(candidate.type.val.i, &storage, &candidate, nullptr));
+            if (defaults)
+            {
+                defaults->init_ctrltypes();
+                defaults->init_default_values();
+            }
+            defaults.reset(); // Its parameter pointers still belong to candidate.
+            fxsync[slot] = std::move(candidate);
+            switch_toggled_queued = true;
+            load_fx_needed = true;
+            fx_reload[slot] = true;
+            storage.getPatch().isDirty = true;
+        }
+        if (external) queueForRefresh(index);
+        return false;
+    }
+#endif
     // does the parameter exist in the interpolator array? If it does, delete it
     ReleaseControlInterpolator(index);
     bool need_refresh = false;
@@ -3123,6 +3202,157 @@ void SurgeSynthesizer::switch_toggled()
     }
 }
 
+#if SURGE_WEB
+bool SurgeSynthesizer::browserEffectEditsPending()
+{
+    std::unique_lock<std::mutex> patchGuard(patchLoadSpawnMutex, std::try_to_lock);
+    if (!patchGuard.owns_lock()) return true;
+    if (halt_engine.load(std::memory_order_acquire)) return true;
+    std::lock_guard<std::mutex> guard(fxSpawnMutex);
+    for (int slot = 0; slot < n_fx_slots; ++slot)
+        if (browserAirwindowsWanted[slot].load(std::memory_order_acquire) >= 0 ||
+            fx_reload[slot] || fxsync[slot].type.val.i != storage.getPatch().fx[slot].type.val.i)
+            return true;
+    return load_fx_needed.load(std::memory_order_acquire);
+}
+
+void SurgeSynthesizer::prepareBrowserEffects()
+{
+    // Main/control thread only. The loader and sample-rate setup must not mutate
+    // global storage during construction. Audio only try-locks the FX mutex.
+    std::unique_lock<std::mutex> patchGuard(patchLoadSpawnMutex, std::try_to_lock);
+    if (!patchGuard.owns_lock() || halt_engine.load(std::memory_order_acquire)) return;
+    std::lock_guard<std::mutex> fxGuard(fxSpawnMutex);
+    const auto reject = [this](int slot) {
+        fxsync[slot] = storage.getPatch().fx[slot];
+        fx_reload[slot] = false;
+        fx_reload_mod[slot] = false;
+        browserIRReloadEdits[slot].finish();
+        storage.browserConvolutionWorker->cancel(n_fx_slots + slot);
+        browserFxRequests[slot] = 0;
+    };
+    for (int slot = 0; slot < n_fx_slots; ++slot)
+    {
+        auto &ready = browserPreparedEffects[slot];
+        auto &candidate = fxsync[slot];
+        auto &live = storage.getPatch().fx[slot];
+        if (auto *airwindows = dynamic_cast<AirWindowsEffect *>(fx[slot].get()))
+        {
+            try { airwindows->serviceBrowserSelection(candidate); }
+            catch (const std::exception &error)
+            {
+                browserEffectPreparationFailures.fetch_add(1, std::memory_order_release);
+                storage.reportError(std::string("The current Airwindows processor was retained. ") +
+                                        error.what(), "Effect Preparation Error");
+            }
+        }
+        if (!audio_processing_active || (!fx_reload[slot] && candidate.type.val.i == live.type.val.i))
+        {
+            ready.reset();
+            continue;
+        }
+        if (ready && ready->matches(candidate, storage.samplerate)) continue;
+        ready.reset(); // Reclaim superseded metadata/instances on this thread.
+        try
+        {
+            auto next = std::make_unique<PreparedEffect>(storage, candidate);
+            if (candidate.type.val.i != fxt_off && !next->effect)
+                throw std::runtime_error("The requested effect type could not be constructed.");
+            if (candidate.type.val.i == fxt_convolution && candidate.user_data.contains("filename") &&
+                !next->parameters.user_data.contains("left"))
+            {
+                // The convolution constructor reported the decode failure. Keep
+                // the current effect instead of publishing an empty response.
+                browserEffectPreparationFailures.fetch_add(1, std::memory_order_release);
+                reject(slot);
+                continue;
+            }
+            // Filename-only convolution construction may have decoded an IR.
+            // Publish its immutable buffers before requesting the worker kernel.
+            candidate.user_data = next->parameters.user_data;
+            next->request.user_data = candidate.user_data;
+            next->initialize();
+            ready = std::move(next);
+        }
+        catch (const std::exception &error)
+        {
+            browserEffectPreparationFailures.fetch_add(1, std::memory_order_release);
+            reject(slot);
+            storage.reportError(std::string("The current effect was retained. ") + error.what(),
+                                "Effect Preparation Error");
+        }
+    }
+}
+
+bool SurgeSynthesizer::prepareBrowserFxReload(int slot, std::unique_ptr<ConvolutionKernel> &prepared)
+{
+    using Conv = ConvolutionEffect;
+    using Worker = ConvolutionKernelWorker;
+    static_assert(Worker::capacity >= 2 * n_fx_slots);
+    auto &worker = *storage.browserConvolutionWorker;
+    const auto lane = n_fx_slots + slot;
+    auto &generation = browserFxRequests[slot];
+    auto &candidate = fxsync[slot];
+    browserIRReloadEdits[slot].merge(storage.getPatch().fx[slot], candidate);
+    auto *previous = dynamic_cast<Conv *>(fx[slot].get());
+    const auto left = candidate.user_data.find("left");
+    const auto rate = candidate.user_data.find("samplerate");
+    if (candidate.type.val.i == fxt_convolution && candidate.user_data.contains("irname") &&
+        left != candidate.user_data.end() && left->second && !left->second->empty() &&
+        rate != candidate.user_data.end())
+    {
+        Worker::Request request;
+        request.left = left->second;
+        if (auto right = candidate.user_data.find("right"); right != candidate.user_data.end())
+            request.right = right->second;
+        if (rate->second && rate->second->size() == sizeof(float))
+            request.inputRate = candidate.by_key("samplerate").to_float();
+        // Match the bounds installed by ConvolutionEffect::init_ctrltypes before
+        // loadFx normalizes its parameter copy. NaN remains invalid for the worker.
+        request.outputRate = storage.samplerate * std::clamp(candidate.p[Conv::convolution_size].val.f,
+                                                            Conv::minimumSize, Conv::maximumSize);
+        request.start = std::clamp(candidate.p[Conv::convolution_start].val.f, 0.f, Conv::maximumStart);
+        request.reverse = std::clamp(candidate.p[Conv::convolution_reverse].val.f, 0.f, Conv::maximumReverse);
+        request.reverseDeactivated = candidate.p[Conv::convolution_reverse].deactivated;
+        if (generation)
+        {
+            request.generation = generation;
+            // Keep the request's sample references alive until the comparison.
+            // Pointer identity cannot be recycled while the worker owns them.
+            auto &destination = previous ? previous->browserKernel() : prepared;
+            const auto result = worker.takeMatching(lane, request, destination);
+            if (result == Worker::Result::pending) return false;
+            generation = 0;
+            if (result == Worker::Result::stale) return false;
+            if (result == Worker::Result::failed)
+            {
+                browserEffectPreparationFailures.fetch_add(1, std::memory_order_release);
+                // Reject only this requested replacement. Keep live parameters,
+                // audio and userdata intact; the UI reports the failure later.
+                fx_reload[slot] = false;
+                browserIRReloadEdits[slot].finish();
+                candidate.type.val.i = storage.getPatch().fx[slot].type.val.i;
+                storage.browserConvolutionErrors.fetch_or(1u << slot, std::memory_order_relaxed);
+                return false;
+            }
+            // takeMatching has transferred the previous kernel to the worker.
+            // Move its replacement out before destroying the old Effect object.
+            if (previous) prepared.swap(previous->browserKernel());
+            return true;
+        }
+        request.generation = ++storage.browserConvolutionGeneration;
+        if (worker.submit(lane, request)) generation = request.generation;
+        return false;
+    }
+    worker.cancel(lane);
+    generation = 0;
+    // Off/clear/non-convolution replacements also retire their old FFT state
+    // through the worker. A busy lane defers the commit, preserving live audio.
+    if (previous && previous->browserKernel()) return worker.retire(lane, previous->browserKernel());
+    return true;
+}
+#endif
+
 bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 {
     load_fx_needed = false;
@@ -3131,46 +3361,140 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
     {
         localSendFX[s] = false;
         bool something_changed = false;
+#if SURGE_WEB
+        bool reloadHookPrepared = false;
+        // Read the reload candidate under the same lock used by UI import and
+        // undo writers. Never wait for a writer from the audio callback.
+        std::unique_lock<std::mutex> g(fxSpawnMutex, std::defer_lock);
+        if (surge_convolution_is_realtime())
+        {
+            if (!g.try_lock()) { load_fx_needed = true; continue; }
+        }
+        else g.lock();
+#endif
         if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all ||
             fx_reload[s])
         {
+#if SURGE_WEB
+            std::unique_ptr<ConvolutionKernel> prepared;
+            PreparedEffect *constructed = nullptr;
+            if (surge_convolution_is_realtime() && !force_reload_all && !initp)
+            {
+                browserIRReloadEdits[s].merge(storage.getPatch().fx[s], fxsync[s]);
+                auto &ready = browserPreparedEffects[s];
+                if (!ready || !ready->matches(fxsync[s], storage.samplerate))
+                {
+                    load_fx_needed = true;
+                    continue;
+                }
+                constructed = ready.get();
+                if (!browserEffectRetirement->available(s))
+                {
+                    load_fx_needed = true;
+                    continue;
+                }
+                if (!prepareBrowserFxReload(s, prepared))
+                {
+                    load_fx_needed = true;
+                    continue;
+                }
+            }
+            else
+            {
+                storage.browserConvolutionWorker->cancel(n_fx_slots + s);
+                browserFxRequests[s] = 0;
+            }
+#else
+            std::lock_guard<std::mutex> g(fxSpawnMutex);
+#endif
             localSendFX[s] = true;
+#if SURGE_WEB
+            // Offline reloads also preserve edits made since the selector queued
+            // the IR, but patch/default initialization deliberately replaces state.
+            if (!surge_convolution_is_realtime() && !force_reload_all && !initp)
+                browserIRReloadEdits[s].merge(storage.getPatch().fx[s], fxsync[s]);
+            browserIRReloadEdits[s].finish();
+#endif
             storage.getPatch().isDirty = true;
             fx_reload[s] = false;
 
-            std::lock_guard<std::mutex> g(fxSpawnMutex);
-
+#if SURGE_WEB
+            // A preset/family replacement supersedes selector requests for its old instance.
+            browserAirwindowsWanted[s].store(-1, std::memory_order_release);
+#endif
+#if SURGE_WEB
+            if (surge_convolution_is_realtime() && !force_reload_all && !initp)
+            {
+                if (auto *convolution = dynamic_cast<ConvolutionEffect *>(fx[s].get()))
+                    convolution->browserDetachForRetirement();
+                // The serialized producer reserved the empty lane above. No
+                // worker operation can occupy it between available and retire.
+                browserEffectRetirement->retire(s, fx[s], storage.getPatch().fx[s].user_data);
+            }
+#endif
             fx[s].reset();
             /*if (!force_reload_all)*/ storage.getPatch().fx[s].type.val.i = fxsync[s].type.val.i;
             // else fxsync[s].type.val.i = storage.getPatch().fx[s].type.val.i;
 
-            for (int j = 0; j < n_fx_params; j++)
+            // Prepared replacements include Off metadata. Transfer ownership
+            // instead of destroying/copying strings and optional metadata on audio.
+#if SURGE_WEB
+            if (constructed)
             {
-                storage.getPatch().fx[s].p[j].set_type(ct_none);
-                std::string n = "Param ";
-                n += std::to_string(j + 1);
-                storage.getPatch().fx[s].p[j].set_name(n.c_str());
-                storage.getPatch().fx[s].p[j].val.i = 0;
-                storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].i = 0;
+                constructed->swapParameterMetadata(storage.getPatch().fx[s]);
+                for (const auto &p : storage.getPatch().fx[s].p)
+                    storage.getPatch().globaldata[p.id].i = 0;
             }
-
-            if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
+            else
+#endif
             {
-                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
-                          std::begin(storage.getPatch().fx[s].p));
+                for (int j = 0; j < n_fx_params; j++)
+                {
+                    storage.getPatch().fx[s].p[j].set_type(ct_none);
+                    std::string n = "Param ";
+                    n += std::to_string(j + 1);
+                    storage.getPatch().fx[s].p[j].set_name(n.c_str());
+                    storage.getPatch().fx[s].p[j].val.i = 0;
+                    storage.getPatch().globaldata[storage.getPatch().fx[s].p[j].id].i = 0;
+                }
+
+                if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
+                {
+                    std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                              std::begin(storage.getPatch().fx[s].p));
+                }
             }
 
             // TODO: Just change this entire thing to a single copy operation? How about an atomic
             // pointer swap or copy-on-write?
-            storage.getPatch().fx[s].user_data = fxsync[s].user_data;
+#if SURGE_WEB
+            if (surge_convolution_is_realtime() && !force_reload_all && !initp)
+                storage.getPatch().fx[s].user_data.swap(fxsync[s].user_data);
+            else
+#endif
+                storage.getPatch().fx[s].user_data = fxsync[s].user_data;
             // If we don't clear this out of the sync, it will hang around and pollute all FX data
             // even if the sync's type changes.
             fxsync[s].user_data.clear();
 
-            fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
-                                     &storage.getPatch().fx[s], storage.getPatch().globaldata));
+#if SURGE_WEB
+            if (constructed)
+            {
+                fx[s].swap(constructed->effect);
+                if (fx[s]) fx[s]->rebindParameterStorage(&storage.getPatch().fx[s], storage.getPatch().globaldata);
+                constructed->consumed = true;
+                reloadHookPrepared = constructed->initialized;
+                browserConstructedEffects.fetch_add(1, std::memory_order_relaxed);
+            }
+            else
+#endif
+                fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
+                                         &storage.getPatch().fx[s], storage.getPatch().globaldata));
             if (fx[s])
             {
+#if SURGE_WEB
+                if (!constructed)
+#endif
                 fx[s]->init_ctrltypes();
                 if (initp)
                 {
@@ -3178,6 +3502,12 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                 }
                 else
                 {
+#if SURGE_WEB
+                    // Private preparation already normalized before its reload
+                    // hook. Do not normalize the resulting sub-effect metadata
+                    // again after attachment (notably Airwindows parameters).
+                    if (!constructed || !constructed->initialized)
+#endif
                     for (int j = 0; j < n_fx_params; j++)
                     {
                         auto p = &(storage.getPatch().fx[s].p[j]);
@@ -3226,7 +3556,14 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     storage.getPatch().fx[s].p[j].val.f;
                 }*/
 
-                fx[s]->init();
+#if SURGE_WEB
+                if (prepared)
+                    static_cast<ConvolutionEffect *>(fx[s].get())->adoptPreparedKernel(prepared);
+#endif
+#if SURGE_WEB
+                if (!constructed || !constructed->initialized)
+#endif
+                    fx[s]->init();
 
                 /*
                 ** Clear modulation onto FX otherwise it hangs around from old ones, often with
@@ -3235,6 +3572,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                 */
                 if (!force_reload_all)
                 {
+#if SURGE_WEB
+                    clearFxModulation(s);
+#else
                     for (int j = 0; j < n_fx_params; j++)
                     {
                         auto p = &(storage.getPatch().fx[s].p[j]);
@@ -3250,6 +3590,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                             }
                         }
                     }
+#endif
                     if (fx_reload_mod[s])
                     {
                         for (auto &t : fxmodsync[s])
@@ -3270,6 +3611,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             {
                 // We have re-loaded to NULL; so we want to clear modulation that points at us
                 // no matter what
+#if SURGE_WEB
+                clearFxModulation(s);
+#else
                 for (int j = 0; j < n_fx_params; j++)
                 {
                     auto p = &(storage.getPatch().fx[s].p[j]);
@@ -3285,6 +3629,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                         }
                     }
                 }
+#endif
             }
 
             something_changed = true;
@@ -3300,7 +3645,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                           std::begin(storage.getPatch().fx[s].p));
             if (fx[s])
             {
+#if !SURGE_WEB
                 std::lock_guard<std::mutex> g(fxSpawnMutex);
+#endif
                 fx[s]->suspend();
                 fx[s]->init();
             }
@@ -3312,6 +3659,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 
         if (fx[s] && something_changed)
         {
+#if SURGE_WEB
+            if (!reloadHookPrepared)
+#endif
             fx[s]->updateAfterReload();
         }
     }
@@ -3340,6 +3690,12 @@ bool SurgeSynthesizer::loadOscalgos()
             auto &osc_st = storage.getPatch().scene[s].osc[i];
             if (osc_st.queue_type > -1)
             {
+#if SURGE_WEB
+                // A control edit may be in flight. Retain the queued type and
+                // retry next block instead of waiting on the audio callback.
+                auto extraGuard = osc_st.extraConfig.tryLock();
+                if (!extraGuard.owns_lock()) continue;
+#endif
                 algosChanged = true;
                 // clear assigned modulation, and echo to OSC if we change osc type, see issue #2224
                 if (osc_st.queue_type != osc_st.type.val.i)
@@ -4022,6 +4378,32 @@ std::vector<std::pair<int, int>> SurgeSynthesizer::getModulationsFromSource(int 
     return res;
 }
 
+void SurgeSynthesizer::clearFxModulation(int slot)
+{
+    if (slot < 0 || slot >= n_fx_slots) return;
+    // processControl already owns this recursive mutex. Offline owners acquire
+    // it here as well; this does not close the wider audio-locking audit.
+    std::lock_guard<std::recursive_mutex> guard(storage.modRoutingMutex);
+    auto &patch = storage.getPatch();
+    auto &routes = patch.modulation_global;
+    static_assert(std::is_trivially_copyable_v<ModulationRouting>);
+    for (const auto &parameter : patch.fx[slot].p)
+    {
+        for (std::size_t i = 0; i < routes.size();)
+        {
+            if (routes[i].destination_id != parameter.id) { ++i; continue; }
+            const auto removed = routes[i];
+            routes.erase(routes.begin() + i);
+            patch.isDirty = true;
+            // Existing listeners must remain quick and must not change the
+            // listener collection during notification (same as clearModulation).
+            for (auto *listener : modListeners)
+                listener->modCleared(parameter.id, static_cast<modsources>(removed.source_id),
+                                     removed.source_scene, removed.source_index);
+        }
+    }
+}
+
 void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int modsourceScene,
                                        int index, bool clearEvenIfInvalid)
 {
@@ -4366,8 +4748,22 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
     if (synth->patchid_queue >= 0)
     {
+#if SURGE_WEB
+        patchid = synth->browserNeedsFactoryPreparation ?
+            synth->browserReadyPatch.load(std::memory_order_acquire) : synth->patchid_queue.load();
+        // A newer selection may arrive between the audio fade and worker startup.
+        // Consume only the selection whose download has completed.
+        if (patchid < 0 || !synth->patchid_queue.compare_exchange_strong(patchid, -1))
+        {
+            synth->halt_engine = false;
+            auto myThread = std::move(synth->patchLoadThread);
+            myThread->detach();
+            return;
+        }
+#else
         patchid = synth->patchid_queue;
         synth->patchid_queue = -1;
+#endif
         synth->stopSound();
         synth->loadPatch(patchid);
     }
@@ -4394,7 +4790,13 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         }
         else
         {
+#if SURGE_WEB
+            // Match the inactive-audio import path: temporary storage directories
+            // are not part of the user-facing patch name.
+            synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath.stem()).c_str());
+#else
             synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath).c_str());
+#endif
         }
     }
 
@@ -4425,16 +4827,64 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     return;
 }
 
+#if SURGE_WEB
+void SurgeSynthesizer::processBrowserAirwindowsSelections()
+{
+    // Called by the audio owner, or the control pump only while audio is inactive.
+    for (int slot = 0; slot < n_fx_slots; ++slot)
+    {
+        if (auto *airwindows = dynamic_cast<AirWindowsEffect *>(fx[slot].get()))
+        {
+            auto wanted = browserAirwindowsWanted[slot].load(std::memory_order_acquire);
+            bool finished = false;
+            if (airwindows->processBrowserSelection(wanted, finished))
+            {
+                browserAirwindowsAdoptions.fetch_add(1, std::memory_order_relaxed);
+                refresh_editor = true;
+            }
+            if (finished)
+                browserAirwindowsWanted[slot].compare_exchange_strong(wanted, -1,
+                                                                      std::memory_order_acq_rel);
+        }
+    }
+}
+#endif
+
 void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dangerMode)
 {
+#if SURGE_WEB
+    // Wasm AudioWorklets cannot create pthreads or proxy filesystem calls.
+    // Consume the audio thread's completed fade on the browser main thread.
+    if (browserPatchLoadPending.load(std::memory_order_acquire))
+    {
+        std::unique_lock<std::mutex> lock(patchLoadSpawnMutex, std::try_to_lock);
+        if (!lock.owns_lock() || patchLoadThread)
+            return;
+        browserPatchLoadPending.store(false, std::memory_order_release);
+        patchLoadThread = std::make_unique<std::thread>(loadPatchInBackgroundThread, this);
+        return;
+    }
+    if (halt_engine.load(std::memory_order_acquire))
+        return;
+#endif
     if (!audio_processing_active || dangerMode)
     {
         processEnqueuedPatchIfNeeded();
 
+#if SURGE_WEB
+        std::unique_lock<std::mutex> lg(patchLoadSpawnMutex, std::try_to_lock);
+        if (!lg.owns_lock()) return;
+#else
         auto lg = std::lock_guard<std::mutex>(patchLoadSpawnMutex);
+#endif
 
         // if the audio processing is inactive, patchloading should occur anyway
-        if (patchid_queue >= 0)
+        if (patchid_queue >= 0
+#if SURGE_WEB
+            && (!browserNeedsFactoryPreparation ||
+                browserReadyPatch.load(std::memory_order_acquire) == patchid_queue.load())
+#endif
+        )
         {
             loadPatch(patchid_queue);
             Patch p = storage.patch_list[patchid_queue];
@@ -4474,6 +4924,9 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
         if (load_fx_needed)
             loadFx(false, false);
 
+#if SURGE_WEB
+        processBrowserAirwindowsSelections();
+#endif
         loadOscalgos();
 
         storage.perform_queued_wtloads();
@@ -4549,7 +5002,17 @@ void SurgeSynthesizer::processControl()
             ControllerModulationSource *mc = &mControlInterpolator[i];
             bool cont = mc->process_block_until_close(0.001f);
             int id = mc->id;
-            storage.getPatch().param_ptr[id]->set_value_f01(mc->get_output(0));
+#if SURGE_WEB
+            const auto *parameter = storage.getPatch().param_ptr[id];
+            if (parameter->ctrltype == ct_airwindows_fx && audio_processing_active)
+            {
+                const auto selected = std::clamp(Parameter::intUnscaledFromFloat(mc->get_output(0),
+                    parameter->val_max.i, parameter->val_min.i), parameter->val_min.i, parameter->val_max.i);
+                browserAirwindowsWanted[parameter->ctrlgroup_entry].store(selected, std::memory_order_release);
+            }
+            else
+#endif
+                storage.getPatch().param_ptr[id]->set_value_f01(mc->get_output(0));
             if (!cont)
             {
                 mControlInterpolatorUsed[i] = false;
@@ -4688,6 +5151,9 @@ void SurgeSynthesizer::processControl()
     if (load_fx_needed)
         loadFx(false, false);
 
+#if SURGE_WEB
+    processBrowserAirwindowsSelections();
+#endif
     if (fx_suspend_bitmask)
     {
         for (int i = 0; i < n_fx_slots; i++)
@@ -4741,7 +5207,13 @@ void SurgeSynthesizer::process()
 #endif
     processRunning = 0;
 
+#if SURGE_WEB
+    // AudioWorkletGlobalScope has no performance.now(), so libc++ steady_clock
+    // fails with ENOSYS. Emscripten supplies a Date.now fallback in this scope.
+    const double process_start = emscripten_get_now();
+#else
     auto process_start = std::chrono::high_resolution_clock::now();
+#endif
 
     if (hostNoteEndedToPushToNextBlock)
     {
@@ -4768,13 +5240,23 @@ void SurgeSynthesizer::process()
         mech::clear_block<BLOCK_SIZE>(output[1]);
         return;
     }
-    else if (patchid_queue >= 0 || has_patchid_file)
+    else if ((patchid_queue >= 0
+#if SURGE_WEB
+              && (!browserNeedsFactoryPreparation ||
+                browserReadyPatch.load(std::memory_order_acquire) == patchid_queue.load())
+#endif
+             ) || has_patchid_file)
     {
         masterfade = max(0.f, masterfade - 0.05f);
         mfade = masterfade * masterfade;
 
         if (masterfade < 0.0001f)
         {
+#if SURGE_WEB
+            stopSound();
+            halt_engine.store(true, std::memory_order_release);
+            browserPatchLoadRequested.store(true, std::memory_order_release);
+#else
             std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
             // spawn patch-loading thread
             stopSound();
@@ -4790,6 +5272,7 @@ void SurgeSynthesizer::process()
                 patchLoadThread->join();
 
             patchLoadThread = std::make_unique<std::thread>(loadPatchInBackgroundThread, this);
+#endif
 
             mech::clear_block<BLOCK_SIZE>(output[0]);
             mech::clear_block<BLOCK_SIZE>(output[1]);
@@ -5219,11 +5702,17 @@ void SurgeSynthesizer::process()
 
     // Calculate how close we are to overloading the CPU
     // (how close is the process() duration to duration)
+#if SURGE_WEB
+    // This is a coarse CPU meter, not an audio deadline measurement. Clamp
+    // backwards wall-clock adjustments; sample timing uses the audio clock.
+    const double duration_usec = std::max(0., emscripten_get_now() - process_start) * 1000.;
+#else
     auto process_end = std::chrono::high_resolution_clock::now();
-    auto duration_usec =
-        std::chrono::duration_cast<std::chrono::microseconds>(process_end - process_start);
+    const double duration_usec =
+        std::chrono::duration_cast<std::chrono::microseconds>(process_end - process_start).count();
+#endif
     auto max_duration_usec = BLOCK_SIZE * storage.dsamplerate_inv * 1000000;
-    float ratio = duration_usec.count() / max_duration_usec;
+    float ratio = duration_usec / max_duration_usec;
     float c = cpu_level.load();
     int window = max_duration_usec;
     auto smoothed_ratio = (c * (window - 1) + ratio) / window;
@@ -5517,6 +6006,13 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         return;
     }
 
+#if SURGE_WEB
+    // Match loadFx's lock order: FX state, then modulation routing. Publish the
+    // source and destination candidates together while audio can only try-lock.
+    std::lock_guard<std::mutex> lockFx(fxSpawnMutex);
+    browserIRReloadEdits[target].finish();
+    if (m != FXReorderMode::COPY) browserIRReloadEdits[source].finish();
+#endif
     std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
 
     FxStorage so{storage.getPatch().fx[source]};

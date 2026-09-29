@@ -1,0 +1,6653 @@
+{
+  "schema": 1,
+  "effectOnly": false,
+  "activeParameters": true,
+  "scope": "Registered Airwindows effects with source-derived active parameter edits. Init FM2 three-second C4 note/release, with variable browser buffer sizes. 44.1/48 kHz. Retired NoOp entries deliberately output silence. Diagnostic only, not complete parameter or real-time parity.",
+  "selectedFamilies": [
+    "AD Clip",
+    "Block Party",
+    "Butter Comp",
+    "Compresaturator",
+    "Logical",
+    "Mojo",
+    "One Corner Clip",
+    "Point",
+    "Pop",
+    "Pressure",
+    "Pye Wacket",
+    "Surge",
+    "Vari-Mu",
+    "Bit Glitter",
+    "Crunchy Groove Wear",
+    "DeRez",
+    "Deck Wrecka",
+    "Dust Bunny",
+    "Groove Wear",
+    "Noise",
+    "Voice Of The Starship",
+    "Bright Ambience",
+    "Hombre",
+    "Melt",
+    "Pocket Verbs",
+    "Star Child",
+    "Apicolypse",
+    "Bass Drive",
+    "Cojones",
+    "Density",
+    "Drive",
+    "Focus",
+    "Fracture",
+    "Hard Vacuum",
+    "Loud",
+    "NC-17",
+    "Spiral",
+    "Unbox",
+    "De-Bess",
+    "NoOp (Was: DeEss)",
+    "Single-Ended Triode",
+    "Iron Oxide",
+    "To Tape",
+    "Air",
+    "Buss Colors",
+    "Drum Slam",
+    "Capacitor",
+    "Slew 1",
+    "Slew 2",
+    "Galactic",
+    "Infinity",
+    "MatrixVerb",
+    "Verbity",
+    "Triple Spread",
+    "Chamber",
+    "Mackity",
+    "MackEQ",
+    "NoOp (Was: Tube)",
+    "Cabs",
+    "Chrome Oxide",
+    "Dub Sub",
+    "Dub Center",
+    "Fire Amp",
+    "Glitch Shifter",
+    "Nonlinear Space",
+    "Pafnuty",
+    "Power Sag",
+    "Tape Dust",
+    "To Vinyl",
+    "YLowpass",
+    "YBandpass",
+    "YHighpass",
+    "YNotch",
+    "ZLowpass",
+    "ZBandpass",
+    "ZHighpass",
+    "ZNotch"
+  ],
+  "fullInventory": true,
+  "inventory": [
+    {
+      "id": 0,
+      "name": "AD Clip",
+      "implementation": "ADClip7::ADClip7",
+      "displayOrder": 10,
+      "group": "Clipping",
+      "noOp": false
+    },
+    {
+      "id": 1,
+      "name": "Block Party",
+      "implementation": "BlockParty::BlockParty",
+      "displayOrder": 20,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 2,
+      "name": "Butter Comp",
+      "implementation": "ButterComp2::ButterComp2",
+      "displayOrder": 30,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 3,
+      "name": "Compresaturator",
+      "implementation": "Compresaturator::Compresaturator",
+      "displayOrder": 40,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 4,
+      "name": "Logical",
+      "implementation": "Logical4::Logical4",
+      "displayOrder": 50,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 5,
+      "name": "Mojo",
+      "implementation": "Mojo::Mojo",
+      "displayOrder": 355,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 6,
+      "name": "One Corner Clip",
+      "implementation": "OneCornerClip::OneCornerClip",
+      "displayOrder": 70,
+      "group": "Clipping",
+      "noOp": false
+    },
+    {
+      "id": 7,
+      "name": "Point",
+      "implementation": "Point::Point",
+      "displayOrder": 80,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 8,
+      "name": "Pop",
+      "implementation": "Pop::Pop",
+      "displayOrder": 90,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 9,
+      "name": "Pressure",
+      "implementation": "Pressure4::Pressure4",
+      "displayOrder": 100,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 10,
+      "name": "Pye Wacket",
+      "implementation": "PyeWacket::Pyewacket",
+      "displayOrder": 110,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 11,
+      "name": "Surge",
+      "implementation": "Surge::Surge",
+      "displayOrder": 120,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 12,
+      "name": "Vari-Mu",
+      "implementation": "VariMu::VariMu",
+      "displayOrder": 130,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 13,
+      "name": "Bit Glitter",
+      "implementation": "BitGlitter::BitGlitter",
+      "displayOrder": 140,
+      "group": "Lo-Fi",
+      "noOp": false
+    },
+    {
+      "id": 14,
+      "name": "Crunchy Groove Wear",
+      "implementation": "CrunchyGrooveWear::CrunchyGrooveWear",
+      "displayOrder": 150,
+      "group": "Lo-Fi",
+      "noOp": false
+    },
+    {
+      "id": 15,
+      "name": "DeRez",
+      "implementation": "DeRez2::DeRez2",
+      "displayOrder": 160,
+      "group": "Lo-Fi",
+      "noOp": false
+    },
+    {
+      "id": 16,
+      "name": "Deck Wrecka",
+      "implementation": "DeckWrecka::Deckwrecka",
+      "displayOrder": 170,
+      "group": "Lo-Fi",
+      "noOp": false
+    },
+    {
+      "id": 17,
+      "name": "Dust Bunny",
+      "implementation": "DustBunny::DustBunny",
+      "displayOrder": 180,
+      "group": "Noise",
+      "noOp": false
+    },
+    {
+      "id": 18,
+      "name": "Groove Wear",
+      "implementation": "GrooveWear::GrooveWear",
+      "displayOrder": 190,
+      "group": "Lo-Fi",
+      "noOp": false
+    },
+    {
+      "id": 19,
+      "name": "Noise",
+      "implementation": "Noise::Noise",
+      "displayOrder": 200,
+      "group": "Noise",
+      "noOp": false
+    },
+    {
+      "id": 20,
+      "name": "Voice Of The Starship",
+      "implementation": "VoiceOfTheStarship::VoiceOfTheStarship",
+      "displayOrder": 210,
+      "group": "Noise",
+      "noOp": false
+    },
+    {
+      "id": 21,
+      "name": "Bright Ambience",
+      "implementation": "BrightAmbience2::BrightAmbience2",
+      "displayOrder": 220,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 22,
+      "name": "Hombre",
+      "implementation": "Hombre::Hombre",
+      "displayOrder": 420,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 23,
+      "name": "Melt",
+      "implementation": "Melt::Melt",
+      "displayOrder": 240,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 24,
+      "name": "Pocket Verbs",
+      "implementation": "PocketVerbs::PocketVerbs",
+      "displayOrder": 250,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 25,
+      "name": "Star Child",
+      "implementation": "StarChild::StarChild",
+      "displayOrder": 260,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 26,
+      "name": "Apicolypse",
+      "implementation": "Apicolypse::Apicolypse",
+      "displayOrder": 270,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 27,
+      "name": "Bass Drive",
+      "implementation": "BassDrive::BassDrive",
+      "displayOrder": 280,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 28,
+      "name": "Cojones",
+      "implementation": "Cojones::Cojones",
+      "displayOrder": 290,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 29,
+      "name": "Density",
+      "implementation": "Density::Density",
+      "displayOrder": 300,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 30,
+      "name": "Drive",
+      "implementation": "Drive::Drive",
+      "displayOrder": 310,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 31,
+      "name": "Focus",
+      "implementation": "Focus::Focus",
+      "displayOrder": 320,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 32,
+      "name": "Fracture",
+      "implementation": "Fracture::Fracture",
+      "displayOrder": 330,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 33,
+      "name": "Hard Vacuum",
+      "implementation": "HardVacuum::HardVacuum",
+      "displayOrder": 340,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 34,
+      "name": "Loud",
+      "implementation": "Loud::Loud",
+      "displayOrder": 350,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 35,
+      "name": "NC-17",
+      "implementation": "NCSeventeen::NCSeventeen",
+      "displayOrder": 360,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 36,
+      "name": "Spiral",
+      "implementation": "Spiral2::Spiral2",
+      "displayOrder": 390,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 37,
+      "name": "Unbox",
+      "implementation": "UnBox::UnBox",
+      "displayOrder": 395,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 38,
+      "name": "De-Bess",
+      "implementation": "DeBess::DeBess",
+      "displayOrder": 415,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 39,
+      "name": "NoOp (Was: DeEss)",
+      "implementation": "AirWindowsNoOp",
+      "displayOrder": -1,
+      "group": "Filter",
+      "noOp": true
+    },
+    {
+      "id": 40,
+      "name": "Single-Ended Triode",
+      "implementation": "SingleEndedTriode::SingleEndedTriode",
+      "displayOrder": 380,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 41,
+      "name": "Iron Oxide",
+      "implementation": "IronOxide5::IronOxide5",
+      "displayOrder": 461,
+      "group": "Tape",
+      "noOp": false
+    },
+    {
+      "id": 42,
+      "name": "To Tape",
+      "implementation": "ToTape6::ToTape6",
+      "displayOrder": 462,
+      "group": "Tape",
+      "noOp": false
+    },
+    {
+      "id": 43,
+      "name": "Air",
+      "implementation": "Air::Air",
+      "displayOrder": 400,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 44,
+      "name": "Buss Colors",
+      "implementation": "BussColors4::BussColors4",
+      "displayOrder": 285,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 45,
+      "name": "Drum Slam",
+      "implementation": "DrumSlam::DrumSlam",
+      "displayOrder": 46,
+      "group": "Dynamics",
+      "noOp": false
+    },
+    {
+      "id": 46,
+      "name": "Capacitor",
+      "implementation": "Capacitor::Capacitor",
+      "displayOrder": 410,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 47,
+      "name": "Slew 1",
+      "implementation": "Slew::Slew",
+      "displayOrder": 113,
+      "group": "Clipping",
+      "noOp": false
+    },
+    {
+      "id": 48,
+      "name": "Slew 2",
+      "implementation": "Slew2::Slew2",
+      "displayOrder": 114,
+      "group": "Clipping",
+      "noOp": false
+    },
+    {
+      "id": 49,
+      "name": "Galactic",
+      "implementation": "Galactic::Galactic",
+      "displayOrder": 227,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 50,
+      "name": "Infinity",
+      "implementation": "Infinity::Infinity",
+      "displayOrder": 230,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 51,
+      "name": "MatrixVerb",
+      "implementation": "MatrixVerb::MatrixVerb",
+      "displayOrder": 235,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 52,
+      "name": "Verbity",
+      "implementation": "Verbity::Verbity",
+      "displayOrder": 265,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 53,
+      "name": "Triple Spread",
+      "implementation": "TripleSpread::TripleSpread",
+      "displayOrder": 440,
+      "group": "Stereo",
+      "noOp": false
+    },
+    {
+      "id": 54,
+      "name": "Chamber",
+      "implementation": "Chamber::Chamber",
+      "displayOrder": 223,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 55,
+      "name": "Mackity",
+      "implementation": "Mackity::Mackity",
+      "displayOrder": 353,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 56,
+      "name": "MackEQ",
+      "implementation": "MackEQ::MackEQ",
+      "displayOrder": 425,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 57,
+      "name": "NoOp (Was: Tube)",
+      "implementation": "AirWindowsNoOp",
+      "displayOrder": -1,
+      "group": "Saturation And More",
+      "noOp": true
+    },
+    {
+      "id": 58,
+      "name": "Cabs",
+      "implementation": "Cabs::Cabs",
+      "displayOrder": 405,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 59,
+      "name": "Chrome Oxide",
+      "implementation": "ChromeOxide::ChromeOxide",
+      "displayOrder": 460,
+      "group": "Tape",
+      "noOp": false
+    },
+    {
+      "id": 60,
+      "name": "Dub Sub",
+      "implementation": "DubSub::DubSub",
+      "displayOrder": 422,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 61,
+      "name": "Dub Center",
+      "implementation": "DubCenter::DubCenter",
+      "displayOrder": 421,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 62,
+      "name": "Fire Amp",
+      "implementation": "FireAmp::FireAmp",
+      "displayOrder": 312,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 63,
+      "name": "Glitch Shifter",
+      "implementation": "GlitchShifter::GlitchShifter",
+      "displayOrder": 500,
+      "group": "Pitch",
+      "noOp": false
+    },
+    {
+      "id": 64,
+      "name": "Nonlinear Space",
+      "implementation": "NonlinearSpace::NonlinearSpace",
+      "displayOrder": 245,
+      "group": "Ambience",
+      "noOp": false
+    },
+    {
+      "id": 65,
+      "name": "Pafnuty",
+      "implementation": "Pafnuty::Pafnuty",
+      "displayOrder": 428,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 66,
+      "name": "Power Sag",
+      "implementation": "PowerSag::PowerSag",
+      "displayOrder": 362,
+      "group": "Saturation And More",
+      "noOp": false
+    },
+    {
+      "id": 67,
+      "name": "Tape Dust",
+      "implementation": "TapeDust::TapeDust",
+      "displayOrder": 205,
+      "group": "Noise",
+      "noOp": false
+    },
+    {
+      "id": 68,
+      "name": "To Vinyl",
+      "implementation": "ToVinyl4::ToVinyl4",
+      "displayOrder": 195,
+      "group": "Lo-Fi",
+      "noOp": false
+    },
+    {
+      "id": 69,
+      "name": "YLowpass",
+      "implementation": "YLowpass::YLowpass",
+      "displayOrder": 430,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 70,
+      "name": "YBandpass",
+      "implementation": "YBandpass::YBandpass",
+      "displayOrder": 431,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 71,
+      "name": "YHighpass",
+      "implementation": "YHighpass::YHighpass",
+      "displayOrder": 432,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 72,
+      "name": "YNotch",
+      "implementation": "YNotch::YNotch",
+      "displayOrder": 433,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 73,
+      "name": "ZLowpass",
+      "implementation": "ZLowpass2::ZLowpass2",
+      "displayOrder": 434,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 74,
+      "name": "ZBandpass",
+      "implementation": "ZBandpass2::ZBandpass2",
+      "displayOrder": 435,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 75,
+      "name": "ZHighpass",
+      "implementation": "ZHighpass2::ZHighpass2",
+      "displayOrder": 436,
+      "group": "Filter",
+      "noOp": false
+    },
+    {
+      "id": 76,
+      "name": "ZNotch",
+      "implementation": "ZNotch2::ZNotch2",
+      "displayOrder": 437,
+      "group": "Filter",
+      "noOp": false
+    }
+  ],
+  "createdAt": "2026-09-27T17:49:24.923Z",
+  "binaries": {
+    "native": "b305f3d24df1c2dcb1373bdbf2d13550a23c73c657ef273daaabd7fa66f8c758",
+    "wasm": "2c6245a5c4b16fc7baf7a80c87a5f3dd7f1732478a7596d6e959bae9e154eded"
+  },
+  "fixture": "30a55236f4b85c4b37978548a9dca70d81b75d5be9787ef6f5675f87b588cf66",
+  "configuration": "c366fe1ada120561f7e355a8010b010c8887a11ad0f2d462b9131a322cd40b2a",
+  "cases": [
+    {
+      "name": "AD Clip",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 0,
+      "parameter": {
+        "index": 1,
+        "value": 1
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 6719.542894234828,
+        "peak": 0.298108845949173,
+        "relativeRMS": 2.8151068925681042e-8,
+        "error": 5.3251213723421635e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 2.4062449431075703,
+        "error": 3490.5988899303593
+      },
+      "nativeRepeat": {
+        "energy": 6719.542894234828,
+        "peak": 0.298108845949173,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 6719.542891705008,
+        "peak": 0.298108845949173,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Block Party",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 1,
+      "parameter": {
+        "index": 0,
+        "value": 0.013157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 588.1010278609401,
+        "peak": 0.11557873338460922,
+        "relativeRMS": 3.979077885702226e-8,
+        "error": 9.311439342711714e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.01232628711020464,
+        "error": 0.09159775648593596
+      },
+      "nativeRepeat": {
+        "energy": 588.1010278609401,
+        "peak": 0.11557873338460922,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 588.1010274722744,
+        "peak": 0.11557873338460922,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Butter Comp",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 2,
+      "parameter": {
+        "index": 0,
+        "value": 0.02631578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 3.984273345547147e-8,
+        "error": 9.532682666169925e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.01810970939493506,
+        "error": 0.19771664867206373
+      },
+      "nativeRepeat": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.5053538436014,
+        "peak": 0.11693678796291351,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Compresaturator",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 3,
+      "parameter": {
+        "index": 0,
+        "value": 0.039473684210526314
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 580.286844561793,
+        "peak": 0.1145227774977684,
+        "relativeRMS": 3.938899990431658e-8,
+        "error": 9.003111592277309e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03709542244033298,
+        "error": 0.8295850562103806
+      },
+      "nativeRepeat": {
+        "energy": 580.286844561793,
+        "peak": 0.1145227774977684,
+        "relativeRMS": 2.398958131466129e-8,
+        "error": 3.339550858072471e-13
+      },
+      "wasmRepeat": {
+        "energy": 580.2868443231278,
+        "peak": 0.11452276259660721,
+        "relativeRMS": 3.188109460488571e-10,
+        "error": 5.898059818321144e-17
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Logical",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 4,
+      "parameter": {
+        "index": 0,
+        "value": 0.05263157894736842
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 504.83731008107867,
+        "peak": 0.10735742747783661,
+        "relativeRMS": 4.0962873332786033e-8,
+        "error": 8.470952941103963e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.08889124804485479,
+        "error": 4.763632894172003
+      },
+      "nativeRepeat": {
+        "energy": 504.83731008107867,
+        "peak": 0.10735742747783661,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 504.83730992889997,
+        "peak": 0.10735742747783661,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Mojo",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 5,
+      "parameter": {
+        "index": 0,
+        "value": 0.06578947368421052
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1381.5595203335065,
+        "peak": 0.1759415566921234,
+        "relativeRMS": 4.197740202828929e-8,
+        "error": 2.4344491821785903e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.5152936316264168,
+        "error": 160.07732865975777
+      },
+      "nativeRepeat": {
+        "energy": 1381.5595203335065,
+        "peak": 0.1759415566921234,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1381.5595199834247,
+        "peak": 0.17594154179096222,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "One Corner Clip",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 6,
+      "parameter": {
+        "index": 0,
+        "value": 0.07894736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.0863697124066,
+        "peak": 0.11693665385246277,
+        "relativeRMS": 3.973587838940475e-8,
+        "error": 9.475003914229553e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.02049019492687692,
+        "error": 0.253111838173137
+      },
+      "nativeRepeat": {
+        "energy": 600.0863697124066,
+        "peak": 0.11693665385246277,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.086369355837,
+        "peak": 0.11693663895130157,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Point",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 7,
+      "parameter": {
+        "index": 0,
+        "value": 0.09210526315789473
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 599.2283295844566,
+        "peak": 0.11695845425128937,
+        "relativeRMS": 3.987258430699853e-8,
+        "error": 9.52666968232132e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03536077105202566,
+        "error": 0.7538131870848903
+      },
+      "nativeRepeat": {
+        "energy": 599.2283295844566,
+        "peak": 0.11695845425128937,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 599.2283292455429,
+        "peak": 0.11695844680070877,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pop",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 8,
+      "parameter": {
+        "index": 0,
+        "value": 0.10526315789473684
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 554.0622758431018,
+        "peak": 0.1749708652496338,
+        "relativeRMS": 4.906299816502912e-8,
+        "error": 1.333726404099977e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.07837250427437102,
+        "error": 3.7029489634568087
+      },
+      "nativeRepeat": {
+        "energy": 554.0622758431018,
+        "peak": 0.1749708652496338,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 554.0622762117466,
+        "peak": 0.1749708652496338,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pressure",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 9,
+      "parameter": {
+        "index": 0,
+        "value": 0.11842105263157894
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 581.4516030366829,
+        "peak": 0.114522784948349,
+        "relativeRMS": 3.9513776389477694e-8,
+        "error": 9.078427879869718e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03403409913415198,
+        "error": 0.6983108613398006
+      },
+      "nativeRepeat": {
+        "energy": 581.4516030366829,
+        "peak": 0.114522784948349,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 581.4516026741605,
+        "peak": 0.1145227774977684,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pye Wacket",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 10,
+      "parameter": {
+        "index": 0,
+        "value": 0.13157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 284.0674254249684,
+        "peak": 0.08288192003965378,
+        "relativeRMS": 4.339344744527647e-8,
+        "error": 5.348964853441616e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.3373471957200061,
+        "error": 68.60795691160652
+      },
+      "nativeRepeat": {
+        "energy": 284.0674254249684,
+        "peak": 0.08288192003965378,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 284.0674252589467,
+        "peak": 0.08288192003965378,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Surge",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 11,
+      "parameter": {
+        "index": 0,
+        "value": 0.14473684210526316
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 38.52051456569767,
+        "peak": 0.11211872100830078,
+        "relativeRMS": 4.331584436796286e-8,
+        "error": 7.227459208014214e-14
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.9230949664492445,
+        "error": 513.7041137120417
+      },
+      "nativeRepeat": {
+        "energy": 38.52051456569767,
+        "peak": 0.11211872100830078,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 38.520514497920345,
+        "peak": 0.11211872100830078,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Vari-Mu",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 12,
+      "parameter": {
+        "index": 0,
+        "value": 0.15789473684210525
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.168710001021,
+        "peak": 0.11690393835306168,
+        "relativeRMS": 3.9805427732990786e-8,
+        "error": 9.509505624895407e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.018131778877417223,
+        "error": 0.1981988389514861
+      },
+      "nativeRepeat": {
+        "energy": 600.168710001021,
+        "peak": 0.11690393835306168,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.168709646483,
+        "peak": 0.11690393090248108,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Bit Glitter",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 13,
+      "parameter": {
+        "index": 0,
+        "value": 0.17105263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 469.69731646237955,
+        "peak": 0.11985371261835098,
+        "relativeRMS": 1.4450163452166218e-9,
+        "error": 9.80761926741518e-16
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.16505253881358842,
+        "error": 16.423461466824442
+      },
+      "nativeRepeat": {
+        "energy": 469.69731646237955,
+        "peak": 0.11985371261835098,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 469.6973164579261,
+        "peak": 0.11985371261835098,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Crunchy Groove Wear",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 14,
+      "parameter": {
+        "index": 0,
+        "value": 0.18421052631578946
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 643.6988852637298,
+        "peak": 0.12085572630167007,
+        "relativeRMS": 3.994630457434598e-8,
+        "error": 1.0271549774827997e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03387429712507284,
+        "error": 0.6917686286432498
+      },
+      "nativeRepeat": {
+        "energy": 643.6988852637298,
+        "peak": 0.12085572630167007,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 643.6988851350327,
+        "peak": 0.12085572630167007,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "DeRez",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 15,
+      "parameter": {
+        "index": 0,
+        "value": 0.19736842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 603.4839072269258,
+        "peak": 0.12046214938163757,
+        "relativeRMS": 2.7708520931063644e-8,
+        "error": 4.633320913532022e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.039191171913944674,
+        "error": 0.9259697053748259
+      },
+      "nativeRepeat": {
+        "energy": 603.4839072269258,
+        "peak": 0.12046214938163757,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 603.483906962188,
+        "peak": 0.12046214938163757,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Deck Wrecka",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 16,
+      "parameter": {
+        "index": 0,
+        "value": 0.21052631578947367
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 3101.635844712566,
+        "peak": 0.2491154968738556,
+        "relativeRMS": 0.15953516890568556,
+        "error": 78.9411920178926
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 2.2480994889889154,
+        "error": 3046.851808662447
+      },
+      "nativeRepeat": {
+        "energy": 3101.635844712566,
+        "peak": 0.2491154968738556,
+        "relativeRMS": 0.12427415521362,
+        "error": 47.901867620723344
+      },
+      "wasmRepeat": {
+        "energy": 3112.181219641037,
+        "peak": 0.2493963986635208,
+        "relativeRMS": 0.18332187108117146,
+        "error": 104.59078922465514
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Dust Bunny",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 17,
+      "parameter": {
+        "index": 0,
+        "value": 0.2236842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 602.889859167539,
+        "peak": 0.11715903133153915,
+        "relativeRMS": 6.931009141259499e-8,
+        "error": 2.8962158249798746e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.0025203651513726133,
+        "error": 0.003829545290159845
+      },
+      "nativeRepeat": {
+        "energy": 602.889859167539,
+        "peak": 0.11715903133153915,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 602.8898588672389,
+        "peak": 0.11715902388095856,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Groove Wear",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 18,
+      "parameter": {
+        "index": 0,
+        "value": 0.23684210526315788
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 622.9872938178003,
+        "peak": 0.11888696998357773,
+        "relativeRMS": 2.723459619235844e-8,
+        "error": 4.620841476704948e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.016832682837235588,
+        "error": 0.17081537507174488
+      },
+      "nativeRepeat": {
+        "energy": 622.9872938178003,
+        "peak": 0.11888696998357773,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 622.9872936156141,
+        "peak": 0.11888696998357773,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Noise",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 19,
+      "parameter": {
+        "index": 0,
+        "value": 0.25
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 53.43729612703141,
+        "peak": 0.08742973208427429,
+        "relativeRMS": 1.4942147427141887,
+        "error": 119.3082592692129
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.0381952343090988,
+        "error": 649.797954489859
+      },
+      "nativeRepeat": {
+        "energy": 53.43729612703141,
+        "peak": 0.08742973208427429,
+        "relativeRMS": 1.4333008024502647,
+        "error": 109.7789729052249
+      },
+      "wasmRepeat": {
+        "energy": 65.7617145422687,
+        "peak": 0.1050395593047142,
+        "relativeRMS": 1.3064033271498172,
+        "error": 112.23483778520021
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Voice Of The Starship",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 20,
+      "parameter": {
+        "index": 0,
+        "value": 0.2631578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1.30425760140431,
+        "peak": 0.010201821103692055,
+        "relativeRMS": 1.3994975875023419,
+        "error": 2.5545104570774457
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.0005752466618723,
+        "error": 603.5590790273645
+      },
+      "nativeRepeat": {
+        "energy": 1.30425760140431,
+        "peak": 0.010201821103692055,
+        "relativeRMS": 1.4072024629457032,
+        "error": 2.5827153854599065
+      },
+      "wasmRepeat": {
+        "energy": 1.2705694659685824,
+        "peak": 0.009510803036391735,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Bright Ambience",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 21,
+      "parameter": {
+        "index": 0,
+        "value": 0.27631578947368424
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 32.499277914559094,
+        "peak": 0.09337630867958069,
+        "relativeRMS": 1.4254532266810644e-7,
+        "error": 6.603583207969072e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.9105432020355128,
+        "error": 499.82893141435324
+      },
+      "nativeRepeat": {
+        "energy": 32.499277914559094,
+        "peak": 0.09337630867958069,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 32.499277910715,
+        "peak": 0.09337631613016129,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Hombre",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 22,
+      "parameter": {
+        "index": 0,
+        "value": 0.2894736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 405.6810826831912,
+        "peak": 0.1006988063454628,
+        "relativeRMS": 3.846106660428999e-8,
+        "error": 6.001052199987576e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.30492981672928976,
+        "error": 56.05573655183167
+      },
+      "nativeRepeat": {
+        "energy": 405.6810826831912,
+        "peak": 0.1006988063454628,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 405.68108259305774,
+        "peak": 0.1006988063454628,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Melt",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 23,
+      "parameter": {
+        "index": 0,
+        "value": 0.3026315789473684
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 175.56083272696043,
+        "peak": 0.15666165947914124,
+        "relativeRMS": 1.0783168999838153e-7,
+        "error": 2.0413640191468627e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.9514461857601357,
+        "error": 545.7437072911598
+      },
+      "nativeRepeat": {
+        "energy": 175.56083272696043,
+        "peak": 0.15666165947914124,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 175.56083328209968,
+        "peak": 0.15666165947914124,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pocket Verbs",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 24,
+      "parameter": {
+        "index": 0,
+        "value": 0.3157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 627.0971691561233,
+        "peak": 0.16216698288917542,
+        "relativeRMS": 3.0229333775184975e-8,
+        "error": 5.730493074493829e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.5248586658165215,
+        "error": 166.07529103778575
+      },
+      "nativeRepeat": {
+        "energy": 627.0971691561233,
+        "peak": 0.16216698288917542,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 627.0971689622745,
+        "peak": 0.16216698288917542,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Star Child",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 25,
+      "parameter": {
+        "index": 0,
+        "value": 0.32894736842105265
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 416.47423934741545,
+        "peak": 0.10535937547683716,
+        "relativeRMS": 0.000008014651798974675,
+        "error": 2.6752074274259495e-8
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.19209865882097865,
+        "error": 22.24687135341206
+      },
+      "nativeRepeat": {
+        "energy": 416.47423934741545,
+        "peak": 0.10535937547683716,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 416.4742382850192,
+        "peak": 0.10535937547683716,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Apicolypse",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 26,
+      "parameter": {
+        "index": 0,
+        "value": 0.34210526315789475
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 517.1264600427157,
+        "peak": 0.10873404890298843,
+        "relativeRMS": 0.0005392677587855802,
+        "error": 0.00015038539880819215
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.11205838622952666,
+        "error": 7.5702287987944015
+      },
+      "nativeRepeat": {
+        "energy": 517.1264600427157,
+        "peak": 0.10873404890298843,
+        "relativeRMS": 0.0005423015688029417,
+        "error": 0.0001520822333783608
+      },
+      "wasmRepeat": {
+        "energy": 517.1266350553266,
+        "peak": 0.10873327404260635,
+        "relativeRMS": 0.000542521055194409,
+        "error": 0.00015220541466649603
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Bass Drive",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 27,
+      "parameter": {
+        "index": 0,
+        "value": 0.35526315789473684
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1686.8402124799488,
+        "peak": 0.19353412091732025,
+        "relativeRMS": 5.523808473305727e-8,
+        "error": 5.1469644593630095e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.7216431149566744,
+        "error": 313.9534232733509
+      },
+      "nativeRepeat": {
+        "energy": 1686.8402124799488,
+        "peak": 0.19353412091732025,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1686.8402108024773,
+        "peak": 0.19353412091732025,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Cojones",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 28,
+      "parameter": {
+        "index": 0,
+        "value": 0.3684210526315789
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 598.9295058152645,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 3.998765244446244e-8,
+        "error": 9.576956753915991e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.030606992802748974,
+        "error": 0.5647569716020235
+      },
+      "nativeRepeat": {
+        "energy": 598.9295058152645,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 598.9295054391032,
+        "peak": 0.11693678796291351,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Density",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 29,
+      "parameter": {
+        "index": 0,
+        "value": 0.3815789473684211
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 599.4740889097759,
+        "peak": 0.11693675816059113,
+        "relativeRMS": 3.9974367089136624e-8,
+        "error": 9.57929634866891e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.026127213512087567,
+        "error": 0.4115347061245093
+      },
+      "nativeRepeat": {
+        "energy": 599.4740889097759,
+        "peak": 0.11693675816059113,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 599.4740885279011,
+        "peak": 0.11693675071001053,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Drive",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 30,
+      "parameter": {
+        "index": 0,
+        "value": 0.39473684210526316
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 3.984273345547147e-8,
+        "error": 9.532682666169925e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.01810970939493506,
+        "error": 0.19771664867206373
+      },
+      "nativeRepeat": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.5053538436014,
+        "peak": 0.11693678796291351,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Focus",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 31,
+      "parameter": {
+        "index": 0,
+        "value": 0.40789473684210525
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 594.6695971722208,
+        "peak": 0.11649853736162186,
+        "relativeRMS": 3.992858368613827e-8,
+        "error": 9.480768596152306e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.019495555817906258,
+        "error": 0.2291350468248995
+      },
+      "nativeRepeat": {
+        "energy": 594.6695971722208,
+        "peak": 0.11649853736162186,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 594.6695968235579,
+        "peak": 0.11649853736162186,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Fracture",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 32,
+      "parameter": {
+        "index": 0,
+        "value": 0.42105263157894735
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 4400.745049965614,
+        "peak": 0.29896193742752075,
+        "relativeRMS": 3.517308177279532e-8,
+        "error": 5.44436273348867e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.7066999787259318,
+        "error": 1756.0409696467195
+      },
+      "nativeRepeat": {
+        "energy": 4400.745049965614,
+        "peak": 0.29896193742752075,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 4400.745048596305,
+        "peak": 0.29896193742752075,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Hard Vacuum",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 33,
+      "parameter": {
+        "index": 0,
+        "value": 0.4342105263157895
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 3.984273345547147e-8,
+        "error": 9.532682666169925e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.01810970939493506,
+        "error": 0.19771664867206373
+      },
+      "nativeRepeat": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.5053538436014,
+        "peak": 0.11693678796291351,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Loud",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 34,
+      "parameter": {
+        "index": 0,
+        "value": 0.4473684210526316
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 3.984273345547147e-8,
+        "error": 9.532682666169925e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.01810970939493506,
+        "error": 0.19771664867206373
+      },
+      "nativeRepeat": {
+        "energy": 600.5053541374098,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.5053538436014,
+        "peak": 0.11693678796291351,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "NC-17",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 35,
+      "parameter": {
+        "index": 0,
+        "value": 0.4605263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 571.439469792354,
+        "peak": 0.11374855041503906,
+        "relativeRMS": 4.000473825244556e-8,
+        "error": 9.14519774454393e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03937749535710665,
+        "error": 0.9347951616072101
+      },
+      "nativeRepeat": {
+        "energy": 571.439469792354,
+        "peak": 0.11374855041503906,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 571.4394698307301,
+        "peak": 0.11374855041503906,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Spiral",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 36,
+      "parameter": {
+        "index": 0,
+        "value": 0.47368421052631576
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 595.8634163501977,
+        "peak": 0.11663448810577393,
+        "relativeRMS": 3.977967948628977e-8,
+        "error": 9.42907915323821e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03996629648550232,
+        "error": 0.962959649769312
+      },
+      "nativeRepeat": {
+        "energy": 595.8634163501977,
+        "peak": 0.11663448810577393,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 595.8634160580075,
+        "peak": 0.11663448065519333,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Unbox",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 37,
+      "parameter": {
+        "index": 0,
+        "value": 0.4868421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 596.1285027769707,
+        "peak": 0.11663493514060974,
+        "relativeRMS": 3.99342766561294e-8,
+        "error": 9.50673814768428e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.04702003205801965,
+        "error": 1.332864864451043
+      },
+      "nativeRepeat": {
+        "energy": 596.1285027769707,
+        "peak": 0.11663493514060974,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 596.1285023408393,
+        "peak": 0.11663492023944855,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "De-Bess",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 38,
+      "parameter": {
+        "index": 0,
+        "value": 0.5
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 1
+        },
+        {
+          "index": 2,
+          "value": 0
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 598.0021149540003,
+        "peak": 0.11661171168088913,
+        "relativeRMS": 3.93938062716336e-8,
+        "error": 9.280227217329014e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.03677264110543401,
+        "error": 0.8152107992115185
+      },
+      "nativeRepeat": {
+        "energy": 598.0021149540003,
+        "peak": 0.11661171168088913,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 598.0021145702565,
+        "peak": 0.11661170423030853,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "NoOp (Was: DeEss)",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 39,
+      "parameter": {
+        "index": 0,
+        "value": 0.5131578947368421
+      },
+      "parameters": [],
+      "noOp": true,
+      "comparison": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1,
+        "error": 602.865287046119
+      },
+      "nativeRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "status": "matched-retired-silence"
+    },
+    {
+      "name": "Single-Ended Triode",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 40,
+      "parameter": {
+        "index": 0,
+        "value": 0.5263157894736842
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 266.25991755040667,
+        "peak": 0.10836504399776459,
+        "relativeRMS": 3.357915751756354e-8,
+        "error": 3.0022398459701013e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.47104999232669575,
+        "error": 133.768630247656
+      },
+      "nativeRepeat": {
+        "energy": 266.25991755040667,
+        "peak": 0.10836504399776459,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 266.25991752155466,
+        "peak": 0.10836504399776459,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Iron Oxide",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 41,
+      "parameter": {
+        "index": 0,
+        "value": 0.5394736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 2506.650369146445,
+        "peak": 0.23251879215240479,
+        "relativeRMS": 0.009804859635085891,
+        "error": 0.24097751620921953
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.1933826117195214,
+        "error": 858.5778678689346
+      },
+      "nativeRepeat": {
+        "energy": 2506.650369146445,
+        "peak": 0.23251879215240479,
+        "relativeRMS": 0.009535008392226709,
+        "error": 0.22789559012155963
+      },
+      "wasmRepeat": {
+        "energy": 2506.5639060055328,
+        "peak": 0.2325516641139984,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "To Tape",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 42,
+      "parameter": {
+        "index": 0,
+        "value": 0.5526315789473685
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1490.0119601352662,
+        "peak": 0.1828179657459259,
+        "relativeRMS": 3.133010169261818e-8,
+        "error": 1.4625588951570247e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.0975321751428433,
+        "error": 726.1975838016178
+      },
+      "nativeRepeat": {
+        "energy": 1490.0119601352662,
+        "peak": 0.1828179657459259,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1490.0119590170189,
+        "peak": 0.1828179657459259,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Air",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 43,
+      "parameter": {
+        "index": 0,
+        "value": 0.5657894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 600.5044571129988,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 3.9871457402794756e-8,
+        "error": 9.54641821431571e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.01812354975713617,
+        "error": 0.19801897441854494
+      },
+      "nativeRepeat": {
+        "energy": 600.5044571129988,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 600.5044568048775,
+        "peak": 0.11693678796291351,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Buss Colors",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 44,
+      "parameter": {
+        "index": 0,
+        "value": 0.5789473684210527
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 428.4729934195142,
+        "peak": 0.09738600999116898,
+        "relativeRMS": 3.326886558306115e-8,
+        "error": 4.742413719095941e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.17262150156938558,
+        "error": 17.964290029628017
+      },
+      "nativeRepeat": {
+        "energy": 428.4729934195142,
+        "peak": 0.09738600999116898,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 428.4729933996,
+        "peak": 0.09738600999116898,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Drum Slam",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 45,
+      "parameter": {
+        "index": 0,
+        "value": 0.5921052631578947
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 560.9564850551847,
+        "peak": 0.11080123484134674,
+        "relativeRMS": 1.137434194088291e-7,
+        "error": 7.257411244946995e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.05867655560265143,
+        "error": 2.0756279125948938
+      },
+      "nativeRepeat": {
+        "energy": 560.9564850551847,
+        "peak": 0.11080123484134674,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 560.9564849567989,
+        "peak": 0.11080123484134674,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Capacitor",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 46,
+      "parameter": {
+        "index": 0,
+        "value": 0.6052631578947368
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 601.6664860324745,
+        "peak": 0.1169368103146553,
+        "relativeRMS": 3.962091883565115e-8,
+        "error": 9.445064040817255e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.02249851837294332,
+        "error": 0.30516035792208196
+      },
+      "nativeRepeat": {
+        "energy": 601.6664860324745,
+        "peak": 0.1169368103146553,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 601.6664856244874,
+        "peak": 0.11693680286407471,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Slew 1",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 47,
+      "parameter": {
+        "index": 0,
+        "value": 0.618421052631579
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 20.127638096213264,
+        "peak": 0.11531713604927063,
+        "relativeRMS": 1.7741953690942065e-7,
+        "error": 6.335715942329808e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.975385886073062,
+        "error": 573.552546040215
+      },
+      "nativeRepeat": {
+        "energy": 20.127638096213264,
+        "peak": 0.11531713604927063,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 20.127638123019654,
+        "peak": 0.11531713604927063,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Slew 2",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 48,
+      "parameter": {
+        "index": 0,
+        "value": 0.631578947368421
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 589.9080182815344,
+        "peak": 0.11643469333648682,
+        "relativeRMS": 2.7059969339184023e-8,
+        "error": 4.3195539210413936e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.07291545407151416,
+        "error": 3.205231832363295
+      },
+      "nativeRepeat": {
+        "energy": 589.9080182815344,
+        "peak": 0.11643469333648682,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 589.9080179993177,
+        "peak": 0.11643469333648682,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Galactic",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 49,
+      "parameter": {
+        "index": 0,
+        "value": 0.6447368421052632
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 139.0580850662225,
+        "peak": 0.0966479480266571,
+        "relativeRMS": 0.36727666575439855,
+        "error": 18.757843959285506
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.1422785797666668,
+        "error": 786.6188398277485
+      },
+      "nativeRepeat": {
+        "energy": 139.0580850662225,
+        "peak": 0.0966479480266571,
+        "relativeRMS": 0.7573913472087364,
+        "error": 79.7695097562988
+      },
+      "wasmRepeat": {
+        "energy": 148.71756419918285,
+        "peak": 0.1011417806148529,
+        "relativeRMS": 0.7025531186424004,
+        "error": 73.40414688022446
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Infinity",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 50,
+      "parameter": {
+        "index": 0,
+        "value": 0.6578947368421053
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 114.87713633574594,
+        "peak": 0.05560976639389992,
+        "relativeRMS": 5.882341098872886e-8,
+        "error": 3.9749714116552793e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.0084818271393792,
+        "error": 613.1354563199445
+      },
+      "nativeRepeat": {
+        "energy": 114.87713633574594,
+        "peak": 0.05560976639389992,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 114.87713639257807,
+        "peak": 0.05560976639389992,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "MatrixVerb",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 51,
+      "parameter": {
+        "index": 0,
+        "value": 0.6710526315789473
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 472.74389679490656,
+        "peak": 0.14540134370326996,
+        "relativeRMS": 0.275180987503025,
+        "error": 35.79833108613721
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.3599635617387813,
+        "error": 1114.9998844941133
+      },
+      "nativeRepeat": {
+        "energy": 472.74389679490656,
+        "peak": 0.14540134370326996,
+        "relativeRMS": 0.2957875692955477,
+        "error": 41.36049880614298
+      },
+      "wasmRepeat": {
+        "energy": 432.3129794252666,
+        "peak": 0.1376451700925827,
+        "relativeRMS": 0.3076533549736383,
+        "error": 40.91867719532946
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Verbity",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 52,
+      "parameter": {
+        "index": 0,
+        "value": 0.6842105263157895
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 491.26434580537176,
+        "peak": 0.1366201490163803,
+        "relativeRMS": 5.7872158389746456e-8,
+        "error": 1.6453360213537229e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.30717299036947715,
+        "error": 56.883502471649194
+      },
+      "nativeRepeat": {
+        "energy": 491.26434580537176,
+        "peak": 0.1366201490163803,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 491.26434547208873,
+        "peak": 0.1366201490163803,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Triple Spread",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 53,
+      "parameter": {
+        "index": 0,
+        "value": 0.6973684210526315
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 545.1074576391993,
+        "peak": 0.115018829703331,
+        "relativeRMS": 1.6218938985376056e-7,
+        "error": 1.4339268724705387e-11
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.31019548666831676,
+        "error": 58.008445442024836
+      },
+      "nativeRepeat": {
+        "energy": 545.1074576391993,
+        "peak": 0.115018829703331,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 545.1074583638855,
+        "peak": 0.115018829703331,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Chamber",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 54,
+      "parameter": {
+        "index": 0,
+        "value": 0.7105263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 635.3087040495163,
+        "peak": 0.15561074018478394,
+        "relativeRMS": 6.34462442037217e-8,
+        "error": 2.5573881140369706e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.2503844456052207,
+        "error": 37.795053997993875
+      },
+      "nativeRepeat": {
+        "energy": 635.3087040495163,
+        "peak": 0.15561074018478394,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 635.308703745653,
+        "peak": 0.15561074018478394,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Mackity",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 55,
+      "parameter": {
+        "index": 0,
+        "value": 0.7236842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 592.0614758341446,
+        "peak": 0.11634232848882675,
+        "relativeRMS": 3.410892422664895e-8,
+        "error": 6.888153995801471e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.07441671348345331,
+        "error": 3.3385758693834573
+      },
+      "nativeRepeat": {
+        "energy": 592.0614758341446,
+        "peak": 0.11634232848882675,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 592.0614753758507,
+        "peak": 0.11634232848882675,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "MackEQ",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 56,
+      "parameter": {
+        "index": 0,
+        "value": 0.7368421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 3680.5462740897556,
+        "peak": 0.2709731161594391,
+        "relativeRMS": 2.5927060047806977e-8,
+        "error": 2.474109001459397e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.481905284705213,
+        "error": 1323.9182580447205
+      },
+      "nativeRepeat": {
+        "energy": 3680.5462740897556,
+        "peak": 0.2709731161594391,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 3680.5462726821524,
+        "peak": 0.2709731161594391,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "NoOp (Was: Tube)",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 57,
+      "parameter": {
+        "index": 0,
+        "value": 0.75
+      },
+      "parameters": [],
+      "noOp": true,
+      "comparison": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1,
+        "error": 602.865287046119
+      },
+      "nativeRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "status": "matched-retired-silence"
+    },
+    {
+      "name": "Cabs",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 58,
+      "parameter": {
+        "index": 0,
+        "value": 0.7631578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 33.47223865609726,
+        "peak": 0.02771168015897274,
+        "relativeRMS": 3.7300381992079623e-7,
+        "error": 4.657054477002778e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.8144262041058385,
+        "error": 399.8745415255209
+      },
+      "nativeRepeat": {
+        "energy": 33.47223865609726,
+        "peak": 0.02771168015897274,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 33.47223864277559,
+        "peak": 0.02771168388426304,
+        "relativeRMS": 8.736259282689142e-8,
+        "error": 2.554675770934259e-13
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Chrome Oxide",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 59,
+      "parameter": {
+        "index": 0,
+        "value": 0.7763157894736842
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 603.9849700311688,
+        "peak": 0.11720992624759674,
+        "relativeRMS": 0.0008617126408408491,
+        "error": 0.0004484882394490391
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.005664369469284916,
+        "error": 0.019342981859091654
+      },
+      "nativeRepeat": {
+        "energy": 603.9849700311688,
+        "peak": 0.11720992624759674,
+        "relativeRMS": 0.0008625289375497052,
+        "error": 0.000449338343900798
+      },
+      "wasmRepeat": {
+        "energy": 603.9836773475315,
+        "peak": 0.1172327771782875,
+        "relativeRMS": 0.0008591917665192456,
+        "error": 0.000445867087405991
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Dub Sub",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 60,
+      "parameter": {
+        "index": 0,
+        "value": 0.7894736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 155.12593114689562,
+        "peak": 0.07140837609767914,
+        "relativeRMS": 0.005512462901601536,
+        "error": 0.004713850023333777
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.5048824696553792,
+        "error": 153.67416464194898
+      },
+      "nativeRepeat": {
+        "energy": 155.12593114689562,
+        "peak": 0.07140837609767914,
+        "relativeRMS": 0.005814874633070936,
+        "error": 0.005245236965269252
+      },
+      "wasmRepeat": {
+        "energy": 155.12791736288455,
+        "peak": 0.07138949632644653,
+        "relativeRMS": 0.0064319698069722426,
+        "error": 0.006417678489098977
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Dub Center",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 61,
+      "parameter": {
+        "index": 0,
+        "value": 0.8026315789473685
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 155.12945956380784,
+        "peak": 0.07138478755950928,
+        "relativeRMS": 0.004743530634485504,
+        "error": 0.003490580826821768
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.5048801010055216,
+        "error": 153.67272272444853
+      },
+      "nativeRepeat": {
+        "energy": 155.12945956380784,
+        "peak": 0.07138478755950928,
+        "relativeRMS": 0.006354859578593602,
+        "error": 0.006264785366993883
+      },
+      "wasmRepeat": {
+        "energy": 155.12491189277156,
+        "peak": 0.07137279212474823,
+        "relativeRMS": 0.006788584511787498,
+        "error": 0.00714891289896876
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Fire Amp",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 62,
+      "parameter": {
+        "index": 0,
+        "value": 0.8157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 42.110450713727275,
+        "peak": 0.04541386663913727,
+        "relativeRMS": 0.007517175135970488,
+        "error": 0.0023795740653627133
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.98512616643633,
+        "error": 585.0648236094738
+      },
+      "nativeRepeat": {
+        "energy": 42.110450713727275,
+        "peak": 0.04541386663913727,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 42.10365112673295,
+        "peak": 0.04531745985150337,
+        "relativeRMS": 0.007575197401390035,
+        "error": 0.0024160597345613145
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Glitch Shifter",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 63,
+      "parameter": {
+        "index": 0,
+        "value": 0.8289473684210527
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 167.8815905094136,
+        "peak": 0.07979369163513184,
+        "relativeRMS": 3.008979240190003e-7,
+        "error": 1.51999254508047e-11
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.8490563091019026,
+        "error": 434.6035453509369
+      },
+      "nativeRepeat": {
+        "energy": 167.8815905094136,
+        "peak": 0.07979369163513184,
+        "relativeRMS": 8.09665336195457e-8,
+        "error": 1.1005611243123721e-12
+      },
+      "wasmRepeat": {
+        "energy": 167.8815909656073,
+        "peak": 0.07979369163513184,
+        "relativeRMS": 7.979791401144354e-8,
+        "error": 1.069020795490353e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Nonlinear Space",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 64,
+      "parameter": {
+        "index": 0,
+        "value": 0.8421052631578947
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 158.2887602681079,
+        "peak": 0.0848151221871376,
+        "relativeRMS": 8.844605633874155e-8,
+        "error": 1.2382462576954028e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.6970375141791132,
+        "error": 292.9089097819336
+      },
+      "nativeRepeat": {
+        "energy": 158.2887602681079,
+        "peak": 0.0848151221871376,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 158.28876028740473,
+        "peak": 0.0848151221871376,
+        "relativeRMS": 7.875670441825052e-8,
+        "error": 9.818047914482135e-13
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pafnuty",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 65,
+      "parameter": {
+        "index": 0,
+        "value": 0.8552631578947368
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 602.6783560903925,
+        "peak": 0.11912781745195389,
+        "relativeRMS": 9.780510450966888e-8,
+        "error": 5.765123802609225e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.008133171630110517,
+        "error": 0.039878622843956664
+      },
+      "nativeRepeat": {
+        "energy": 602.6783560903925,
+        "peak": 0.11912781745195389,
+        "relativeRMS": 9.029721920162736e-8,
+        "error": 4.913990888858797e-12
+      },
+      "wasmRepeat": {
+        "energy": 602.6783559465048,
+        "peak": 0.11912781745195389,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Power Sag",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 66,
+      "parameter": {
+        "index": 0,
+        "value": 0.868421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 432.33415827703357,
+        "peak": 0.1166507676243782,
+        "relativeRMS": 9.537385194417642e-8,
+        "error": 3.932585707218347e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.15727133614325553,
+        "error": 14.91143469588664
+      },
+      "nativeRepeat": {
+        "energy": 432.33415827703357,
+        "peak": 0.1166507676243782,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 432.33415851309724,
+        "peak": 0.11665076017379761,
+        "relativeRMS": 8.737013823591428e-8,
+        "error": 3.3002405486454445e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Tape Dust",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 67,
+      "parameter": {
+        "index": 0,
+        "value": 0.881578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 334.97628932975135,
+        "peak": 0.10251963883638382,
+        "relativeRMS": 0.08098484446056829,
+        "error": 2.1969570783227454
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.2597817955729892,
+        "error": 40.685317213893434
+      },
+      "nativeRepeat": {
+        "energy": 334.97628932975135,
+        "peak": 0.10251963883638382,
+        "relativeRMS": 0.08061243762081509,
+        "error": 2.1767982276298623
+      },
+      "wasmRepeat": {
+        "energy": 334.8250222802865,
+        "peak": 0.10234565287828445,
+        "relativeRMS": 0.08081173792450641,
+        "error": 2.1865871919666198
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "To Vinyl",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 68,
+      "parameter": {
+        "index": 0,
+        "value": 0.8947368421052632
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 596.5237895188387,
+        "peak": 0.11641722172498703,
+        "relativeRMS": 9.338094579085261e-8,
+        "error": 5.20168806307665e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.27363319444841105,
+        "error": 45.139613788462306
+      },
+      "nativeRepeat": {
+        "energy": 596.5237895188387,
+        "peak": 0.11641722172498703,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 596.5237892869931,
+        "peak": 0.11641722172498703,
+        "relativeRMS": 8.256713466140427e-8,
+        "error": 4.066700554135961e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "YLowpass",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 69,
+      "parameter": {
+        "index": 0,
+        "value": 0.9078947368421053
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 598.5316813745939,
+        "peak": 0.11692998558282852,
+        "relativeRMS": 8.236940784534373e-8,
+        "error": 4.060869479487559e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.1588881813218679,
+        "error": 15.219607971051305
+      },
+      "nativeRepeat": {
+        "energy": 598.5316813745939,
+        "peak": 0.11692998558282852,
+        "relativeRMS": 8.163068788256439e-8,
+        "error": 3.9883572797342065e-12
+      },
+      "wasmRepeat": {
+        "energy": 598.5316801266858,
+        "peak": 0.11692997813224792,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "YBandpass",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 70,
+      "parameter": {
+        "index": 0,
+        "value": 0.9210526315789473
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 13.71626308020798,
+        "peak": 0.055580493062734604,
+        "relativeRMS": 1.1121671625120866e-7,
+        "error": 1.6965862484794697e-13
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.985195729301595,
+        "error": 585.1474530711967
+      },
+      "nativeRepeat": {
+        "energy": 13.71626308020798,
+        "peak": 0.055580493062734604,
+        "relativeRMS": 8.153324317592045e-8,
+        "error": 9.118118706236081e-14
+      },
+      "wasmRepeat": {
+        "energy": 13.716263078983427,
+        "peak": 0.055580493062734604,
+        "relativeRMS": 8.203748369646959e-8,
+        "error": 9.231249055849112e-14
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "YHighpass",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 71,
+      "parameter": {
+        "index": 0,
+        "value": 0.9342105263157895
+      },
+      "parameters": [
+        {
+          "index": 2,
+          "value": 0.2
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 525.7635449138726,
+        "peak": 0.10952712595462799,
+        "relativeRMS": 8.864835104136482e-8,
+        "error": 4.131728665456058e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.8714428407005228,
+        "error": 457.82350992086714
+      },
+      "nativeRepeat": {
+        "energy": 525.7635449138726,
+        "peak": 0.10952712595462799,
+        "relativeRMS": 8.439851011136314e-8,
+        "error": 3.745070780507403e-12
+      },
+      "wasmRepeat": {
+        "energy": 525.763544193454,
+        "peak": 0.10952712595462799,
+        "relativeRMS": 8.457590149015244e-8,
+        "error": 3.760830329333911e-12
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "YNotch",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 72,
+      "parameter": {
+        "index": 0,
+        "value": 0.9473684210526315
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 401.4072728325373,
+        "peak": 0.09591677039861679,
+        "relativeRMS": 8.988875923357862e-8,
+        "error": 3.2433663636792454e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 0.5800770207397837,
+        "error": 202.85774856989042
+      },
+      "nativeRepeat": {
+        "energy": 401.4072728325373,
+        "peak": 0.09591677039861679,
+        "relativeRMS": 8.760125778970777e-8,
+        "error": 3.080391530622507e-12
+      },
+      "wasmRepeat": {
+        "energy": 401.4072727616902,
+        "peak": 0.0959167629480362,
+        "relativeRMS": 8.758032385903976e-8,
+        "error": 3.0789194736393356e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZLowpass",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 73,
+      "parameter": {
+        "index": 0,
+        "value": 0.9605263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 6400.682707291443,
+        "peak": 0.38385456800460815,
+        "relativeRMS": 8.802441488832807e-8,
+        "error": 4.9594394564447077e-11
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 2.2792426383797886,
+        "error": 3131.853217122655
+      },
+      "nativeRepeat": {
+        "energy": 6400.682707291443,
+        "peak": 0.38385456800460815,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 6400.682700235468,
+        "peak": 0.38385453820228577,
+        "relativeRMS": 8.744722530794961e-8,
+        "error": 4.89461307904322e-11
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZBandpass",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 74,
+      "parameter": {
+        "index": 0,
+        "value": 0.9736842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1777.005666759136,
+        "peak": 0.2019578516483307,
+        "relativeRMS": 8.860096519617094e-8,
+        "error": 1.3949727331674386e-11
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.2433480898193252,
+        "error": 931.9781721867589
+      },
+      "nativeRepeat": {
+        "energy": 1777.005666759136,
+        "peak": 0.2019578516483307,
+        "relativeRMS": 8.727068921632565e-8,
+        "error": 1.3533982928830811e-11
+      },
+      "wasmRepeat": {
+        "energy": 1777.0056657858877,
+        "peak": 0.2019578516483307,
+        "relativeRMS": 8.679197184172711e-8,
+        "error": 1.3385910689957937e-11
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZHighpass",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 75,
+      "parameter": {
+        "index": 0,
+        "value": 0.9868421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 50.46906558466161,
+        "peak": 0.07191324979066849,
+        "relativeRMS": 1.5582457489760198e-7,
+        "error": 1.2254544284102473e-12
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.2570244357633684,
+        "error": 952.5937292162804
+      },
+      "nativeRepeat": {
+        "energy": 50.46906558466161,
+        "peak": 0.07191324979066849,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 50.46906559475096,
+        "peak": 0.07191324234008789,
+        "relativeRMS": 8.985694582686579e-8,
+        "error": 4.0750089826094404e-13
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZNotch",
+      "type": 14,
+      "rate": 44100,
+      "streamingId": 76,
+      "parameter": {
+        "index": 0,
+        "value": 1
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1731.3535164467203,
+        "peak": 0.19965319335460663,
+        "relativeRMS": 9.2930970490256e-8,
+        "error": 1.495225511966925e-11
+      },
+      "dry": {
+        "energy": 602.865287046119,
+        "peak": 0.1169913113117218,
+        "relativeRMS": 1.1161181136943223,
+        "error": 751.0011305881802
+      },
+      "nativeRepeat": {
+        "energy": 1731.3535164467203,
+        "peak": 0.19965319335460663,
+        "relativeRMS": 8.815831964363931e-8,
+        "error": 1.3455887907754785e-11
+      },
+      "wasmRepeat": {
+        "energy": 1731.3535159881324,
+        "peak": 0.19965320825576782,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "AD Clip",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 0,
+      "parameter": {
+        "index": 1,
+        "value": 1
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 7317.3752837653,
+        "peak": 0.298108845949173,
+        "relativeRMS": 3.048540396695439e-8,
+        "error": 6.8004748329085046e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 2.40647840970113,
+        "error": 3801.437535014148
+      },
+      "nativeRepeat": {
+        "energy": 7317.3752837653,
+        "peak": 0.298108845949173,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 7317.375281564795,
+        "peak": 0.298108845949173,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Block Party",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 1,
+      "parameter": {
+        "index": 0,
+        "value": 0.013157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 640.342395533263,
+        "peak": 0.11562739312648773,
+        "relativeRMS": 4.116065336266624e-8,
+        "error": 1.084867692856567e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.01232940238394527,
+        "error": 0.09978562280339398
+      },
+      "nativeRepeat": {
+        "energy": 640.342395533263,
+        "peak": 0.11562739312648773,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 640.3423953033218,
+        "peak": 0.11562739312648773,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Butter Comp",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 2,
+      "parameter": {
+        "index": 0,
+        "value": 0.02631578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 4.106993712350366e-8,
+        "error": 1.1032826169870639e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.017183193069077972,
+        "error": 0.19381690711512367
+      },
+      "nativeRepeat": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 654.0917924744224,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Compresaturator",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 3,
+      "parameter": {
+        "index": 0,
+        "value": 0.039473684210526314
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 632.1293170531746,
+        "peak": 0.11452323943376541,
+        "relativeRMS": 4.455627991781035e-8,
+        "error": 1.2549423628741983e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.03572516633423242,
+        "error": 0.8377847260245632
+      },
+      "nativeRepeat": {
+        "energy": 632.1293170531746,
+        "peak": 0.11452323943376541,
+        "relativeRMS": 1.760992280706483e-8,
+        "error": 1.9602923139448204e-13
+      },
+      "wasmRepeat": {
+        "energy": 632.1293170127831,
+        "peak": 0.11452323943376541,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Logical",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 4,
+      "parameter": {
+        "index": 0,
+        "value": 0.05263157894736842
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 550.2113955238459,
+        "peak": 0.10734453797340393,
+        "relativeRMS": 4.2206259567149545e-8,
+        "error": 9.801291639520838e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.08801139323998369,
+        "error": 5.084657581255369
+      },
+      "nativeRepeat": {
+        "energy": 550.2113955238459,
+        "peak": 0.10734453797340393,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 550.2113954792646,
+        "peak": 0.10734453797340393,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Mojo",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 5,
+      "parameter": {
+        "index": 0,
+        "value": 0.06578947368421052
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1505.1238978009264,
+        "peak": 0.17594225704669952,
+        "relativeRMS": 4.258931214810368e-8,
+        "error": 2.730068243384568e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.515552106567216,
+        "error": 174.47333026530708
+      },
+      "nativeRepeat": {
+        "energy": 1505.1238978009264,
+        "peak": 0.17594225704669952,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1505.1238971780854,
+        "peak": 0.17594225704669952,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "One Corner Clip",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 6,
+      "parameter": {
+        "index": 0,
+        "value": 0.07894736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 653.6712301372629,
+        "peak": 0.11693714559078217,
+        "relativeRMS": 4.1122404825108266e-8,
+        "error": 1.1053921578118178e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.019501107140880457,
+        "error": 0.24963326443469308
+      },
+      "nativeRepeat": {
+        "energy": 653.6712301372629,
+        "peak": 0.11693714559078217,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 653.6712298766313,
+        "peak": 0.11693714559078217,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Point",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 7,
+      "parameter": {
+        "index": 0,
+        "value": 0.09210526315789473
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 652.8807022541155,
+        "peak": 0.11696141958236694,
+        "relativeRMS": 4.0982825768616865e-8,
+        "error": 1.0965732096709089e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.03311671669090692,
+        "error": 0.7199104285717293
+      },
+      "nativeRepeat": {
+        "energy": 652.8807022541155,
+        "peak": 0.11696141958236694,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 652.8807020396821,
+        "peak": 0.11696141958236694,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pop",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 8,
+      "parameter": {
+        "index": 0,
+        "value": 0.10526315789473684
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 598.6460371674464,
+        "peak": 0.17367157340049744,
+        "relativeRMS": 5.09701875161841e-8,
+        "error": 1.5552584679596222e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.07877136964342753,
+        "error": 4.073059111893432
+      },
+      "nativeRepeat": {
+        "energy": 598.6460371674464,
+        "peak": 0.17367157340049744,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 598.6460364783172,
+        "peak": 0.17367157340049744,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pressure",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 9,
+      "parameter": {
+        "index": 0,
+        "value": 0.11842105263157894
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 633.4218846559013,
+        "peak": 0.11452324688434601,
+        "relativeRMS": 4.067246400951071e-8,
+        "error": 1.047837727415703e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.03237135828528632,
+        "error": 0.6878690423221847
+      },
+      "nativeRepeat": {
+        "energy": 633.4218846559013,
+        "peak": 0.11452324688434601,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 633.421884432561,
+        "peak": 0.11452324688434601,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pye Wacket",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 10,
+      "parameter": {
+        "index": 0,
+        "value": 0.13157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 309.57456625445656,
+        "peak": 0.08288080245256424,
+        "relativeRMS": 4.4797073658508104e-8,
+        "error": 6.212473695939115e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.33672202086851394,
+        "error": 74.42639057145125
+      },
+      "nativeRepeat": {
+        "energy": 309.57456625445656,
+        "peak": 0.08288080245256424,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 309.574566288938,
+        "peak": 0.08288080245256424,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Surge",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 11,
+      "parameter": {
+        "index": 0,
+        "value": 0.14473684210526316
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 47.2518535649602,
+        "peak": 0.11271346360445023,
+        "relativeRMS": 3.7556618528527463e-8,
+        "error": 6.664872033042518e-14
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.8789451991404988,
+        "error": 507.1162367708811
+      },
+      "nativeRepeat": {
+        "energy": 47.2518535649602,
+        "peak": 0.11271346360445023,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 47.25185353747584,
+        "peak": 0.11271346360445023,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Vari-Mu",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 12,
+      "parameter": {
+        "index": 0,
+        "value": 0.15789473684210525
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 653.7250158399725,
+        "peak": 0.11690443009138107,
+        "relativeRMS": 4.093782189571642e-8,
+        "error": 1.0955811936631337e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.01720467551954699,
+        "error": 0.19430183035358334
+      },
+      "nativeRepeat": {
+        "energy": 653.7250158399725,
+        "peak": 0.11690443009138107,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 653.7250155990093,
+        "peak": 0.11690443009138107,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Bit Glitter",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 13,
+      "parameter": {
+        "index": 0,
+        "value": 0.17105263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 512.2049640310131,
+        "peak": 0.11985371261835098,
+        "relativeRMS": 1.5804943355811529e-9,
+        "error": 1.2794687129712143e-15
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.16180513430414947,
+        "error": 17.185751027402407
+      },
+      "nativeRepeat": {
+        "energy": 512.2049640310131,
+        "peak": 0.11985371261835098,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 512.2049640336554,
+        "peak": 0.11985371261835098,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Crunchy Groove Wear",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 14,
+      "parameter": {
+        "index": 0,
+        "value": 0.18421052631578946
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 693.9347257787706,
+        "peak": 0.12026163190603256,
+        "relativeRMS": 4.0801730017857576e-8,
+        "error": 1.1552494663858482e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.02857948313763882,
+        "error": 0.5361578387080046
+      },
+      "nativeRepeat": {
+        "energy": 693.9347257787706,
+        "peak": 0.12026163190603256,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 693.9347256331982,
+        "peak": 0.12026162445545197,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "DeRez",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 15,
+      "parameter": {
+        "index": 0,
+        "value": 0.19736842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 656.713359921459,
+        "peak": 0.12243456393480301,
+        "relativeRMS": 3.22685257388553e-8,
+        "error": 6.838078777527683e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.04036306620354668,
+        "error": 1.069429647535771
+      },
+      "nativeRepeat": {
+        "energy": 656.713359921459,
+        "peak": 0.12243456393480301,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 656.7133599006111,
+        "peak": 0.12243456393480301,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Deck Wrecka",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 16,
+      "parameter": {
+        "index": 0,
+        "value": 0.21052631578947367
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 3482.796269912376,
+        "peak": 0.250032514333725,
+        "relativeRMS": 0.0899659519236915,
+        "error": 28.189308971427007
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 2.27423164308834,
+        "error": 3395.10581992552
+      },
+      "nativeRepeat": {
+        "energy": 3482.796269912376,
+        "peak": 0.250032514333725,
+        "relativeRMS": 0.10570005224981645,
+        "error": 38.911544967256305
+      },
+      "wasmRepeat": {
+        "energy": 3485.950107864605,
+        "peak": 0.25039148330688477,
+        "relativeRMS": 0.11624153420496663,
+        "error": 47.10248649305795
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Dust Bunny",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 17,
+      "parameter": {
+        "index": 0,
+        "value": 0.2236842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 656.472043389804,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.0011315070115577666,
+        "error": 0.000840486485869717
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.00389559534716181,
+        "error": 0.009961657278750941
+      },
+      "nativeRepeat": {
+        "energy": 656.472043389804,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 656.4426228323632,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Groove Wear",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 18,
+      "parameter": {
+        "index": 0,
+        "value": 0.23684210526315788
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 674.9495478450128,
+        "peak": 0.11861198395490646,
+        "relativeRMS": 2.762433211852191e-8,
+        "error": 5.150565141438161e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.01421502780574985,
+        "error": 0.132641476125133
+      },
+      "nativeRepeat": {
+        "energy": 674.9495478450128,
+        "peak": 0.11861198395490646,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 674.9495477443384,
+        "peak": 0.11861198395490646,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Noise",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 19,
+      "parameter": {
+        "index": 0,
+        "value": 0.25
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 51.78848981280341,
+        "peak": 0.07322648167610168,
+        "relativeRMS": 1.4057485298917973,
+        "error": 102.34073292347404
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.036114321915681,
+        "error": 704.6918893637716
+      },
+      "nativeRepeat": {
+        "energy": 51.78848981280341,
+        "peak": 0.07322648167610168,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 56.34391056378085,
+        "peak": 0.08361826092004776,
+        "relativeRMS": 1.404994824281672,
+        "error": 111.22346859938514
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Voice Of The Starship",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 20,
+      "parameter": {
+        "index": 0,
+        "value": 0.2631578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1.4129862459957216,
+        "peak": 0.009626505896449089,
+        "relativeRMS": 1.420602859811752,
+        "error": 2.851565184608671
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.0014897222404133,
+        "error": 658.3804292128709
+      },
+      "nativeRepeat": {
+        "energy": 1.4129862459957216,
+        "peak": 0.009626505896449089,
+        "relativeRMS": 1.4080876823820472,
+        "error": 2.8015432615485576
+      },
+      "wasmRepeat": {
+        "energy": 1.413599861556005,
+        "peak": 0.009401287883520126,
+        "relativeRMS": 1.4297757188170095,
+        "error": 2.8897636825940607
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Bright Ambience",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 21,
+      "parameter": {
+        "index": 0,
+        "value": 0.27631578947368424
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 445.8612227727188,
+        "peak": 0.13079291582107544,
+        "relativeRMS": 5.8687281097700435e-8,
+        "error": 1.5356338692329804e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.6070544382862424,
+        "error": 241.90185382295616
+      },
+      "nativeRepeat": {
+        "energy": 445.8612227727188,
+        "peak": 0.13079291582107544,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 445.8612224853061,
+        "peak": 0.13079291582107544,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Hombre",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 22,
+      "parameter": {
+        "index": 0,
+        "value": 0.2894736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 442.2459328579316,
+        "peak": 0.10114964842796326,
+        "relativeRMS": 3.891435066471374e-8,
+        "error": 6.697048186342248e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.3056470680654933,
+        "error": 61.323140444318
+      },
+      "nativeRepeat": {
+        "energy": 442.2459328579316,
+        "peak": 0.10114964842796326,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 442.2459326903686,
+        "peak": 0.10114964842796326,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Melt",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 23,
+      "parameter": {
+        "index": 0,
+        "value": 0.3026315789473684
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 96.38459314935977,
+        "peak": 0.1423315852880478,
+        "relativeRMS": 1.5100006326226107e-7,
+        "error": 2.1976669498461413e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.7880715054989602,
+        "error": 407.6760224304066
+      },
+      "nativeRepeat": {
+        "energy": 96.38459314935977,
+        "peak": 0.1423315852880478,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 96.38459343971324,
+        "peak": 0.1423315852880478,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pocket Verbs",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 24,
+      "parameter": {
+        "index": 0,
+        "value": 0.3157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 392.2706736986325,
+        "peak": 0.10733029991388321,
+        "relativeRMS": 3.657338041466288e-8,
+        "error": 5.247060211719311e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.8562109429323971,
+        "error": 481.22199305730294
+      },
+      "nativeRepeat": {
+        "energy": 392.2706736986325,
+        "peak": 0.10733029991388321,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 392.27067376067106,
+        "peak": 0.10733029991388321,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Star Child",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 25,
+      "parameter": {
+        "index": 0,
+        "value": 0.32894736842105265
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 396.6405419724831,
+        "peak": 0.10546459257602692,
+        "relativeRMS": 0.000007242734194332977,
+        "error": 2.080665168693346e-8
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.2712879799946917,
+        "error": 48.310888291181044
+      },
+      "nativeRepeat": {
+        "energy": 396.6405419724831,
+        "peak": 0.10546459257602692,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 396.64054343367485,
+        "peak": 0.10546459257602692,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Apicolypse",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 26,
+      "parameter": {
+        "index": 0,
+        "value": 0.34210526315789475
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 557.8092103266698,
+        "peak": 0.10818494856357574,
+        "relativeRMS": 0.000499632440637851,
+        "error": 0.00013924734994407895
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.11128355747463421,
+        "error": 8.129164659289623
+      },
+      "nativeRepeat": {
+        "energy": 557.8092103266698,
+        "peak": 0.10818494856357574,
+        "relativeRMS": 0.0004974360956433033,
+        "error": 0.0001380257999348263
+      },
+      "wasmRepeat": {
+        "energy": 557.808760497619,
+        "peak": 0.1081845611333847,
+        "relativeRMS": 0.0004977657218552132,
+        "error": 0.00013820867478253312
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Bass Drive",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 27,
+      "parameter": {
+        "index": 0,
+        "value": 0.35526315789473684
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1825.4378610138974,
+        "peak": 0.19284304976463318,
+        "relativeRMS": 5.6352516495769436e-8,
+        "error": 5.796871634729319e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.7383019063079476,
+        "error": 357.809526149232
+      },
+      "nativeRepeat": {
+        "energy": 1825.4378610138974,
+        "peak": 0.19284304976463318,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1825.4378606000569,
+        "peak": 0.19284304976463318,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Cojones",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 28,
+      "parameter": {
+        "index": 0,
+        "value": 0.3684210526315789
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 652.5252504736172,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 4.1023407708083515e-8,
+        "error": 1.0981477814658835e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.029129786440305564,
+        "error": 0.5570042650747635
+      },
+      "nativeRepeat": {
+        "energy": 652.5252504736172,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 652.5252504225534,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Density",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 29,
+      "parameter": {
+        "index": 0,
+        "value": 0.3815789473684211
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 653.0664780926888,
+        "peak": 0.11693725734949112,
+        "relativeRMS": 4.089951282540061e-8,
+        "error": 1.0924301100979221e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.024850760314067803,
+        "error": 0.4053808980715325
+      },
+      "nativeRepeat": {
+        "energy": 653.0664780926888,
+        "peak": 0.11693725734949112,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 653.0664780700763,
+        "peak": 0.11693725734949112,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Drive",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 30,
+      "parameter": {
+        "index": 0,
+        "value": 0.39473684210526316
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 4.106993712350366e-8,
+        "error": 1.1032826169870639e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.017183193069077972,
+        "error": 0.19381690711512367
+      },
+      "nativeRepeat": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 654.0917924744224,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Focus",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 31,
+      "parameter": {
+        "index": 0,
+        "value": 0.40789473684210525
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 647.6784284645803,
+        "peak": 0.11649593710899353,
+        "relativeRMS": 4.1297910481443013e-8,
+        "error": 1.1046268359141042e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.018619552196336157,
+        "error": 0.22757386378392752
+      },
+      "nativeRepeat": {
+        "energy": 647.6784284645803,
+        "peak": 0.11649593710899353,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 647.678428280436,
+        "peak": 0.11649593710899353,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Fracture",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 32,
+      "parameter": {
+        "index": 0,
+        "value": 0.42105263157894735
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 4795.998289887255,
+        "peak": 0.29896265268325806,
+        "relativeRMS": 3.609629736581179e-8,
+        "error": 6.248910881988361e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.7076788537468677,
+        "error": 1914.2397064320494
+      },
+      "nativeRepeat": {
+        "energy": 4795.998289887255,
+        "peak": 0.29896265268325806,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 4795.9982879818535,
+        "peak": 0.29896265268325806,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Hard Vacuum",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 33,
+      "parameter": {
+        "index": 0,
+        "value": 0.4342105263157895
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 4.106993712350366e-8,
+        "error": 1.1032826169870639e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.017183193069077972,
+        "error": 0.19381690711512367
+      },
+      "nativeRepeat": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 654.0917924744224,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Loud",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 34,
+      "parameter": {
+        "index": 0,
+        "value": 0.4473684210526316
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 4.106993712350366e-8,
+        "error": 1.1032826169870639e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.017183193069077972,
+        "error": 0.19381690711512367
+      },
+      "nativeRepeat": {
+        "energy": 654.0917925148458,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 654.0917924744224,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "NC-17",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 35,
+      "parameter": {
+        "index": 0,
+        "value": 0.4605263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 622.0111726747673,
+        "peak": 0.11366467922925949,
+        "relativeRMS": 0.0000011359592282905502,
+        "error": 8.026453123636766e-10
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.03823759769155238,
+        "error": 0.9597654641468636
+      },
+      "nativeRepeat": {
+        "energy": 622.0111726747673,
+        "peak": 0.11366467922925949,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 622.011173571764,
+        "peak": 0.1136646643280983,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Spiral",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 36,
+      "parameter": {
+        "index": 0,
+        "value": 0.47368421052631576
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 649.2896886339922,
+        "peak": 0.11663493514060974,
+        "relativeRMS": 4.0875173909939046e-8,
+        "error": 1.0848201234970567e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.03811149253688563,
+        "error": 0.9534454125365397
+      },
+      "nativeRepeat": {
+        "energy": 649.2896886339922,
+        "peak": 0.11663493514060974,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 649.2896884221798,
+        "peak": 0.11663493514060974,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Unbox",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 37,
+      "parameter": {
+        "index": 0,
+        "value": 0.4868421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 649.5799837181878,
+        "peak": 0.11663534492254257,
+        "relativeRMS": 4.099938249567567e-8,
+        "error": 1.0919110611651528e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.044248346556068775,
+        "error": 1.2852215916722907
+      },
+      "nativeRepeat": {
+        "energy": 649.5799837181878,
+        "peak": 0.11663534492254257,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 649.5799834022257,
+        "peak": 0.11663534492254257,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "De-Bess",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 38,
+      "parameter": {
+        "index": 0,
+        "value": 0.5
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 1
+        },
+        {
+          "index": 2,
+          "value": 0
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 651.4292121877829,
+        "peak": 0.1167071983218193,
+        "relativeRMS": 4.004870698818921e-8,
+        "error": 1.0448266173275587e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.033490053319866826,
+        "error": 0.7362335380986729
+      },
+      "nativeRepeat": {
+        "energy": 651.4292121877829,
+        "peak": 0.1167071983218193,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 651.4292123522443,
+        "peak": 0.1167071983218193,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "NoOp (Was: DeEss)",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 39,
+      "parameter": {
+        "index": 0,
+        "value": 0.5131578947368421
+      },
+      "parameters": [],
+      "noOp": true,
+      "comparison": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1,
+        "error": 656.423195962722
+      },
+      "nativeRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "status": "matched-retired-silence"
+    },
+    {
+      "name": "Single-Ended Triode",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 40,
+      "parameter": {
+        "index": 0,
+        "value": 0.5263157894736842
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 289.74253631402814,
+        "peak": 0.10811421275138855,
+        "relativeRMS": 3.416192217806114e-8,
+        "error": 3.381402391721078e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.4712377541899216,
+        "error": 145.76863077925634
+      },
+      "nativeRepeat": {
+        "energy": 289.74253631402814,
+        "peak": 0.10811421275138855,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 289.7425363637972,
+        "peak": 0.10811421275138855,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Iron Oxide",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 41,
+      "parameter": {
+        "index": 0,
+        "value": 0.5394736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 2742.314946409675,
+        "peak": 0.2329162359237671,
+        "relativeRMS": 0.009571308860702133,
+        "error": 0.2512233441935556
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.1974740244839612,
+        "error": 941.2741291180694
+      },
+      "nativeRepeat": {
+        "energy": 2742.314946409675,
+        "peak": 0.2329162359237671,
+        "relativeRMS": 0.009737546275990078,
+        "error": 0.26002577525999726
+      },
+      "wasmRepeat": {
+        "energy": 2742.164765071203,
+        "peak": 0.2329566329717636,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "To Tape",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 42,
+      "parameter": {
+        "index": 0,
+        "value": 0.5526315789473685
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1640.0104677346715,
+        "peak": 0.1836920976638794,
+        "relativeRMS": 0.00003710072806447052,
+        "error": 0.0000022574154060387932
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.1169058769584805,
+        "error": 818.8739800832582
+      },
+      "nativeRepeat": {
+        "energy": 1640.0104677346715,
+        "peak": 0.1836920976638794,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1640.0104672520965,
+        "peak": 0.1836920976638794,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Air",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 43,
+      "parameter": {
+        "index": 0,
+        "value": 0.5657894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 654.0909034606357,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 4.1084741567968e-8,
+        "error": 1.1040766583090583e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.01719638234928817,
+        "error": 0.19411455686591295
+      },
+      "nativeRepeat": {
+        "energy": 654.0909034606357,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 654.0909034438666,
+        "peak": 0.1169372946023941,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Buss Colors",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 44,
+      "parameter": {
+        "index": 0,
+        "value": 0.5789473684210527
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 465.9661177329932,
+        "peak": 0.09728561341762543,
+        "relativeRMS": 3.315500684702582e-8,
+        "error": 5.122153419925025e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.1723874748719395,
+        "error": 19.507217920488813
+      },
+      "nativeRepeat": {
+        "energy": 465.9661177329932,
+        "peak": 0.09728561341762543,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 465.9661175403877,
+        "peak": 0.09728561341762543,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Drum Slam",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 45,
+      "parameter": {
+        "index": 0,
+        "value": 0.5921052631578947
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 612.8961715275291,
+        "peak": 0.11115651577711105,
+        "relativeRMS": 1.12558460848972e-7,
+        "error": 7.765031112439495e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.05462976742665625,
+        "error": 1.9590369277366866
+      },
+      "nativeRepeat": {
+        "energy": 612.8961715275291,
+        "peak": 0.11115651577711105,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 612.8961712724918,
+        "peak": 0.11115648597478867,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Capacitor",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 46,
+      "parameter": {
+        "index": 0,
+        "value": 0.6052631578947368
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 655.3382463589728,
+        "peak": 0.1169373020529747,
+        "relativeRMS": 4.122553283338468e-8,
+        "error": 1.113776549853145e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.020287976366170732,
+        "error": 0.27018509048081707
+      },
+      "nativeRepeat": {
+        "energy": 655.3382463589728,
+        "peak": 0.1169373020529747,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 655.3382460555181,
+        "peak": 0.1169373020529747,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Slew 1",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 47,
+      "parameter": {
+        "index": 0,
+        "value": 0.618421052631579
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 21.46010252629464,
+        "peak": 0.11594580858945847,
+        "relativeRMS": 1.7946549075725474e-7,
+        "error": 6.91184028671837e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.9757605530670094,
+        "error": 624.9862074802752
+      },
+      "nativeRepeat": {
+        "energy": 21.46010252629464,
+        "peak": 0.11594580858945847,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 21.460102605420584,
+        "peak": 0.11594580858945847,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Slew 2",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 48,
+      "parameter": {
+        "index": 0,
+        "value": 0.631578947368421
+      },
+      "parameters": [
+        {
+          "index": 1,
+          "value": 0.8
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 644.4255153208246,
+        "peak": 0.11660312861204147,
+        "relativeRMS": 2.7487660523278686e-8,
+        "error": 4.869095410328627e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.06725103422638687,
+        "error": 2.9688062416238683
+      },
+      "nativeRepeat": {
+        "energy": 644.4255153208246,
+        "peak": 0.11660312861204147,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 644.4255150678584,
+        "peak": 0.11660312861204147,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "Galactic",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 49,
+      "parameter": {
+        "index": 0,
+        "value": 0.6447368421052632
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 206.38128988703244,
+        "peak": 0.10747119039297104,
+        "relativeRMS": 0.3059187558203211,
+        "error": 19.314458247604023
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.2002966438079505,
+        "error": 945.7167972534978
+      },
+      "nativeRepeat": {
+        "energy": 206.38128988703244,
+        "peak": 0.10747119039297104,
+        "relativeRMS": 0.5784581422681185,
+        "error": 69.05803227191998
+      },
+      "wasmRepeat": {
+        "energy": 215.08963743354607,
+        "peak": 0.10621379315853119,
+        "relativeRMS": 0.49322359201287297,
+        "error": 52.324751074077824
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Infinity",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 50,
+      "parameter": {
+        "index": 0,
+        "value": 0.6578947368421053
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 317.5971462875375,
+        "peak": 0.08220808953046799,
+        "relativeRMS": 5.064021043100429e-8,
+        "error": 8.144559396604009e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.4147816070279766,
+        "error": 1313.9012611030275
+      },
+      "nativeRepeat": {
+        "energy": 317.5971462875375,
+        "peak": 0.08220808953046799,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 317.59714610934344,
+        "peak": 0.08220808953046799,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "MatrixVerb",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 51,
+      "parameter": {
+        "index": 0,
+        "value": 0.6710526315789473
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1865.37097415393,
+        "peak": 0.19021712243556976,
+        "relativeRMS": 0.17229721151093183,
+        "error": 55.376016621954896
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 2.1308139497278686,
+        "error": 2980.4029314050654
+      },
+      "nativeRepeat": {
+        "energy": 1865.37097415393,
+        "peak": 0.19021712243556976,
+        "relativeRMS": 0.17998197091984894,
+        "error": 60.42591303671233
+      },
+      "wasmRepeat": {
+        "energy": 1826.4862450634384,
+        "peak": 0.19077721238136292,
+        "relativeRMS": 0.11116395943917894,
+        "error": 22.570668390914914
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Verbity",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 52,
+      "parameter": {
+        "index": 0,
+        "value": 0.6842105263157895
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1241.701453776836,
+        "peak": 0.1777820736169815,
+        "relativeRMS": 4.3908719532219156e-8,
+        "error": 2.3939701686422367e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.6182992774614839,
+        "error": 250.9466469860575
+      },
+      "nativeRepeat": {
+        "energy": 1241.701453776836,
+        "peak": 0.1777820736169815,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1241.7014536124057,
+        "peak": 0.1777820736169815,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Triple Spread",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 53,
+      "parameter": {
+        "index": 0,
+        "value": 0.6973684210526315
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 371.8837213378667,
+        "peak": 0.1151670441031456,
+        "relativeRMS": 2.1214076192366833e-7,
+        "error": 1.673614449711357e-11
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.6586227933448697,
+        "error": 284.74586907787534
+      },
+      "nativeRepeat": {
+        "energy": 371.8837213378667,
+        "peak": 0.1151670441031456,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 371.88372092826455,
+        "peak": 0.1151670441031456,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Chamber",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 54,
+      "parameter": {
+        "index": 0,
+        "value": 0.7105263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 685.64109143373,
+        "peak": 0.15468470752239227,
+        "relativeRMS": 6.365980053806298e-8,
+        "error": 2.778608658156709e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.23094984556780024,
+        "error": 35.012189600881314
+      },
+      "nativeRepeat": {
+        "energy": 685.64109143373,
+        "peak": 0.15468470752239227,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 685.6410908699365,
+        "peak": 0.15468470752239227,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Mackity",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 55,
+      "parameter": {
+        "index": 0,
+        "value": 0.7236842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 645.3457932406459,
+        "peak": 0.11635221540927887,
+        "relativeRMS": 3.2490293017552044e-8,
+        "error": 6.812393714997574e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.06858798160799354,
+        "error": 3.088019006530489
+      },
+      "nativeRepeat": {
+        "energy": 645.3457932406459,
+        "peak": 0.11635221540927887,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 645.3457930738532,
+        "peak": 0.11635221540927887,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "MackEQ",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 56,
+      "parameter": {
+        "index": 0,
+        "value": 0.7368421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 4011.3379050738313,
+        "peak": 0.2709662616252899,
+        "relativeRMS": 2.430780366592138e-8,
+        "error": 2.3701764964944763e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.484266601686575,
+        "error": 1446.131378984772
+      },
+      "nativeRepeat": {
+        "energy": 4011.3379050738313,
+        "peak": 0.2709662616252899,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 4011.337903142242,
+        "peak": 0.2709662616252899,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "NoOp (Was: Tube)",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 57,
+      "parameter": {
+        "index": 0,
+        "value": 0.75
+      },
+      "parameters": [],
+      "noOp": true,
+      "comparison": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1,
+        "error": 656.423195962722
+      },
+      "nativeRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 0,
+        "peak": 0,
+        "relativeRMS": null,
+        "error": 0
+      },
+      "status": "matched-retired-silence"
+    },
+    {
+      "name": "Cabs",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 58,
+      "parameter": {
+        "index": 0,
+        "value": 0.7631578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 33.2305341921602,
+        "peak": 0.026464052498340607,
+        "relativeRMS": 0.0000014931694231428094,
+        "error": 7.408930120867509e-11
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.8358376339234834,
+        "error": 458.59336007465964
+      },
+      "nativeRepeat": {
+        "energy": 33.2305341921602,
+        "peak": 0.026464052498340607,
+        "relativeRMS": 8.691664276121229e-8,
+        "error": 2.5104016323065297e-13
+      },
+      "wasmRepeat": {
+        "energy": 33.230534177470034,
+        "peak": 0.02646404504776001,
+        "relativeRMS": 8.731314496537412e-8,
+        "error": 2.5333581132632706e-13
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Chrome Oxide",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 59,
+      "parameter": {
+        "index": 0,
+        "value": 0.7763157894736842
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 657.9706796400319,
+        "peak": 0.11732172966003418,
+        "relativeRMS": 0.0010796594498110846,
+        "error": 0.0007669730814351237
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.005967082124132332,
+        "error": 0.023372649658629018
+      },
+      "nativeRepeat": {
+        "energy": 657.9706796400319,
+        "peak": 0.11732172966003418,
+        "relativeRMS": 0.0010723519940298194,
+        "error": 0.0007566260131880915
+      },
+      "wasmRepeat": {
+        "energy": 657.9730334779342,
+        "peak": 0.1173119768500328,
+        "relativeRMS": 0.0010704582944617127,
+        "error": 0.0007539587713754786
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Dub Sub",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 60,
+      "parameter": {
+        "index": 0,
+        "value": 0.7894736842105263
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 170.385985532936,
+        "peak": 0.07199333608150482,
+        "relativeRMS": 0.0074716701719719945,
+        "error": 0.009511943349440175
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.5074108429694815,
+        "error": 169.00649936900686
+      },
+      "nativeRepeat": {
+        "energy": 170.385985532936,
+        "peak": 0.07199333608150482,
+        "relativeRMS": 0.007996094515891394,
+        "error": 0.01089405863683106
+      },
+      "wasmRepeat": {
+        "energy": 170.3823284903177,
+        "peak": 0.07198873907327652,
+        "relativeRMS": 0.006862256838884852,
+        "error": 0.008023400783004191
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Dub Center",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 61,
+      "parameter": {
+        "index": 0,
+        "value": 0.8026315789473685
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 170.38078922526796,
+        "peak": 0.0720277801156044,
+        "relativeRMS": 0.006848999298162836,
+        "error": 0.007992356897990174
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.5074073715944087,
+        "error": 169.00418691175332
+      },
+      "nativeRepeat": {
+        "energy": 170.38078922526796,
+        "peak": 0.0720277801156044,
+        "relativeRMS": 0.005346156303349577,
+        "error": 0.0048697193116700776
+      },
+      "wasmRepeat": {
+        "energy": 170.3845567282517,
+        "peak": 0.07198827713727951,
+        "relativeRMS": 0.007613498282333313,
+        "error": 0.009876401503857567
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Fire Amp",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 62,
+      "parameter": {
+        "index": 0,
+        "value": 0.8157894736842105
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 45.86536918519279,
+        "peak": 0.04348437860608101,
+        "relativeRMS": 0.007499934310657333,
+        "error": 0.0025798818238757133
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.956367269135524,
+        "error": 600.3898311373141
+      },
+      "nativeRepeat": {
+        "energy": 45.86536918519279,
+        "peak": 0.04348437860608101,
+        "relativeRMS": 0.007438167130064331,
+        "error": 0.0025375625627969017
+      },
+      "wasmRepeat": {
+        "energy": 45.87161853130654,
+        "peak": 0.04360364004969597,
+        "relativeRMS": 0.007477110142036934,
+        "error": 0.002564552654127812
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "Glitch Shifter",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 63,
+      "parameter": {
+        "index": 0,
+        "value": 0.8289473684210527
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 13.058567813109775,
+        "peak": 0.08500680327415466,
+        "relativeRMS": 0.0000011237946395488802,
+        "error": 1.649185322850157e-11
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.9897917163445956,
+        "error": 643.0896928390285
+      },
+      "nativeRepeat": {
+        "energy": 13.058567813109775,
+        "peak": 0.08500680327415466,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 13.058567728315406,
+        "peak": 0.08500681072473526,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Nonlinear Space",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 64,
+      "parameter": {
+        "index": 0,
+        "value": 0.8421052631578947
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 586.2614898763705,
+        "peak": 0.16905078291893005,
+        "relativeRMS": 7.83048428910494e-8,
+        "error": 3.594749338219815e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.7534516755725762,
+        "error": 372.6445082633339
+      },
+      "nativeRepeat": {
+        "energy": 586.2614898763705,
+        "peak": 0.16905078291893005,
+        "relativeRMS": 7.514248840465825e-8,
+        "error": 3.3102631030503976e-12
+      },
+      "wasmRepeat": {
+        "energy": 586.2614905776273,
+        "peak": 0.16905078291893005,
+        "relativeRMS": 7.468642766043613e-8,
+        "error": 3.2702032221121176e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Pafnuty",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 65,
+      "parameter": {
+        "index": 0,
+        "value": 0.8552631578947368
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 656.2426640996906,
+        "peak": 0.11914006620645523,
+        "relativeRMS": 9.831646930501577e-8,
+        "error": 6.343325679894058e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.007911360049976637,
+        "error": 0.041085276976858674
+      },
+      "nativeRepeat": {
+        "energy": 656.2426640996906,
+        "peak": 0.11914006620645523,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 656.2426638143269,
+        "peak": 0.11914005130529404,
+        "relativeRMS": 9.031784412325832e-8,
+        "error": 5.353176791079259e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Power Sag",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 66,
+      "parameter": {
+        "index": 0,
+        "value": 0.868421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 476.453040696181,
+        "peak": 0.11693020910024643,
+        "relativeRMS": 9.501962249982197e-8,
+        "error": 4.301765223681888e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.15980244670004135,
+        "error": 16.762962293144643
+      },
+      "nativeRepeat": {
+        "energy": 476.453040696181,
+        "peak": 0.11693020910024643,
+        "relativeRMS": 8.633408088134706e-8,
+        "error": 3.5512777684317143e-12
+      },
+      "wasmRepeat": {
+        "energy": 476.4530411151091,
+        "peak": 0.11693019419908524,
+        "relativeRMS": 8.674468600013971e-8,
+        "error": 3.5851378729943425e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "Tape Dust",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 67,
+      "parameter": {
+        "index": 0,
+        "value": 0.881578947368421
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 364.2747227185635,
+        "peak": 0.10225243866443634,
+        "relativeRMS": 0.08067372950943165,
+        "error": 2.3707911947047626
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.26018038891625356,
+        "error": 44.43580337103673
+      },
+      "nativeRepeat": {
+        "energy": 364.2747227185635,
+        "peak": 0.10225243866443634,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 364.2245267020393,
+        "peak": 0.10273914784193039,
+        "relativeRMS": 0.08096077916796342,
+        "error": 2.3873634793534455
+      },
+      "status": "needs-investigation"
+    },
+    {
+      "name": "To Vinyl",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 68,
+      "parameter": {
+        "index": 0,
+        "value": 0.8947368421052632
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 649.7905392991121,
+        "peak": 0.11649485677480698,
+        "relativeRMS": 9.337682038030367e-8,
+        "error": 5.6656735436686724e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.27373668324195094,
+        "error": 49.18695309279672
+      },
+      "nativeRepeat": {
+        "energy": 649.7905392991121,
+        "peak": 0.11649485677480698,
+        "relativeRMS": 8.189748851813576e-8,
+        "error": 4.358274212100709e-12
+      },
+      "wasmRepeat": {
+        "energy": 649.7905402276602,
+        "peak": 0.11649484932422638,
+        "relativeRMS": 8.146458489839466e-8,
+        "error": 4.312321009938881e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "YLowpass",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 69,
+      "parameter": {
+        "index": 0,
+        "value": 0.9078947368421053
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 652.1144233705693,
+        "peak": 0.11693156510591507,
+        "relativeRMS": 8.219277120674166e-8,
+        "error": 4.405457872826631e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.16382482549219812,
+        "error": 17.617462157520475
+      },
+      "nativeRepeat": {
+        "energy": 652.1144233705693,
+        "peak": 0.11693156510591507,
+        "relativeRMS": 8.151708649363e-8,
+        "error": 4.333323421894214e-12
+      },
+      "wasmRepeat": {
+        "energy": 652.1144230404734,
+        "peak": 0.11693155765533447,
+        "relativeRMS": 8.109634449296258e-8,
+        "error": 4.288706859282544e-12
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "YBandpass",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 70,
+      "parameter": {
+        "index": 0,
+        "value": 0.9210526315789473
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 14.887761356576387,
+        "peak": 0.057274963706731796,
+        "relativeRMS": 1.094073639548584e-7,
+        "error": 1.7820607597412845e-13
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.9846664675988028,
+        "error": 636.4469596686245
+      },
+      "nativeRepeat": {
+        "energy": 14.887761356576387,
+        "peak": 0.057274963706731796,
+        "relativeRMS": 7.830948768039734e-8,
+        "error": 9.129734836391843e-14
+      },
+      "wasmRepeat": {
+        "energy": 14.88776135921835,
+        "peak": 0.057274963706731796,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "YHighpass",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 71,
+      "parameter": {
+        "index": 0,
+        "value": 0.9342105263157895
+      },
+      "parameters": [
+        {
+          "index": 2,
+          "value": 0.2
+        }
+      ],
+      "noOp": false,
+      "comparison": {
+        "energy": 572.776717296279,
+        "peak": 0.10952682048082352,
+        "relativeRMS": 8.799911570192716e-8,
+        "error": 4.4354937542491665e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.86737786761413,
+        "error": 493.85629268674467
+      },
+      "nativeRepeat": {
+        "energy": 572.776717296279,
+        "peak": 0.10952682048082352,
+        "relativeRMS": 8.4314786531384e-8,
+        "error": 4.071860076552407e-12
+      },
+      "wasmRepeat": {
+        "energy": 572.7767171862249,
+        "peak": 0.10952682048082352,
+        "relativeRMS": 8.412173279890342e-8,
+        "error": 4.0532349241443985e-12
+      },
+      "status": "matched-parameter-fixture"
+    },
+    {
+      "name": "YNotch",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 72,
+      "parameter": {
+        "index": 0,
+        "value": 0.9473684210526315
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 436.97711830187757,
+        "peak": 0.09586523473262787,
+        "relativeRMS": 8.956511400716572e-8,
+        "error": 3.5053909608750405e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 0.5848237143021777,
+        "error": 224.50905855300923
+      },
+      "nativeRepeat": {
+        "energy": 436.97711830187757,
+        "peak": 0.09586523473262787,
+        "relativeRMS": 8.810373532106658e-8,
+        "error": 3.391933579701047e-12
+      },
+      "wasmRepeat": {
+        "energy": 436.9771182602709,
+        "peak": 0.09586522728204727,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZLowpass",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 73,
+      "parameter": {
+        "index": 0,
+        "value": 0.9605263157894737
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 6259.190635659891,
+        "peak": 0.3635452687740326,
+        "relativeRMS": 8.748478619724002e-8,
+        "error": 4.790526518696261e-11
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 2.1093797342606093,
+        "error": 2920.7437615148933
+      },
+      "nativeRepeat": {
+        "energy": 6259.190635659891,
+        "peak": 0.3635452687740326,
+        "relativeRMS": 8.662871293252563e-8,
+        "error": 4.697230833907422e-11
+      },
+      "wasmRepeat": {
+        "energy": 6259.190635536558,
+        "peak": 0.3635452389717102,
+        "relativeRMS": 8.704531056146948e-8,
+        "error": 4.7425174465703716e-11
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZBandpass",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 74,
+      "parameter": {
+        "index": 0,
+        "value": 0.9736842105263158
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1799.9868346893745,
+        "peak": 0.19467397034168243,
+        "relativeRMS": 8.904727797157496e-8,
+        "error": 1.4272847492217202e-11
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.1931496783748323,
+        "error": 934.4881020612185
+      },
+      "nativeRepeat": {
+        "energy": 1799.9868346893745,
+        "peak": 0.19467397034168243,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1799.9868334842586,
+        "peak": 0.19467397034168243,
+        "relativeRMS": 8.72137157631952e-8,
+        "error": 1.3691117843425904e-11
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZHighpass",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 75,
+      "parameter": {
+        "index": 0,
+        "value": 0.9868421052631579
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 51.040832920200764,
+        "peak": 0.07298051565885544,
+        "relativeRMS": 1.492883810220567e-7,
+        "error": 1.1375481002556156e-12
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.2479165757626167,
+        "error": 1022.245073008277
+      },
+      "nativeRepeat": {
+        "energy": 51.040832920200764,
+        "peak": 0.07298051565885544,
+        "relativeRMS": 8.189768211661623e-8,
+        "error": 3.423426229408715e-13
+      },
+      "wasmRepeat": {
+        "energy": 51.04083295977911,
+        "peak": 0.07298051565885544,
+        "relativeRMS": 8.217454532568702e-8,
+        "error": 3.446611818003987e-13
+      },
+      "status": "matched-default-fixture"
+    },
+    {
+      "name": "ZNotch",
+      "type": 14,
+      "rate": 48000,
+      "streamingId": 76,
+      "parameter": {
+        "index": 0,
+        "value": 1
+      },
+      "parameters": [],
+      "noOp": false,
+      "comparison": {
+        "energy": 1802.2965759541182,
+        "peak": 0.1950923651456833,
+        "relativeRMS": 9.235796392993338e-8,
+        "error": 1.5373578080273008e-11
+      },
+      "dry": {
+        "energy": 656.423195962722,
+        "peak": 0.11702387779951096,
+        "relativeRMS": 1.083559582743372,
+        "error": 770.7073732562112
+      },
+      "nativeRepeat": {
+        "energy": 1802.2965759541182,
+        "peak": 0.1950923651456833,
+        "relativeRMS": 0,
+        "error": 0
+      },
+      "wasmRepeat": {
+        "energy": 1802.2965751327724,
+        "peak": 0.1950923651456833,
+        "relativeRMS": 8.73818972993967e-8,
+        "error": 1.3761608475997719e-11
+      },
+      "status": "matched-default-fixture"
+    }
+  ],
+  "registrySHA256": "e9fb6685c8e90d6c26f4c19bc125d9ccb07d800ba67f795193a0885317667263",
+  "chrome": "153.0.8010.53",
+  "complete": true,
+  "coverage": {
+    "activeFixtures": [
+      "AD Clip",
+      "Block Party",
+      "Butter Comp",
+      "Compresaturator",
+      "Logical",
+      "Mojo",
+      "One Corner Clip",
+      "Point",
+      "Pop",
+      "Pressure",
+      "Pye Wacket",
+      "Surge",
+      "Vari-Mu",
+      "Bit Glitter",
+      "Crunchy Groove Wear",
+      "DeRez",
+      "Groove Wear",
+      "Bright Ambience",
+      "Hombre",
+      "Melt",
+      "Pocket Verbs",
+      "Star Child",
+      "Bass Drive",
+      "Cojones",
+      "Density",
+      "Drive",
+      "Focus",
+      "Fracture",
+      "Hard Vacuum",
+      "Loud",
+      "NC-17",
+      "Spiral",
+      "Unbox",
+      "De-Bess",
+      "Single-Ended Triode",
+      "Air",
+      "Buss Colors",
+      "Drum Slam",
+      "Capacitor",
+      "Slew 1",
+      "Slew 2",
+      "Infinity",
+      "Verbity",
+      "Triple Spread",
+      "Chamber",
+      "Mackity",
+      "MackEQ",
+      "Cabs",
+      "Glitch Shifter",
+      "Nonlinear Space",
+      "Pafnuty",
+      "Power Sag",
+      "To Vinyl",
+      "YLowpass",
+      "YBandpass",
+      "YHighpass",
+      "YNotch",
+      "ZLowpass",
+      "ZBandpass",
+      "ZHighpass",
+      "ZNotch"
+    ],
+    "retiredSilence": [
+      "NoOp (Was: DeEss)",
+      "NoOp (Was: Tube)"
+    ],
+    "pending": [
+      {
+        "id": 16,
+        "name": "Deck Wrecka",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 17,
+        "name": "Dust Bunny",
+        "reason": "native-wasm-mismatch"
+      },
+      {
+        "id": 19,
+        "name": "Noise",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 20,
+        "name": "Voice Of The Starship",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 26,
+        "name": "Apicolypse",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 41,
+        "name": "Iron Oxide",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 42,
+        "name": "To Tape",
+        "reason": "native-wasm-mismatch"
+      },
+      {
+        "id": 49,
+        "name": "Galactic",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 51,
+        "name": "MatrixVerb",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 59,
+        "name": "Chrome Oxide",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 60,
+        "name": "Dub Sub",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 61,
+        "name": "Dub Center",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 62,
+        "name": "Fire Amp",
+        "reason": "needs-statistical-comparison"
+      },
+      {
+        "id": 67,
+        "name": "Tape Dust",
+        "reason": "needs-statistical-comparison"
+      }
+    ]
+  }
+}

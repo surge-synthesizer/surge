@@ -57,6 +57,7 @@
 // FIXME
 #include "FormulaModulationHelper.h"
 #include "WtGenService.h"
+#include "dsp/effects/ConvolutionKernelWorker.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 
@@ -71,6 +72,9 @@ std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>
 SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : otherscene_clients(0)
 {
     wtGenService = std::make_unique<Surge::WavetableScript::WtGenService>(this);
+#if SURGE_WEB
+    browserConvolutionWorker = std::make_unique<ConvolutionKernelWorker>();
+#endif
 
     auto suppliedDataPath = config.suppliedDataPath;
     bool loadWtAndPatch = true;
@@ -122,9 +126,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
                     getPatch().scene[s].osc[o].wt.TableF32WeakPointers[i][j] = 0;
                     getPatch().scene[s].osc[o].wt.TableI16WeakPointers[i][j] = 0;
                 }
-            getPatch().scene[s].osc[o].extraConfig.nData = 0;
-            memset(getPatch().scene[s].osc[0].extraConfig.data, 0,
-                   sizeof(float) * OscillatorStorage::ExtraConfigurationData::max_config);
+            getPatch().scene[s].osc[o].extraConfig = OscillatorStorage::ExtraConfigurationData{};
         }
 
     for (int s = 0; s < n_scenes; ++s)
@@ -203,7 +205,11 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     bool isFactoryPortable{false};
     bool isUserPortable{false};
 
-#if MAC
+#if SURGE_WEB
+    datapath = hasSuppliedDataPath ? fs::path{suppliedDataPath} : fs::path{"/factory"};
+    localAppDataPath = "/user/config";
+    userDataPath = "/user";
+#elif MAC
     if (!hasSuppliedDataPath)
     {
         auto shareddp = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt);
@@ -875,17 +881,29 @@ fs::path SurgeStorage::resolvePathTokens(fs::path path)
 
 void SurgeStorage::initializePatchDb(bool force)
 {
+#if SURGE_WEB
+    // A save may request a refresh while the writer is still indexing earlier
+    // patches. Keep that request pending so the browser control tick retries
+    // with the current patch list once the worker becomes idle.
+    if (force)
+        patchDBInitialized = false;
+#endif
     if (patchDBInitialized && !force)
         return;
 
     if (!userDataPathValid)
         return;
 
-    patchDBInitialized = true;
-
     // We do this here, because if there is a schema upgrade we need to do it before we do a patch
     // read, even though our next activity is a read
     patchDB->prepareForWrites();
+#if SURGE_WEB
+    // Browser filesystem operations from a worker need the main event loop.
+    // Defer indexing until schema setup has committed instead of spinning here.
+    if (!patchDB->isWriterInitialized())
+        return;
+#endif
+    patchDBInitialized = true;
 
     auto awid = patchDB->readAllPatchPathsWithIdAndModTime();
     std::vector<Patch> addThese;
@@ -1005,7 +1023,21 @@ void SurgeStorage::refresh_patchlist()
         patch_category[patchCategoryOrdering[i]].order = i;
     }
 
+#if SURGE_WEB
+    // A previous save can still be indexed by the writer. Do not block the
+    // browser or replace known favorites with an empty result on contention.
+    browserFavoritesRefreshPending = patchDB->numberOfJobsOutstanding() != 0;
+    if (!browserFavoritesRefreshPending)
+    {
+        bool retry = false;
+        auto next = patchDB->readUserFavorites(&retry);
+        browserFavoritesRefreshPending = retry;
+        if (!retry) browserFavoritePaths = std::move(next);
+    }
+    const auto &favorites = browserFavoritePaths;
+#else
     auto favorites = patchDB->readUserFavorites();
+#endif
     auto pathToTrunc = [](const std::string &s) -> std::string {
         auto pf = s.find("patches_factory");
         auto p3 = s.find("patches_3rdparty");
@@ -1499,6 +1531,10 @@ void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std:
 
 void SurgeStorage::perform_queued_wtloads()
 {
+#if SURGE_WEB
+    if (browserManagesWavetables)
+        return; // Browser control code prepares tables; audio only publishes prepared data.
+#endif
     SurgePatch &patch =
         getPatch(); // Change here is for performance and ease of debugging, simply not calling
                     // getPatch so many times. Code should behave identically.
@@ -2229,7 +2265,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
         if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
         {
-            clipboard_wt[0].Copy(&getPatch().scene[scene].osc[entry].wt);
+            copyOscillatorWavetable(scene, entry, clipboard_wt[0]);
             clipboard_wt_names[0] = getPatch().scene[scene].osc[entry].wavetable_display_name;
             clipboard_wavetable_script[0] = getPatch().scene[scene].osc[entry].wavetable_script;
             clipboard_wavetable_script_nframes[0] =
@@ -2238,7 +2274,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                 getPatch().scene[scene].osc[entry].wavetable_script_res_base;
         }
 
-        clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
+        clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig.read();
 
         for (int s = 0; s < n_wt_snapshots; ++s)
         {
@@ -2304,9 +2340,9 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
         for (int i = 0; i < n_oscs; i++)
         {
-            clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
+            copyOscillatorWavetable(scene, i, clipboard_wt[i]);
             clipboard_wt_names[i] = getPatch().scene[scene].osc[i].wavetable_display_name;
-            clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
+            clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig.read();
             clipboard_wavetable_script[i] = getPatch().scene[scene].osc[i].wavetable_script;
             clipboard_wavetable_script_res_base[i] =
                 getPatch().scene[scene].osc[i].wavetable_script_res_base;
@@ -2551,6 +2587,56 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
     modRoutingMutex.unlock();
 }
 
+void SurgeStorage::copyOscillatorWavetable(int scene, int osc, Wavetable &destination)
+{
+    const std::lock_guard<std::mutex> lock(waveTableDataMutex);
+    auto &live = getPatch().scene[scene].osc[osc].wt;
+    auto *source = &live;
+#if SURGE_WEB
+    const int index = scene * n_oscs + osc;
+    const auto &pending = browserGeneratedWavetables[index];
+    if (pending && pending->controlReplacement &&
+        pending->publishToken == wtGenPublishToken[index].load() &&
+        pending->state.load(std::memory_order_acquire) == BrowserGeneratedWavetable::pending)
+        source = pending->table.get();
+#endif
+    destination.Copy(source);
+    destination.current_id = live.current_id;
+    destination.current_filename = live.current_filename;
+    destination.frame_size_if_absent = live.frame_size_if_absent;
+}
+
+void SurgeStorage::replaceOscillatorWavetable(int scene, int osc, Wavetable &source)
+{
+    auto prepared = std::make_unique<Wavetable>();
+    prepared->Copy(&source);
+    const std::lock_guard<std::mutex> lock(waveTableDataMutex);
+    const int index = scene * n_oscs + osc;
+    const auto token = ++wtGenPublishToken[index];
+    auto &live = getPatch().scene[scene].osc[osc].wt;
+    live.queue_id = -1;
+    live.queue_filename.clear();
+    live.queue_reslice = false;
+    live.current_id = source.current_id;
+    live.current_filename = source.current_filename;
+    live.frame_size_if_absent = source.frame_size_if_absent;
+#if SURGE_WEB
+    if (browserManagesWavetables)
+    {
+        auto publication = std::make_shared<BrowserGeneratedWavetable>();
+        publication->table = std::move(prepared);
+        publication->publishToken = token;
+        publication->controlReplacement = true;
+        browserGeneratedWavetables[index] = std::move(publication);
+    }
+    else
+#endif
+        live.swapData(*prepared);
+    live.refresh_display = true;
+    live.force_refresh_display = true;
+    live.refresh_script_editor = true;
+}
+
 void SurgeStorage::clipboard_paste(
     int type, int scene, int entry, modsources ms, std::function<bool(int, modsources)> isValid,
     std::function<void(std::unique_ptr<Surge::FxClipboard::Clipboard> &, int)> updateFxInSlot)
@@ -2634,13 +2720,7 @@ void SurgeStorage::clipboard_paste(
         for (int i = 0; i < n_oscs; i++)
         {
             getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
-            {
-                // Pasting replaces this osc's live wt so bump wtGenPublishToken and copy under
-                // waveTableDataMutex so an in-progress WT script skips its stale publish.
-                std::lock_guard<std::mutex> lk(waveTableDataMutex);
-                wtGenPublishToken[scene * n_oscs + i]++;
-                getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
-            }
+            replaceOscillatorWavetable(scene, i, clipboard_wt[i]);
             getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
             getPatch().scene[scene].osc[i].wavetable_script = clipboard_wavetable_script[i];
             getPatch().scene[scene].osc[i].wavetable_script_res_base =
@@ -2765,13 +2845,7 @@ void SurgeStorage::clipboard_paste(
         {
             if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
             {
-                {
-                    // Pasting replaces this osc's live wt so bump wtGenPublishToken and copy under
-                    // waveTableDataMutex so an in-progress WT script skips its stale publish.
-                    std::lock_guard<std::mutex> lk(waveTableDataMutex);
-                    wtGenPublishToken[scene * n_oscs + entry]++;
-                    getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
-                }
+                replaceOscillatorWavetable(scene, entry, clipboard_wt[0]);
                 getPatch().scene[scene].osc[entry].wavetable_display_name = clipboard_wt_names[0];
                 getPatch().scene[scene].osc[entry].wavetable_script = clipboard_wavetable_script[0];
                 getPatch().scene[scene].osc[entry].wavetable_script_res_base =
@@ -3277,10 +3351,19 @@ void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &co
     int e = (int)x;
     float a = x - (float)e;
 
+#if SURGE_WEB
+    // Preserve the native ARM64 interpolation's single rounding. Small cosine
+    // differences become significant in high-resonance filter coefficients.
+    sinu = std::fma(1 - a, table_note_omega_ignoring_tuning[0][e],
+                    a * table_note_omega_ignoring_tuning[0][(e + 1) & 0x1ff]);
+    cosi = std::fma(1 - a, table_note_omega_ignoring_tuning[1][e],
+                    a * table_note_omega_ignoring_tuning[1][(e + 1) & 0x1ff]);
+#else
     sinu = (1 - a) * table_note_omega_ignoring_tuning[0][e] +
            a * table_note_omega_ignoring_tuning[0][(e + 1) & 0x1ff];
     cosi = (1 - a) * table_note_omega_ignoring_tuning[1][e] +
            a * table_note_omega_ignoring_tuning[1][(e + 1) & 0x1ff];
+#endif
 }
 
 float SurgeStorage::db_to_linear(float x)
@@ -3424,12 +3507,15 @@ void SurgeStorage::loadTuningFromSCL(const fs::path &p)
 {
     try
     {
-        retuneToScale(Tunings::readSCLFile(p));
+        auto scale = Tunings::readSCLFile(p);
+        // Validate the candidate against the current mapping before changing state.
+        Tunings::Tuning(scale, currentMapping).withSkippedNotesInterpolated();
+        retuneToScale(scale);
     }
     catch (Tunings::TuningError &e)
     {
-        retuneTo12TETScaleC261Mapping();
         reportError(e.what(), "SCL Error");
+        return;
     }
     if (onTuningChanged)
         onTuningChanged();
@@ -3439,12 +3525,14 @@ void SurgeStorage::loadMappingFromKBM(const fs::path &p)
 {
     try
     {
-        remapToKeyboard(Tunings::readKBMFile(p));
+        auto mapping = Tunings::readKBMFile(p);
+        Tunings::Tuning(currentScale, mapping).withSkippedNotesInterpolated();
+        remapToKeyboard(mapping);
     }
     catch (Tunings::TuningError &e)
     {
-        remapToConcertCKeyboard();
         reportError(e.what(), "KBM Error");
+        return;
     }
     if (onTuningChanged)
         onTuningChanged();

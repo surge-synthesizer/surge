@@ -44,10 +44,22 @@ namespace Formula
 
 void setupStorage(SurgeStorage *s) { s->formulaGlobalData = std::make_unique<GlobalData>(); }
 
-bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
-                          bool is_display)
+GlobalData::~GlobalData()
+{
+#if HAS_LUA
+    if (audioState)
+        lua_close(static_cast<lua_State *>(audioState));
+    if (displayState)
+        lua_close(static_cast<lua_State *>(displayState));
+#endif
+}
+
+static bool prepareEvaluator(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
+                             bool is_display, bool compileOnly)
 {
     auto &stateData = *storage->formulaGlobalData;
+    auto &functions = stateData.functions(is_display);
+    s.is_display = is_display;
     bool firstTimeThrough = false;
     if (!is_display)
     {
@@ -58,7 +70,7 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
             stateData.audioState = luaL_newstate();
             if (!stateData.audioState)
                 return false;
-            luaL_openlibs((lua_State *)(stateData.audioState));
+            Surge::LuaSupport::openLibraries((lua_State *)(stateData.audioState));
 #endif
             firstTimeThrough = true;
         }
@@ -77,7 +89,7 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
             stateData.displayState = luaL_newstate();
             if (!stateData.displayState)
                 return false;
-            luaL_openlibs((lua_State *)(stateData.displayState));
+            Surge::LuaSupport::openLibraries((lua_State *)(stateData.displayState));
 #endif
             firstTimeThrough = true;
         }
@@ -114,9 +126,6 @@ end
         }
     }
 
-    // Service any pending shared-table wipe here, immediately before init() runs below
-    wipeSharedData(storage, !is_display);
-
     // Calculate lfo_id from the element pointer
     // Requires that formulamods is a contiguous 2D array and that fs points inside it
     auto computeLfoId = [storage](const FormulaModulatorStorage *fs) {
@@ -127,6 +136,28 @@ end
         return static_cast<int>(fs - base) + 1;
     };
     s.lfo_id = computeLfoId(fs);
+
+    if (compileOnly)
+    {
+        auto &prepared = functions.preparedChunks[s.lfo_id - 1];
+        if (prepared.prepared && prepared.definition == fs->formulaString)
+            return prepared.registryReference >= 0;
+        std::string definition = fs->formulaString, error;
+        functions.compilationAttempts.fetch_add(1, std::memory_order_relaxed);
+        const bool compiled = Surge::LuaSupport::compileString(s.L, definition, error);
+        const int reference = compiled ? luaL_ref(s.L, LUA_REGISTRYINDEX) : -1;
+        if (prepared.registryReference >= 0)
+            luaL_unref(s.L, LUA_REGISTRYINDEX, prepared.registryReference);
+        prepared.definition = std::move(definition);
+        prepared.error = std::move(error);
+        prepared.registryReference = reference;
+        prepared.prepared = true;
+        return compiled;
+    }
+
+    // Preserve the original timing: a pending reset is consumed when a new
+    // evaluator is created, never merely by compiling a replacement script.
+    wipeSharedData(storage, !is_display);
 
     // Reset the dynamic slider labels on every display script eval
     if (is_display)
@@ -169,7 +200,7 @@ end
         s.isvalid = lua_isfunction(s.L, -1);
         lua_pop(s.L, 1);
 
-        if (stateData.knownBadFunctions.find(s.funcName) != stateData.knownBadFunctions.end())
+        if (functions.knownBadFunctions.find(s.funcName) != functions.knownBadFunctions.end())
         {
             s.isvalid = false;
         }
@@ -177,8 +208,28 @@ end
     else
     {
         std::string emsg;
-        int res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
-            s.L, fs->formulaString, {"process", "init"}, emsg);
+        int res = 0;
+        const auto &prepared = functions.preparedChunks[s.lfo_id - 1];
+        if (prepared.prepared && prepared.definition == fs->formulaString)
+        {
+            if (prepared.registryReference >= 0)
+            {
+                lua_rawgeti(s.L, LUA_REGISTRYINDEX, prepared.registryReference);
+                res = Surge::LuaSupport::evaluateCompiledFunctions(s.L, {"process", "init"}, emsg);
+            }
+            else
+            {
+                emsg = prepared.error;
+                lua_pushnil(s.L);
+                lua_pushnil(s.L);
+            }
+        }
+        else
+        {
+            functions.compilationAttempts.fetch_add(1, std::memory_order_relaxed);
+            res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
+                s.L, fs->formulaString, {"process", "init"}, emsg);
+        }
 
         if (res >= 1)
         {
@@ -201,8 +252,8 @@ end
             Surge::LuaSupport::setSurgeFunctionEnvironment(s.L, formulaFeatures);
             lua_pop(s.L, 1);
 
-            stateData.functionsPerFMS[fs].insert(s.funcName);
-            stateData.functionsPerFMS[fs].insert(s.funcNameInit);
+            functions.functionsPerFMS[fs].insert(s.funcName);
+            functions.functionsPerFMS[fs].insert(s.funcNameInit);
 
             s.isvalid = true;
         }
@@ -215,7 +266,7 @@ end
                 oss << "\n" << emsg;
             s.adderror(oss.str());
             lua_pop(s.L, 2); // Pop process and init (or nil)
-            stateData.knownBadFunctions.insert(s.funcName);
+            functions.knownBadFunctions.insert(s.funcName);
         }
 
         // this happens here because we did parse it at least. Don't parse again until it is changed
@@ -330,7 +381,7 @@ end
                     s.adderror("The init() function must return a table.\nThis usually means "
                                "that you didn't close the init() function with 'return state' "
                                "before the 'end' statement.");
-                    stateData.knownBadFunctions.insert(s.funcName);
+                    functions.knownBadFunctions.insert(s.funcName);
                 }
             }
             else
@@ -344,7 +395,7 @@ end
                 oss << "Failed to evaluate init() function!\n" << err;
                 s.adderror(oss.str());
                 lua_pop(s.L, 1); // Pop error
-                stateData.knownBadFunctions.insert(s.funcName);
+                functions.knownBadFunctions.insert(s.funcName);
             }
         }
 
@@ -365,7 +416,6 @@ end
             if (!lua_istable(s.L, -1))
             {
                 lua_pop(s.L, 1); // Pop non-table
-                std::cout << "Not a table!" << std::endl;
             }
             else
             {
@@ -486,18 +536,38 @@ end
     s.deform = 0;
     s.tempo = 120;
 
-    if (s.raisedError)
-        std::cout << "Error: " << *(s.error) << std::endl;
+    // The caller consumes s.error through the normal error-reporting path.
+    // Do not write duplicate diagnostics to a shared stream from this thread.
 #endif
 
     return true;
 }
 
+bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
+                          bool is_display)
+{
+    return prepareEvaluator(storage, fs, s, is_display, false);
+}
+
+bool prepareCompilation(SurgeStorage *storage, FormulaModulatorStorage *fs, bool is_display)
+{
+    EvaluatorState state{};
+    initEvaluatorState(state);
+    return prepareEvaluator(storage, fs, state, is_display, true);
+}
+
+void preparePatchCompilation(SurgeStorage *storage)
+{
+    for (auto &scene : storage->getPatch().formulamods)
+        for (auto &formula : scene)
+            prepareCompilation(storage, &formula, false);
+}
+
 void requestSharedDataWipe(SurgeStorage *storage)
 {
     auto &stateData = *storage->formulaGlobalData;
-    stateData.audioSharedWipeRequested.store(true, std::memory_order_relaxed);
-    stateData.displaySharedWipeRequested.store(true, std::memory_order_relaxed);
+    stateData.audioSharedWipeRequested.store(true, std::memory_order_release);
+    stateData.displaySharedWipeRequested.store(true, std::memory_order_release);
 }
 
 void wipeSharedData(SurgeStorage *storage, bool onAudioThread)
@@ -526,9 +596,8 @@ void wipeSharedData(SurgeStorage *storage, bool onAudioThread)
     auto *requested =
         onAudioThread ? &stateData.audioSharedWipeRequested : &stateData.displaySharedWipeRequested;
 
-    if (requested->load(std::memory_order_relaxed))
+    if (requested->exchange(false, std::memory_order_acq_rel))
     {
-        requested->store(false, std::memory_order_relaxed);
         auto *state = onAudioThread ? stateData.audioState : stateData.displayState;
         if (state)
             wipe(state);
@@ -544,10 +613,10 @@ void removeFunctionsAssociatedWith(SurgeStorage *storage, FormulaModulatorStorag
     auto S = stateData.audioState;
     if (!S)
         return;
-    if (stateData.functionsPerFMS.find(fs) == stateData.functionsPerFMS.end())
+    if (stateData.audioFunctions.functionsPerFMS.find(fs) == stateData.audioFunctions.functionsPerFMS.end())
         return;
 
-    stateData.functionsPerFMS.erase(fs);
+    stateData.audioFunctions.functionsPerFMS.erase(fs);
 #endif
 }
 
@@ -786,8 +855,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
                     if (idx > max_formula_outputs)
                         oss << "an index larger than the maximum table size!";
                     s->adderror(oss.str());
-                    auto &stateData = *storage->formulaGlobalData;
-                    stateData.knownBadFunctions.insert(s->funcName);
+                    auto &functions = storage->formulaGlobalData->functions(s->is_display);
+                    functions.knownBadFunctions.insert(s->funcName);
                     s->isvalid = false;
 
                     idx = 0;
@@ -803,13 +872,13 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         }
         else
         {
-            auto &stateData = *storage->formulaGlobalData;
+            auto &functions = storage->formulaGlobalData->functions(s->is_display);
 
-            if (stateData.knownBadFunctions.find(s->funcName) != stateData.knownBadFunctions.end())
+            if (functions.knownBadFunctions.find(s->funcName) != functions.knownBadFunctions.end())
                 s->adderror(
                     "You must define the 'output' field in the returned table as a number or a "
                     "float array!");
-            stateData.knownBadFunctions.insert(s->funcName);
+            functions.knownBadFunctions.insert(s->funcName);
             s->isvalid = false;
         }
 

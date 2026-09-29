@@ -20,6 +20,9 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "SurgeGUIEditor.h"
+#if SURGE_WEB
+#include <emscripten.h>
+#endif
 #include "UserDefaults.h"
 #include <algorithm>
 #include <set>
@@ -75,6 +78,9 @@ std::string escapeForHTML(const std::string &s)
 
 void SurgeGUIEditor::showHTML(const std::string &html)
 {
+#if SURGE_WEB
+    EM_ASM({ SurgeReports.show(UTF8ToString($0)); }, html.c_str());
+#else
     static struct filesToDelete : juce::DeletedAtShutdown
     {
         ~filesToDelete()
@@ -91,6 +97,7 @@ void SurgeGUIEditor::showHTML(const std::string &html)
     f.replaceWithText(html);
     f.startAsProcess();
     byebyeOnExit->deleteThese.push_back(f);
+#endif
 };
 
 std::string SurgeGUIEditor::tuningToHtml()

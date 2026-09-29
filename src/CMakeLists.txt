@@ -1,4 +1,8 @@
 # vi:set sw=2 et:
+if(SURGE_ENGINE_ONLY)
+  include(${CMAKE_SOURCE_DIR}/cmake/engine-only.cmake)
+  return()
+endif()
 option(SURGE_BUILD_XT "Build Surge XT plugin" ON)
 option(SURGE_BUILD_FX "Build Surge XT Effects plugin" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge XT Python bindings" OFF)

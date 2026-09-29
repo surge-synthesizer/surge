@@ -14,6 +14,9 @@
 #include "SurgeGUIUtils.h"
 #include "dsp/effects/ConditionerEffect.h"
 #include "dsp/effects/ConvolutionEffect.h"
+#if SURGE_WEB
+#include <emscripten.h>
+#endif
 
 namespace
 {
@@ -29,7 +32,31 @@ namespace
 {
 
 struct ConvolutionButton : public juce::Component, public juce::SettableTooltipClient
+#if SURGE_WEB
+    , private juce::Timer
+#endif
 {
+#if SURGE_WEB
+    int browserImpulseRequest{0};
+    juce::String browserImpulseFile;
+    void cancelBrowserImpulse()
+    {
+        stopTimer();
+        EM_ASM({ if (SurgeFactory.impulseRequests.delete($0)) SurgeBrowser.reportFile(""); }, browserImpulseRequest);
+        browserImpulseRequest = 0;
+    }
+    ~ConvolutionButton() override { cancelBrowserImpulse(); }
+    void timerCallback() override
+    {
+        auto status = EM_ASM_INT({ return SurgeFactory.impulseRequests.get($0) || 0; }, browserImpulseRequest);
+        if (!status) return;
+        stopTimer();
+        EM_ASM({ SurgeFactory.impulseRequests.delete($0); }, browserImpulseRequest);
+        browserImpulseRequest = 0;
+        if (status > 0 && !loadWavForConvolution(browserImpulseFile))
+            storage->reportError("Unable to decode the selected impulse response. The current response was retained.", "Impulse Load Error");
+    }
+#endif
     // We lock to make sure we don't update the current FX in the middle of
     // loading a WAV, but if it does slip through the cracks (maybe the parent
     // class swaps to a new FX) the worst thing that happens is some unusual
@@ -375,6 +402,12 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
 
     void clearIR()
     {
+#if SURGE_WEB
+        cancelBrowserImpulse();
+#endif
+#if SURGE_WEB
+        std::lock_guard<std::mutex> fxGuard(sge->synth->fxSpawnMutex);
+#endif
         sge->undoManager()->pushFX(slot);
         FxStorage &sync = sge->synth->fxsync[slot];
         sync.user_data.clear();
@@ -386,6 +419,9 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
         {
             sync.p[i] = fxs->p[i];
         }
+#if SURGE_WEB
+        sge->synth->browserIRReloadEdits[slot].capture(*fxs, sync);
+#endif
         sge->synth->fx_reload[slot] = true;
         sge->synth->load_fx_needed = true;
     }
@@ -428,7 +464,8 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
     {
         if (id >= 0 && id < storage->ir_list.size() && sge)
         {
-            loadWavForConvolution(storage->ir_list[id].path.string());
+            if (!loadWavForConvolution(storage->ir_list[id].path.string()))
+                storage->reportError("Unable to decode the selected impulse response. The current response was retained.", "Impulse Load Error");
         }
     }
 
@@ -440,10 +477,14 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
         if (!sge)
             return;
 
+#if SURGE_WEB
+        cancelBrowserImpulse();
+#endif
         juce::String fileTypes = "*.aif;*.aiff;*.flac;*.wav";
         sge->fileChooser = std::make_unique<juce::FileChooser>(
             "Select Impulse Response to Load", juce::File(path_to_string(path)), fileTypes);
-        auto action = [this, path](const juce::FileChooser &c) {
+        auto action = [safe = juce::Component::SafePointer<ConvolutionButton>(this), path](const juce::FileChooser &c) {
+            if (!safe) return;
             auto ress = c.getResults();
 
             if (ress.size() != 1)
@@ -453,15 +494,19 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
 
             auto res = c.getResult();
             auto rString = res.getFullPathName();
-            rString = CopyIRToImported(rString);
+            rString = safe->CopyIRToImported(rString);
 
-            this->loadWavForConvolution(rString);
+            if (rString.isEmpty() || !safe->loadWavForConvolution(rString))
+            {
+                safe->storage->reportError("Unable to import the selected impulse response. The current response was retained.", "Impulse Load Error");
+                return;
+            }
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
 
             if (dir != path)
             {
-                Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastIRPath, dir);
+                Surge::Storage::updateUserDefaultPath(safe->storage, Surge::Storage::LastIRPath, dir);
             }
         };
 
@@ -472,6 +517,16 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
 
     bool loadWavForConvolution(juce::String file)
     {
+#if SURGE_WEB
+        cancelBrowserImpulse();
+        if (file.startsWith("/factory/") && juce::File(file).getSize() == 0)
+        {
+            browserImpulseFile = file;
+            browserImpulseRequest = EM_ASM_INT({ return SurgeFactory.requestImpulse(UTF8ToString($0)); }, file.toRawUTF8());
+            startTimerHz(30);
+            return true;
+        }
+#endif
         std::lock_guard l(loading);
         juce::AudioFormatManager manager;
         manager.registerBasicFormats();
@@ -487,6 +542,12 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
         if (!reader->read(&buf, 0, reader->lengthInSamples, 0, true, true))
             return false;
 
+#if SURGE_WEB
+        std::unique_lock<std::mutex> fxGuard(sge->synth->fxSpawnMutex);
+#endif
+        // Capture the preceding effect before publishing the reload. Otherwise
+        // a fast audio commit can make Undo capture the newly loaded response.
+        sge->undoManager()->pushFX(slot);
         FxStorage &sync = sge->synth->fxsync[slot];
 
         std::string name = juce::File(file).getFileNameWithoutExtension().toStdString();
@@ -546,13 +607,18 @@ struct ConvolutionButton : public juce::Component, public juce::SettableTooltipC
         {
             sync.p[i] = fxs->p[i];
         }
+#if SURGE_WEB
+        sge->synth->browserIRReloadEdits[slot].capture(*fxs, sync);
+#endif
         sge->synth->fx_reload[slot] = true;
         sge->synth->load_fx_needed = true;
 
+#if SURGE_WEB
+        fxGuard.unlock();
+#endif
         if (cfxd)
             cfxd->had_focus = true;
 
-        sge->undoManager()->pushFX(slot);
         std::string announce = "Loaded impulse response ";
         announce += name;
         sge->enqueueAccessibleAnnouncement(announce);

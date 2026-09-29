@@ -101,6 +101,11 @@ struct UndoManagerImpl
         int oscNum;
         int scene;
         int type;
+        OscillatorStorage::ExtraConfigurationData extraConfig;
+        std::shared_ptr<Wavetable> wavetable;
+        std::array<std::shared_ptr<Wavetable>, n_wt_snapshots> snapshots;
+        std::string wavetableName, wavetableScript;
+        int scriptResolution{}, scriptFrames{};
         std::vector<UndoParam> undoParamValues;
         std::vector<UndoModulation> undoModulations;
     };
@@ -109,9 +114,8 @@ struct UndoManagerImpl
         int oscNum;
         int scene;
 
-        int current_id;
-        // Why shared? Well this is only used in one edge case and it makes it easier
         std::shared_ptr<Wavetable> wt;
+        std::array<std::shared_ptr<Wavetable>, n_wt_snapshots> snapshots;
 
         std::string displayName;
 
@@ -248,6 +252,15 @@ struct UndoManagerImpl
     size_t actionSize(const UndoAction &a)
     {
         auto res = sizeof(a);
+        if (auto pt = std::get_if<UndoOscillator>(&a))
+        {
+            res += pt->wavetableName.size() + pt->wavetableScript.size();
+            auto addTable = [&](const auto &table) {
+                if (table) res += sizeof(Wavetable) + table->dataSizes * (sizeof(float) + sizeof(short));
+            };
+            addTable(pt->wavetable);
+            for (const auto &snapshot : pt->snapshots) addTable(snapshot);
+        }
 
         if (auto pt = std::get_if<UndoFormula>(&a))
         {
@@ -276,6 +289,9 @@ struct UndoManagerImpl
             {
                 res += sizeof(Wavetable) + pt->wt->dataSizes * (sizeof(float) + sizeof(short));
             }
+            for (const auto &snapshot : pt->snapshots)
+                if (snapshot)
+                    res += sizeof(Wavetable) + snapshot->dataSizes * (sizeof(float) + sizeof(short));
         }
         return res;
     }
@@ -576,6 +592,18 @@ struct UndoManagerImpl
 
     void pushParameterChange(int paramId, const Parameter *p, pdata val, UndoManager::Target to)
     {
+#if SURGE_WEB
+        // A selector edit is authoritative before its processor preparation is
+        // adopted. Undo during that interval must put the requested selector on
+        // the redo stack, rather than recording the still-playing old instance.
+        if (p->ctrltype == ct_airwindows_fx && val.i == p->val.i)
+        {
+            const auto requested =
+                synth->browserAirwindowsWanted[p->ctrlgroup_entry].load(std::memory_order_acquire);
+            if (requested >= 0)
+                val.i = requested;
+        }
+#endif
         auto r = UndoParam();
         r.paramId = paramId;
         populateUndoParamFromP(p, val, r);
@@ -618,6 +646,23 @@ struct UndoManagerImpl
         r.scene = scene;
         r.oscNum = oscnum;
         r.type = os->type.val.i;
+        r.extraConfig = os->extraConfig.read();
+
+        r.wavetable = std::make_shared<Wavetable>();
+        synth->storage.copyOscillatorWavetable(scene, oscnum, *r.wavetable);
+        r.wavetableName = os->wavetable_display_name;
+        r.wavetableScript = os->wavetable_script;
+        r.scriptResolution = os->wavetable_script_res_base;
+        r.scriptFrames = os->wavetable_script_nframes;
+        {
+            const std::lock_guard<std::mutex> lock(synth->storage.wtSnapshotMutex);
+            for (int i = 0; i < n_wt_snapshots; ++i)
+                if (os->wtSnapshots[i])
+                {
+                    r.snapshots[i] = std::make_shared<Wavetable>();
+                    r.snapshots[i]->Copy(os->wtSnapshots[i].get());
+                }
+        }
 
         Parameter *p = &(os->type);
         p++;
@@ -663,26 +708,21 @@ struct UndoManagerImpl
         auto os = &(synth->storage.getPatch().scene[scene].osc[oscnum]);
         auto r = UndoWavetable();
 
-        r.current_id = os->wt.current_id;
-
-        r.wt = nullptr;
-        bool isWTS = false;
-
-        if (r.current_id >= 0)
+        // Preserve the exact table, including user reslices and generated data.
+        // Undo must not depend on reloading a factory file or recompiling Lua.
+        r.wt = std::make_shared<Wavetable>();
+        synth->storage.copyOscillatorWavetable(scene, oscnum, *r.wt);
+        r.wavetable_script = os->wavetable_script;
+        r.wavetable_script_res_base = os->wavetable_script_res_base;
+        r.wavetable_script_nframes = os->wavetable_script_nframes;
         {
-            isWTS = synth->storage.wt_list[r.current_id].path.extension() == ".wtscript";
-        }
-
-        if (r.current_id < 0 || isWTS)
-        {
-            r.wt = std::make_shared<Wavetable>();
-            r.wt->Copy(&(os->wt));
-            if (!os->wavetable_script.empty())
-            {
-                r.wavetable_script = os->wavetable_script;
-                r.wavetable_script_res_base = os->wavetable_script_res_base;
-                r.wavetable_script_nframes = os->wavetable_script_nframes;
-            }
+            std::lock_guard<std::mutex> lock(synth->storage.wtSnapshotMutex);
+            for (int i = 0; i < n_wt_snapshots; ++i)
+                if (os->wtSnapshots[i])
+                {
+                    r.snapshots[i] = std::make_shared<Wavetable>();
+                    r.snapshots[i]->Copy(os->wtSnapshots[i].get());
+                }
         }
 
         r.scene = scene;
@@ -702,7 +742,7 @@ struct UndoManagerImpl
         auto r = UndoOscillatorExtraConfig();
         r.scene = scene;
         r.oscNum = oscnum;
-        r.extraConfig = os->extraConfig;
+        r.extraConfig = os->extraConfig.read();
 
         if (to == UndoManager::UNDO)
             pushUndo(r);
@@ -931,7 +971,7 @@ struct UndoManagerImpl
         }
 
         static int qq = 0;
-        bool doStream = editor->getPatch().isDirty;
+        bool doStream = editor->getPatch().isDirty || editor->getPatch().hasAnySnapshots();
         if (!doStream)
         {
             auto pt = editor->pathForCurrentPatch();
@@ -947,7 +987,7 @@ struct UndoManagerImpl
         if (doStream)
         {
             void *data{nullptr};
-            auto dsz = editor->getPatch().save_patch(&data);
+            auto dsz = editor->getPatch().save_patch(&data, true);
             // Now the pointer which is returned will be the patches 'patchptr'
             // which on the lext load will get clobbered so we need to make a copy.
             r.dataSz = dsz;
@@ -1029,6 +1069,28 @@ struct UndoManagerImpl
             auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
             os->type.val.i = p->type;
             synth->storage.getPatch().update_controls(false, os, false);
+            // Type initialization resets Alias partials. Restore the captured
+            // non-parameter state together with the oscillator parameters.
+            os->extraConfig = p->extraConfig;
+            if (p->wavetable)
+                synth->storage.replaceOscillatorWavetable(p->scene, p->oscNum, *p->wavetable);
+            os->wavetable_display_name = p->wavetableName;
+            os->wavetable_script = p->wavetableScript;
+            os->wavetable_script_res_base = p->scriptResolution;
+            os->wavetable_script_nframes = p->scriptFrames;
+            {
+                const std::lock_guard<std::mutex> lock(synth->storage.wtSnapshotMutex);
+                for (int i = 0; i < n_wt_snapshots; ++i)
+                {
+                    if (p->snapshots[i])
+                    {
+                        os->wtSnapshots[i] = std::make_unique<Wavetable>();
+                        os->wtSnapshots[i]->Copy(p->snapshots[i].get());
+                    }
+                    else os->wtSnapshots[i].reset();
+                }
+                ++os->wtSnapshotsVersion;
+            }
 
             for (const auto &qp : p->undoParamValues)
             {
@@ -1065,43 +1127,26 @@ struct UndoManagerImpl
             auto g = SelfPushGuard(this);
             auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
 
+            synth->storage.replaceOscillatorWavetable(p->scene, p->oscNum, *p->wt);
+            os->wavetable_display_name = p->displayName;
+            os->wavetable_script = p->wavetable_script;
+            os->wavetable_script_res_base = p->wavetable_script_res_base;
+            os->wavetable_script_nframes = p->wavetable_script_nframes;
             {
-                // This undo/redo replaces the osc's wavetable so invalidate any in-progress WT
-                // script job for it.
-                // Bump under waveTableDataMutex so the worker's re-check sees it.
-                std::lock_guard<std::mutex> lk(synth->storage.waveTableDataMutex);
-                synth->storage.wtGenPublishToken[p->scene * n_oscs + p->oscNum]++;
+                std::lock_guard<std::mutex> lock(synth->storage.wtSnapshotMutex);
+                for (int i = 0; i < n_wt_snapshots; ++i)
+                {
+                    if (p->snapshots[i])
+                    {
+                        os->wtSnapshots[i] = std::make_unique<Wavetable>();
+                        os->wtSnapshots[i]->Copy(p->snapshots[i].get());
+                    }
+                    else
+                        os->wtSnapshots[i].reset();
+                }
+                ++os->wtSnapshotsVersion;
             }
-
-            if (!p->displayName.empty())
-            {
-                os->wavetable_display_name = p->displayName;
-            }
-
-            bool isWTS = false;
-            if (p->current_id >= 0)
-            {
-                isWTS = synth->storage.wt_list[p->current_id].path.extension() == ".wtscript";
-            }
-
-            if (p->current_id >= 0 && !isWTS)
-            {
-                os->wt.queue_id = p->current_id;
-            }
-            else if (p->wt)
-            {
-                os->wt.Copy(p->wt.get());
-                synth->refresh_editor = true;
-
-                os->wavetable_script = p->wavetable_script;
-                os->wavetable_script_res_base = p->wavetable_script_res_base;
-                os->wavetable_script_nframes = p->wavetable_script_nframes;
-                os->wt.refresh_script_editor = true;
-            }
-            else
-            {
-                jassertfalse;
-            }
+            synth->refresh_editor = true;
 
             auto ann = fmt::format("{} Oscillator Wavetable in Scene {} Oscillator {}", verb,
                                    (char)('A' + p->scene), p->oscNum + 1);
@@ -1193,6 +1238,9 @@ struct UndoManagerImpl
             std::lock_guard<std::mutex> g(synth->fxSpawnMutex);
 
             int cge = p->fxslot;
+#if SURGE_WEB
+            synth->browserIRReloadEdits[cge].finish();
+#endif
 
             setFXPresetInfo(cge, p->presetInfo);
 

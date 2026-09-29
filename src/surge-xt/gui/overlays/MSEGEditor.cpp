@@ -3648,6 +3648,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 (prop == SegmentProps::duration || prop == SegmentProps::cp_duration) ? 0.f : -1.f;
             const float highClamp = (prop == SegmentProps::duration) ? 1000.f : 1.f;
 
+            // Keyboard type-in can open without a mouse/context-menu snapshot.
+            // Capture the current model only after accepting the input, so
+            // cancel and invalid input never create an undo transaction.
+            prepareForUndo();
             *propValue = std::clamp(v, lowClamp, highClamp);
 
             pushToUndo();
@@ -4360,6 +4364,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 lassoSelector->items.addToSelection(i);
             }
+            if (controlregion)
+                controlregion->refreshNodeControls();
             repaint();
         };
         cbk.repaint = [this]() {

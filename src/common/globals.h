@@ -33,7 +33,7 @@
 
 #include "sst/basic-blocks/simd/setup.h"
 
-#if MAC || LINUX
+#if MAC || LINUX || SURGE_WEB
 #include <strings.h>
 
 static inline int _stricmp(const char *s1, const char *s2) { return strcasecmp(s1, s2); }

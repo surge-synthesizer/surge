@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "status": "open-real-time-gate",
+  "capturedAt": "2026-09-28T08:15:05.435Z",
+  "command": "SURGE_TEST_SILENT_OUTPUT=1 ./node_modules/.bin/playwright test tests/formula-editor.spec.js --grep \"preserve held voices\"",
+  "measurements": [
+    {
+      "test": "formula edits preserve held voices and reach new notes at 44100 Hz",
+      "status": "passed",
+      "rate": 44100,
+      "edits": [
+        {
+          "value": 0.5,
+          "beforeApply": 25,
+          "beforeAttack": 25,
+          "afterAttack": 26
+        },
+        {
+          "value": -0.25,
+          "beforeApply": 26,
+          "beforeAttack": 26,
+          "afterAttack": 27
+        }
+      ]
+    },
+    {
+      "test": "formula edits preserve held voices and reach new notes at 48000 Hz",
+      "status": "passed",
+      "rate": 48000,
+      "edits": [
+        {
+          "value": 0.5,
+          "beforeApply": 25,
+          "beforeAttack": 25,
+          "afterAttack": 26
+        },
+        {
+          "value": -0.25,
+          "beforeApply": 26,
+          "beforeAttack": 26,
+          "afterAttack": 27
+        }
+      ]
+    }
+  ],
+  "finding": "Both sample rates preserve held-note pitch and apply the replacement to new notes. Each new source compiles once on the next note attack; compilation does not happen during Apply. The live-edit off-callback compilation requirement is not satisfied.",
+  "limitations": [
+    "Silent-output Chrome run does not verify physical audio devices or deadlines.",
+    "Compilation counters do not measure Lua allocation, loading, garbage collection, or execution duration.",
+    "These checks do not prove concurrent formula source access is race-free."
+  ],
+  "nativeCheck": {
+    "command": "build-reference/src/surge-web/surge-engine-reference --check-lua-compilation resources/data",
+    "exitCode": 0
+  },
+  "sha256": {
+    "src/common/dsp/modulators/FormulaModulationHelper.cpp": "671c5eb69b2d9dd2bf492073252e0215d80c662cc69b89cccd4b9e288f115470",
+    "src/common/dsp/modulators/FormulaModulationHelper.h": "c9ede0c6707f5867a239e9921491882bee782c35ebd088a875b8135d530a0f46",
+    "src/surge-web/juce/BrowserMain.cpp": "fe8573abbf6ad5be0a9a5562dbccac37a04d86e9da33689f1fb9b5329ac1c0c2",
+    "web/tests/formula-editor.spec.js": "49eb0b9a2c42c6bf4ef3bb6f5ee214f3e31959a972936809f0f7b9e447a12735",
+    "build-web/web/surge-xt-browser.wasm": "58c506d9a6fb87858043b607812fb6780740bb867efdf8cb6d74bd1f4a0c9f5a",
+    "build-reference/src/surge-web/surge-engine-reference": "ca0730a3f0ce7bd6230f6ae653c695863cdfcdfe57015ac88af18bb0071901f1"
+  }
+}

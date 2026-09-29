@@ -44,6 +44,22 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     std::string &errorMessage)
 {
 #if HAS_LUA
+    if (!compileString(L, definition, errorMessage))
+    {
+        for (size_t i = 0; i < functions.size(); ++i)
+            lua_pushnil(L);
+        return 0;
+    }
+    return evaluateCompiledFunctions(L, functions, errorMessage);
+#else
+    return 0;
+#endif
+}
+
+bool Surge::LuaSupport::compileString(lua_State *L, const std::string &definition,
+                                     std::string &errorMessage)
+{
+#if HAS_LUA
     const char *lua_script = definition.c_str();
     auto lerr = luaL_loadbuffer(L, lua_script, strlen(lua_script), "lua-script");
     if (lerr != LUA_OK)
@@ -66,12 +82,29 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         oss << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
-        for (const auto &f : functions)
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+int Surge::LuaSupport::evaluateCompiledFunctions(lua_State *L,
+                                                const std::vector<std::string> &functions,
+                                                std::string &errorMessage)
+{
+#if HAS_LUA
+    if (!lua_isfunction(L, -1))
+    {
+        errorMessage = "Lua evaluation error: Missing compiled script chunk";
+        if (lua_gettop(L) > 0)
+            lua_pop(L, 1);
+        for (size_t i = 0; i < functions.size(); ++i)
             lua_pushnil(L);
         return 0;
     }
-
-    lerr = lua_pcall(L, 0, 0, 0);
+    auto lerr = lua_pcall(L, 0, 0, 0);
     if (lerr != LUA_OK)
     {
         std::ostringstream oss;
@@ -99,12 +132,10 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         return 0;
     }
 
-    // sloppy
     int res = 0;
-    std::vector<std::string> frev(functions.rbegin(), functions.rend());
-    for (const auto &functionName : frev)
+    for (auto function = functions.rbegin(); function != functions.rend(); ++function)
     {
-        lua_getglobal(L, functionName.c_str());
+        lua_getglobal(L, function->c_str());
         if (lua_isfunction(L, -1))
             res++;
         else if (!lua_isnil(L, -1))

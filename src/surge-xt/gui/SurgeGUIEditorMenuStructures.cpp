@@ -474,6 +474,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 try
                 {
                     auto sc = Tunings::readSCLFile(sf);
+                    Tunings::Tuning(sc, synth->storage.currentMapping).withSkippedNotesInterpolated();
 
                     if (!this->synth->storage.retuneToScale(sc))
                     {
@@ -485,8 +486,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 }
                 catch (Tunings::TuningError &e)
                 {
-                    synth->storage.retuneTo12TETScaleC261Mapping();
                     synth->storage.reportError(e.what(), "Load Error");
+                    return;
                 }
                 tuningChanged();
                 auto tuningLabel = path_to_string(fs::path(synth->storage.currentScale.name));
@@ -537,6 +538,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 try
                 {
                     auto kb = Tunings::readKBMFile(sf);
+                    Tunings::Tuning(synth->storage.currentScale, kb).withSkippedNotesInterpolated();
 
                     if (!this->synth->storage.remapToKeyboard(kb))
                     {
@@ -549,8 +551,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 }
                 catch (Tunings::TuningError &e)
                 {
-                    synth->storage.remapToConcertCKeyboard();
                     synth->storage.reportError(e.what(), "Load Error");
+                    return;
                 }
                 tuningChanged();
                 auto mappingLabel = synth->storage.currentMapping.name;
@@ -1547,12 +1549,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
             auto checked = entry.matchesSkin(currentSkin);
 
             addToThis->addItem(dname, true, checked, [this, entry]() {
-                setupSkinFromEntry(entry);
-                this->synth->refresh_editor = true;
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::DefaultSkin, entry.name);
-                Surge::Storage::updateUserDefaultValue(
-                    &(this->synth->storage), Surge::Storage::DefaultSkinRootType, entry.rootType);
+                selectSkinFromEntry(entry);
             });
         }
 
@@ -1641,7 +1638,24 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     else
     {
         skinSubMenu.addItem(Surge::GUI::toOSCase("Install a New Skin..."), [this]() {
+#if SURGE_WEB
+            fileChooser = std::make_unique<juce::FileChooser>(
+                "Select a .surge-skin Folder", juce::File(), "*.surge-skin");
+            fileChooser->launchAsync(
+                juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
+                [this](const juce::FileChooser &chooser) {
+                    const auto folder = chooser.getResult();
+                    if (folder == juce::File()) return;
+                    if (!folder.isDirectory() || !folder.hasFileExtension(".surge-skin"))
+                    {
+                        synth->storage.reportError("Select a folder ending in .surge-skin.", "Skin Import Error");
+                        return;
+                    }
+                    onDrop(folder.getFullPathName());
+                });
+#else
             Surge::GUI::openFileOrFolder(this->synth->storage.userSkinsPath);
+#endif
         });
     }
 
@@ -1668,6 +1682,7 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
 {
     auto dataSubMenu = juce::PopupMenu();
 
+#if !SURGE_WEB
     dataSubMenu.addItem(Surge::GUI::toOSCase("Open Factory Data Folder..."), [this]() {
         if (!Surge::GUI::openFileOrFolder(this->synth->storage.datapath))
         {
@@ -1684,6 +1699,8 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         fs::create_directories(this->synth->storage.userDataPath);
         Surge::GUI::openFileOrFolder(this->synth->storage.userDataPath);
     });
+
+#endif
 
     dataSubMenu.addItem(Surge::GUI::toOSCase("Set Custom User Data Folder..."), [this]() {
         fileChooser = std::make_unique<juce::FileChooser>(
@@ -2016,8 +2033,10 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     auto midiSubMenu = makeMidiMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("MIDI Settings"), midiSubMenu);
 
+#if !SURGE_WEB
     auto oscSubMenu = makeOSCMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("OSC Settings"), oscSubMenu);
+#endif
 
     auto tuningSubMenu = makeTuningMenu(where, false);
     settingsMenu.addSubMenu("Tuning", tuningSubMenu);

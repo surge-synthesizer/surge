@@ -1,0 +1,67 @@
+{
+  "url": "https://surge-xt-browser.vercel.app",
+  "chrome": "154.0.8037.58",
+  "physicalAudioVerified": false,
+  "factoryPatches": 3561,
+  "keyboardAudio": true,
+  "patchSearchAndSwitch": true,
+  "suspendResume": true,
+  "saveReload": true,
+  "status": "passed",
+  "errors": [],
+  "failedResponses": [],
+  "schema": 1,
+  "verifiedAt": "2026-09-29T18:28:11.749437+00:00",
+  "deploymentId": "dpl_HgRhiwwW4P3GhwVrLgLZ2LVhnHCX",
+  "deploymentUrl": "https://surge-xt-browser-71rwtssgz-amila-welihindas-projects.vercel.app",
+  "target": "production",
+  "vercelStatus": "Ready",
+  "factoryAssetsVerifiedDuringBuild": 5756,
+  "assets": {
+    "surge-xt-browser.wasm": {
+      "sha256": "58c506d9a6fb87858043b607812fb6780740bb867efdf8cb6d74bd1f4a0c9f5a",
+      "bytes": 24948431,
+      "status": 200,
+      "contentType": "application/wasm"
+    },
+    "surge-xt-browser.js": {
+      "sha256": "328dc4a0a73f93b302feb1703049ab78a5c963d77e5032253df91810670408fe",
+      "bytes": 202156,
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    "surge-xt-browser.data": {
+      "sha256": "2ecc8d4a2ebf62c26c5c04758c838c5e9fb892f40fc71599b86fa06d6b78d864",
+      "bytes": 2981137,
+      "status": 200,
+      "contentType": "application/octet-stream"
+    },
+    "library/manifest.json": {
+      "sha256": "f036a2694959c17c6f5aadc0e361f43be338dfbc9cc123768113b4b205c83d92",
+      "bytes": 1825277,
+      "status": 200,
+      "contentType": "application/json; charset=utf-8"
+    },
+    "source/README.txt": {
+      "sha256": "b2ddbc9ee1c70fe9ce5c9b36ce1b465678582313529ddc0df60d327d7a239907",
+      "bytes": 572,
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8"
+    },
+    "source/surge-browser-changes.tar.gz": {
+      "sha256": "f73c729506e9c8236952de937319ab9fca79ecbfc44e484008f8a5429192a208",
+      "bytes": 1315971,
+      "status": 200,
+      "contentType": "application/gzip"
+    },
+    "THIRD-PARTY-NOTICES.txt": {
+      "sha256": "ffcf228ccc4a0111949855e18b3639bc0993d4d98eb429c172c20c483ad89a88",
+      "bytes": 516654,
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8"
+    }
+  },
+  "verificationCommand": "node web/scripts/verify-deployment.mjs https://surge-xt-browser.vercel.app",
+  "verificationScriptSha256": "500512bdc02d0a3735bba467988bfc37e9e42bf403c4610f2ad4f16b1f77f696",
+  "scope": "Deployment usability checks; does not close the full portable-feature migration gate."
+}

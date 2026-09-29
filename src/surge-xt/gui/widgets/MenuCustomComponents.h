@@ -221,6 +221,10 @@ struct WavetableSnapshotMenuComponent : juce::PopupMenu::CustomComponent,
     int hoveredOsc{-1};
     juce::Rectangle<int> loadFileHitBox;
     bool hoveredFile{false};
+#if SURGE_WEB
+    // Accessible hit targets for the existing painted links.
+    std::array<std::unique_ptr<juce::TextButton>, n_oscs + 1> browserActions;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableSnapshotMenuComponent);
 };

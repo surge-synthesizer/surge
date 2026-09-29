@@ -82,7 +82,8 @@ struct FxUserPreset
     void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn,
                   std::function<void(const fs::path &)> onSaved = nullptr);
 
-    void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
+    // Returns false without changing the destination when preparation fails.
+    bool loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
 };
 
 struct FxChainUserPreset
@@ -137,7 +138,8 @@ struct FxChainUserPreset
     bool readFromXMLSnapshot(Preset &p, TiXmlElement *snapshotEl);
     void saveChainPresetIn(SurgeStorage *s, const Preset::SlotData slots[n_fx_per_chain],
                            const std::string &fn);
-    void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer[n_fx_per_chain]);
+    // Returns false with every destination unchanged if any slot fails preparation.
+    bool loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer[n_fx_per_chain]);
 };
 
 } // namespace Storage

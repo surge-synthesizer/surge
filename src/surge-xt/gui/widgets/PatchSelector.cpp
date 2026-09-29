@@ -181,18 +181,32 @@ struct PatchSelector::TB : juce::Component
 
     std::function<void(bool)> onEnterExit = [](auto b) {};
     std::function<bool()> onMenu = []() { return false; }, onPress = []() { return false; };
+    bool hasMenu{false};
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
     {
+#if SURGE_WEB
+        auto actions = juce::AccessibilityActions().addAction(
+            juce::AccessibilityActionType::press, [this]() { onPress(); });
+        if (hasMenu)
+            actions = actions.addAction(juce::AccessibilityActionType::showMenu,
+                                        [this]() { onMenu(); });
+        return std::make_unique<juce::AccessibilityHandler>(
+            *this, juce::AccessibilityRole::button, std::move(actions));
+#else
         return std::make_unique<juce::AccessibilityHandler>(
             *this, juce::AccessibilityRole::button,
             juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
                                                    [this]() {}));
+#endif
     }
 };
 
 PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelector>(this)
 {
+#if SURGE_WEB
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+#endif
     patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>(this);
     typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("Patch select", patchDbProvider.get());
     typeAhead->setVisible(false);
@@ -262,6 +276,7 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
         }
         return true;
     };
+    favoriteButton->hasMenu = true;
 
     setWantsKeyboardFocus(true);
 };
@@ -817,6 +832,7 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         Surge::GUI::addRevealFile(contextMenu, storage->patch_list[current_patch].path);
     }
 
+#if !SURGE_WEB
     contextMenu.addItem(Surge::GUI::toOSCase("Open User Patches Folder..."),
                         [this]() { Surge::GUI::openFileOrFolder(this->storage->userPatchesPath); });
 
@@ -845,6 +861,8 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
                 "Load Error");
         }
     });
+
+#endif
 
     contextMenu.addSeparator();
 
@@ -1479,7 +1497,12 @@ class PatchSelectorAH : public juce::AccessibilityHandler
   public:
     explicit PatchSelectorAH(PatchSelector *sel)
         : selector(sel),
-          juce::AccessibilityHandler(*sel, juce::AccessibilityRole::label,
+          juce::AccessibilityHandler(*sel,
+#if SURGE_WEB
+                                     juce::AccessibilityRole::group,
+#else
+                                     juce::AccessibilityRole::label,
+#endif
                                      juce::AccessibilityActions()
                                          .addAction(juce::AccessibilityActionType::press,
                                                     [sel] { sel->showClassicMenu(); })

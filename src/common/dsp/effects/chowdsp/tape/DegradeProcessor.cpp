@@ -19,6 +19,7 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+#include "SurgeRandom.h"
 #include "DegradeProcessor.h"
 
 namespace chowdsp
@@ -26,7 +27,7 @@ namespace chowdsp
 
 DegradeProcessor::DegradeProcessor()
 {
-    std::random_device rd;
+    Surge::AudioRandomDevice rd;
     auto gen = std::minstd_rand(rd());
     std::uniform_real_distribution<float> distro(-0.5f, 0.5f);
     urng = std::bind(distro, gen);

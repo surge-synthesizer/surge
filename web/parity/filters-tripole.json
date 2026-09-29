@@ -1,0 +1,1905 @@
+{
+  "schema": 1,
+  "status": "diagnostic",
+  "complete": false,
+  "selectionComplete": true,
+  "inventory": {
+    "schema": 1,
+    "source": "libs/sst/sst-filters/include/sst/filters/FilterConfiguration.h",
+    "sourceSha256": "6eeb8ee16b68f06edf8b6d2ac1ee5559c608aedc741b3532529b3f936a42b97c",
+    "scope": "Public filter type and subtype selectors. Zero-subtype types use subtype 0. This matrix is unverified: it does not prove DSP or UI parity. Internal subtype masks, morph parameters, cutoff/resonance ranges, routing, modulation and live edits need additional coverage.",
+    "rates": [
+      44100,
+      48000
+    ],
+    "types": [
+      {
+        "id": 0,
+        "symbol": "fut_none",
+        "name": "Off",
+        "subtypeCount": 0
+      },
+      {
+        "id": 1,
+        "symbol": "fut_lp12",
+        "name": "LP 12 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 2,
+        "symbol": "fut_lp24",
+        "name": "LP 24 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 3,
+        "symbol": "fut_lpmoog",
+        "name": "LP Legacy Ladder",
+        "subtypeCount": 4
+      },
+      {
+        "id": 4,
+        "symbol": "fut_hp12",
+        "name": "HP 12 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 5,
+        "symbol": "fut_hp24",
+        "name": "HP 24 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 6,
+        "symbol": "fut_bp12",
+        "name": "BP 12 dB",
+        "subtypeCount": 5
+      },
+      {
+        "id": 7,
+        "symbol": "fut_notch12",
+        "name": "N 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 8,
+        "symbol": "fut_comb_pos",
+        "name": "FX Comb +",
+        "subtypeCount": 2
+      },
+      {
+        "id": 9,
+        "symbol": "fut_SNH",
+        "name": "FX Sample & Hold",
+        "subtypeCount": 0
+      },
+      {
+        "id": 10,
+        "symbol": "fut_vintageladder",
+        "name": "LP Vintage Ladder",
+        "subtypeCount": 6
+      },
+      {
+        "id": 11,
+        "symbol": "fut_obxd_2pole_lp",
+        "name": "LP OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 12,
+        "symbol": "fut_obxd_4pole",
+        "name": "LP OB-Xd 24 dB",
+        "subtypeCount": 5
+      },
+      {
+        "id": 13,
+        "symbol": "fut_k35_lp",
+        "name": "LP K35",
+        "subtypeCount": 5
+      },
+      {
+        "id": 14,
+        "symbol": "fut_k35_hp",
+        "name": "HP K35",
+        "subtypeCount": 5
+      },
+      {
+        "id": 15,
+        "symbol": "fut_diode",
+        "name": "LP Diode Ladder",
+        "subtypeCount": 4
+      },
+      {
+        "id": 16,
+        "symbol": "fut_cutoffwarp_lp",
+        "name": "LP Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 17,
+        "symbol": "fut_cutoffwarp_hp",
+        "name": "HP Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 18,
+        "symbol": "fut_cutoffwarp_n",
+        "name": "N Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 19,
+        "symbol": "fut_cutoffwarp_bp",
+        "name": "BP Cutoff Warp",
+        "subtypeCount": 12
+      },
+      {
+        "id": 20,
+        "symbol": "fut_obxd_2pole_hp",
+        "name": "HP OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 21,
+        "symbol": "fut_obxd_2pole_n",
+        "name": "N OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 22,
+        "symbol": "fut_obxd_2pole_bp",
+        "name": "BP OB-Xd 12 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 23,
+        "symbol": "fut_bp24",
+        "name": "BP 24 dB",
+        "subtypeCount": 3
+      },
+      {
+        "id": 24,
+        "symbol": "fut_notch24",
+        "name": "N 24 dB",
+        "subtypeCount": 2
+      },
+      {
+        "id": 25,
+        "symbol": "fut_comb_neg",
+        "name": "FX Comb -",
+        "subtypeCount": 2
+      },
+      {
+        "id": 26,
+        "symbol": "fut_apf",
+        "name": "FX Allpass",
+        "subtypeCount": 0
+      },
+      {
+        "id": 27,
+        "symbol": "fut_cutoffwarp_ap",
+        "name": "FX Cutoff Warp AP",
+        "subtypeCount": 12
+      },
+      {
+        "id": 28,
+        "symbol": "fut_resonancewarp_lp",
+        "name": "LP Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 29,
+        "symbol": "fut_resonancewarp_hp",
+        "name": "HP Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 30,
+        "symbol": "fut_resonancewarp_n",
+        "name": "N Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 31,
+        "symbol": "fut_resonancewarp_bp",
+        "name": "BP Res Warp",
+        "subtypeCount": 8
+      },
+      {
+        "id": 32,
+        "symbol": "fut_resonancewarp_ap",
+        "name": "FX Res Warp AP",
+        "subtypeCount": 8
+      },
+      {
+        "id": 33,
+        "symbol": "fut_tripole",
+        "name": "MULTI Tri-pole",
+        "subtypeCount": 12
+      },
+      {
+        "id": 34,
+        "symbol": "fut_cytomic_svf",
+        "name": "MULTI Fast SVF",
+        "subtypeCount": 9
+      },
+      {
+        "id": 35,
+        "symbol": "fut_obxd_xpander",
+        "name": "MULTI Xpander",
+        "subtypeCount": 15
+      }
+    ],
+    "modes": [
+      {
+        "type": 0,
+        "subtype": 0
+      },
+      {
+        "type": 1,
+        "subtype": 0
+      },
+      {
+        "type": 1,
+        "subtype": 1
+      },
+      {
+        "type": 1,
+        "subtype": 2
+      },
+      {
+        "type": 2,
+        "subtype": 0
+      },
+      {
+        "type": 2,
+        "subtype": 1
+      },
+      {
+        "type": 2,
+        "subtype": 2
+      },
+      {
+        "type": 3,
+        "subtype": 0
+      },
+      {
+        "type": 3,
+        "subtype": 1
+      },
+      {
+        "type": 3,
+        "subtype": 2
+      },
+      {
+        "type": 3,
+        "subtype": 3
+      },
+      {
+        "type": 4,
+        "subtype": 0
+      },
+      {
+        "type": 4,
+        "subtype": 1
+      },
+      {
+        "type": 4,
+        "subtype": 2
+      },
+      {
+        "type": 5,
+        "subtype": 0
+      },
+      {
+        "type": 5,
+        "subtype": 1
+      },
+      {
+        "type": 5,
+        "subtype": 2
+      },
+      {
+        "type": 6,
+        "subtype": 0
+      },
+      {
+        "type": 6,
+        "subtype": 1
+      },
+      {
+        "type": 6,
+        "subtype": 2
+      },
+      {
+        "type": 6,
+        "subtype": 3
+      },
+      {
+        "type": 6,
+        "subtype": 4
+      },
+      {
+        "type": 7,
+        "subtype": 0
+      },
+      {
+        "type": 7,
+        "subtype": 1
+      },
+      {
+        "type": 8,
+        "subtype": 0
+      },
+      {
+        "type": 8,
+        "subtype": 1
+      },
+      {
+        "type": 9,
+        "subtype": 0
+      },
+      {
+        "type": 10,
+        "subtype": 0
+      },
+      {
+        "type": 10,
+        "subtype": 1
+      },
+      {
+        "type": 10,
+        "subtype": 2
+      },
+      {
+        "type": 10,
+        "subtype": 3
+      },
+      {
+        "type": 10,
+        "subtype": 4
+      },
+      {
+        "type": 10,
+        "subtype": 5
+      },
+      {
+        "type": 11,
+        "subtype": 0
+      },
+      {
+        "type": 11,
+        "subtype": 1
+      },
+      {
+        "type": 12,
+        "subtype": 0
+      },
+      {
+        "type": 12,
+        "subtype": 1
+      },
+      {
+        "type": 12,
+        "subtype": 2
+      },
+      {
+        "type": 12,
+        "subtype": 3
+      },
+      {
+        "type": 12,
+        "subtype": 4
+      },
+      {
+        "type": 13,
+        "subtype": 0
+      },
+      {
+        "type": 13,
+        "subtype": 1
+      },
+      {
+        "type": 13,
+        "subtype": 2
+      },
+      {
+        "type": 13,
+        "subtype": 3
+      },
+      {
+        "type": 13,
+        "subtype": 4
+      },
+      {
+        "type": 14,
+        "subtype": 0
+      },
+      {
+        "type": 14,
+        "subtype": 1
+      },
+      {
+        "type": 14,
+        "subtype": 2
+      },
+      {
+        "type": 14,
+        "subtype": 3
+      },
+      {
+        "type": 14,
+        "subtype": 4
+      },
+      {
+        "type": 15,
+        "subtype": 0
+      },
+      {
+        "type": 15,
+        "subtype": 1
+      },
+      {
+        "type": 15,
+        "subtype": 2
+      },
+      {
+        "type": 15,
+        "subtype": 3
+      },
+      {
+        "type": 16,
+        "subtype": 0
+      },
+      {
+        "type": 16,
+        "subtype": 1
+      },
+      {
+        "type": 16,
+        "subtype": 2
+      },
+      {
+        "type": 16,
+        "subtype": 3
+      },
+      {
+        "type": 16,
+        "subtype": 4
+      },
+      {
+        "type": 16,
+        "subtype": 5
+      },
+      {
+        "type": 16,
+        "subtype": 6
+      },
+      {
+        "type": 16,
+        "subtype": 7
+      },
+      {
+        "type": 16,
+        "subtype": 8
+      },
+      {
+        "type": 16,
+        "subtype": 9
+      },
+      {
+        "type": 16,
+        "subtype": 10
+      },
+      {
+        "type": 16,
+        "subtype": 11
+      },
+      {
+        "type": 17,
+        "subtype": 0
+      },
+      {
+        "type": 17,
+        "subtype": 1
+      },
+      {
+        "type": 17,
+        "subtype": 2
+      },
+      {
+        "type": 17,
+        "subtype": 3
+      },
+      {
+        "type": 17,
+        "subtype": 4
+      },
+      {
+        "type": 17,
+        "subtype": 5
+      },
+      {
+        "type": 17,
+        "subtype": 6
+      },
+      {
+        "type": 17,
+        "subtype": 7
+      },
+      {
+        "type": 17,
+        "subtype": 8
+      },
+      {
+        "type": 17,
+        "subtype": 9
+      },
+      {
+        "type": 17,
+        "subtype": 10
+      },
+      {
+        "type": 17,
+        "subtype": 11
+      },
+      {
+        "type": 18,
+        "subtype": 0
+      },
+      {
+        "type": 18,
+        "subtype": 1
+      },
+      {
+        "type": 18,
+        "subtype": 2
+      },
+      {
+        "type": 18,
+        "subtype": 3
+      },
+      {
+        "type": 18,
+        "subtype": 4
+      },
+      {
+        "type": 18,
+        "subtype": 5
+      },
+      {
+        "type": 18,
+        "subtype": 6
+      },
+      {
+        "type": 18,
+        "subtype": 7
+      },
+      {
+        "type": 18,
+        "subtype": 8
+      },
+      {
+        "type": 18,
+        "subtype": 9
+      },
+      {
+        "type": 18,
+        "subtype": 10
+      },
+      {
+        "type": 18,
+        "subtype": 11
+      },
+      {
+        "type": 19,
+        "subtype": 0
+      },
+      {
+        "type": 19,
+        "subtype": 1
+      },
+      {
+        "type": 19,
+        "subtype": 2
+      },
+      {
+        "type": 19,
+        "subtype": 3
+      },
+      {
+        "type": 19,
+        "subtype": 4
+      },
+      {
+        "type": 19,
+        "subtype": 5
+      },
+      {
+        "type": 19,
+        "subtype": 6
+      },
+      {
+        "type": 19,
+        "subtype": 7
+      },
+      {
+        "type": 19,
+        "subtype": 8
+      },
+      {
+        "type": 19,
+        "subtype": 9
+      },
+      {
+        "type": 19,
+        "subtype": 10
+      },
+      {
+        "type": 19,
+        "subtype": 11
+      },
+      {
+        "type": 20,
+        "subtype": 0
+      },
+      {
+        "type": 20,
+        "subtype": 1
+      },
+      {
+        "type": 21,
+        "subtype": 0
+      },
+      {
+        "type": 21,
+        "subtype": 1
+      },
+      {
+        "type": 22,
+        "subtype": 0
+      },
+      {
+        "type": 22,
+        "subtype": 1
+      },
+      {
+        "type": 23,
+        "subtype": 0
+      },
+      {
+        "type": 23,
+        "subtype": 1
+      },
+      {
+        "type": 23,
+        "subtype": 2
+      },
+      {
+        "type": 24,
+        "subtype": 0
+      },
+      {
+        "type": 24,
+        "subtype": 1
+      },
+      {
+        "type": 25,
+        "subtype": 0
+      },
+      {
+        "type": 25,
+        "subtype": 1
+      },
+      {
+        "type": 26,
+        "subtype": 0
+      },
+      {
+        "type": 27,
+        "subtype": 0
+      },
+      {
+        "type": 27,
+        "subtype": 1
+      },
+      {
+        "type": 27,
+        "subtype": 2
+      },
+      {
+        "type": 27,
+        "subtype": 3
+      },
+      {
+        "type": 27,
+        "subtype": 4
+      },
+      {
+        "type": 27,
+        "subtype": 5
+      },
+      {
+        "type": 27,
+        "subtype": 6
+      },
+      {
+        "type": 27,
+        "subtype": 7
+      },
+      {
+        "type": 27,
+        "subtype": 8
+      },
+      {
+        "type": 27,
+        "subtype": 9
+      },
+      {
+        "type": 27,
+        "subtype": 10
+      },
+      {
+        "type": 27,
+        "subtype": 11
+      },
+      {
+        "type": 28,
+        "subtype": 0
+      },
+      {
+        "type": 28,
+        "subtype": 1
+      },
+      {
+        "type": 28,
+        "subtype": 2
+      },
+      {
+        "type": 28,
+        "subtype": 3
+      },
+      {
+        "type": 28,
+        "subtype": 4
+      },
+      {
+        "type": 28,
+        "subtype": 5
+      },
+      {
+        "type": 28,
+        "subtype": 6
+      },
+      {
+        "type": 28,
+        "subtype": 7
+      },
+      {
+        "type": 29,
+        "subtype": 0
+      },
+      {
+        "type": 29,
+        "subtype": 1
+      },
+      {
+        "type": 29,
+        "subtype": 2
+      },
+      {
+        "type": 29,
+        "subtype": 3
+      },
+      {
+        "type": 29,
+        "subtype": 4
+      },
+      {
+        "type": 29,
+        "subtype": 5
+      },
+      {
+        "type": 29,
+        "subtype": 6
+      },
+      {
+        "type": 29,
+        "subtype": 7
+      },
+      {
+        "type": 30,
+        "subtype": 0
+      },
+      {
+        "type": 30,
+        "subtype": 1
+      },
+      {
+        "type": 30,
+        "subtype": 2
+      },
+      {
+        "type": 30,
+        "subtype": 3
+      },
+      {
+        "type": 30,
+        "subtype": 4
+      },
+      {
+        "type": 30,
+        "subtype": 5
+      },
+      {
+        "type": 30,
+        "subtype": 6
+      },
+      {
+        "type": 30,
+        "subtype": 7
+      },
+      {
+        "type": 31,
+        "subtype": 0
+      },
+      {
+        "type": 31,
+        "subtype": 1
+      },
+      {
+        "type": 31,
+        "subtype": 2
+      },
+      {
+        "type": 31,
+        "subtype": 3
+      },
+      {
+        "type": 31,
+        "subtype": 4
+      },
+      {
+        "type": 31,
+        "subtype": 5
+      },
+      {
+        "type": 31,
+        "subtype": 6
+      },
+      {
+        "type": 31,
+        "subtype": 7
+      },
+      {
+        "type": 32,
+        "subtype": 0
+      },
+      {
+        "type": 32,
+        "subtype": 1
+      },
+      {
+        "type": 32,
+        "subtype": 2
+      },
+      {
+        "type": 32,
+        "subtype": 3
+      },
+      {
+        "type": 32,
+        "subtype": 4
+      },
+      {
+        "type": 32,
+        "subtype": 5
+      },
+      {
+        "type": 32,
+        "subtype": 6
+      },
+      {
+        "type": 32,
+        "subtype": 7
+      },
+      {
+        "type": 33,
+        "subtype": 0
+      },
+      {
+        "type": 33,
+        "subtype": 1
+      },
+      {
+        "type": 33,
+        "subtype": 2
+      },
+      {
+        "type": 33,
+        "subtype": 3
+      },
+      {
+        "type": 33,
+        "subtype": 4
+      },
+      {
+        "type": 33,
+        "subtype": 5
+      },
+      {
+        "type": 33,
+        "subtype": 6
+      },
+      {
+        "type": 33,
+        "subtype": 7
+      },
+      {
+        "type": 33,
+        "subtype": 8
+      },
+      {
+        "type": 33,
+        "subtype": 9
+      },
+      {
+        "type": 33,
+        "subtype": 10
+      },
+      {
+        "type": 33,
+        "subtype": 11
+      },
+      {
+        "type": 34,
+        "subtype": 0
+      },
+      {
+        "type": 34,
+        "subtype": 1
+      },
+      {
+        "type": 34,
+        "subtype": 2
+      },
+      {
+        "type": 34,
+        "subtype": 3
+      },
+      {
+        "type": 34,
+        "subtype": 4
+      },
+      {
+        "type": 34,
+        "subtype": 5
+      },
+      {
+        "type": 34,
+        "subtype": 6
+      },
+      {
+        "type": 34,
+        "subtype": 7
+      },
+      {
+        "type": 34,
+        "subtype": 8
+      },
+      {
+        "type": 35,
+        "subtype": 0
+      },
+      {
+        "type": 35,
+        "subtype": 1
+      },
+      {
+        "type": 35,
+        "subtype": 2
+      },
+      {
+        "type": 35,
+        "subtype": 3
+      },
+      {
+        "type": 35,
+        "subtype": 4
+      },
+      {
+        "type": 35,
+        "subtype": 5
+      },
+      {
+        "type": 35,
+        "subtype": 6
+      },
+      {
+        "type": 35,
+        "subtype": 7
+      },
+      {
+        "type": 35,
+        "subtype": 8
+      },
+      {
+        "type": 35,
+        "subtype": 9
+      },
+      {
+        "type": 35,
+        "subtype": 10
+      },
+      {
+        "type": 35,
+        "subtype": 11
+      },
+      {
+        "type": 35,
+        "subtype": 12
+      },
+      {
+        "type": 35,
+        "subtype": 13
+      },
+      {
+        "type": 35,
+        "subtype": 14
+      }
+    ]
+  },
+  "selection": {
+    "modes": [
+      {
+        "type": 33,
+        "subtype": 0
+      },
+      {
+        "type": 33,
+        "subtype": 1
+      },
+      {
+        "type": 33,
+        "subtype": 2
+      },
+      {
+        "type": 33,
+        "subtype": 3
+      },
+      {
+        "type": 33,
+        "subtype": 4
+      },
+      {
+        "type": 33,
+        "subtype": 5
+      },
+      {
+        "type": 33,
+        "subtype": 6
+      },
+      {
+        "type": 33,
+        "subtype": 7
+      },
+      {
+        "type": 33,
+        "subtype": 8
+      },
+      {
+        "type": 33,
+        "subtype": 9
+      },
+      {
+        "type": 33,
+        "subtype": 10
+      },
+      {
+        "type": 33,
+        "subtype": 11
+      }
+    ],
+    "rates": [
+      44100,
+      48000
+    ]
+  },
+  "binaries": {
+    "native": "cb60db1b25c4467e66fcb4c48236b836af9402ca5767c30843a78ac080be540c",
+    "wasm": "685a49c3747fc6d67c31862a6e97dd271b0ae11eee2ec56e8fdde2a2de2788d7"
+  },
+  "createdAt": "2026-09-28T07:34:40.616Z",
+  "relativeRmsTolerance": 1e-05,
+  "scope": "Serial 1, filter 1 only, cutoff 3, resonance 0.35, deterministic stereo Audio Input. Repeatability, mute and bypass controls. No claim about other routing, modulation, parameter extremes or real-time deadlines.",
+  "cases": [
+    {
+      "type": 33,
+      "subtype": 0,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "c41579c7aa49be51024c25e7dd896a06234d2838f69715e9f9dc0bd722c22e19",
+      "comparison": {
+        "energy": 97.95813457288537,
+        "error": 9.763835605406672e-19,
+        "relativeRMS": 9.983664454128598e-11
+      },
+      "nativeRepeat": {
+        "energy": 97.95813457288537,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 97.95813457290241,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 53.47055051264108,
+        "relativeRMS": 1.1534048020960297
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 1,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "07afa0faa8aee90b2f37d6ac24b19185505105b88c4f5510d5f1e8fa458eb0e0",
+      "comparison": {
+        "energy": 42.57643659592385,
+        "error": 7.054713378406147e-18,
+        "relativeRMS": 4.070568163090395e-10
+      },
+      "nativeRepeat": {
+        "energy": 42.57643659592385,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 42.57643659582892,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 16.979507361120422,
+        "relativeRMS": 0.6499605092646599
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 2,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "f1c8b7feaddce3bd6da9966bfa92c474522361ca7c077e43546b2ef9fdb4d990",
+      "comparison": {
+        "energy": 10.726108847593206,
+        "error": 5.834253896516442e-19,
+        "relativeRMS": 2.33223099386707e-10
+      },
+      "nativeRepeat": {
+        "energy": 10.726108847593206,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 10.726108847588112,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 28.647610808802316,
+        "relativeRMS": 0.844245260963842
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 3,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "d8ab8e19e2d5bbbb06bb9b65851d8297f13ec43dcb4387ad1ad46c7ad84ab1e8",
+      "comparison": {
+        "energy": 12.387947896741935,
+        "error": 2.179979271002536e-18,
+        "relativeRMS": 4.1949471811607625e-10
+      },
+      "nativeRepeat": {
+        "energy": 12.387947896741935,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 12.387947896763347,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 20.833237900098382,
+        "relativeRMS": 0.7199507924930262
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 4,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "ddfab0d625cdea1daa440093542ad8f39ea25a4f5e3a21426ea02aed5f3f124b",
+      "comparison": {
+        "energy": 45.187387241686864,
+        "error": 1.228765991841669e-19,
+        "relativeRMS": 5.2146597444024584e-11
+      },
+      "nativeRepeat": {
+        "energy": 45.187387241686864,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 45.18738724168389,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 54.467889781630134,
+        "relativeRMS": 1.16411182951021
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 5,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "9afb88d90774085293c72edb349eded1796b25f930742b41ef2e361fd787aca8",
+      "comparison": {
+        "energy": 15.831193028732052,
+        "error": 4.338836142302669e-19,
+        "relativeRMS": 1.655502353338933e-10
+      },
+      "nativeRepeat": {
+        "energy": 15.831193028732052,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 15.831193028722407,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 32.3564700568444,
+        "relativeRMS": 0.8972324980587876
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 6,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "da7ce6e6296f23479e06ab80f75e581cfe5674c4438485f9fd09834a83a8ffa9",
+      "comparison": {
+        "energy": 2.006253030898928,
+        "error": 1.085215073544923e-19,
+        "relativeRMS": 2.32576085063915e-10
+      },
+      "nativeRepeat": {
+        "energy": 2.006253030898928,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 2.0062530308976942,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 27.566467914997176,
+        "relativeRMS": 0.8281614091887161
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 7,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "2c348817e28e9c47746cf8fbcb92c448764da306213b73adf570d843e1290820",
+      "comparison": {
+        "energy": 6.974477524892668,
+        "error": 2.819914734712541e-20,
+        "relativeRMS": 6.358609416514465e-11
+      },
+      "nativeRepeat": {
+        "energy": 6.974477524892668,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 6.974477524892993,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 39.51998887428661,
+        "relativeRMS": 0.9915915890850311
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 8,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "4ff761ae5266054227337fa2cf677c65f905b0b90d636c99b0c734555234660d",
+      "comparison": {
+        "energy": 16.606011773603502,
+        "error": 7.047480399554569e-18,
+        "relativeRMS": 6.514547688401942e-10
+      },
+      "nativeRepeat": {
+        "energy": 16.606011773603502,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 16.606011773698317,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 63.461330629491215,
+        "relativeRMS": 1.2565478010167856
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 9,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "cee64618f4f7903d86b927800a0bb41ce5d2c755822e9fa501789c385d44f10b",
+      "comparison": {
+        "energy": 11.49959509036361,
+        "error": 1.38811760494634e-17,
+        "relativeRMS": 1.0986816137458712e-09
+      },
+      "nativeRepeat": {
+        "energy": 11.49959509036361,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 11.49959509034397,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 82.50850636583017,
+        "relativeRMS": 1.4327611276304872
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 10,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "a1937a474d805daf34593d47293ace4e1f03ccea00c43fb399bdeea085d91d66",
+      "comparison": {
+        "energy": 6.667721282322619,
+        "error": 1.099190883689799e-19,
+        "relativeRMS": 1.2839491973625427e-10
+      },
+      "nativeRepeat": {
+        "energy": 6.667721282322619,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 6.667721282324691,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 54.187382377140565,
+        "relativeRMS": 1.1611103960539
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 11,
+      "name": "MULTI Tri-pole",
+      "rate": 44100,
+      "fixtureSha256": "433bffb0b2bfb1966caec73995a593ff7f8176af791a3d123ed647404c58dfa2",
+      "comparison": {
+        "energy": 5.048736239483923,
+        "error": 8.986806169924803e-19,
+        "relativeRMS": 4.2190176881149897e-10
+      },
+      "nativeRepeat": {
+        "energy": 5.048736239483923,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 5.048736239502534,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 40.193066812619676,
+        "error": 42.14178462190871,
+        "relativeRMS": 1.0239550426117074
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 0,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "c41579c7aa49be51024c25e7dd896a06234d2838f69715e9f9dc0bd722c22e19",
+      "comparison": {
+        "energy": 103.38883011316506,
+        "error": 5.088320518081894e-17,
+        "relativeRMS": 7.015367387200174e-10
+      },
+      "nativeRepeat": {
+        "energy": 103.38883011316506,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 103.38883011272601,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 60.141962919288005,
+        "relativeRMS": 1.1688368593110663
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 1,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "07afa0faa8aee90b2f37d6ac24b19185505105b88c4f5510d5f1e8fa458eb0e0",
+      "comparison": {
+        "energy": 47.484448701179886,
+        "error": 6.940059171076187e-18,
+        "relativeRMS": 3.823013983533687e-10
+      },
+      "nativeRepeat": {
+        "energy": 47.484448701179886,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 47.48444870108328,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 19.965335736182944,
+        "relativeRMS": 0.6734469776533121
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 2,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "f1c8b7feaddce3bd6da9966bfa92c474522361ca7c077e43546b2ef9fdb4d990",
+      "comparison": {
+        "energy": 12.965635783143718,
+        "error": 5.788484551876513e-19,
+        "relativeRMS": 2.112932048507315e-10
+      },
+      "nativeRepeat": {
+        "energy": 12.965635783143718,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 12.965635783155541,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 30.624803703954036,
+        "relativeRMS": 0.8340685702146199
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 3,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "d8ab8e19e2d5bbbb06bb9b65851d8297f13ec43dcb4387ad1ad46c7ad84ab1e8",
+      "comparison": {
+        "energy": 14.239884711279569,
+        "error": 3.963745201074649e-18,
+        "relativeRMS": 5.275937328380726e-10
+      },
+      "nativeRepeat": {
+        "energy": 14.239884711279569,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 14.239884711278076,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 21.842188360918644,
+        "relativeRMS": 0.7043899863329881
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 4,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "ddfab0d625cdea1daa440093542ad8f39ea25a4f5e3a21426ea02aed5f3f124b",
+      "comparison": {
+        "energy": 46.85175734989893,
+        "error": 8.675558712603973e-18,
+        "relativeRMS": 4.303143053090804e-10
+      },
+      "nativeRepeat": {
+        "energy": 46.85175734989893,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 46.85175735009267,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 62.11846600649105,
+        "relativeRMS": 1.1878879055139506
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 5,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "9afb88d90774085293c72edb349eded1796b25f930742b41ef2e361fd787aca8",
+      "comparison": {
+        "energy": 18.68958209188994,
+        "error": 7.6000237358510285e-19,
+        "relativeRMS": 2.0165438911369142e-10
+      },
+      "nativeRepeat": {
+        "energy": 18.68958209188994,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 18.689582091899265,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 34.60124767223725,
+        "relativeRMS": 0.8865658100069561
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 6,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "da7ce6e6296f23479e06ab80f75e581cfe5674c4438485f9fd09834a83a8ffa9",
+      "comparison": {
+        "energy": 2.3314987792215236,
+        "error": 2.1684382778151615e-19,
+        "relativeRMS": 3.0496916894088364e-10
+      },
+      "nativeRepeat": {
+        "energy": 2.3314987792215236,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 2.3314987792220903,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 29.63563765536938,
+        "relativeRMS": 0.8204880071110406
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 7,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "2c348817e28e9c47746cf8fbcb92c448764da306213b73adf570d843e1290820",
+      "comparison": {
+        "energy": 8.426596680704208,
+        "error": 3.081988809033487e-19,
+        "relativeRMS": 1.9124470723862513e-10
+      },
+      "nativeRepeat": {
+        "energy": 8.426596680704208,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 8.426596680712041,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 42.642428836744415,
+        "relativeRMS": 0.9842061308861464
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 8,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "4ff761ae5266054227337fa2cf677c65f905b0b90d636c99b0c734555234660d",
+      "comparison": {
+        "energy": 17.944534209125717,
+        "error": 7.088079236718436e-18,
+        "relativeRMS": 6.284897324236453e-10
+      },
+      "nativeRepeat": {
+        "energy": 17.944534209125717,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 17.944534209242217,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 67.24767039643363,
+        "relativeRMS": 1.2359580240808825
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 9,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "cee64618f4f7903d86b927800a0bb41ce5d2c755822e9fa501789c385d44f10b",
+      "comparison": {
+        "energy": 12.273919446417203,
+        "error": 1.7416056332137374e-18,
+        "relativeRMS": 3.76689293020742e-10
+      },
+      "nativeRepeat": {
+        "energy": 12.273919446417203,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 12.27391944637899,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 89.19914116177426,
+        "relativeRMS": 1.423460550819356
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 10,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "a1937a474d805daf34593d47293ace4e1f03ccea00c43fb399bdeea085d91d66",
+      "comparison": {
+        "energy": 8.06501139718915,
+        "error": 2.180811808043726e-18,
+        "relativeRMS": 5.200039017209637e-10
+      },
+      "nativeRepeat": {
+        "energy": 8.06501139718915,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 8.065011397155914,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 61.17146587970849,
+        "relativeRMS": 1.1787984151139617
+      },
+      "status": "matched-fixture"
+    },
+    {
+      "type": 33,
+      "subtype": 11,
+      "name": "MULTI Tri-pole",
+      "rate": 48000,
+      "fixtureSha256": "433bffb0b2bfb1966caec73995a593ff7f8176af791a3d123ed647404c58dfa2",
+      "comparison": {
+        "energy": 6.004946873180276,
+        "error": 4.0800058996294656e-20,
+        "relativeRMS": 8.24281989791198e-11
+      },
+      "nativeRepeat": {
+        "energy": 6.004946873180276,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "wasmRepeat": {
+        "energy": 6.004946873179951,
+        "error": 0,
+        "relativeRMS": 0
+      },
+      "mute": {
+        "nativeEnergy": 0,
+        "wasmEnergy": 0
+      },
+      "bypass": {
+        "energy": 44.02200322498156,
+        "error": 47.298893719299315,
+        "relativeRMS": 1.0365507993948009
+      },
+      "status": "matched-fixture"
+    }
+  ],
+  "chrome": "153.0.8010.53",
+  "applicationValidation": {
+    "testsPassed": 8,
+    "durationSeconds": 38.1,
+    "command": "SURGE_TEST_SILENT_OUTPUT=1 ./node_modules/.bin/playwright test tests/tripole-live.spec.js tests/juce.spec.js --max-failures=2",
+    "silentOutput": true,
+    "scope": "Two real AudioWorklet cases cover all 12 modes at both rates, patch changes and suspend/resume; six JUCE paint/input checks. No physical-device or deadline claim.",
+    "files": {
+      "web/tests/tripole-live.spec.js": "91955c64a5b6a6738d1628fd6b396354235a19969e92db0827d11e3aac8e2ab9",
+      "web/tests/juce.spec.js": "e9128aa3b3955771eda9580c0fc7d5eb0395b6b3c40cc04e9c370b67b36088cb",
+      "build-web/web/surge-xt-browser.wasm": "c24b47aba8cc2770cbbcc4008d421d9736fbb3b325e3f93cd2aa8e8b1950986d",
+      "src/common/dsp/vembertech/ReciprocalSquareRootEstimate.h": "c2dc2afaae9bfd5c3559b034f7c2a4805338f9d89e3cbbbbc6db00f44e3f8c55",
+      "cmake/wasm-dsp-overlay.cmake": "e372d25f5738d3df498f256a6560b4a5d347f542d102dcb42cdf9e8bfaf1e98d"
+    }
+  },
+  "primaryBuildVerified": {
+    "directory": "build-web/web",
+    "engineMatchesSurveyBinary": true,
+    "allEngineFilesMatchIndependentBuild": true
+  }
+}

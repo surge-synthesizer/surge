@@ -20,6 +20,16 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "AirWindowsEffect.h"
+#include <stdexcept>
+#include <type_traits>
+#if SURGE_WEB
+bool surge_convolution_is_realtime();
+namespace { std::atomic<unsigned> realtimeAirwindowsConstructions{0}; }
+unsigned surge_airwindows_realtime_constructions()
+{
+    return realtimeAirwindowsConstructions.load(std::memory_order_relaxed);
+}
+#endif
 #include "UserDefaults.h"
 #include "DebugHelpers.h"
 
@@ -279,8 +289,136 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
     mech::copy_from_to<BLOCK_SIZE>(outR, dataR);
 }
 
+AirWindowsEffect::SelectionRequest
+AirWindowsEffect::captureSelectionRequest(int selector) const noexcept
+{
+    static_assert(std::is_trivially_copyable_v<SelectionRequest>);
+    SelectionRequest request;
+    request.owner = this;
+    request.selector = selector;
+    request.previousSelector = lastSelected;
+    request.sampleRate = storage->samplerate;
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        request.parameters[i] = SelectionParameterState(fxdata->p[i]);
+        request.parameterIds[i] = fxdata->p[i].id;
+    }
+    return request;
+}
+
+std::unique_ptr<AirWindowsEffect::PreparedSelection>
+AirWindowsEffect::prepareSelection(int selector) const
+{
+    // Exclusive-owner convenience path used by the native reference harness.
+    return prepareSelection(*fxdata, captureSelectionRequest(selector));
+}
+
+std::unique_ptr<AirWindowsEffect::PreparedSelection>
+AirWindowsEffect::prepareSelection(const FxStorage &basis, const SelectionRequest &request) const
+{
+    if (request.owner != this || request.selector < 0 || request.selector >= fxreg.size() ||
+        request.sampleRate != storage->samplerate)
+        throw std::out_of_range("Invalid or obsolete Airwindows selection request");
+    for (const auto &formatter : fxFormatters)
+        if (!formatter)
+            throw std::logic_error("Airwindows metadata must be initialized before selection");
+    for (int i = 0; i < n_fx_params; ++i)
+        if (basis.p[i].id != request.parameterIds[i])
+            throw std::invalid_argument("Airwindows selection metadata belongs to another slot");
+    auto next = std::make_unique<PreparedSelection>(basis);
+    std::array<pdata, n_global_params> privateValues{};
+    AirWindowsEffect builder(storage, &next->parameters, privateValues.data());
+    builder.init_ctrltypes();
+    // init_ctrltypes only initializes the builder's formatters. Reconstruct
+    // editable state from the audio-owned snapshot, never from live parameters.
+    next->parameters = basis;
+    for (int i = 0; i < n_fx_params; ++i)
+        request.parameters[i].apply(next->parameters.p[i]);
+    next->parameters.p[0].val.i = request.selector;
+    builder.setupSubFX(request.selector, false);
+    next->processor = std::move(builder.airwin);
+    next->owner = this;
+    next->selector = request.selector;
+    next->previousSelector = request.previousSelector;
+    next->sampleRate = request.sampleRate;
+    next->parameters.p[0].set_user_data(&mapper);
+    for (int i = 0; i < next->processor->paramCount && i < n_fx_params - 1; ++i)
+        next->parameters.p[i + 1].set_user_data(fxFormatters[i].get());
+    return next;
+}
+
+bool AirWindowsEffect::adoptSelection(PreparedSelection &selection) noexcept
+{
+    static_assert(std::is_nothrow_move_constructible_v<Parameter>);
+    static_assert(std::is_nothrow_move_assignable_v<Parameter>);
+    if (selection.owner != this || selection.consumed || !selection.processor ||
+        selection.previousSelector != lastSelected || selection.sampleRate != storage->samplerate)
+        return false;
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        // Direct selection never changes the optional oscillator alias. Keep
+        // its live ownership rather than copying a string into the request.
+        fxdata->p[i].oscName.swap(selection.parameters.p[i].oscName);
+        std::swap(fxdata->p[i], selection.parameters.p[i]);
+    }
+    airwin.swap(selection.processor);
+    lastSelected = selection.selector;
+    fxdata->p[0].deactivated = false;
+    hasInvalidated = true;
+    selection.consumed = true;
+    // param_lags and pd_float remain attached to this instance. The first
+    // processing block sees the same pre-selection values as the native path.
+    return true;
+}
+
+void AirWindowsEffect::serviceBrowserSelection(const FxStorage &basis)
+{
+    selectionMailbox.service([&](const SelectionRequest &request) {
+        return prepareSelection(basis, request);
+    });
+}
+
+bool AirWindowsEffect::processBrowserSelection(int wanted, bool &finished) noexcept
+{
+    bool adopted = false;
+    finished = false;
+    selectionMailbox.consume([&](const SelectionRequest &request, PreparedSelection *prepared) noexcept {
+        if (wanted != request.selector) return; // Superseded request; control reclaims it.
+        if (!prepared) { finished = true; return; }
+        for (int i = 0; i < n_fx_params; ++i)
+        {
+            const auto &before = request.parameters[i];
+            const auto &now = fxdata->p[i];
+            if (before.value.i != now.val.i || before.takeover != now.miditakeover_status) return;
+#define CHECK_SELECTION_FIELD(field) if (before.field != now.field) return;
+            CHECK_SELECTION_FIELD(temposync)
+            CHECK_SELECTION_FIELD(absolute)
+            CHECK_SELECTION_FIELD(deactivated)
+            CHECK_SELECTION_FIELD(extend_range)
+            CHECK_SELECTION_FIELD(porta_constrate)
+            CHECK_SELECTION_FIELD(porta_gliss)
+            CHECK_SELECTION_FIELD(porta_retrigger)
+            CHECK_SELECTION_FIELD(porta_curve)
+            CHECK_SELECTION_FIELD(deform_type)
+            CHECK_SELECTION_FIELD(midictrl)
+            CHECK_SELECTION_FIELD(midichan)
+#undef CHECK_SELECTION_FIELD
+        }
+        adopted = adoptSelection(*prepared);
+        finished = adopted;
+    });
+    if (wanted >= 0 && wanted == lastSelected) finished = true;
+    if (!finished && wanted >= 0 && wanted < fxreg.size())
+        selectionMailbox.submit(captureSelectionRequest(wanted));
+    return adopted;
+}
+
 void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)
 {
+#if SURGE_WEB
+    if (surge_convolution_is_realtime())
+        realtimeAirwindowsConstructions.fetch_add(1, std::memory_order_relaxed);
+#endif
     const auto &r = fxreg[sfx];
     const bool detailedMode = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     int dp = detailedMode ? 6 : 2;

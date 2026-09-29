@@ -57,6 +57,7 @@ static bool initializedShapedSinetable = false;
 
 void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
+    displayInstance = is_display;
     if (!initializedShapedSinetable)
     {
         initializedShapedSinetable = true;
@@ -210,10 +211,12 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
         // normally we'd multiply the array by 1/sqrt(squared sum) but since we want the output
         // to go -127..127, instead make it 127/sqrt(squared sum).
         // n.b. this will mean that the max amplitude of a single harmonnic is 1/2 of full scale.
+        const auto extra = displayInstance ? oscdata->extraConfig.read()
+                                           : oscdata->extraConfig.audioValue();
         float norm = 0.f;
         for (int h = 0; h < n_additive_partials; h++)
         {
-            norm += oscdata->extraConfig.data[h] * oscdata->extraConfig.data[h];
+            norm += extra.data[h] * extra.data[h];
         }
         norm = 127.f / sqrtf(norm);
 
@@ -221,7 +224,7 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
         int8_t amps[n_additive_partials];
         for (int h = 0; h < n_additive_partials; h++)
         {
-            amps[h] = oscdata->extraConfig.data[h] * norm;
+            amps[h] = extra.data[h] * norm;
         }
 
         // s for sample

@@ -122,6 +122,23 @@ void Wavetable::allocPointers(size_t newSize)
     memset(TableI16Data, 0, dataSizes * sizeof(short));
 }
 
+void Wavetable::swapData(Wavetable &other) noexcept
+{
+    using std::swap;
+    swap(everBuilt, other.everBuilt);
+    swap(size, other.size);
+    swap(data_n_tables, other.data_n_tables);
+    swap(n_tables, other.n_tables);
+    swap(size_po2, other.size_po2);
+    swap(flags, other.flags);
+    swap(dt, other.dt);
+    swap(dataSizes, other.dataSizes);
+    swap(TableF32Data, other.TableF32Data);
+    swap(TableI16Data, other.TableI16Data);
+    swap(TableF32WeakPointers, other.TableF32WeakPointers);
+    swap(TableI16WeakPointers, other.TableI16WeakPointers);
+}
+
 void Wavetable::Copy(Wavetable *wt)
 {
     size = wt->size;

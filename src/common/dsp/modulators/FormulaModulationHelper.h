@@ -28,6 +28,7 @@
 #include "LuaSupport.h"
 
 #include <atomic>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -41,10 +42,28 @@ namespace Surge
 namespace Formula
 {
 
-struct GlobalData
+struct FunctionCache
 {
+    struct PreparedChunk
+    {
+        std::string definition, error;
+        int registryReference{-1};
+        bool prepared{false};
+    };
     std::unordered_set<std::string> knownBadFunctions; // these are functions which cause an error
     std::unordered_map<FormulaModulatorStorage *, std::unordered_set<std::string>> functionsPerFMS;
+    std::array<PreparedChunk, n_scenes * n_lfos> preparedChunks;
+    // Read by control-thread diagnostics while the audio interpreter runs.
+    std::atomic<uint64_t> compilationAttempts{0};
+};
+
+struct GlobalData
+{
+    ~GlobalData(); // All evaluators and workers must be retired before storage.
+    // Each interpreter and its cache have one owner. Display evaluation must
+    // never mutate containers used by the audio interpreter.
+    FunctionCache audioFunctions, displayFunctions;
+    FunctionCache &functions(bool display) { return display ? displayFunctions : audioFunctions; }
     void *audioState{nullptr}, *displayState{nullptr};
     std::atomic<bool> audioSharedWipeRequested{false};
     std::atomic<bool> displaySharedWipeRequested{false};
@@ -117,6 +136,14 @@ void removeFunctionsAssociatedWith(SurgeStorage *,
                                    FormulaModulatorStorage *fs); // audio thread only please
 bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
                           bool is_display);
+
+// Requires exclusive ownership of the selected interpreter. Prepare a bounded
+// per-modulator chunk slot without executing user code or consuming a shared
+// reset request. A later prepareForEvaluation executes it at the original time.
+bool prepareCompilation(SurgeStorage *storage, FormulaModulatorStorage *fs, bool is_display);
+// Prepare every slot while the caller exclusively owns the audio engine.
+// Compilation errors remain cached for the normal evaluator error-reporting path.
+void preparePatchCompilation(SurgeStorage *storage);
 
 bool isUserDefined(std::string);
 

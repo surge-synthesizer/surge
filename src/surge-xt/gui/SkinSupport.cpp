@@ -35,6 +35,10 @@
 #include "SurgeXTBinary.h"
 #include "RuntimeFont.h"
 
+#if SURGE_WEB
+#include "../../surge-web/juce/BrowserArchiveImport.h"
+#endif
+
 namespace Surge
 {
 namespace GUI
@@ -334,7 +338,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
     if (!surgeskin)
     {
         FIXMEERROR << "There is no top level surge-skin node in skin.xml" << std::endl;
-        return true;
+        return false;
     }
     const char *a;
     displayName = name;
@@ -1451,6 +1455,18 @@ std::array<SurgeImage *, 3> Skin::standardHoverAndHoverOnForCSB(SurgeImage *csb,
     return res;
 }
 
+#if SURGE_WEB
+void SkinDB::validateSkinForImport(const fs::path &from)
+{
+    // Keep candidate font/image state separate from the live editor.
+    Skin candidate("", path_to_string(from));
+    auto images = std::make_shared<SurgeImageStore>();
+    images->setupBuiltinBitmaps();
+    if (!candidate.reloadSkin(images))
+        throw std::runtime_error("Unable to install skin. " + getAndResetErrorString());
+}
+#endif
+
 std::optional<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s,
                                                                         const fs::path &p)
 {
@@ -1460,15 +1476,31 @@ std::optional<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeSto
 
     try
     {
+#if SURGE_WEB
+        BrowserArchiveImport transaction(s->userDataPath);
+        auto staged = transaction.stage(tgPath);
+        fs::copy(p, staged, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+        validateSkinForImport(staged);
+        transaction.commit();
+#else
         fs::create_directories(tgPath);
         fs::copy(p, tgPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+#endif
     }
+#if SURGE_WEB
+    catch (const std::exception &e)
+    {
+        s->reportError(e.what(), "Skin Import Error");
+        return {};
+    }
+#else
     catch (const fs::filesystem_error &e)
     {
         // This will give us a broken skin but no need to tell the users
         FIXMEERROR << "Unable to install Skin: " << e.what();
         return {};
     }
+#endif
     rescanForSkins(s);
 
     auto nameS = path_to_string(nmP);

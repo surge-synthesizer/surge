@@ -477,16 +477,89 @@ void PatchStoreDialog::resized()
     }
 }
 
+#if SURGE_WEB
+void PatchStoreDialog::cancelDeferredSave()
+{
+    stopTimer();
+    browserSavePending = false;
+    okButton->setButtonText("OK");
+    okButton->setEnabled(true);
+    okOverButton->setEnabled(true);
+}
+
+void PatchStoreDialog::timerCallback()
+{
+    if (!browserSavePending) return;
+    // Editor refresh can temporarily detach a still-open overlay. Test its
+    // ownership, not visibility, so that refresh does not discard a save.
+    if (editor->getOverlayIfOpen(SurgeGUIEditor::SAVE_PATCH) != this)
+    {
+        cancelDeferredSave();
+        return;
+    }
+    auto *synth = editor->synth;
+    const char *error = nullptr;
+    if (synth->browserPatchGeneration.load(std::memory_order_acquire) != browserSavePatchGeneration)
+        error = "The patch changed while effects were being prepared. No patch file was written. "
+                "Review the current patch before saving again.";
+    else if (synth->browserEffectPreparationFailures.load(std::memory_order_acquire) != browserSaveFailures)
+        error = "An effect could not be prepared. No patch file was written. "
+                "Your save details remain available; review the effect and try again.";
+    else if (juce::Time::getMillisecondCounterHiRes() - browserSaveStarted > 15000)
+        error = "Effects are still being prepared. No patch file was written. "
+                "Your save details remain available; try again when preparation finishes.";
+    if (error)
+    {
+        cancelDeferredSave();
+        storage->reportError(error, "Patch Save Interrupted");
+        return;
+    }
+    if (!synth->browserEffectEditsPending())
+        buttonClicked(browserSaveFactory ? okOverButton.get() : okButton.get());
+}
+#endif
+
 void PatchStoreDialog::buttonClicked(juce::Button *button)
 {
     if (button == cancelButton.get())
     {
+#if SURGE_WEB
+        cancelDeferredSave();
+#endif
         editor->closeOverlay(SurgeGUIEditor::SAVE_PATCH);
+        return;
     }
 
     if (button == okButton.get() || button == okOverButton.get())
     {
         auto synth = editor->synth;
+        bool factoryInPlace = button == okOverButton.get();
+        bool skipOverwrite = juce::ModifierKeys::getCurrentModifiers().isShiftDown();
+#if SURGE_WEB
+        if (browserSavePending)
+        {
+            factoryInPlace = browserSaveFactory;
+            skipOverwrite = browserSaveSkipOverwrite;
+        }
+        else
+        {
+            browserSavePatchGeneration = synth->browserPatchGeneration.load(std::memory_order_acquire);
+            browserSaveFailures = synth->browserEffectPreparationFailures.load(std::memory_order_acquire);
+            browserSaveStarted = juce::Time::getMillisecondCounterHiRes();
+        }
+        if (synth->browserEffectEditsPending())
+        {
+            browserSavePending = true;
+            browserSaveFactory = factoryInPlace;
+            browserSaveSkipOverwrite = skipOverwrite;
+            okButton->setButtonText("Preparing...");
+            okButton->setEnabled(false);
+            okOverButton->setEnabled(false);
+            startTimer(16);
+            return;
+        }
+        cancelDeferredSave();
+#endif
 
         synth->storage.getPatch().name = nameEd->getText().toStdString();
         synth->storage.getPatch().author = authorEd->getText().toStdString();
@@ -545,9 +618,7 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         // Ignore whatever comes from the DAW
         synth->storage.getPatch().dawExtraState.isPopulated = false;
 
-        auto m = juce::ModifierKeys::getCurrentModifiers();
-
-        synth->savePatch(button == okOverButton.get(), m.isShiftDown());
+        synth->savePatch(factoryInPlace, skipOverwrite);
 
         onOK();
 

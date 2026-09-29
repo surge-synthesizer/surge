@@ -104,6 +104,7 @@ struct PatchDB
 
     void initialize();
     void prepareForWrites();
+    bool isWriterInitialized() const;
 
     SurgeStorage *storage;
 
@@ -139,7 +140,7 @@ struct PatchDB
     std::vector<std::pair<std::string, int>> readAllFeatures();
     std::vector<std::string> readAllFeatureValueString(const std::string &feature);
     std::vector<int> readAllFeatureValueInt(const std::string &feature);
-    std::vector<std::string> readUserFavorites();
+    std::vector<std::string> readUserFavorites(bool *retry = nullptr);
 
     std::unordered_map<std::string, std::pair<int, int64_t>> readAllPatchPathsWithIdAndModTime();
 

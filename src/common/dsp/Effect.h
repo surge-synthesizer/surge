@@ -99,6 +99,11 @@ class alignas(16) Effect
     // keeps a cache so give loaded fx a notice when the sample rate changes
     virtual void sampleRateReset() {}
 
+    // Engine owner only, while this instance is not processing. Preparation may
+    // use private parameter/value storage; attach the completed instance to the
+    // stable live addresses before publication. Global storage is unchanged.
+    virtual void rebindParameterStorage(FxStorage *parameters, pdata *values);
+
     virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
     {
         // No-op here.

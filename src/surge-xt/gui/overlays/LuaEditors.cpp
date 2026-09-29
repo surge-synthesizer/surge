@@ -178,7 +178,13 @@ void Textfield::focusLost(FocusChangeType)
     }
 }
 
-void Textfield::setHeader(juce::String h) { header = h; }
+void Textfield::setHeader(juce::String h)
+{
+    header = h;
+#if SURGE_WEB
+    setTitle(h);
+#endif
+}
 
 void Textfield::setHeaderColor(juce::Colour c) { colour = c; }
 
@@ -408,23 +414,39 @@ bool GotoLine::keyPressed(const juce::KeyPress &key, juce::Component *originatin
     }
     else
     {
-        int line = std::max(0, textfield[0]->getText().getIntValue() - 1);
-        line = std::min(ed->getDocument().getNumLines(), line);
-
-        int numLines = ed->getNumLinesOnScreen();
-        currentLine = line;
-
-        ed->scrollToLine(std::max(0, line - int(numLines * 0.5)));
-
-        auto textLineLength = ed->getDocument().getLine(line).length();
-        auto pos = juce::CodeDocument::Position(ed->getDocument(), line, textLineLength);
-        ed->moveCaretTo(pos, false);
+        updateCaretFromText();
     }
 
     ed->repaint();
 
     return command == false;
 }
+
+void GotoLine::updateCaretFromText()
+{
+    int line = std::max(0, textfield[0]->getText().getIntValue() - 1);
+    line = std::min(ed->getDocument().getNumLines(), line);
+
+    int numLines = ed->getNumLinesOnScreen();
+    currentLine = line;
+
+    ed->scrollToLine(std::max(0, line - int(numLines * 0.5)));
+
+    auto textLineLength = ed->getDocument().getLine(line).length();
+    auto pos = juce::CodeDocument::Position(ed->getDocument(), line, textLineLength);
+    ed->moveCaretTo(pos, false);
+}
+
+#if SURGE_WEB
+void GotoLine::textEditorTextChanged(juce::TextEditor &)
+{
+    if (isShowing() && textfield[0]->getText().isNotEmpty())
+    {
+        updateCaretFromText();
+        ed->repaint();
+    }
+}
+#endif
 
 void GotoLine::show()
 {
@@ -1006,6 +1028,9 @@ SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::
                                                    Surge::GUI::Skin::ptr_t &skin)
     : juce::CodeEditorComponent(d, t)
 {
+#if SURGE_WEB
+    getProperties().set("surgeCodeEditorKeys", true);
+#endif
     currentSkin = skin;
     searchMapCache = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, 10, 512, true);
 }
@@ -4617,9 +4642,17 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
             item.setAction(action);
             item.setSharedDrawable(wtScriptIcon);
 
-            // subMenu->addItem(*item);
+#if SURGE_WEB
+            // Standard items share one action path for pointer, keyboard and accessibility.
+            // The custom renderer only dispatched item.action from mouseDown.
+            item.itemID = p;
+            if (wtScriptIcon)
+                item.setImage(wtScriptIcon->createCopy());
+            subMenu->addItem(item);
+#else
             subMenu->addCustomItem(p, std::make_unique<ItemWithSharedIconComponent>(item), nullptr,
                                    storage->wt_list[p].name);
+#endif
 
             sub++;
 
@@ -4741,18 +4774,64 @@ void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
         return;
     }
 
+#if SURGE_WEB
+    std::unique_lock<std::mutex> targetLock(editor->synth->patchLoadSpawnMutex, std::try_to_lock);
+    if (!targetLock.owns_lock() || editor->synth->halt_engine.load(std::memory_order_acquire))
+    {
+        storage->reportError("Wait for the current patch to finish loading, then import again.",
+                             "Snapshot Import Unavailable");
+        return;
+    }
+    const auto generation = editor->synth->browserPatchGeneration.load(std::memory_order_acquire);
+    const auto token = storage->wtGenPublishToken[scene * n_oscs + osc_id].load(std::memory_order_acquire);
+    const auto version = [&]() {
+        std::lock_guard<std::mutex> lock(storage->wtSnapshotMutex);
+        return osc->wtSnapshotsVersion;
+    }();
+    const auto draft = mainDocument->getAllContent();
+#endif
+
     juce::String fileTypes = "*.wav;*.wt";
     editor->fileChooser = std::make_unique<juce::FileChooser>(
         "Select Wavetable to Load", juce::File(path_to_string(wtPath)), fileTypes);
     editor->fileChooser->launchAsync(
         juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-        [this, wtPath, slot](const juce::FileChooser &c) {
+        [safe = juce::Component::SafePointer<WavetableScriptEditor>(this), wtPath, slot
+#if SURGE_WEB
+         , generation, token, version, draft
+#endif
+        ](const juce::FileChooser &c) {
+            auto *self = safe.getComponent();
+            if (!self || !self->editor)
+                return;
+            auto *storage = self->storage;
+            auto *osc = self->osc;
             auto ress = c.getResults();
 
             if (ress.size() != 1)
             {
                 return;
             }
+
+#if SURGE_WEB
+            auto *synth = self->editor->synth;
+            std::unique_lock<std::mutex> importLock(synth->patchLoadSpawnMutex, std::try_to_lock);
+            bool changed = !importLock.owns_lock() || synth->halt_engine.load(std::memory_order_acquire) ||
+                synth->browserPatchGeneration.load(std::memory_order_acquire) != generation;
+            if (!changed)
+            {
+                std::lock_guard<std::mutex> lock(storage->wtSnapshotMutex);
+                changed = osc->wtSnapshotsVersion != version ||
+                    self->mainDocument->getAllContent() != draft ||
+                    storage->wtGenPublishToken[self->scene * n_oscs + self->osc_id].load(std::memory_order_acquire) != token;
+            }
+            if (changed)
+            {
+                storage->reportError("The oscillator changed while the snapshot picker was open. "
+                                     "The current state was retained.", "Snapshot Import Canceled");
+                return;
+            }
+#endif
 
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
@@ -4765,18 +4844,23 @@ void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
             storage->load_wt(rString, tmp.get(), nullptr);
             const bool built = tmp->everBuilt && tmp->n_tables != 0 && tmp->size != 0;
 
+            if (!built)
+            {
+                storage->reportError("The selected file could not be loaded as a wavetable. "
+                                     "The previous snapshot was retained.",
+                                     "Snapshot Import Failed");
+                return;
+            }
+
             {
                 std::lock_guard<std::mutex> snapGuard(storage->wtSnapshotMutex);
-                if (built)
-                    osc->wtSnapshots[slot] = std::move(tmp);
-                else
-                    osc->wtSnapshots[slot].reset();
+                osc->wtSnapshots[slot] = std::move(tmp);
                 osc->wtSnapshotsVersion++;
             }
 
-            lastFrames = -1;
-            rerenderFromUIState();
-            rendererComponent->repaint();
+            self->lastFrames = -1;
+            self->rerenderFromUIState();
+            self->rendererComponent->repaint();
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
 

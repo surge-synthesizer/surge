@@ -271,6 +271,10 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
     lbox->setRowHeight(p->getRowHeight());
     setTitle(l);
     lbox->setTitle(l);
+#if SURGE_WEB
+    getProperties().set("surgeNativeKeyNavigation", true);
+    lbox->getProperties().set("surgeNativeKeyNavigation", true);
+#endif
     setColour(ColourIds::borderid, juce::Colours::black);
     setColour(ColourIds::emptyBackgroundId, juce::Colours::white);
     fixupJuceTextEditorAccessibility(*this);

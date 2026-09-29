@@ -107,21 +107,25 @@ struct Statement
             throw Exception(rc, "Unable to prepare statement [" + statement + "]");
         prepared = true;
     }
+    Statement(const Statement &) = delete;
+    Statement &operator=(const Statement &) = delete;
     ~Statement()
     {
-        if (prepared)
-        {
-            std::cout << "ERROR: Prepared Statement never Finalized \n"
-                      << statementCopy << "\n"
-                      << std::endl;
-        }
+        // A failed step/bind must release its statement too. Otherwise the
+        // read connection can retain locks and prevent the index writer from
+        // committing subsequent saved patches. Destructors must not throw.
+        if (s)
+            sqlite3_finalize(s);
     }
     void finalize()
     {
-        if (s)
-            if (sqlite3_finalize(s) != SQLITE_OK)
-                throw Exception(h);
+        auto *statement = s;
+        s = nullptr;
         prepared = false;
+        // SQLite destroys the statement even when finalize returns the error
+        // from its last step. Clear ownership before reporting that error.
+        if (statement && sqlite3_finalize(statement) != SQLITE_OK)
+            throw Exception(h);
     }
 
     int col_int(int c) const { return sqlite3_column_int(s, c); }
@@ -402,6 +406,12 @@ CREATE TABLE IF NOT EXISTS Favorites (
             dbh = nullptr;
             return;
         }
+#if SURGE_WEB
+        // The index writer can briefly contend with the UI's read connection
+        // when committing a saved patch. Retry on this worker only: waiting on
+        // the browser main thread could block proxied filesystem operations.
+        sqlite3_busy_timeout(dbh, 1000);
+#endif
     }
 
     void closeDb()
@@ -516,9 +526,11 @@ CREATE TABLE IF NOT EXISTS Favorites (
             pathQ.push_back(new EnQSetup());
         }
         qCV.notify_all();
+#if !SURGE_WEB
         while (!waiting)
         {
         }
+#endif
     }
 
     ~WriterWorker()
@@ -653,6 +665,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
      * Functions for the write thread
      */
     std::atomic<bool> waiting{false};
+    // Protected by qLock. A dequeued batch remains outstanding until its
+    // transaction finishes; otherwise search can be enabled during a write.
+    size_t activeJobs{0};
     void loadQueueFunction()
     {
         static constexpr auto transChunkSize = 10; // How many FXP to load in a single txn
@@ -683,6 +698,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         doThis.emplace_back(*it);
                     }
                     pathQ.erase(b, e);
+                    activeJobs = doThis.size();
                 }
             }
             if (!doThis.empty())
@@ -735,6 +751,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                                         pathQ.push_front(it->release());
                                     }
                                 }
+                                activeJobs = 0; // Ownership returned to the pending queue.
                             }
                             std::this_thread::sleep_for(std::chrono::seconds(lock_retries * 3));
                         }
@@ -769,6 +786,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     }
                 }
             }
+            {
+                std::lock_guard<std::mutex> guard(qLock);
+                activeJobs = 0;
+            }
         }
     }
 
@@ -802,59 +823,73 @@ CREATE TABLE IF NOT EXISTS Favorites (
         int64_t qtimeInt =
             std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
 
-        std::ifstream stream(p.path, std::ios::in | std::ios::binary);
-
-        if (!stream.is_open())
-        {
-#if TRACE_DB
-            std::cout << "    - Warning: Unopenable " << path_to_string(p.path) << std::endl;
-#endif
-            return;
-        }
-
-        std::vector<char> fxChunk;
-        fxChunk.resize(sizeof(sst::io::fxChunkSetCustom));
-        stream.read(fxChunk.data(), fxChunk.size());
-
-        if (!stream)
-        {
-            return;
-        }
-
-        auto *fxp = (sst::io::fxChunkSetCustom *)(fxChunk.data());
-
-        if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
-            (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
-            (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
-        {
-            return;
-        }
-
-        std::vector<char> patchHeaderChunk;
-        patchHeaderChunk.resize(sizeof(sst::io::patch_header));
-        stream.read(patchHeaderChunk.data(), patchHeaderChunk.size());
-
-        if (!stream)
-        {
-            return;
-        }
-
-        auto *ph = (sst::io::patch_header *)(patchHeaderChunk.data());
-        auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
-
-        if (memcmp(ph->tag, "sub3", 4) != 0 || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
-        {
-            std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
-            return;
-        }
-
         std::string xmlData;
-        xmlData.resize(xmlSz);
-        stream.read(xmlData.data(), xmlData.size());
-
-        if (!stream)
+#if SURGE_WEB
+        // Factory search metadata is published separately from downloadable patch audio data.
+        const auto relative = p.path.lexically_relative(storage->datapath);
+        const auto metadata = storage->datapath / ".metadata" / (relative.u8string() + ".xml");
+        std::ifstream metadataStream(metadata, std::ios::binary);
+        if (!relative.empty() && *relative.begin() != ".." && metadataStream.is_open())
         {
-            return;
+            xmlData.assign(std::istreambuf_iterator<char>(metadataStream), {});
+        }
+        else
+#endif
+        {
+            std::ifstream stream(p.path, std::ios::in | std::ios::binary);
+
+            if (!stream.is_open())
+            {
+#if TRACE_DB
+                std::cout << "    - Warning: Unopenable " << path_to_string(p.path) << std::endl;
+#endif
+                return;
+            }
+
+            std::vector<char> fxChunk;
+            fxChunk.resize(sizeof(sst::io::fxChunkSetCustom));
+            stream.read(fxChunk.data(), fxChunk.size());
+
+            if (!stream)
+            {
+                return;
+            }
+
+            auto *fxp = (sst::io::fxChunkSetCustom *)(fxChunk.data());
+
+            if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
+                (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
+                (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
+            {
+                return;
+            }
+
+            std::vector<char> patchHeaderChunk;
+            patchHeaderChunk.resize(sizeof(sst::io::patch_header));
+            stream.read(patchHeaderChunk.data(), patchHeaderChunk.size());
+
+            if (!stream)
+            {
+                return;
+            }
+
+            auto *ph = (sst::io::patch_header *)(patchHeaderChunk.data());
+            auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
+
+            if (memcmp(ph->tag, "sub3", 4) != 0 || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
+            {
+                std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
+                return;
+            }
+
+            xmlData.resize(xmlSz);
+            stream.read(xmlData.data(), xmlData.size());
+
+            if (!stream)
+            {
+                return;
+            }
+
         }
 
         auto features = extractFeaturesFromXML(xmlData.data());
@@ -1263,6 +1298,17 @@ void PatchDB::initialize()
         worker = std::make_unique<WriterWorker>(storage);
 }
 void PatchDB::prepareForWrites() { worker->openForWrite(); }
+bool PatchDB::isWriterInitialized() const
+{
+#if SURGE_WEB
+    // waiting remains true between enqueue and worker wakeup. Checking it alone
+    // can start a browser read just as the queued write begins its transaction.
+    std::lock_guard<std::mutex> guard(worker->qLock);
+    return worker->hasSetup && worker->waiting && worker->pathQ.empty() && worker->activeJobs == 0;
+#else
+    return worker->hasSetup && worker->waiting;
+#endif
+}
 
 void PatchDB::considerFXPForLoad(const fs::path &fxp, const std::string &name,
                                  const std::string &catName, const CatType type) const
@@ -1475,6 +1521,13 @@ void PatchDB::setUserFavorite(const std::string &path, bool isIt)
 {
     prepareForWrites();
     worker->enqueueWorkItem(new WriterWorker::EnQFavorite(path, isIt));
+#if SURGE_WEB
+    // Preserve the user's current choice while its asynchronous write is pending.
+    auto &known = storage->browserFavoritePaths;
+    known.erase(std::remove(known.begin(), known.end(), path), known.end());
+    if (isIt) known.push_back(path);
+    storage->browserFavoritesRefreshPending = true;
+#endif
 }
 
 void PatchDB::erasePatchByID(int id)
@@ -1489,8 +1542,9 @@ void PatchDB::erasePatchByPath(const std::string &path)
     worker->enqueueWorkItem(new WriterWorker::EnQDeleteByPath(path));
 }
 
-std::vector<std::string> PatchDB::readUserFavorites()
+std::vector<std::string> PatchDB::readUserFavorites(bool *retry)
 {
+    if (retry) *retry = false;
     auto conn = worker->getReadOnlyConn(false);
     if (!conn)
         return std::vector<std::string>();
@@ -1519,6 +1573,13 @@ std::vector<std::string> PatchDB::readUserFavorites()
     }
     catch (SQL::Exception &e)
     {
+#if SURGE_WEB
+        if (retry && (e.rc == SQLITE_BUSY || e.rc == SQLITE_LOCKED))
+        {
+            *retry = true;
+            return {};
+        }
+#endif
         // This error really doesn't matter most of the time
         storage->reportError(e.what(), "Database Loading Favorites");
     }
@@ -1557,7 +1618,7 @@ PatchDB::readAllPatchPathsWithIdAndModTime()
 int PatchDB::numberOfJobsOutstanding()
 {
     std::lock_guard<std::mutex> guard(worker->qLock);
-    return worker->pathQ.size();
+    return worker->pathQ.size() + worker->activeJobs;
 }
 
 int PatchDB::waitForJobsOutstandingComplete(int maxWaitInMS)
