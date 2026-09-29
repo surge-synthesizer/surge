@@ -344,6 +344,29 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
     }
 }
 
+/*
+ * With the VKB shown, the player expects QWERTY to keep playing the whole time it is up. A menu
+ * being open is not a reason to take the instrument away from them, so the only thing that stops
+ * QWERTY playing is a text or code editor wanting the keys for itself, which Surge already
+ * tracks through vkbForward, or the application not being frontmost at all.
+ */
+bool SurgeSynthEditor::vkbShouldTakeKeys() const
+{
+    if (!sge->getShowVirtualKeyboard() || !sge->shouldForwardKeysToVKB())
+    {
+        return false;
+    }
+
+    // vkbForward covers the typein overlays and the formula editor, but not a plain TextEditor
+    // such as the BPM field sitting next to the keyboard itself.
+    if (dynamic_cast<juce::TextEditor *>(juce::Component::getCurrentlyFocusedComponent()))
+    {
+        return false;
+    }
+
+    return juce::Process::isForegroundProcess();
+}
+
 void SurgeSynthEditor::handleAsyncUpdate() {}
 
 void SurgeSynthEditor::paint(juce::Graphics &g)
@@ -367,6 +390,29 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 void SurgeSynthEditor::idle()
 {
     takeInitialKeyboardFocus();
+
+    /*
+     * A juce::PopupMenu window sets wantsKeyboardFocus false and runs off modal state and a
+     * temporary peer, so opening one is not a focus change at all - it silently stops key events
+     * reaching us with nothing to notify on, which is also why JUCE's own focusLost net never
+     * covered menus. Read the real key state for as long as one is blocking us instead.
+     * keyStateChanged both starts and ends notes from the physical keys, so QWERTY carries on
+     * playing across the menu rather than going quiet or leaving a note hanging.
+     */
+    const auto takingKeys = vkbShouldTakeKeys();
+
+    if (vkbWasTakingKeys && !takingKeys)
+    {
+        // An editor just took the keys, or we went to the background. Drop anything held rather
+        // than leaving it sounding with no key up coming.
+        keyboard->focusLost(juce::Component::focusChangedDirectly);
+    }
+    else if (takingKeys && isCurrentlyBlockedByAnotherModalComponent())
+    {
+        keyboard->keyStateChanged(false);
+    }
+
+    vkbWasTakingKeys = takingKeys;
 
     sge->idle();
 
