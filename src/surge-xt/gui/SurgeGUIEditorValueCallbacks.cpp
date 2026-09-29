@@ -2307,6 +2307,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     switch (p->ctrltype)
                     {
+                    case ct_syncpitch_deformable:
+                    {
+                        contextMenu.addSeparator();
+
+                        bool isChecked = (p->deform_type);
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Economy Mode"), true, isChecked, [p, this]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                update_deform_type(p, !p->deform_type);
+                                synth->storage.getPatch().isDirty = true;
+                            });
+
+                        break;
+                    }
                     case ct_freq_hpf:
                     {
                         contextMenu.addSeparator();
