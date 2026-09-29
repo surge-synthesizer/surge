@@ -69,7 +69,9 @@ def stage_package(package, destination, commit):
         'public/library/objects/*\n!public/' + index + '\n.env*\n')
     source = public / 'source'
     source.mkdir()
-    changed = subprocess.check_output(['git', 'diff', '--name-only', 'HEAD', '-z'], cwd=ROOT).decode().split('\0')
+    # Reconstruct from the pinned upstream commit, including migration changes
+    # that have already been committed on this branch.
+    changed = subprocess.check_output(['git', 'diff', '--name-only', commit, '-z'], cwd=ROOT).decode().split('\0')
     added = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z'], cwd=ROOT).decode().split('\0')
     names = {name for name in changed + added if name and (ROOT / name).is_file()
              and (name in changed or name.split('/')[0] in ('web', 'src', 'cmake'))}
