@@ -197,8 +197,8 @@ void SampleAndHoldOscillator::prepare_block()
             tm = storage->note_to_pitch_inv_ignoring_tuning((float)ad) * 2;
             t = storage->note_to_pitch_inv_ignoring_tuning((float)(ad + l_sync.v));
 
-            if (t < 0.1)
-                t = 0.1;
+            if (t < 0.01)
+                t = 0.01;
         }
         else
         {
