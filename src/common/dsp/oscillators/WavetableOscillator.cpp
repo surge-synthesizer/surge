@@ -175,8 +175,30 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
                 ** One draw per voice, as before, so the rest of the random sequence is
                 ** unchanged. convolute masks state against the mipmapped table size.
                 */
+                float drand = storage->rand_01();
+
                 oscstate[i] = 0.f;
-                state[i] = (int)(storage->rand_01() * oscdata->wt.size) & (oscdata->wt.size - 1);
+
+                if (oscdata->wt.flags & wtf_is_sample)
+                {
+                    /*
+                    ** A sample is not periodic: its frames are consecutive audio rather
+                    ** than cycles of one waveform, so there is no phase to randomise and
+                    ** it should start at the top. It also cannot start anywhere else.
+                    ** ::init seeds tableid at -1 for a sample and relies on the first
+                    ** advance inside the state == 0 block of ::convolute to land it on
+                    ** frame 0; a random state skips that block, leaving tableid at -1 and
+                    ** indexing before the start of the table.
+                    **
+                    ** The draw above still happens, so the random sequence is unchanged
+                    ** whether or not the wavetable is a sample.
+                    */
+                    state[i] = 0;
+                }
+                else
+                {
+                    state[i] = (int)(drand * oscdata->wt.size) & (oscdata->wt.size - 1);
+                }
             }
         }
 

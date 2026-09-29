@@ -1199,11 +1199,9 @@ TEST_CASE("Retrigger Off Is A Phase Shift", "[dsp]") // See issue 7570
     constexpr int window{512};
 
     /*
-    ** Classic walks a four segment cycle lasting 2 * t, so the shift can be up to two
-    **
-     * periods rather than one. At MIDI 60 a period is about 337 oversampled samples, so
-    ** this
-     * covers two full cycles.
+    ** Classic walks a four segment cycle lasting 2 * t, so the shift can be up to
+    ** two periods rather than one. At MIDI 60 a period is about 337 oversampled
+    ** samples, so this covers two full cycles.
     */
     constexpr int maxLag{1400};
     constexpr int nTrials{8};
@@ -1225,13 +1223,10 @@ TEST_CASE("Retrigger Off Is A Phase Shift", "[dsp]") // See issue 7570
         o->init_extra_config();
 
         /*
-        ** init_default_values only fills oscdata. The oscillator reads its parameters
-         * from
-        ** localcopy, which is scenedata here, so the defaults have to be pushed
-         * across or
-        ** it runs on zeros, and a zero Width 2 degenerates two of the four
-         * segments to
-        ** nothing.
+        ** init_default_values only fills oscdata. The oscillator reads its
+        ** parameters from localcopy, which is scenedata here, so the defaults have
+        ** to be pushed across or it runs on zeros, and a zero Width 2 degenerates
+        ** two of the four segments to nothing.
         */
         for (int q = 0; q < n_osc_params; ++q)
         {
@@ -1315,34 +1310,26 @@ TEST_CASE("Retrigger Off Is A Phase Shift", "[dsp]") // See issue 7570
 }
 
 /*
-** The three tests around this one cover different failure modes of the mid-cycle seeding,
-** and
- * none of them subsumes another. That is worth stating, because it is not obvious and
-** it cost a
- * few rounds of mutation testing to establish:
+** The three tests around this one cover different failure modes of the mid-cycle
+** seeding, and none of them subsumes another. That is worth stating, because it is
+** not obvious and it cost a few rounds of mutation testing to establish:
 **
-**   - Retrigger Off Is A Phase Shift compares
- * steady state, so it catches a voice that
-**     settles into the wrong waveform. It cannot catch
- * anything about the onset: Classic
-**     resets its level absolutely at state 0 and recomputes
- * rate on every convolute, so
-**     seeding errors wash out within a cycle or two, and a
- * correlation that searches over
-**     lag is blind to a phase offset by construction.
-**   -
- * Onset Step Stays Within The Waveform looks at the level of sample 0, so it catches a
-** wrongly
- * seeded level. It is blind to an error in WHEN the next impulse fires.
-**   - First Block Runs At
- * The Steady Rate looks at how fast the first block is running, so
-**     it catches a wrongly
- * seeded period, which is the bug that reached review.
+** - Retrigger Off Is A Phase Shift compares steady state, so it catches a voice
+**   that settles into the wrong waveform. It cannot catch anything about the onset:
+**   Classic resets its level absolutely at state 0 and recomputes rate on every
+**   convolute, so seeding errors wash out within a cycle or two, and a correlation
+**   that searches over lag is blind to a phase offset by construction.
 **
-** One gap is known and not covered:
- * seeding the voice into the wrong segment of the cycle
-** is not reliably caught by any of the
- * three.
+** - Onset Step Stays Within The Waveform looks at the level of sample 0, so it
+**   catches a wrongly seeded level. It is blind to an error in WHEN the next
+**   impulse fires.
+**
+** - First Block Runs At The Steady Rate looks at how fast the first block is
+**   running, so it catches a wrongly seeded period, which is the bug that reached
+**   review.
+**
+** One gap is known and not covered: seeding the voice into the wrong segment of the
+** cycle is not reliably caught by any of the three.
 */
 
 TEST_CASE("Onset Step Stays Within The Waveform", "[dsp]") // See issue 7570
@@ -1389,11 +1376,9 @@ TEST_CASE("Onset Step Stays Within The Waveform", "[dsp]") // See issue 7570
 
             /*
             ** init_default_values only fills oscdata. The oscillator reads its
-             * parameters
-            ** from localcopy, which is scenedata here, so the defaults
-             * have to be pushed
-            ** across or it runs on zeros and the pulse widths
-             * degenerate.
+            ** parameters from localcopy, which is scenedata here, so the defaults
+            ** have to be pushed across or it runs on zeros and the pulse widths
+            ** degenerate.
             */
             for (int q = 0; q < n_osc_params; ++q)
             {
