@@ -730,8 +730,9 @@ TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
         {
             for (const auto &note : {24, 60, 96})
             {
-                auto surge =
-                    Surge::Headless::createSurge(44100, ot == ot_wavetable || ot == ot_window);
+                const bool needsWavetable = (ot == ot_wavetable || ot == ot_window);
+
+                auto surge = Surge::Headless::createSurge(44100, needsWavetable);
                 auto storage = &surge->storage;
 
                 auto oscstorage = &(storage->getPatch().scene[0].osc[0]);
@@ -739,6 +740,40 @@ TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
                 unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
 
                 oscstorage->retrigger.val.b = rt;
+
+                /*
+                ** Wavetable and Window read oscdata->wt, and loading the factory patches
+                ** only leaves something there incidentally. What that something is depends
+                ** on how the patch directory enumerates, so it varies by platform: this
+                ** test passed everywhere for months and then had Window emit silence on
+                ** one CI runner and nowhere else. Build an explicit table instead, so the
+                ** onset being measured is a property of the oscillator rather than of
+                ** whatever the patch loader happened to leave behind.
+                */
+                if (needsWavetable)
+                {
+                    constexpr int frames{8}, frameSize{1024};
+
+                    std::vector<float> data((size_t)frames * frameSize);
+
+                    for (int f = 0; f < frames; ++f)
+                    {
+                        for (int k = 0; k < frameSize; ++k)
+                        {
+                            data[(size_t)f * frameSize + k] =
+                                std::sin(2.0 * M_PI * k / (double)frameSize);
+                        }
+                    }
+
+                    wt_header wh;
+
+                    memset(&wh, 0, sizeof(wt_header));
+                    wh.n_samples = frameSize;
+                    wh.n_tables = frames;
+                    wh.flags = 0;
+
+                    REQUIRE(oscstorage->wt.BuildWT(data.data(), wh, false));
+                }
 
                 auto o = spawn_osc(ot, storage, oscstorage, storage->getPatch().scenedata[0],
                                    storage->getPatch().scenedataOrig[0], oscbuffer);
