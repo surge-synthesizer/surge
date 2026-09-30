@@ -1729,28 +1729,32 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     if (p->can_extend_range())
                     {
-                        contextMenu.addItem(Surge::GUI::toOSCase("Use Decimal Values"), true,
-                                            p->extend_range, [this, p, control]() {
-                                                auto wasExtended = p->extend_range;
-                                                p->set_extend_range(!p->extend_range);
-                                                if (p->ctrltype == ct_pbdepth)
-                                                {
-                                                    if (wasExtended)
-                                                        p->val.i = p->val.i / 100;
-                                                    else
-                                                        p->val.i = p->val.i * 100;
-                                                    // This requires an extra call to
-                                                    // paramChangeToListeners()
-                                                    juceEditor->processor.paramChangeToListeners(p);
-                                                }
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Use Decimal Values"), true, p->extend_range,
+                            [this, p, control]() {
+                                auto wasExtended = p->extend_range;
+                                p->set_extend_range(!p->extend_range);
+                                if (p->ctrltype == ct_pbdepth)
+                                {
+                                    if (wasExtended)
+                                        p->val.i = p->val.i / 100;
+                                    else
+                                        p->val.i = p->val.i * 100;
+                                    // This requires an extra call to
+                                    // paramChangeToListeners()
+                                    juceEditor->processor.paramChangeToListeners(p);
+                                }
 
-                                                synth->storage.getPatch().isDirty = true;
-                                                synth->refresh_editor = true;
-                                                juceEditor->processor.paramChangeToListeners(
-                                                    p, true,
-                                                    juceEditor->processor.SCT_EX_EXTENDRANGE,
-                                                    (float)p->extend_range, .0, .0, "");
-                                            });
+                                synth->storage.getPatch().isDirty = true;
+                                synth->refresh_editor = true;
+
+                                auto pid = synth->idForParameter(p);
+                                synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+
+                                juceEditor->processor.paramChangeToListeners(
+                                    p, true, juceEditor->processor.SCT_EX_EXTENDRANGE,
+                                    (float)p->extend_range, .0, .0, "");
+                            });
                     }
                 }
                 else
@@ -2111,6 +2115,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 p->set_value_f01(control->getValue());
                             }
 
+                            // Both branches move the value, so the host's cached one is stale
+                            auto pid = synth->idForParameter(p);
+                            synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+
                             if (lfoDisplay)
                                 lfoDisplay->repaint();
                             auto *css = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(
@@ -2186,6 +2194,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     {
                                         pl->bound_value();
                                     }
+
+                                    auto plid = synth->idForParameter(pl);
+                                    synth->sendParameterAutomation(plid,
+                                                                   synth->getParameter01(plid));
                                 }
                             }
 
@@ -2884,6 +2896,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     synth->storage.getPatch().isDirty = true;
                                     synth->refresh_editor = true;
 
+                                    auto pid = synth->idForParameter(p);
+                                    synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+
                                     // output updated value to OSC
                                     juceEditor->processor.paramChangeToListeners(
                                         p, true, juceEditor->processor.SCT_EX_EXTENDRANGE,
@@ -2925,6 +2940,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             p->set_name(ntxt.c_str());
                             synth->refresh_editor = true;
                         }
+
+                        // Absolute leaves the value alone and only changes what it means, but
+                        // notifying anyway is what gets a host to re-read the display
+                        auto pid = synth->idForParameter(p);
+                        synth->sendParameterAutomation(pid, synth->getParameter01(pid));
 
                         // output updated value to OSC
                         juceEditor->processor.paramChangeToListeners(
