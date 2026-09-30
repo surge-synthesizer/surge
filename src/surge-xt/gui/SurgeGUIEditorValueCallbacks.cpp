@@ -2096,6 +2096,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             undoManager()->pushParameterChange(p->id, p, p->val);
                             p->temposync = !p->temposync;
                             synth->storage.getPatch().isDirty = true;
+                            parameterInfoUpdated = true;
                             // output updated value to OSC
                             juceEditor->processor.paramChangeToListeners(
                                 p, true, juceEditor->processor.SCT_EX_TEMPOSYNC,
@@ -2189,6 +2190,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             }
 
                             synth->storage.getPatch().isDirty = true;
+                            parameterInfoUpdated = true;
                             synth->refresh_editor = true;
                         });
                     }
@@ -2900,6 +2902,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         p->absolute = !p->absolute;
                         synth->storage.getPatch().isDirty = true;
+                        parameterInfoUpdated = true;
 
                         // FIXME : What's a better aprpoach?
                         if (p->ctrltype == ct_fmratio)
@@ -3667,6 +3670,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 void SurgeGUIEditor::update_deform_type(Parameter *p, int type)
 {
     p->deform_type = type;
+    parameterInfoUpdated = true;
     juceEditor->processor.paramChangeToListeners(p, true, juceEditor->processor.SCT_EX_DEFORM,
                                                  (float)type, .0, .0, "");
 }
@@ -3675,6 +3679,7 @@ void SurgeGUIEditor::update_deform_type_bit(Parameter *p, int type, int bit)
 {
     int old = p->deform_type & ~(1 << bit);
     p->deform_type = old | (type << bit);
+    parameterInfoUpdated = true;
     juceEditor->processor.paramChangeToListeners(p, true, juceEditor->processor.SCT_EX_DEFORM,
                                                  (float)type, .0, .0, "");
 }

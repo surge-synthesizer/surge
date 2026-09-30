@@ -164,7 +164,7 @@ void Parameter::set_name(const char *n)
 {
     strxcpy(dispname, n, NAMECHARS);
     create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
-    parameterNameUpdated = true;
+    parameterInfoUpdated = true;
 }
 
 Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const char *name,
@@ -2206,6 +2206,7 @@ void Parameter::set_extend_range(bool er)
     bool prior_extend = extend_range;
 
     extend_range = er;
+    parameterInfoUpdated = true;
 
     if (!extend_range)
     {
@@ -5756,4 +5757,4 @@ bool Parameter::supports_tuning_value_from_string(const std::string &s, std::str
     return true;
 }
 
-std::atomic<bool> parameterNameUpdated(false);
+std::atomic<bool> parameterInfoUpdated(false);

@@ -1508,6 +1508,7 @@ void SurgeStorage::perform_queued_wtloads()
                 {
                     std::lock_guard<std::mutex> lk(waveTableDataMutex);
                     wtGenPublishToken[sc * n_oscs + o]++;
+                    parameterInfoUpdated = true;
                 }
 
                 if (patch.scene[sc].osc[o].wt.queue_id != -1)
