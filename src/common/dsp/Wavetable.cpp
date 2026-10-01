@@ -450,17 +450,30 @@ void Wavetable::MipMapWT()
                 for (int i = 0; i < lsize; i++)
                 {
                     this->TableF32WeakPointers[l][s][i] = 0;
+                    int64_t ival = 0;
+
                     for (int a = 0; a < filter_size; a++)
                     {
                         int srcindex = (i << 1) + a - filter_id_of;
                         int srctable = max(0, s + (srcindex / psize));
                         srcindex = srcindex & (psize - 1);
                         if (srctable < ns)
+                        {
                             this->TableF32WeakPointers[l][s][i] +=
                                 hrfilter[a] * this->TableF32WeakPointers[l - 1][srctable][srcindex];
+                            ival += static_cast<int64_t>(HRFilterI16[a]) *
+                                    this->TableI16WeakPointers[l - 1][srctable]
+                                                              [srcindex + FIRoffsetI16];
+                        }
                     }
+
+                    // These used to be left at zero, which was harmless while only the
+                    // wavetable oscillator played samples: it reads the float tables. The
+                    // window oscillator reads the int16 ones, and picks a mipmap level from
+                    // the read rate, so without these a sample went silent above whatever
+                    // pitch first selected a level other than zero.
                     this->TableI16WeakPointers[l][s][i + FIRoffsetI16] =
-                        0; // not supported in int16 atm
+                        static_cast<short>(std::clamp<int64_t>(ival >> 16, -32768, 32767));
                 }
             }
             else

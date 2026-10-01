@@ -32,6 +32,7 @@
 #include "UnitTestUtilities.h"
 #include "WavetableScriptEvaluator.h"
 #include "dsp/oscillators/WavetableOscillator.h"
+#include "dsp/oscillators/WindowOscillator.h"
 #include "PatchFileHeaderStructs.h"
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 
@@ -2373,5 +2374,209 @@ TEST_CASE("Sample Play Count Covers The Whole Unison Range", "[dsp]")
         // Nine voices, but nine voices - so it is finished long before nine plays would be
         REQUIRE(energyIn(9, false, false, 0, 40) > 1.f);
         REQUIRE(energyIn(9, false, false, 150, 250) < energyIn(9, true, false, 150, 250) * 0.01f);
+    }
+}
+
+TEST_CASE("Sample Wavetables Get Int16 Mipmaps", "[io]")
+{
+    // MipMapWT used to leave the int16 mipmaps of a sample at zero, which is harmless for the
+    // wavetable oscillator since it reads the float tables. Anything reading the int16 ones
+    // and picking a mipmap level from the read rate gets silence above whatever pitch first
+    // selects a level other than zero.
+    Wavetable wt;
+    buildSineWT(&wt, 8, 1024);
+    REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample));
+    REQUIRE(wt.flags & wtf_is_sample);
+    REQUIRE(wt.SourceFrameCount() == 8);
+
+    for (int level = 0; level < 4; ++level)
+    {
+        const int lsize = wt.size >> level;
+        double sum = 0;
+
+        for (int frame = 0; frame < wt.SourceFrameCount(); ++frame)
+        {
+            const short *f = wt.TableI16WeakPointers[level][frame];
+            REQUIRE(f);
+
+            for (int i = 0; i < lsize; ++i)
+            {
+                sum += fabs((double)f[i + FIRoffsetI16]);
+            }
+        }
+
+        INFO("int16 mipmap level " << level);
+        REQUIRE(sum > 0);
+    }
+}
+TEST_CASE("The Window Oscillator Plays Samples", "[dsp]")
+{
+    // The window oscillator advances one frame per grain and its grain rate is the note
+    // frequency, so the timing matches the wavetable oscillator: eight frames at note 60 is
+    // about 1300 samples, or roughly 41 blocks per play.
+    //
+    // As in the wavetable oscillator tests, "stopped" is not "silent" - what is left after a
+    // sample finishes is the voice ringing down - so a stopped case is measured against one
+    // that is genuinely still sounding in the same window rather than against zero.
+    auto energyIn = [](int voices, bool asPlayCount, bool looped, float morph, int fromBlock,
+                       int toBlock) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge.get());
+
+        auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+        osc->queue_type = ot_window;
+
+        // Let the type switch land first: it re-runs init_ctrltypes and init_default_values,
+        // which would wipe anything set before it
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+
+        auto &wt = osc->wt;
+        buildSineWT(&wt, 8, 1024);
+        REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample | (looped ? wtf_loop_sample : 0)));
+        REQUIRE(wt.SourceFrameCount() == 8);
+
+        osc->p[WindowOscillator::win_morph].val.f = morph;
+        osc->p[WindowOscillator::win_unison_voices].val.i = voices;
+        osc->p[WindowOscillator::win_unison_voices].deform_type =
+            asPlayCount ? WavetableOscillator::SAMPLE_PLAY_COUNT
+                        : WavetableOscillator::UNISON_VOICES;
+
+        // Morph is read through the scene data rather than off the parameter, so it needs a
+        // block to get there before the note starts. The voice count and the deform are read
+        // directly and do not, but this costs nothing.
+        for (int i = 0; i < 2; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 127, 0);
+
+        float e = 0;
+
+        for (int q = 0; q < 1200; ++q)
+        {
+            surge->process();
+
+            if (q >= fromBlock && q < toBlock)
+            {
+                for (int s = 0; s < BLOCK_SIZE; ++s)
+                    e += fabs(surge->output[0][s]);
+            }
+        }
+
+        return e;
+    };
+
+    SECTION("a oneshot sounds once and stops")
+    {
+        REQUIRE(energyIn(1, false, false, 0.f, 0, 40) > 1.f);
+        REQUIRE(energyIn(1, false, false, 0.f, 150, 250) <
+                energyIn(1, false, true, 0.f, 150, 250) * 0.01f);
+    }
+
+    SECTION("a looped sample keeps sounding")
+    {
+        REQUIRE(energyIn(1, false, true, 0.f, 1100, 1200) > 1.f);
+    }
+
+    SECTION("Morph is the start point, so a late start finishes sooner")
+    {
+        // Morph at seven eighths starts on the last of the eight frames, so only one frame is
+        // left to play and the whole note carries about an eighth of the energy
+        const auto fromStart = energyIn(1, false, false, 0.f, 0, 1200);
+        const auto fromLate = energyIn(1, false, false, 0.875f, 0, 1200);
+
+        REQUIRE(fromStart > 1.f);
+        // It does sound, so this is a start point rather than silence
+        REQUIRE(fromLate > 0.1f);
+        REQUIRE(fromLate < fromStart * 0.25f);
+    }
+
+    SECTION("the play count deform applies here too")
+    {
+        REQUIRE(energyIn(4, true, false, 0.f, 100, 150) > 1.f);
+        REQUIRE(energyIn(4, true, false, 0.f, 300, 400) <
+                energyIn(4, true, true, 0.f, 300, 400) * 0.01f);
+    }
+
+    SECTION("without the deform the count is unison and the sample plays once")
+    {
+        REQUIRE(energyIn(4, false, false, 0.f, 0, 40) > 1.f);
+        // Four voices rather than four plays, so by the time four plays would still be going
+        // this has been finished for a hundred blocks
+        REQUIRE(energyIn(4, false, false, 0.f, 100, 150) <
+                energyIn(4, true, false, 0.f, 100, 150) * 0.01f);
+    }
+}
+
+TEST_CASE("Old Window Oscillator Patches Do Not Turn Into Samples", "[io]")
+{
+    auto roundTripAtRevision = [](int oscType, int revision) {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge.get());
+
+        auto *osc = &(surge->storage.getPatch().scene[0].osc[0]);
+        osc->type.val.i = oscType;
+
+        buildRampWT(&osc->wt, 8, 64);
+        REQUIRE(osc->wt.Reslice(-1, -1, osc->wt.flags | wtf_is_sample | wtf_loop_sample));
+
+        void *data = nullptr;
+        auto sz = surge->storage.getPatch().save_patch(&data);
+        REQUIRE(sz > 0);
+
+        if (revision != ff_revision)
+        {
+            // Rewrite the stamped revision in place to put the loader on the pre-feature
+            // migration path; both numbers are the same width, so the xml size recorded in
+            // the patch header stays correct.
+            const std::string from = "revision=\"" + std::to_string(ff_revision) + "\"";
+            const std::string to = "revision=\"" + std::to_string(revision) + "\"";
+
+            REQUIRE(from.size() == to.size());
+
+            char *p = (char *)data;
+            bool found = false;
+
+            for (size_t i = 0; i + from.size() <= sz && !found; ++i)
+            {
+                if (memcmp(p + i, from.c_str(), from.size()) == 0)
+                {
+                    memcpy(p + i, to.c_str(), to.size());
+                    found = true;
+                }
+            }
+
+            REQUIRE(found);
+        }
+
+        surge->storage.getPatch().load_patch(data, sz, false);
+
+        return surge->storage.getPatch().scene[0].osc[0].wt.flags;
+    };
+
+    SECTION("a pre-feature window oscillator patch has the sample flags cleared")
+    {
+        // These patches were scanned by Morph as ordinary wavetables, because the window
+        // oscillator ignored the flag. Honoring it now would turn them into oneshots.
+        const auto flags = roundTripAtRevision(ot_window, 30);
+
+        REQUIRE(!(flags & wtf_is_sample));
+        REQUIRE(!(flags & wtf_loop_sample));
+    }
+
+    SECTION("a current revision window oscillator patch keeps them")
+    {
+        const auto flags = roundTripAtRevision(ot_window, ff_revision);
+
+        REQUIRE(flags & wtf_is_sample);
+        REQUIRE(flags & wtf_loop_sample);
+    }
+
+    SECTION("the wavetable oscillator is not caught by the window migration")
+    {
+        const auto flags = roundTripAtRevision(ot_wavetable, 30);
+
+        REQUIRE(flags & wtf_is_sample);
+        REQUIRE(flags & wtf_loop_sample);
     }
 }
