@@ -109,21 +109,55 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
         {
             oscstate[i] = 0;
             syncstate[i] = 0;
+            last_level[i] = 0.0;
+            start_level[i] = 0.f;
+            pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
         }
         else
         {
-            double drand = (double)storage->rand_01();
+            /*
+            ** Start partway through a held value rather than delaying the first step by a
+            ** random amount, which is what seeding oscstate does and is the bug in #7570.
+            **
+            ** Unlike the Classic oscillator there is no level to reconstruct: the held
+            ** value is random by construction, so any draw from the same range is as
+            ** correct as any other. Pick one, and put the voice partway through the
+            ** segment holding it.
+            **
+            ** Two draws per voice, matching the previous code, which also drew twice and
+            ** discarded the second - so the rest of the random sequence is unchanged.
+            */
             double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
                             (detune_bias * float(i) + detune_offset);
-            double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
-            drand = (double)storage->rand_01();
-            double ot = drand * storage->note_to_pitch_tuningctr(detune);
-            oscstate[i] = st;
-            syncstate[i] = st;
+            float phase = storage->rand_01();
+            float level = storage->rand_01() - 0.5f;
+
+            // l_pw is a lag<double> in this oscillator, unlike the Classic one
+            float pw = (float)limit_range(l_pw.v, 0.001, 0.999);
+
+            // As in ClassicOscillator: mirror ::convolute's non-absolute t, sync included,
+            // and leave the absolute branch seeded from the unsynced period.
+            float t;
+
+            if (oscdata->p[shn_unison_detune].absolute)
+            {
+                t = storage->note_to_pitch_inv_tuningctr(detune);
+            }
+            else
+            {
+                t = storage->note_to_pitch_inv_tuningctr(detune + l_sync.v);
+            }
+
+            // convolute uses the inverted form; state 0 runs for t * pwidth
+            float seg = t * pw;
+
+            oscstate[i] = seg * (1.f - phase);
+            syncstate[i] = oscstate[i];
+            last_level[i] = level;
+            start_level[i] = level;
+            pwidth[i] = pw;
         }
         state[i] = 0;
-        last_level[i] = 0.0;
-        pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
         driftLFO[i].init(nonzero_init_drift);
     }
 
@@ -380,6 +414,39 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     pitchmult_inv =
         max(1.0, storage->dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch));
     pitchmult = 1.f / pitchmult_inv;
+
+    /*
+    ** ::init chose a held value and a phase for each voice but could not seed the shared
+    ** integrator, since a voice's contribution depends on the stereo flag, which only
+    ** arrives here. Do it on the first block, before anything is generated. See #7570.
+    **
+    ** Unlike ClassicOscillator this class never cleared first_run, since nothing here
+    ** read it before, so clear it right away rather than at the end of the block.
+    */
+    if (first_run)
+    {
+        first_run = false;
+
+        float sL = 0.f, sR = 0.f;
+
+        for (int u = 0; u < n_unison; u++)
+        {
+            float v = start_level[u] * out_attenuation;
+
+            if (stereo)
+            {
+                sL += v * panL[u];
+                sR += v * panR[u];
+            }
+            else
+            {
+                sL += v;
+            }
+        }
+
+        osc_out = SIMD_MM(set1_ps)(sL);
+        osc_outR = SIMD_MM(set1_ps)(sR);
+    }
     // This must be a real division, reciprocal-approximation is not precise enough
     int k, l;
 
