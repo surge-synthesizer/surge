@@ -23,12 +23,16 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <cmath>
 #include <optional>
+#include <sstream>
 #include <thread>
 #include <utility>
 
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
+#include "MSEGModulationHelper.h"
+#include "FormulaModulationHelper.h"
 #include "version.h"
 #include "filesystem/import.h"
 
@@ -135,6 +139,435 @@ struct SurgePyModRouting
     float depth;
     float normalizedDepth;
 };
+
+/*
+ * An MSEG is a structure rather than a set of parameters, so rather than copying it in and out of
+ * Python we hand back a live reference into the patch: an edit through one of these wrappers lands
+ * in the patch directly, the way the MSEG editor's edits do. The MSEG array is a plain member of
+ * SurgePatch, so the pointer stays good for the life of the synth, and py::keep_alive ties the
+ * wrapper's lifetime to the synth which owns it.
+ *
+ * Every write rebuilds the cached segment start/end times, since leaving those stale is what
+ * separates an MSEG which plays back as asked from one which doesn't. Writes are checked where a
+ * bad value has a single meaning - a segment type outside the enum, a loop point off the ends - but
+ * the invariants which span the whole structure are left to validateMSEG(), because a structure in
+ * the middle of being rewritten is legitimately inconsistent.
+ */
+struct SurgePyMSEGSegment
+{
+    /*
+     * The MSEG this came from, held as a reference rather than through py::keep_alive, because the
+     * segments arrive in a list and pybind can't make a list keep anything alive. Through it the
+     * synth which owns the storage outlives the segment.
+     */
+    py::object owner;
+    MSEGStorage *ms{nullptr};
+    int idx{-1};
+
+    SurgePyMSEGSegment() = default;
+    SurgePyMSEGSegment(py::object owner, MSEGStorage *ms, int idx)
+        : owner(std::move(owner)), ms(ms), idx(idx)
+    {
+    }
+
+    MSEGStorage::segment &seg() const { return ms->segments[idx]; }
+
+    static float checkedValue(float f, float lo, float hi, const std::string &what)
+    {
+        if (!std::isfinite(f) || f < lo || f > hi)
+        {
+            std::ostringstream oss;
+
+            oss << what << " must be between " << lo << " and " << hi << "!";
+
+            throw std::invalid_argument(oss.str());
+        }
+
+        return f;
+    }
+
+    void touch() const { Surge::MSEG::rebuildCache(ms); }
+
+    int getIndex() const { return idx; }
+
+    float getDuration() const { return seg().duration; }
+    void setDuration(float f)
+    {
+        if (!std::isfinite(f) || f < MSEGStorage::minimumDuration)
+        {
+            throw std::invalid_argument("Segment duration cannot be negative!");
+        }
+
+        seg().duration = f;
+        touch();
+    }
+
+    float getV0() const { return seg().v0; }
+    void setV0(float f)
+    {
+        seg().v0 = checkedValue(f, -1.f, 1.f, "Segment value");
+        touch();
+    }
+
+    float getCPDuration() const { return seg().cpduration; }
+    void setCPDuration(float f)
+    {
+        seg().cpduration = checkedValue(f, 0.f, 1.f, "Segment control point duration");
+        touch();
+    }
+
+    float getCPV() const { return seg().cpv; }
+    void setCPV(float f)
+    {
+        seg().cpv = checkedValue(f, -1.f, 1.f, "Segment control point value");
+        touch();
+    }
+
+    // NONE is a hole in the middle of the enum - the MSEG editor uses it as a menu separator, and
+    // no segment is ever meant to carry it
+    static bool isSegmentType(int t)
+    {
+        return t >= MSEGStorage::segment::LINEAR && t <= MSEGStorage::segment::RATCHET_8 &&
+               t != MSEGStorage::segment::NONE;
+    }
+
+    int getType() const { return (int)seg().type; }
+    void setType(int t)
+    {
+        if (!isSegmentType(t))
+        {
+            throw std::invalid_argument("Unknown segment type - use one of the mseg_seg_ constants "
+                                        "from surgepy.constants!");
+        }
+
+        seg().type = (MSEGStorage::segment::Type)t;
+        touch();
+    }
+
+    bool getUseDeform() const { return seg().useDeform; }
+    void setUseDeform(bool b)
+    {
+        seg().useDeform = b;
+        touch();
+    }
+
+    bool getInvertDeform() const { return seg().invertDeform; }
+    void setInvertDeform(bool b)
+    {
+        seg().invertDeform = b;
+        touch();
+    }
+
+    bool getRetriggerFEG() const { return seg().retriggerFEG; }
+    void setRetriggerFEG(bool b)
+    {
+        seg().retriggerFEG = b;
+        touch();
+    }
+
+    bool getRetriggerAEG() const { return seg().retriggerAEG; }
+    void setRetriggerAEG(bool b)
+    {
+        seg().retriggerAEG = b;
+        touch();
+    }
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+
+        oss << "<SurgeMSEGSegment " << idx << " duration=" << seg().duration << " v0=" << seg().v0
+            << " type=" << (int)seg().type << ">";
+
+        return oss.str();
+    }
+};
+
+struct SurgePyMSEG
+{
+    MSEGStorage *ms{nullptr};
+    int scene{-1}, lfo{-1};
+
+    SurgePyMSEG() = default;
+    SurgePyMSEG(MSEGStorage *ms, int scene, int lfo) : ms(ms), scene(scene), lfo(lfo) {}
+
+    void rebuildCache() const { Surge::MSEG::rebuildCache(ms); }
+
+    int getSegmentCount() const { return ms->n_activeSegments; }
+
+    static std::vector<SurgePyMSEGSegment> getSegments(const py::object &self)
+    {
+        const auto &mseg = self.cast<const SurgePyMSEG &>();
+        std::vector<SurgePyMSEGSegment> res;
+
+        for (int i = 0; i < mseg.ms->n_activeSegments; ++i)
+        {
+            res.emplace_back(self, mseg.ms, i);
+        }
+
+        return res;
+    }
+
+    int checkedIndex(int idx, int onePast) const
+    {
+        if (idx < 0 || idx >= ms->n_activeSegments + (onePast ? 1 : 0))
+        {
+            throw std::invalid_argument(std::string("Segment index ") + std::to_string(idx) +
+                                        " is out of range!");
+        }
+
+        return idx;
+    }
+
+    void insertSegment(int idx)
+    {
+        if (ms->n_activeSegments >= max_msegs)
+        {
+            throw std::invalid_argument(std::string("An MSEG can hold at most ") +
+                                        std::to_string(max_msegs) + " segments!");
+        }
+
+        // insertAtIndex takes the index the new segment lands on, so one past the end is the
+        // perfectly reasonable "append" and has to be allowed through
+        Surge::MSEG::insertAtIndex(ms, checkedIndex(idx, true));
+        rebuildCache();
+    }
+
+    void deleteSegment(int idx)
+    {
+        if (ms->n_activeSegments <= 1)
+        {
+            throw std::invalid_argument("An MSEG must keep at least one segment!");
+        }
+
+        Surge::MSEG::deleteSegment(ms, checkedIndex(idx, false));
+        rebuildCache();
+    }
+
+    int getEndpointMode() const { return (int)ms->endpointMode; }
+    void setEndpointMode(int m)
+    {
+        if (m != MSEGStorage::LOCKED && m != MSEGStorage::FREE)
+        {
+            throw std::invalid_argument("Endpoint mode must be mseg_endpoint_locked or "
+                                        "mseg_endpoint_free from surgepy.constants!");
+        }
+
+        ms->endpointMode = (MSEGStorage::EndpointMode)m;
+        rebuildCache();
+    }
+
+    int getEditMode() const { return (int)ms->editMode; }
+    void setEditMode(int m)
+    {
+        if (m != MSEGStorage::ENVELOPE && m != MSEGStorage::LFO)
+        {
+            throw std::invalid_argument("Edit mode must be mseg_editmode_env or mseg_editmode_lfo "
+                                        "from surgepy.constants!");
+        }
+
+        // LFO edit mode requires the durations to sum to one, so this goes through the engine's
+        // mode switch, which rescales them, rather than assigning the field and leaving the
+        // structure in a state rebuildCache() has no answer for
+        Surge::MSEG::modifyEditMode(ms, (MSEGStorage::EditMode)m);
+    }
+
+    int getLoopMode() const { return (int)ms->loopMode; }
+    void setLoopMode(int m)
+    {
+        if (m < MSEGStorage::ONESHOT || m > MSEGStorage::GATED_LOOP)
+        {
+            throw std::invalid_argument("Loop mode must be one of mseg_loop_off, mseg_loop_on or "
+                                        "mseg_loop_gated from surgepy.constants!");
+        }
+
+        ms->loopMode = (MSEGStorage::LoopMode)m;
+        rebuildCache();
+    }
+
+    int getLoopStart() const { return ms->loop_start; }
+    void setLoopStart(int p)
+    {
+        if (p != MSEGStorage::kLoopPointUnset && (p < 0 || p > ms->n_activeSegments))
+        {
+            throw std::invalid_argument("Loop start must be a point from 0 to the segment count, "
+                                        "or mseg_unset!");
+        }
+
+        ms->loop_start = p;
+        rebuildCache();
+    }
+
+    int getLoopEnd() const { return ms->loop_end; }
+    void setLoopEnd(int p)
+    {
+        if (p != MSEGStorage::kLoopPointUnset && (p < -1 || p >= ms->n_activeSegments))
+        {
+            throw std::invalid_argument("Loop end must be a point from -1 to one less than the "
+                                        "segment count, or mseg_unset!");
+        }
+
+        ms->loop_end = p;
+        rebuildCache();
+    }
+
+    /*
+     * Every segment carries the value its successor starts on, which rebuildCache() recomputes, so
+     * there's nothing for Python to set there. The exception is the final segment in free endpoint
+     * mode, where that value is the MSEG's own end point and nothing else determines it, so it
+     * surfaces here as a property of the MSEG rather than of a segment.
+     */
+    float getEndValue() const { return ms->segments[ms->n_activeSegments - 1].nv1; }
+    void setEndValue(float f)
+    {
+        if (ms->endpointMode != MSEGStorage::FREE)
+        {
+            throw std::invalid_argument("End value can only be set in free endpoint mode - in "
+                                        "locked mode it follows the first segment's value!");
+        }
+
+        ms->segments[ms->n_activeSegments - 1].nv1 =
+            SurgePyMSEGSegment::checkedValue(f, -1.f, 1.f, "End value");
+        rebuildCache();
+    }
+
+    float getTotalDuration() const { return ms->totalDuration; }
+
+    float getHSnap() const { return ms->hSnap; }
+    void setHSnap(float f) { ms->hSnap = SurgePyMSEGSegment::checkedValue(f, 0.f, 1.f, "Snap"); }
+
+    float getVSnap() const { return ms->vSnap; }
+    void setVSnap(float f) { ms->vSnap = SurgePyMSEGSegment::checkedValue(f, 0.f, 1.f, "Snap"); }
+
+    float getHSnapDefault() const { return ms->hSnapDefault; }
+    void setHSnapDefault(float f)
+    {
+        ms->hSnapDefault = SurgePyMSEGSegment::checkedValue(f, 0.f, 1.f, "Snap");
+    }
+
+    float getVSnapDefault() const { return ms->vSnapDefault; }
+    void setVSnapDefault(float f)
+    {
+        ms->vSnapDefault = SurgePyMSEGSegment::checkedValue(f, 0.f, 1.f, "Snap");
+    }
+
+    std::string toString() const
+    {
+        std::ostringstream oss;
+
+        oss << "<SurgeMSEG scene=" << (scene == 0 ? "A" : "B") << " lfo=" << (lfo + 1)
+            << " segments=" << ms->n_activeSegments << " duration=" << ms->totalDuration << ">";
+
+        return oss.str();
+    }
+};
+
+/*
+ * The structural invariants an MSEG has to satisfy for the engine to evaluate it. A loaded patch,
+ * or a structure part way through being rewritten from Python, can violate these, so this reports
+ * everything wrong with one rather than raising on the first problem.
+ */
+std::vector<std::string> validateMSEG(const SurgePyMSEG &mseg)
+{
+    auto *ms = mseg.ms;
+    std::vector<std::string> res;
+
+    if (ms->n_activeSegments < 1)
+    {
+        res.emplace_back("MSEG has no segments - it must have at least one");
+
+        // Everything below reads the segments, and there's nothing trustworthy to read
+        return res;
+    }
+
+    if (ms->n_activeSegments > max_msegs)
+    {
+        res.emplace_back("MSEG has " + std::to_string(ms->n_activeSegments) +
+                         " segments, more than the maximum of " + std::to_string(max_msegs));
+        return res;
+    }
+
+    const auto check = [&res](bool ok, const std::string &msg) {
+        if (!ok)
+        {
+            res.emplace_back(msg);
+        }
+    };
+
+    const auto inRange = [](float f, float lo, float hi) {
+        return std::isfinite(f) && f >= lo && f <= hi;
+    };
+
+    float totalDuration = 0;
+
+    for (int i = 0; i < ms->n_activeSegments; ++i)
+    {
+        const auto &seg = ms->segments[i];
+        const auto at = " on segment " + std::to_string(i);
+
+        check(std::isfinite(seg.duration) && seg.duration >= MSEGStorage::minimumDuration,
+              "Duration" + at + " is negative or not a number");
+        check(inRange(seg.v0, -1.f, 1.f), "Value" + at + " is outside -1 to 1");
+        check(inRange(seg.cpv, -1.f, 1.f), "Control point value" + at + " is outside -1 to 1");
+        check(inRange(seg.cpduration, 0.f, 1.f),
+              "Control point duration" + at + " is outside 0 to 1");
+        check(SurgePyMSEGSegment::isSegmentType((int)seg.type),
+              "Type" + at + " is not a known segment type");
+
+        if (std::isfinite(seg.duration))
+        {
+            totalDuration += seg.duration;
+        }
+    }
+
+    check(ms->endpointMode == MSEGStorage::LOCKED || ms->endpointMode == MSEGStorage::FREE,
+          "Endpoint mode is not a known mode");
+    check(ms->editMode == MSEGStorage::ENVELOPE || ms->editMode == MSEGStorage::LFO,
+          "Edit mode is not a known mode");
+    check(ms->loopMode >= MSEGStorage::ONESHOT && ms->loopMode <= MSEGStorage::GATED_LOOP,
+          "Loop mode is not a known mode");
+
+    if (ms->endpointMode == MSEGStorage::FREE)
+    {
+        check(inRange(ms->segments[ms->n_activeSegments - 1].nv1, -1.f, 1.f),
+              "End value is outside -1 to 1");
+    }
+
+    // LFO edit mode constrains the MSEG to a single phase unit, and the engine has no recovery for
+    // durations which don't add up to one - it just plays the wrong shape
+    if (ms->editMode == MSEGStorage::LFO && std::fabs(totalDuration - 1.f) > 1e-5)
+    {
+        std::ostringstream oss;
+
+        oss << "Durations sum to " << totalDuration
+            << " rather than 1, which LFO edit mode requires";
+
+        res.emplace_back(oss.str());
+    }
+
+    const auto loopPoint = [&](int p, int lo, int hi, const std::string &which) {
+        if (p != MSEGStorage::kLoopPointUnset && (p < lo || p > hi))
+        {
+            res.emplace_back("Loop " + which + " point " + std::to_string(p) + " is outside " +
+                             std::to_string(lo) + " to " + std::to_string(hi));
+            return false;
+        }
+
+        return true;
+    };
+
+    const auto startOK = loopPoint(ms->loop_start, 0, ms->n_activeSegments, "start");
+    const auto endOK = loopPoint(ms->loop_end, -1, ms->n_activeSegments - 1, "end");
+
+    if (startOK && endOK && ms->loop_start != MSEGStorage::kLoopPointUnset &&
+        ms->loop_end != MSEGStorage::kLoopPointUnset && ms->loop_start > ms->loop_end + 1)
+    {
+        res.emplace_back("Loop start point " + std::to_string(ms->loop_start) +
+                         " comes after loop end point " + std::to_string(ms->loop_end));
+    }
+
+    return res;
+}
 
 class SurgePyPatchConverter
 {
@@ -623,6 +1056,11 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             oss << "Parameter absolute mode: " << onOff(p->absolute) << std::endl;
         }
 
+        if (p->can_deactivate())
+        {
+            oss << "Parameter deactivated: " << onOff(p->deactivated) << std::endl;
+        }
+
         if (p->has_deformoptions())
         {
             oss << "Parameter deform type: " << p->deform_type << std::endl;
@@ -730,6 +1168,19 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         storage.getPatch().isDirty = true;
     }
 
+    bool canDeactivate(const SurgePyNamedParam &id) { return paramPtr(id)->can_deactivate(); }
+
+    bool getDeactivated(const SurgePyNamedParam &id) { return paramPtr(id)->deactivated; }
+
+    void setDeactivated(const SurgePyNamedParam &id, bool b)
+    {
+        auto p = paramPtr(id);
+
+        requireFeature(p, p->can_deactivate(), "deactivation");
+        p->deactivated = b;
+        storage.getPatch().isDirty = true;
+    }
+
     bool canPortamento(const SurgePyNamedParam &id) { return paramPtr(id)->has_portaoptions(); }
 
     py::dict getPortamentoOptions(const SurgePyNamedParam &id)
@@ -783,6 +1234,98 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
 
         storage.getPatch().isDirty = true;
+    }
+
+    void requireSceneLFO(int scene, int lfo, const char *what)
+    {
+        if (scene < 0 || scene >= n_scenes || lfo < 0 || lfo >= n_lfos)
+        {
+            throw std::invalid_argument(std::string("SCENE and LFO out of range in ") + what);
+        }
+    }
+
+    SurgePyMSEG getMSEGPy(int scene, int lfo)
+    {
+        requireSceneLFO(scene, lfo, "getMSEG");
+
+        return SurgePyMSEG(&storage.getPatch().msegs[scene][lfo], scene, lfo);
+    }
+
+    void setMSEGPy(int scene, int lfo, const SurgePyMSEG &from)
+    {
+        requireSceneLFO(scene, lfo, "setMSEG");
+
+        auto problems = validateMSEG(from);
+
+        if (!problems.empty())
+        {
+            std::ostringstream oss;
+
+            oss << "Refusing to assign an invalid MSEG:";
+
+            for (const auto &p : problems)
+            {
+                oss << std::endl << "  - " << p;
+            }
+
+            throw std::invalid_argument(oss.str());
+        }
+
+        auto *to = &storage.getPatch().msegs[scene][lfo];
+
+        if (to != from.ms)
+        {
+            *to = *from.ms;
+        }
+
+        Surge::MSEG::rebuildCache(to);
+        storage.getPatch().isDirty = true;
+    }
+
+    std::string getFormulaPy(int scene, int lfo)
+    {
+        requireSceneLFO(scene, lfo, "getFormula");
+
+        return storage.getPatch().formulamods[scene][lfo].formulaString;
+    }
+
+    void setFormulaPy(int scene, int lfo, const std::string &formula)
+    {
+        requireSceneLFO(scene, lfo, "setFormula");
+
+        // Deliberately unvalidated, exactly as the Lua editor's Apply is: a patch can legitimately
+        // carry a formula which doesn't compile, and the engine reports that at evaluation time.
+        // Use checkFormula() to find out whether this one will run.
+        storage.getPatch().formulamods[scene][lfo].setFormula(formula);
+        storage.getPatch().isDirty = true;
+    }
+
+    std::string checkFormulaPy(int scene, int lfo)
+    {
+        requireSceneLFO(scene, lfo, "checkFormula");
+
+#if HAS_LUA
+        auto *fs = &storage.getPatch().formulamods[scene][lfo];
+
+        Surge::Formula::EvaluatorState es;
+        Surge::Formula::prepareForEvaluation(&storage, fs, es, true);
+
+        std::string res;
+
+        if (!es.isvalid)
+        {
+            res = es.error ? *es.error : "Formula did not compile!";
+        }
+
+        // The evaluator parks a table in the Lua state under its own name, so hand it back rather
+        // than leaving one behind on every check
+        Surge::Formula::cleanEvaluatorState(es);
+
+        return res;
+#else
+        throw std::runtime_error(
+            "This build of Surge XT has no Lua interpreter, so formulas cannot be checked!");
+#endif
     }
 
     void releaseNoteWithInts(int ch, int note, int vel) { releaseNote(ch, note, vel); }
@@ -1356,6 +1899,13 @@ PYBIND11_MODULE(surgepy, m)
         .def("setAbsolute", &SurgeSynthesizerWithPythonExtensions::setAbsolute,
              "Set the absolute mode of a parameter.", py::arg("param"), py::arg("toThis"))
 
+        .def("canDeactivate", &SurgeSynthesizerWithPythonExtensions::canDeactivate,
+             "Can this parameter be deactivated?", py::arg("param"))
+        .def("getDeactivated", &SurgeSynthesizerWithPythonExtensions::getDeactivated,
+             "Is this parameter deactivated?", py::arg("param"))
+        .def("setDeactivated", &SurgeSynthesizerWithPythonExtensions::setDeactivated,
+             "Set the deactivated state of a parameter.", py::arg("param"), py::arg("toThis"))
+
         .def("canDeform", &SurgeSynthesizerWithPythonExtensions::canDeform,
              "Does this parameter have deform options?", py::arg("param"))
         .def("getDeform", &SurgeSynthesizerWithPythonExtensions::getDeform,
@@ -1392,6 +1942,29 @@ PYBIND11_MODULE(surgepy, m)
              "Save the wavetable of a scene and oscillator to a .wt file, immediately on this "
              "thread.",
              py::arg("scene"), py::arg("osc"), py::arg("path"))
+
+        .def("getMSEG", &SurgeSynthesizerWithPythonExtensions::getMSEGPy,
+             "The MSEG of an LFO in a scene, as a live reference: editing the object returned here "
+             "edits the patch. Every LFO has one, but it is only saved with the patch while that "
+             "LFO's shape is surgepy.constants.lt_mseg.",
+             py::arg("scene"), py::arg("lfo"), py::keep_alive<0, 1>())
+        .def("setMSEG", &SurgeSynthesizerWithPythonExtensions::setMSEGPy,
+             "Copy an MSEG onto the MSEG of an LFO in a scene, raising if the source doesn't pass "
+             "validateMSEG().",
+             py::arg("scene"), py::arg("lfo"), py::arg("mseg"))
+
+        .def("getFormula", &SurgeSynthesizerWithPythonExtensions::getFormulaPy,
+             "The Lua body of the formula modulator of an LFO in a scene.", py::arg("scene"),
+             py::arg("lfo"))
+        .def("setFormula", &SurgeSynthesizerWithPythonExtensions::setFormulaPy,
+             "Set the Lua body of the formula modulator of an LFO in a scene. The formula is not "
+             "compiled here - use checkFormula() for that - and is only saved with the patch while "
+             "that LFO's shape is surgepy.constants.lt_formula.",
+             py::arg("scene"), py::arg("lfo"), py::arg("formula"))
+        .def("checkFormula", &SurgeSynthesizerWithPythonExtensions::checkFormulaPy,
+             "Compile the formula modulator of an LFO in a scene, returning the error it reports, "
+             "or an empty string if it runs.",
+             py::arg("scene"), py::arg("lfo"))
 
         .def("getModSource", &SurgeSynthesizerWithPythonExtensions::getModSource,
              "Given a constant from surge.constants.ms_*, provide a modulator object",
@@ -1497,13 +2070,134 @@ PYBIND11_MODULE(surgepy, m)
             return oss.str();
         });
 
+    py::class_<SurgePyMSEGSegment>(m, "SurgeMSEGSegment")
+        .def_property_readonly("index", &SurgePyMSEGSegment::getIndex,
+                               "Position of this segment in its MSEG.")
+        .def_property("duration", &SurgePyMSEGSegment::getDuration,
+                      &SurgePyMSEGSegment::setDuration,
+                      "Length of this segment, in beats when the LFO is tempo synced and in "
+                      "seconds otherwise.")
+        .def_property("v0", &SurgePyMSEGSegment::getV0, &SurgePyMSEGSegment::setV0,
+                      "Value this segment starts at, from -1 to 1. A segment ends at the value the "
+                      "next one starts at, or at the MSEG's endValue for the last one.")
+        .def_property("cpduration", &SurgePyMSEGSegment::getCPDuration,
+                      &SurgePyMSEGSegment::setCPDuration,
+                      "Control point position along this segment, from 0 to 1.")
+        .def_property("cpv", &SurgePyMSEGSegment::getCPV, &SurgePyMSEGSegment::setCPV,
+                      "Control point value, from -1 to 1. What it does depends on the segment "
+                      "type.")
+        .def_property("type", &SurgePyMSEGSegment::getType, &SurgePyMSEGSegment::setType,
+                      "Curve of this segment, one of the surgepy.constants.mseg_seg_ values.")
+        .def_property("useDeform", &SurgePyMSEGSegment::getUseDeform,
+                      &SurgePyMSEGSegment::setUseDeform,
+                      "Does the LFO's Deform parameter apply to this segment?")
+        .def_property("invertDeform", &SurgePyMSEGSegment::getInvertDeform,
+                      &SurgePyMSEGSegment::setInvertDeform,
+                      "Is the LFO's Deform parameter inverted on this segment?")
+        .def_property("retriggerFEG", &SurgePyMSEGSegment::getRetriggerFEG,
+                      &SurgePyMSEGSegment::setRetriggerFEG,
+                      "Does reaching this segment retrigger the filter envelope?")
+        .def_property("retriggerAEG", &SurgePyMSEGSegment::getRetriggerAEG,
+                      &SurgePyMSEGSegment::setRetriggerAEG,
+                      "Does reaching this segment retrigger the amplitude envelope?")
+        .def("__repr__", &SurgePyMSEGSegment::toString);
+
+    py::class_<SurgePyMSEG>(m, "SurgeMSEG")
+        .def_property_readonly("segments", &SurgePyMSEG::getSegments,
+                               "The active segments, in order. Each one is a live reference into "
+                               "this MSEG.")
+        .def_property_readonly("segmentCount", &SurgePyMSEG::getSegmentCount,
+                               "How many segments this MSEG has.")
+        .def_property_readonly("totalDuration", &SurgePyMSEG::getTotalDuration,
+                               "Length of every segment added up. Always 1 in LFO edit mode.")
+        .def_property("endpointMode", &SurgePyMSEG::getEndpointMode, &SurgePyMSEG::setEndpointMode,
+                      "surgepy.constants.mseg_endpoint_locked to make the MSEG end where it "
+                      "starts, or mseg_endpoint_free to give it its own endValue.")
+        .def_property("editMode", &SurgePyMSEG::getEditMode, &SurgePyMSEG::setEditMode,
+                      "surgepy.constants.mseg_editmode_env for an MSEG of any length, or "
+                      "mseg_editmode_lfo to constrain it to a single cycle. Switching rescales the "
+                      "durations.")
+        .def_property("loopMode", &SurgePyMSEG::getLoopMode, &SurgePyMSEG::setLoopMode,
+                      "One of surgepy.constants.mseg_loop_off, mseg_loop_on or mseg_loop_gated.")
+        .def_property("loopStart", &SurgePyMSEG::getLoopStart, &SurgePyMSEG::setLoopStart,
+                      "Point the loop returns to, from 0 to segmentCount, or "
+                      "surgepy.constants.mseg_unset to loop the whole MSEG.")
+        .def_property("loopEnd", &SurgePyMSEG::getLoopEnd, &SurgePyMSEG::setLoopEnd,
+                      "Point the loop runs to, from -1 to segmentCount - 1, or "
+                      "surgepy.constants.mseg_unset to loop the whole MSEG.")
+        .def_property("endValue", &SurgePyMSEG::getEndValue, &SurgePyMSEG::setEndValue,
+                      "Value the MSEG finishes on. Only settable in free endpoint mode - in locked "
+                      "mode it follows the first segment's value.")
+        .def_property("hSnap", &SurgePyMSEG::getHSnap, &SurgePyMSEG::setHSnap,
+                      "Horizontal snap currently in force in the MSEG editor, 0 for none.")
+        .def_property("vSnap", &SurgePyMSEG::getVSnap, &SurgePyMSEG::setVSnap,
+                      "Vertical snap currently in force in the MSEG editor, 0 for none.")
+        .def_property("hSnapDefault", &SurgePyMSEG::getHSnapDefault, &SurgePyMSEG::setHSnapDefault,
+                      "Horizontal snap the MSEG editor returns to when snap is toggled on.")
+        .def_property("vSnapDefault", &SurgePyMSEG::getVSnapDefault, &SurgePyMSEG::setVSnapDefault,
+                      "Vertical snap the MSEG editor returns to when snap is toggled on.")
+        .def("insertSegment", &SurgePyMSEG::insertSegment,
+             "Insert a segment at an index, or at segmentCount to append one.", py::arg("index"))
+        .def("deleteSegment", &SurgePyMSEG::deleteSegment, "Delete the segment at an index.",
+             py::arg("index"))
+        .def("rebuildCache", &SurgePyMSEG::rebuildCache,
+             "Recompute the derived segment times. Editing through this object does this already, "
+             "so this is only needed after the patch has been changed some other way.")
+        .def("__repr__", &SurgePyMSEG::toString);
+
+    m.def("validateMSEG", &validateMSEG,
+          "Everything structurally wrong with an MSEG, as a list of descriptions which is empty "
+          "when it is valid.",
+          py::arg("mseg"));
+
     py::module m_const =
         m.def_submodule("constants", "Constants which are used to navigate Surge XT");
 
 #define C(x) m_const.attr(#x) = py::int_((int)(x));
+// For the enums which are nested in a struct, so can't be named by the C++ identifier alone
+#define CN(n, x) m_const.attr(n) = py::int_((int)(x));
     C(porta_log);
     C(porta_lin);
     C(porta_exp);
+
+    {
+        using MS = MSEGStorage;
+        using segType = MSEGStorage::segment;
+
+        CN("mseg_endpoint_locked", MS::LOCKED);
+        CN("mseg_endpoint_free", MS::FREE);
+
+        CN("mseg_editmode_env", MS::ENVELOPE);
+        CN("mseg_editmode_lfo", MS::LFO);
+
+        CN("mseg_loop_off", MS::ONESHOT);
+        CN("mseg_loop_on", MS::LOOP);
+        CN("mseg_loop_gated", MS::GATED_LOOP);
+
+        // The loopStart / loopEnd value meaning "no loop point here, use the whole MSEG"
+        CN("mseg_unset", MS::kLoopPointUnset);
+
+        CN("mseg_seg_linear", segType::LINEAR);
+        CN("mseg_seg_quad_bezier", segType::QUAD_BEZIER);
+        CN("mseg_seg_scurve", segType::SCURVE);
+        CN("mseg_seg_sine", segType::SINE);
+        CN("mseg_seg_stairs", segType::STAIRS);
+        CN("mseg_seg_smooth_stairs", segType::SMOOTH_STAIRS);
+        CN("mseg_seg_brownian", segType::BROWNIAN);
+        CN("mseg_seg_square", segType::SQUARE);
+        CN("mseg_seg_triangle", segType::TRIANGLE);
+        CN("mseg_seg_sawtooth", segType::SAWTOOTH);
+        CN("mseg_seg_hold", segType::HOLD);
+        CN("mseg_seg_bump", segType::BUMP);
+        CN("mseg_seg_ratchet_1", segType::RATCHET_1);
+        CN("mseg_seg_ratchet_2", segType::RATCHET_2);
+        CN("mseg_seg_ratchet_3", segType::RATCHET_3);
+        CN("mseg_seg_ratchet_4", segType::RATCHET_4);
+        CN("mseg_seg_ratchet_5", segType::RATCHET_5);
+        CN("mseg_seg_ratchet_6", segType::RATCHET_6);
+        CN("mseg_seg_ratchet_7", segType::RATCHET_7);
+        CN("mseg_seg_ratchet_8", segType::RATCHET_8);
+    }
 
     C(cg_GLOBAL);
     C(cg_OSC);

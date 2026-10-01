@@ -2,7 +2,7 @@
 Constants which are used to navigate Surge XT
 """
 from __future__ import annotations
-__all__ = ['adsr_ampeg', 'adsr_filteg', 'cg_ENV', 'cg_FILTER', 'cg_FX', 'cg_GLOBAL', 'cg_LFO', 'cg_MIX', 'cg_OSC', 'fc_dual1', 'fc_dual2', 'fc_ring', 'fc_serial1', 'fc_serial2', 'fc_serial3', 'fc_stereo', 'fc_wide', 'fm_2and3to1', 'fm_2to1', 'fm_3to2to1', 'fm_off', 'fxslot_ains1', 'fxslot_ains2', 'fxslot_bins1', 'fxslot_bins2', 'fxslot_global1', 'fxslot_global2', 'fxslot_send1', 'fxslot_send2', 'fxt_airwindows', 'fxt_chorus4', 'fxt_conditioner', 'fxt_delay', 'fxt_distortion', 'fxt_eq', 'fxt_flanger', 'fxt_freqshift', 'fxt_neuron', 'fxt_off', 'fxt_phaser', 'fxt_reverb', 'fxt_reverb2', 'fxt_ringmod', 'fxt_rotaryspeaker', 'fxt_vocoder', 'lt_envelope', 'lt_formula', 'lt_mseg', 'lt_noise', 'lt_ramp', 'lt_sine', 'lt_snh', 'lt_square', 'lt_tri', 'ms_aftertouch', 'ms_alternate_bipolar', 'ms_alternate_unipolar', 'ms_ampeg', 'ms_breath', 'ms_ctrl1', 'ms_ctrl2', 'ms_ctrl3', 'ms_ctrl4', 'ms_ctrl5', 'ms_ctrl6', 'ms_ctrl7', 'ms_ctrl8', 'ms_expression', 'ms_filtereg', 'ms_highest_key', 'ms_keytrack', 'ms_latest_key', 'ms_lfo1', 'ms_lfo2', 'ms_lfo3', 'ms_lfo4', 'ms_lfo5', 'ms_lfo6', 'ms_lowest_key', 'ms_modwheel', 'ms_pitchbend', 'ms_polyaftertouch', 'ms_random_bipolar', 'ms_random_unipolar', 'ms_releasevelocity', 'ms_slfo1', 'ms_slfo2', 'ms_slfo3', 'ms_slfo4', 'ms_slfo5', 'ms_slfo6', 'ms_sustain', 'ms_timbre', 'ms_velocity', 'ot_FM2', 'ot_FM3', 'ot_audioinput', 'ot_classic', 'ot_shnoise', 'ot_sine', 'ot_wavetable', 'ot_window', 'pm_latch', 'pm_mono', 'pm_mono_fp', 'pm_mono_st', 'pm_mono_st_fp', 'pm_poly', 'porta_exp', 'porta_lin', 'porta_log', 'sm_chsplit', 'sm_dual', 'sm_single', 'sm_split']
+__all__ = ['adsr_ampeg', 'adsr_filteg', 'cg_ENV', 'cg_FILTER', 'cg_FX', 'cg_GLOBAL', 'cg_LFO', 'cg_MIX', 'cg_OSC', 'fc_dual1', 'fc_dual2', 'fc_ring', 'fc_serial1', 'fc_serial2', 'fc_serial3', 'fc_stereo', 'fc_wide', 'fm_2and3to1', 'fm_2to1', 'fm_3to2to1', 'fm_off', 'fxslot_ains1', 'fxslot_ains2', 'fxslot_bins1', 'fxslot_bins2', 'fxslot_global1', 'fxslot_global2', 'fxslot_send1', 'fxslot_send2', 'fxt_airwindows', 'fxt_chorus4', 'fxt_conditioner', 'fxt_delay', 'fxt_distortion', 'fxt_eq', 'fxt_flanger', 'fxt_freqshift', 'fxt_neuron', 'fxt_off', 'fxt_phaser', 'fxt_reverb', 'fxt_reverb2', 'fxt_ringmod', 'fxt_rotaryspeaker', 'fxt_vocoder', 'lt_envelope', 'lt_formula', 'lt_mseg', 'lt_noise', 'lt_ramp', 'lt_sine', 'lt_snh', 'lt_square', 'lt_tri', 'ms_aftertouch', 'ms_alternate_bipolar', 'ms_alternate_unipolar', 'ms_ampeg', 'ms_breath', 'ms_ctrl1', 'ms_ctrl2', 'ms_ctrl3', 'ms_ctrl4', 'ms_ctrl5', 'ms_ctrl6', 'ms_ctrl7', 'ms_ctrl8', 'ms_expression', 'ms_filtereg', 'ms_highest_key', 'ms_keytrack', 'ms_latest_key', 'ms_lfo1', 'ms_lfo2', 'ms_lfo3', 'ms_lfo4', 'ms_lfo5', 'ms_lfo6', 'ms_lowest_key', 'ms_modwheel', 'ms_pitchbend', 'ms_polyaftertouch', 'ms_random_bipolar', 'ms_random_unipolar', 'ms_releasevelocity', 'ms_slfo1', 'ms_slfo2', 'ms_slfo3', 'ms_slfo4', 'ms_slfo5', 'ms_slfo6', 'ms_sustain', 'ms_timbre', 'ms_velocity', 'mseg_editmode_env', 'mseg_editmode_lfo', 'mseg_endpoint_free', 'mseg_endpoint_locked', 'mseg_loop_gated', 'mseg_loop_off', 'mseg_loop_on', 'mseg_seg_brownian', 'mseg_seg_bump', 'mseg_seg_hold', 'mseg_seg_linear', 'mseg_seg_quad_bezier', 'mseg_seg_ratchet_1', 'mseg_seg_ratchet_2', 'mseg_seg_ratchet_3', 'mseg_seg_ratchet_4', 'mseg_seg_ratchet_5', 'mseg_seg_ratchet_6', 'mseg_seg_ratchet_7', 'mseg_seg_ratchet_8', 'mseg_seg_sawtooth', 'mseg_seg_scurve', 'mseg_seg_sine', 'mseg_seg_smooth_stairs', 'mseg_seg_square', 'mseg_seg_stairs', 'mseg_seg_triangle', 'mseg_unset', 'ot_FM2', 'ot_FM3', 'ot_audioinput', 'ot_classic', 'ot_shnoise', 'ot_sine', 'ot_wavetable', 'ot_window', 'pm_latch', 'pm_mono', 'pm_mono_fp', 'pm_mono_st', 'pm_mono_st_fp', 'pm_poly', 'porta_exp', 'porta_lin', 'porta_log', 'sm_chsplit', 'sm_dual', 'sm_single', 'sm_split']
 adsr_ampeg: int = 0
 adsr_filteg: int = 1
 cg_ENV: int = 5
@@ -97,6 +97,34 @@ ms_slfo6: int = 28
 ms_sustain: int = 37
 ms_timbre: int = 29
 ms_velocity: int = 1
+mseg_editmode_env: int = 0
+mseg_editmode_lfo: int = 1
+mseg_endpoint_free: int = 2
+mseg_endpoint_locked: int = 1
+mseg_loop_gated: int = 3
+mseg_loop_off: int = 1
+mseg_loop_on: int = 2
+mseg_seg_brownian: int = 6
+mseg_seg_bump: int = 12
+mseg_seg_hold: int = 9
+mseg_seg_linear: int = 1
+mseg_seg_quad_bezier: int = 2
+mseg_seg_ratchet_1: int = 14
+mseg_seg_ratchet_2: int = 15
+mseg_seg_ratchet_3: int = 16
+mseg_seg_ratchet_4: int = 17
+mseg_seg_ratchet_5: int = 18
+mseg_seg_ratchet_6: int = 19
+mseg_seg_ratchet_7: int = 20
+mseg_seg_ratchet_8: int = 21
+mseg_seg_sawtooth: int = 10
+mseg_seg_scurve: int = 3
+mseg_seg_sine: int = 4
+mseg_seg_smooth_stairs: int = 13
+mseg_seg_square: int = 7
+mseg_seg_stairs: int = 5
+mseg_seg_triangle: int = 8
+mseg_unset: int = -13214
 ot_FM2: int = 6
 ot_FM3: int = 5
 ot_audioinput: int = 4
