@@ -4659,7 +4659,7 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
                     CUSTOM_CONTROLLER_LABEL_SIZE - 1);
             synth->storage.getPatch()
                 .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] = 0; // to be sure
-            parameterNameUpdated = true;
+            parameterInfoUpdated = true;
 
             if (msb)
             {

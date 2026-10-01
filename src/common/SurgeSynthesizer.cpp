@@ -3070,6 +3070,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             release_if_latched[1] = true;
             release_anyway[0] = false;
             release_anyway[1] = false;
+            parameterInfoUpdated = true;
             break;
         case ct_polymode:
             if ((oldval.i == pm_latch) && (storage.getPatch().param_ptr[index]->val.i != pm_latch))
@@ -3104,6 +3105,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                 subtypep->val.i =
                     storage.subtypeMemory[typep->scene - 1][typep->ctrlgroup_entry][typep->val.i];
             }
+            parameterInfoUpdated = true;
             refresh_editor = true;
             break;
         case ct_osctype:
