@@ -595,6 +595,7 @@ void Parameter::set_type(int ctrltype)
      * remapper. See #6619.
      */
     user_data = nullptr;
+    basicBlocksParamMetaData = nullptr;
     dynamicName = nullptr;
     dynamicBipolar = nullptr;
     dynamicDeactivation = nullptr;
@@ -603,8 +604,6 @@ void Parameter::set_type(int ctrltype)
     moverate = 1.f;
 
     affect_other_parameters = false;
-
-    basicBlocksParamMetaData = {};
 
     /*
     ** Note we now have two ctrltype switches. This one sets ranges
@@ -2548,7 +2547,9 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
                       .withHighPrecision(isHighPrecision)
@@ -2556,8 +2557,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
 
-        auto res = basicBlocksParamMetaData->modulationNaturalToString(val.f, modulationDepth,
-                                                                       isBipolar, fs);
+        auto res = bbpmd->modulationNaturalToString(val.f, modulationDepth, isBipolar, fs);
         if (res.has_value())
         {
 #if DEBUG_MOD_STRINGS
@@ -2587,8 +2587,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         }
         else
         {
-            std::cout << "Modulation formatting failed for [" << basicBlocksParamMetaData->name
-                      << "]" << std::endl;
+            std::cout << "Modulation formatting failed for [" << bbpmd->name << "]" << std::endl;
         }
     }
 
@@ -3374,12 +3373,14 @@ void Parameter::getSemitonesOrKeys(std::string &str) const
 
 void Parameter::get_display_alt(char *txt, bool external, float ef) const
 {
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
         auto bbf = val.f;
         if (external)
-            bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
-        auto tryFormat = basicBlocksParamMetaData->valueToAlternateString(bbf);
+            bbf = bbpmd->normalized01ToNatural(ef);
+        auto tryFormat = bbpmd->valueToAlternateString(bbf);
         if (tryFormat.has_value())
         {
             strncpy(txt, tryFormat->c_str(), TXT_SIZE - 1);
@@ -3583,7 +3584,9 @@ std::string Parameter::get_display(bool external, float ef) const
     const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
         auto bbf = val.f;
         if (valtype == vt_int)
@@ -3591,7 +3594,7 @@ std::string Parameter::get_display(bool external, float ef) const
         if (valtype == vt_bool)
             bbf = val.b ? 1.f : 0.f;
         if (external)
-            bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
+            bbf = bbpmd->normalized01ToNatural(ef);
 
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
                       .withHighPrecision(isHighPrecision)
@@ -3599,7 +3602,7 @@ std::string Parameter::get_display(bool external, float ef) const
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
 
-        auto tryFormat = basicBlocksParamMetaData->valueToString(bbf, fs);
+        auto tryFormat = bbpmd->valueToString(bbf, fs);
         if (tryFormat.has_value())
             return *tryFormat;
     }
@@ -4773,9 +4776,11 @@ bool Parameter::set_value_from_string(const std::string &s, std::string &errMsg)
 bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis,
                                            std::string &errMsg)
 {
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
-        auto res = basicBlocksParamMetaData->valueFromString(s, errMsg);
+        auto res = bbpmd->valueFromString(s, errMsg);
         if (res.has_value())
         {
             switch (valtype)
@@ -5306,13 +5311,15 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
                                                         bool &valid)
 {
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
-        auto res = basicBlocksParamMetaData->modulationNaturalFromString(s, val.f, errMsg);
+        auto res = bbpmd->modulationNaturalFromString(s, val.f, errMsg);
         if (res.has_value())
         {
             valid = true;
-            return (*res) / (basicBlocksParamMetaData->maxVal - basicBlocksParamMetaData->minVal);
+            return (*res) / (bbpmd->maxVal - bbpmd->minVal);
         }
         else
         {

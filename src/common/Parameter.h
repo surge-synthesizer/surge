@@ -469,7 +469,24 @@ class Parameter
         Special,
     };
 
-    std::optional<sst::basic_blocks::params::ParamMetaData> basicBlocksParamMetaData;
+    /*
+     * This used to be a std::optional held by value, and a ParamMetaData owns an
+     * unordered_map and a pile of strings. set_type resetting it therefore freed that map while
+     * the UI thread or the host was partway through reading a display out of it, which is a use
+     * after free rather than merely a torn read - see #6619, where it is by far the most
+     * frequent crash in a patch-change soak.
+     *
+     * The metadata is a pure function of the effect type and the parameter index, so it now
+     * lives in an immortal per-effect-type table and parameters only point at it. Clearing the
+     * pointer unpublishes without destroying anything, so a reader which has already loaded it
+     * stays valid. Read it into a local before testing it, since it can be cleared underneath
+     * you between the test and the use.
+     *
+     * Note the load is still not synchronized, exactly like user_data next to it. What changed
+     * is that it can no longer point at freed memory. As a bonus, Parameter is cheap to copy
+     * again, which matters because loadFx copies whole parameters on the audio thread.
+     */
+    const sst::basic_blocks::params::ParamMetaData *basicBlocksParamMetaData{nullptr};
 
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                          ModulationDisplayMode mode,

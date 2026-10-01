@@ -193,6 +193,42 @@ template <typename T> struct SurgeSSTFXBase : T
 
     const char *get_effectname() override { return T::displayName; }
 
+    /*
+     * T::paramAt(i) is a pure function of the effect type and the index, so build the whole set
+     * once into a table which is never destroyed and hand parameters a pointer into it. A
+     * ParamMetaData owns a map and strings, and a Parameter used to hold one by value, so
+     * set_type freeing it under a reader on the UI thread or the host's thread was a use after
+     * free. See #6619 and the note on Parameter::basicBlocksParamMetaData.
+     */
+    const sst::basic_blocks::params::ParamMetaData *metadataFor(int i) const
+    {
+        /*
+         * paramAt is a const member rather than a free function, so this needs an instance to
+         * build the table - but it reads nothing except compile time traits of T, so whichever
+         * instance happens to get here first gives the same answer as any other. The static is
+         * per specialization of this template, initialized once, and never destroyed.
+         */
+        static const std::vector<sst::basic_blocks::params::ParamMetaData> table = [this]() {
+            std::vector<sst::basic_blocks::params::ParamMetaData> res;
+
+            res.reserve(T::numParams);
+
+            for (int j = 0; j < T::numParams; ++j)
+            {
+                res.push_back(this->paramAt(j));
+            }
+
+            return res;
+        }();
+
+        if (i < 0 || i >= (int)table.size())
+        {
+            return nullptr;
+        }
+
+        return &table[i];
+    }
+
     void init_default_values() override
     {
         for (int i = 0; i < T::numParams; ++i)
@@ -230,7 +266,7 @@ template <typename T> struct SurgeSSTFXBase : T
                 started = true;
             }
             this->fxdata->p[i].set_name(pmd.name.c_str());
-            this->fxdata->p[i].basicBlocksParamMetaData = pmd;
+            this->fxdata->p[i].basicBlocksParamMetaData = metadataFor(i);
             auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
                 {
