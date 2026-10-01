@@ -81,6 +81,11 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     void setVKBLayout(const std::string layout);
 
+    // Whether the VKB should be hearing QWERTY right now. True whenever it is shown, except
+    // while a text or code editor has the keys for itself, or we are not the foreground app.
+    bool vkbShouldTakeKeys() const;
+    bool vkbWasTakingKeys{false};
+
     void reapplySurgeComponentColours();
 
     struct IdleTimer : juce::Timer
