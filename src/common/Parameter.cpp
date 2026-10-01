@@ -3936,9 +3936,16 @@ std::string Parameter::get_display(bool external, float ef) const
                     {
                         using sst::filters::FilterType;
 
-                        int type = patch.scene[scene].filterunit[unit].type.val.i;
+                        /*
+                         * We are reading another parameter's value here, and on the UI thread
+                         * or the host's thread that read can catch a patch change mid-flight,
+                         * so bound it before indexing. Same for a negative i, which the
+                         * subcount test on its own lets straight through. See #6619.
+                         */
+                        int type = limit_range(patch.scene[scene].filterunit[unit].type.val.i, 0,
+                                               (int)sst::filters::num_filter_types - 1);
                         const auto fType = (FilterType)type;
-                        if (i >= sst::filters::fut_subcount[type])
+                        if (i < 0 || i >= sst::filters::fut_subcount[type])
                         {
                             txt = "None";
                         }
@@ -4137,7 +4144,7 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = fmt::format("{:d} bands", i);
             break;
         case ct_distortion_waveshape:
-            txt = sst::waveshapers::wst_names[(int)FXWaveShapers[i]];
+            txt = sst::waveshapers::wst_names[(int)FXWaveShapers[limit_range(i, 0, n_fxws - 1)]];
             break;
         case ct_mscodec:
             switch (i)
