@@ -71,6 +71,7 @@ class alignas(16) AirWindowsEffect : public Effect
     void setupSubFX(int awfx, bool useStreamedValues);
     std::unique_ptr<AirWinBaseClass> airwin;
     int lastSelected = -1;
+    char groupLabel[1024]{};
 
     void sampleRateReset() override
     {
@@ -80,34 +81,40 @@ class alignas(16) AirWindowsEffect : public Effect
         }
     }
 
-    static std::vector<AirWinBaseClass::Registration> fxreg;
-    static std::vector<int> fxregOrdering;
+    /*
+     * The registries are immutable once built, but they used to be static members filled
+     * lazily by whichever constructor ran first. The UI thread can construct a throwaway effect
+     * onto fxsync at the same moment the audio thread constructs the real one, so that fill
+     * raced a reader of the very vector these names are read out of. Function local statics
+     * initialize exactly once and every reader synchronizes with that. See #6619.
+     */
+    static const std::vector<AirWinBaseClass::Registration> &fxreg();
+    static const std::vector<int> &fxregOrdering();
 
     static struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper
     {
         AWFxSelectorMapper() {}
 
         // See #6619 for this defense which works around a different problem
-        inline int safeIdx(int i) const { return std::clamp(i, 0, (int)fxreg.size() - 1); }
+        inline int safeIdx(int i) const { return std::clamp(i, 0, (int)fxreg().size() - 1); }
         virtual int remapStreamedIndexToDisplayIndex(int i) const override
         {
-            return fxreg[safeIdx(i)].displayOrder;
+            return fxreg()[safeIdx(i)].displayOrder;
         }
         virtual std::string nameAtStreamedIndex(int i) const override
         {
-            return fxreg[safeIdx(i)].name;
+            return fxreg()[safeIdx(i)].name;
         }
         virtual bool hasGroupNames() const override { return true; }
 
         virtual std::string groupNameAtStreamedIndex(int i) const override
         {
-            return fxreg[safeIdx(i)].groupName;
+            return fxreg()[safeIdx(i)].groupName;
         }
 
         bool supportsTotalIndexOrdering() const override { return true; }
 
-        const std::vector<int> totalIndexOrdering() const override { return fxregOrdering; }
-        AirWindowsEffect *fx;
+        const std::vector<int> totalIndexOrdering() const override { return fxregOrdering(); }
     } mapper;
 
     struct AWFxParamFormatter : public ParameterExternalFormatter

@@ -585,17 +585,25 @@ void Parameter::set_user_data(ParamUserData *ud)
 
 void Parameter::set_type(int ctrltype)
 {
-    this->ctrltype = ctrltype;
-    posy_offset = 0;
-    moverate = 1.f;
-
-    affect_other_parameters = false;
+    /*
+     * Unpublish first, publish last. Every switch below reads the ctrltype argument, not the
+     * member, so this->ctrltype is assigned at the very end of this function, once the ranges
+     * and display info it describes are actually in place. The UI thread and the host read
+     * these members off a live parameter without synchronization, so a reader which catches us
+     * mid-flight now sees the old type with the old handlers rather than the new type paired
+     * with stale ranges - the latter is how an out of range index reaches a discrete index
+     * remapper. See #6619.
+     */
     user_data = nullptr;
+    basicBlocksParamMetaData = nullptr;
     dynamicName = nullptr;
     dynamicBipolar = nullptr;
     dynamicDeactivation = nullptr;
 
-    basicBlocksParamMetaData = {};
+    posy_offset = 0;
+    moverate = 1.f;
+
+    affect_other_parameters = false;
 
     /*
     ** Note we now have two ctrltype switches. This one sets ranges
@@ -1792,6 +1800,9 @@ void Parameter::set_type(int ctrltype)
     default:
         break;
     }
+
+    // Everything the new type implies is set up now, so publish it. See the note at the top.
+    this->ctrltype = ctrltype;
 }
 
 void Parameter::bound_value(bool force_integer)
@@ -2536,7 +2547,9 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
                       .withHighPrecision(isHighPrecision)
@@ -2544,8 +2557,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
 
-        auto res = basicBlocksParamMetaData->modulationNaturalToString(val.f, modulationDepth,
-                                                                       isBipolar, fs);
+        auto res = bbpmd->modulationNaturalToString(val.f, modulationDepth, isBipolar, fs);
         if (res.has_value())
         {
 #if DEBUG_MOD_STRINGS
@@ -2575,8 +2587,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         }
         else
         {
-            std::cout << "Modulation formatting failed for [" << basicBlocksParamMetaData->name
-                      << "]" << std::endl;
+            std::cout << "Modulation formatting failed for [" << bbpmd->name << "]" << std::endl;
         }
     }
 
@@ -3362,12 +3373,14 @@ void Parameter::getSemitonesOrKeys(std::string &str) const
 
 void Parameter::get_display_alt(char *txt, bool external, float ef) const
 {
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
         auto bbf = val.f;
         if (external)
-            bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
-        auto tryFormat = basicBlocksParamMetaData->valueToAlternateString(bbf);
+            bbf = bbpmd->normalized01ToNatural(ef);
+        auto tryFormat = bbpmd->valueToAlternateString(bbf);
         if (tryFormat.has_value())
         {
             strncpy(txt, tryFormat->c_str(), TXT_SIZE - 1);
@@ -3571,7 +3584,9 @@ std::string Parameter::get_display(bool external, float ef) const
     const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
         auto bbf = val.f;
         if (valtype == vt_int)
@@ -3579,7 +3594,7 @@ std::string Parameter::get_display(bool external, float ef) const
         if (valtype == vt_bool)
             bbf = val.b ? 1.f : 0.f;
         if (external)
-            bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
+            bbf = bbpmd->normalized01ToNatural(ef);
 
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
                       .withHighPrecision(isHighPrecision)
@@ -3587,7 +3602,7 @@ std::string Parameter::get_display(bool external, float ef) const
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
 
-        auto tryFormat = basicBlocksParamMetaData->valueToString(bbf, fs);
+        auto tryFormat = bbpmd->valueToString(bbf, fs);
         if (tryFormat.has_value())
             return *tryFormat;
     }
@@ -3921,9 +3936,16 @@ std::string Parameter::get_display(bool external, float ef) const
                     {
                         using sst::filters::FilterType;
 
-                        int type = patch.scene[scene].filterunit[unit].type.val.i;
+                        /*
+                         * We are reading another parameter's value here, and on the UI thread
+                         * or the host's thread that read can catch a patch change mid-flight,
+                         * so bound it before indexing. Same for a negative i, which the
+                         * subcount test on its own lets straight through. See #6619.
+                         */
+                        int type = limit_range(patch.scene[scene].filterunit[unit].type.val.i, 0,
+                                               (int)sst::filters::num_filter_types - 1);
                         const auto fType = (FilterType)type;
-                        if (i >= sst::filters::fut_subcount[type])
+                        if (i < 0 || i >= sst::filters::fut_subcount[type])
                         {
                             txt = "None";
                         }
@@ -4122,7 +4144,7 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = fmt::format("{:d} bands", i);
             break;
         case ct_distortion_waveshape:
-            txt = sst::waveshapers::wst_names[(int)FXWaveShapers[i]];
+            txt = sst::waveshapers::wst_names[(int)FXWaveShapers[limit_range(i, 0, n_fxws - 1)]];
             break;
         case ct_mscodec:
             switch (i)
@@ -4761,9 +4783,11 @@ bool Parameter::set_value_from_string(const std::string &s, std::string &errMsg)
 bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis,
                                            std::string &errMsg)
 {
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
-        auto res = basicBlocksParamMetaData->valueFromString(s, errMsg);
+        auto res = bbpmd->valueFromString(s, errMsg);
         if (res.has_value())
         {
             switch (valtype)
@@ -5294,13 +5318,15 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
                                                         bool &valid)
 {
-    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    const auto *bbpmd = basicBlocksParamMetaData;
+
+    if (bbpmd && bbpmd->supportsStringConversion)
     {
-        auto res = basicBlocksParamMetaData->modulationNaturalFromString(s, val.f, errMsg);
+        auto res = bbpmd->modulationNaturalFromString(s, val.f, errMsg);
         if (res.has_value())
         {
             valid = true;
-            return (*res) / (basicBlocksParamMetaData->maxVal - basicBlocksParamMetaData->minVal);
+            return (*res) / (bbpmd->maxVal - bbpmd->minVal);
         }
         else
         {

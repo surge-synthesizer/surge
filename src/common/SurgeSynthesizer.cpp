@@ -3168,6 +3168,15 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             {
                 int cge = p->ctrlgroup_entry;
 
+                /*
+                 * We are about to rewrite this slot's fxsync, which loadFx copies onto the live
+                 * patch under fxSpawnMutex. This runs on the UI thread as often as not, so take
+                 * the same lock - a mutex only one side honors is not a mutex, and the torn
+                 * copy that results is how garbage parameter values reach the display. The undo
+                 * path and enqueueFXOff already do this. See #6619.
+                 */
+                std::lock_guard<std::mutex> g(fxSpawnMutex);
+
                 fxsync[cge].type.val.i = p->val.i;
 
                 // so funnily we want to set the value *back* so that loadFx picks up the change in
@@ -3303,6 +3312,18 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             fx_reload[s] = false;
 
             std::lock_guard<std::mutex> g(fxSpawnMutex);
+
+            /*
+             * An effect can hand its own members to a parameter as user data - the Airwindows
+             * parameter formatters do exactly that - so unpublish those pointers before the
+             * effect which owns them is destroyed. The UI thread and the host both dereference
+             * user_data off a live parameter, and clearing it after the delete leaves a window
+             * where they are reading freed memory. See #6619.
+             */
+            for (int j = 0; j < n_fx_params; j++)
+            {
+                storage.getPatch().fx[s].p[j].clear_user_data();
+            }
 
             fx[s].reset();
             /*if (!force_reload_all)*/ storage.getPatch().fx[s].type.val.i = fxsync[s].type.val.i;

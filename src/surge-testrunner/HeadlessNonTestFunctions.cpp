@@ -26,6 +26,14 @@
 #include <sstream>
 #include <chrono>
 #include <deque>
+#include <atomic>
+#include <thread>
+#include <vector>
+
+#ifdef _WIN32
+#include <crtdbg.h>
+#include <stdlib.h>
+#endif
 
 namespace Surge
 {
@@ -741,6 +749,243 @@ void generateNLFeedbackNorms()
     }
     std::cout << "\n      };\n"
               << "      if (useNormalization) normNumerator = lpNormTable[subtype];\n";
+}
+
+/*
+ * A soak test for the thread segregation problem in #6619. Two crash reports there - one in
+ * Reaper, one in Logic - both come from a thread which is not the audio thread reading a
+ * parameter's display while the audio thread is partway through rewriting that parameter during
+ * a patch change. The Logic one does not even need the editor open: the host polls parameter
+ * names and texts off the live parameter on its own main thread.
+ *
+ * So this plays notes continuously, rotates through a pool of patches alternating between ones
+ * that use Airwindows and ones that don't (Airwindows is the interesting case because its
+ * parameter user data points at members of the effect instance, and factory patches barely use
+ * it), and runs reader threads which hammer exactly the two calls those stacks show. The audio
+ * loop runs flat out rather than in real time, so a minute here is worth a great many minutes
+ * of real playing.
+ *
+ * It either survives or it dies; there is nothing to assert. Run it repeatedly and count the
+ * crashes, which is why it lives here rather than in the Catch2 suite.
+ */
+void patchChangeSoak(int seconds, int readerThreads)
+{
+#ifdef _WIN32
+    /*
+     * This is meant to be run unattended in a loop, so send the debug CRT's assertion and abort
+     * reports to stderr instead of putting up an abort/retry/ignore dialog that waits forever
+     * for a human.
+     */
+    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+    // keep the abort message, which says what went wrong, but not the crash dialog
+    _set_abort_behavior(_WRITE_ABORT_MSG, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#endif
+
+    /*
+     * Alternating so that every rotation destroys and respawns Airwindows effects, which is the
+     * transition that frees the parameter formatters.
+     */
+    const std::vector<std::string> patchPool = {
+        "resources/data/patches_3rdparty/Altenberg/Drums/Linn Kick Tape.fxp",
+        "resources/data/patches_3rdparty/A.Liv/Keys/November.fxp",
+        "resources/data/patches_3rdparty/Altenberg/FX/Ritual.fxp",
+        "resources/data/patches_3rdparty/Aleksey Zhehanov/Brass/Trumpet Ensemble.fxp",
+        "resources/data/patches_3rdparty/Aleksey Zhehanov/Keys/Upright Piano.fxp",
+        "resources/data/patches_3rdparty/A.Liv/Leads/Novuo.fxp"};
+
+    for (const auto &p : patchPool)
+    {
+        if (!fs::exists(string_to_path(p)))
+        {
+            std::cout << "Missing patch: " << p << "\n"
+                      << "Run this from the repository root." << std::endl;
+            return;
+        }
+    }
+
+    auto surge = Surge::Headless::createSurge(48000);
+
+    std::atomic<bool> running{true};
+    std::atomic<uint64_t> readerPasses{0};
+    std::atomic<uint64_t> readerSink{0};
+
+    /*
+     * fxOnly concentrates the pressure where the reported crashes are. A full sweep of every
+     * parameter spends only a few percent of its time in the FX section, so one reader covers
+     * everything and the rest stay on the FX parameters.
+     */
+    auto reader = [&surge, &running, &readerPasses, &readerSink](bool fxOnly) {
+        auto &patch = surge->storage.getPatch();
+        uint64_t sink = 0;
+        float sweep = 0.f;
+
+        while (running.load(std::memory_order_relaxed))
+        {
+            for (auto *p : patch.param_ptr)
+            {
+                if (!p || (fxOnly && p->ctrlgroup != cg_FX))
+                {
+                    continue;
+                }
+
+                // what a widget's paint does, via SurgeGUIEditor::getDisplayForTag
+                sink += p->get_display().size();
+                // what the host does, via SurgeParamToJuceParamAdapter::getText
+                sink += p->get_display(true, sweep).size();
+
+                auto n = p->get_full_name();
+                sink += n ? strlen(n) : 0;
+            }
+
+            sweep += 0.011f;
+
+            if (sweep > 1.f)
+            {
+                sweep -= 1.f;
+            }
+
+            readerPasses++;
+        }
+
+        readerSink += sink;
+    };
+
+    std::vector<std::thread> readers;
+    for (int i = 0; i < readerThreads; ++i)
+    {
+        readers.emplace_back(reader, i > 0);
+    }
+
+    std::cout << "Patch change soak: " << seconds << "s, " << readerThreads << " reader thread(s), "
+              << patchPool.size() << " patches in the pool" << std::endl;
+
+    for (int i = 0; i < 10; ++i)
+    {
+        surge->process();
+    }
+
+    const int noteOnEvery = 48000 / BLOCK_SIZE / 10;
+    std::deque<int> notesOn;
+    int nt = 0, nextNote = 48;
+
+    uint64_t blocks = 0, loads = 0, blocksAtLastLoad = 0, fxTypeChanges = 0;
+    const auto started = std::chrono::steady_clock::now();
+    auto deadline = started + std::chrono::seconds(seconds);
+    auto nextReport = started + std::chrono::seconds(1);
+
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        /*
+         * Flushed once a second, so when this dies the log still says how long it took and how
+         * much it got through - which is the measurement that matters once the crash rate is at
+         * saturation and a pass/fail count stops telling you anything.
+         */
+        auto now = std::chrono::steady_clock::now();
+        if (now > nextReport)
+        {
+            std::cout
+                << "t="
+                << std::chrono::duration_cast<std::chrono::milliseconds>(now - started).count()
+                << "ms blocks=" << blocks << " patchLoads=" << loads
+                << " fxTypeChanges=" << fxTypeChanges << " readerPasses=" << readerPasses
+                << std::endl;
+            nextReport = now + std::chrono::seconds(1);
+        }
+
+        /*
+         * While a load is in flight process() returns immediately, so spinning on it here just
+         * starves the reader threads of the cores they need to collide with us. Stand aside and
+         * let them run, which is also what a host thread does - it waits for its next callback.
+         */
+        if (surge->halt_engine)
+        {
+            std::this_thread::yield();
+            continue;
+        }
+
+        surge->process();
+        blocks++;
+
+        if (nt++ >= noteOnEvery)
+        {
+            if (notesOn.size() >= 8)
+            {
+                surge->releaseNote(0, notesOn.front(), 0);
+                notesOn.pop_front();
+            }
+
+            nextNote = 36 + (nextNote - 35) % 48;
+            notesOn.push_back(nextNote);
+            surge->playNote(0, nextNote, 100, 0);
+            nt = 0;
+        }
+
+        /*
+         * Enqueue the next patch the way the editor does, once the previous one has been picked
+         * up so no load is silently dropped, and not before some audio has actually run. Without
+         * that gap the loads come back to back, the engine is halted almost the whole time and
+         * barely a note sounds - and every report here is about changing patches while notes are
+         * playing.
+         */
+        if (!surge->has_patchid_file && !surge->halt_engine && blocks - blocksAtLastLoad > 64)
+        {
+            blocksAtLastLoad = blocks;
+
+            {
+                std::lock_guard<std::mutex> mg(surge->patchLoadSpawnMutex);
+                strncpy(surge->patchid_file, patchPool[loads % patchPool.size()].c_str(),
+                        FILENAME_MAX - 1);
+                surge->patchid_file_isPreset = false;
+                surge->has_patchid_file = true;
+            }
+
+            loads++;
+
+            /*
+             * Between patches, also change one slot's FX type outright, which is a different
+             * code path and not a weaker one. A patch load goes through
+             * update_controls(from_streaming), which spawns a throwaway effect and reinitializes
+             * every FX parameter's type - so by the time loadFx destroys the old effect the
+             * parameters have already let go of it. Only a type change reaches loadFx with the
+             * effect's own user data still published, and "changing on and off of Airwindows" is
+             * what the reports in #6619 describe anyway.
+             */
+            auto slot = (int)(loads % n_fx_slots);
+            auto &fxType = surge->storage.getPatch().fx[slot].type;
+            const int cycle[] = {fxt_airwindows, fxt_delay,      fxt_off,
+                                 fxt_reverb2,    fxt_airwindows, fxt_phaser};
+            const int want = cycle[(loads / n_fx_slots) % std::size(cycle)];
+
+            if (fxType.val.i != want)
+            {
+                surge->setParameter01(surge->idForParameter(&fxType),
+                                      fxType.value_to_normalized((float)want), false, true);
+                fxTypeChanges++;
+            }
+        }
+    }
+
+    std::cout << "Soak loop finished. blocks=" << blocks << " patchLoads=" << loads
+              << " fxTypeChanges=" << fxTypeChanges << " readerPasses=" << readerPasses
+              << std::endl;
+
+    running = false;
+    for (auto &t : readers)
+    {
+        t.join();
+    }
+
+    // the loader detaches itself, so wait for it to clear rather than joining it
+    auto loaderDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    while (surge->patchLoadThread && std::chrono::steady_clock::now() < loaderDeadline)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    std::cout << "Survived. sink=" << readerSink << std::endl;
 }
 
 } // namespace NonTest
