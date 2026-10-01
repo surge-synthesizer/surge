@@ -31,6 +31,7 @@
 #include "Player.h"
 #include "Oscillator.h"
 #include "ModernOscillator.h"
+#include "SampleAndHoldOscillator.h"
 
 #include "catch2/catch_amalgamated.hpp"
 
@@ -753,6 +754,76 @@ TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
                       << (continueChecking ? "Unknown" : std::to_string(itUntilBigger))
                       << std::endl;*/
         }
+    }
+}
+
+TEST_CASE("S&H Noise Economy Mode", "[dsp]") // See issue 2387
+{
+    // Renders the S&H Noise oscillator from a fixed random sequence, with Economy Mode on or off
+    auto render = [](int voices, float sync, float pitch, bool economy, int blocks,
+                     std::vector<float> &out) {
+        auto surge = Surge::Headless::createSurge(44100);
+        auto storage = &surge->storage;
+        auto oscstorage = &(storage->getPatch().scene[0].osc[0]);
+        auto sd = storage->getPatch().scenedata[0];
+        unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
+
+        storage->rngGen.g.seed(2387);
+
+        auto o = spawn_osc(ot_shnoise, storage, oscstorage, sd,
+                           storage->getPatch().scenedataOrig[0], oscbuffer);
+        o->init_ctrltypes();
+        o->init_default_values();
+        o->init_extra_config();
+
+        using S = SampleAndHoldOscillator;
+        auto set = [&](int idx, float v) {
+            oscstorage->p[idx].val.f = v;
+            sd[oscstorage->p[idx].param_id_in_scene].f = v;
+        };
+        set(S::shn_sync, sync);
+        set(S::shn_unison_detune, 1.f);
+        oscstorage->p[S::shn_unison_voices].val.i = voices;
+        oscstorage->p[S::shn_sync].deform_type = economy ? 1 : 0;
+
+        o->init(pitch);
+
+        out.resize(blocks * BLOCK_SIZE_OS);
+        for (int b = 0; b < blocks; ++b)
+        {
+            o->process_block(pitch, 0, false, false, 0);
+            std::copy(o->output, o->output + BLOCK_SIZE_OS, out.begin() + b * BLOCK_SIZE_OS);
+        }
+        o->~Oscillator();
+    };
+
+    auto rmsdb = [](const std::vector<float> &v) {
+        double s = 0;
+        for (auto x : v)
+            s += (double)x * x;
+        return 10 * std::log10(s / v.size() + 1e-30);
+    };
+
+    SECTION("Identical below the cap")
+    {
+        // pitch 60 with sync 24 is far below the step rate where the cap engages
+        std::vector<float> off, on;
+        render(4, 24.f, 60.f, false, 40, off);
+        render(4, 24.f, 60.f, true, 40, on);
+        REQUIRE(off == on);
+    }
+
+    SECTION("Finite and level-matched above the cap")
+    {
+        // the scenario from the issue: pitch clamped at 148, 16 unison voices, maximum sync
+        std::vector<float> off, on;
+        render(16, 60.f, 148.f, false, 300, off);
+        render(16, 60.f, 148.f, true, 300, on);
+        for (auto x : on)
+            REQUIRE(std::isfinite(x));
+        auto dOff = rmsdb(off), dOn = rmsdb(on);
+        INFO("Economy off " << dOff << " dB, on " << dOn << " dB");
+        REQUIRE(std::fabs(dOff - dOn) < 1.5);
     }
 }
 

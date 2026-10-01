@@ -72,6 +72,7 @@ enum ctrltypes
     ct_fmratio_int,
     ct_pbdepth,
     ct_syncpitch,
+    ct_syncpitch_deformable, // S&H Noise: deform toggles Economy Mode
     ct_amplitude,
     ct_reverbshape,
     ct_decibel,

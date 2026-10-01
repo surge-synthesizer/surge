@@ -27,6 +27,7 @@
 #include "DSPUtils.h"
 #include <vembertech/lipol.h>
 #include "BiquadFilter.h"
+#include <random>
 
 class SampleAndHoldOscillator : public AbstractBlitOscillator
 {
@@ -60,6 +61,7 @@ class SampleAndHoldOscillator : public AbstractBlitOscillator
     BiquadFilter lp, hp;
     void applyFilter();
 
+    void prepare_block();
     void convolute(int voice, bool FM, bool stereo);
     template <bool FM> void process_blockT(float pitch, float depth, float drift = 0);
     template <bool is_init> void update_lagvals();
@@ -71,7 +73,12 @@ class SampleAndHoldOscillator : public AbstractBlitOscillator
     int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;
     int FMdelay;
     float FMmul_inv;
-    std::function<float()> urng; // A uniform -1,1 RNG
+    // Everything convolute() needs that only changes once per block, see prepare_block()
+    float tSlave[MAX_UNISON], tMaster[MAX_UNISON], levelComp[MAX_UNISON];
+    float wfBase, oneMinusWfAbs, rcpOneMinusWfAbs, pwTarget, p24pmi;
+    bool economy{false};
+    std::minstd_rand rng;
+    std::uniform_real_distribution<float> rngDistro{-1.f, 1.f};
 };
 
 #endif // SURGE_SRC_COMMON_DSP_OSCILLATORS_SAMPLEANDHOLDOSCILLATOR_H
