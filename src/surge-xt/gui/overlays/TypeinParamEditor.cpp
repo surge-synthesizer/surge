@@ -231,8 +231,20 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
     }
     else
     {
+        if (errorToDisplay.empty())
+        {
+            errorToDisplay = "Invalid value!";
+        }
+
         wasInputInvalid = true;
         repaint();
+
+        // the error is otherwise only painted, so screen reader users would just hear nothing
+        if (editor)
+        {
+            editor->enqueueImmediateAccessibleAnnouncement(errorToDisplay);
+        }
+
         juce::Timer::callAfterDelay(5000, [that = juce::Component::SafePointer(this)]() {
             if (that)
             {
