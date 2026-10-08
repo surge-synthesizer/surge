@@ -370,18 +370,9 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
         mipmap[voice] = 0;
 
-        if ((a < 0.015625 * wtbias) && (ts >= 128))
-            mipmap[voice] = 6;
-        else if ((a < 0.03125 * wtbias) && (ts >= 64))
-            mipmap[voice] = 5;
-        else if ((a < 0.0625 * wtbias) && (ts >= 32))
-            mipmap[voice] = 4;
-        else if ((a < 0.125 * wtbias) && (ts >= 16))
-            mipmap[voice] = 3;
-        else if ((a < 0.25 * wtbias) && (ts >= 8))
-            mipmap[voice] = 2;
-        else if ((a < 0.5 * wtbias) && (ts >= 4))
-            mipmap[voice] = 1;
+        while ((mipmap[voice] < max_mipmap_levels - 1) && ((ts >> (mipmap[voice] + 1)) >= 2) &&
+               (a * (1 << mipmap[voice]) < 0.5f * wtbias))
+            mipmap[voice]++;
 
         mipmap_ofs[voice] = 0;
         for (int i = 0; i < mipmap[voice]; i++)
