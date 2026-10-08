@@ -76,19 +76,14 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
     if (is_display)
     {
         n_unison = 1;
-
-        auto gen = std::minstd_rand(2);
-        std::uniform_real_distribution<float> distro(-1.f, 1.f);
-        urng = std::bind(distro, gen);
+        rng = std::minstd_rand(2);
     }
     else
     {
-        std::uniform_real_distribution<float> distro(-1.f, 1.f);
 #ifdef STORAGE_USES_INDEPENDENT_RNG
-        urng = std::bind(distro, storage->rngGen.g);
+        rng = storage->rngGen.g;
 #else
-        std::minstd_rand gen(std::rand());
-        urng = std::bind(distro, gen);
+        rng = std::minstd_rand(std::rand());
 #endif
     }
     prepare_unison(n_unison);
@@ -146,7 +141,7 @@ void SampleAndHoldOscillator::init_ctrltypes()
     oscdata->p[shn_highcut].set_name("High Cut");
     oscdata->p[shn_highcut].set_type(ct_freq_audible_deactivatable_lp);
     oscdata->p[shn_sync].set_name("Sync");
-    oscdata->p[shn_sync].set_type(ct_syncpitch);
+    oscdata->p[shn_sync].set_type(ct_syncpitch_deformable);
     oscdata->p[shn_unison_detune].set_name("Unison Detune");
     oscdata->p[shn_unison_detune].set_type(ct_oscspread);
     oscdata->p[shn_unison_voices].set_name("Unison Voices");
@@ -167,54 +162,96 @@ void SampleAndHoldOscillator::init_default_values()
     oscdata->p[shn_highcut].deactivated = true;
 
     oscdata->p[shn_sync].val.f = 0.f;
+    oscdata->p[shn_sync].deform_type = 1; // Economy Mode on
 
     oscdata->p[shn_unison_detune].val.f = 0.1f;
     oscdata->p[shn_unison_voices].val.i = 1;
 }
 
+void SampleAndHoldOscillator::prepare_block()
+{
+    economy = oscdata->p[shn_sync].deform_type != 0;
+
+    const bool absolute = oscdata->p[shn_unison_detune].absolute;
+    const float spread =
+        n_unison > 1 ? oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) : 0.f;
+    // Economy Mode: no voice runs more than four impulses per oversampled sample. Past that point
+    // every extra impulse only lowers the in-band level (3 dB per octave), so the level drop is
+    // applied directly instead of being paid for in convolutions
+    const float tmin = 0.5f * pitchmult;
+
+    for (int v = 0; v < n_unison; v++)
+    {
+        float detune = drift * driftLFO[v].val();
+        if (n_unison > 1)
+            detune += spread * (detune_bias * float(v) + detune_offset);
+
+        float t, tm;
+
+        if (absolute)
+        {
+            // see the comment in ClassicOscillator in the absolute branch
+            const double ad =
+                detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443;
+
+            tm = storage->note_to_pitch_inv_ignoring_tuning((float)ad) * 2;
+            t = storage->note_to_pitch_inv_ignoring_tuning((float)(ad + l_sync.v));
+
+            if (t < 0.01)
+                t = 0.01;
+        }
+        else
+        {
+            tm = storage->note_to_pitch_inv_tuningctr(detune) * 2;
+            t = storage->note_to_pitch_inv_tuningctr(detune + l_sync.v);
+        }
+
+        float lc = 1.f;
+
+        if (economy && t < tmin)
+        {
+            lc = sqrt(t / tmin);
+            t = tmin;
+        }
+
+        tFollower[v] = t;
+        tLeader[v] = tm;
+        levelComp[v] = lc;
+    }
+
+    wfBase = l_shape.v * 0.8;
+    oneMinusWfAbs = 1 - fabs(wfBase);
+    rcpOneMinusWfAbs = mech::rcp(oneMinusWfAbs);
+    pwTarget = l_pw.v;
+    p24pmi = (float)(1 << 24) * pitchmult_inv;
+}
+
 void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 {
-    float detune = drift * driftLFO[voice].val();
-    if (n_unison > 1)
-        detune += oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
-                  (detune_bias * float(voice) + detune_offset);
-
-    float sub = l_sub.v;
-
-    const float p24 = (1 << 24);
     float invertcorrelation = 1.f;
     unsigned int ipos;
 
     if (syncstate[voice] < oscstate[voice])
     {
         if (FM)
-            ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
+            ipos = (unsigned int)(p24pmi * syncstate[voice] * FMmul_inv);
         else
-            ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
-
-        float t;
-
-        if (!oscdata->p[shn_unison_detune].absolute)
-            t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
-        else
-            t = storage->note_to_pitch_inv_ignoring_tuning(
-                    detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443) *
-                2;
+            ipos = (unsigned int)(p24pmi * syncstate[voice]);
 
         if (state[voice] == 1)
             invertcorrelation = -1.f;
 
         state[voice] = 0;
         oscstate[voice] = syncstate[voice];
-        syncstate[voice] += t;
+        syncstate[voice] += tLeader[voice];
         syncstate[voice] = max(0.f, syncstate[voice]);
     }
     else
     {
         if (FM)
-            ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
+            ipos = (unsigned int)(p24pmi * oscstate[voice] * FMmul_inv);
         else
-            ipos = (unsigned int)((float)p24 * (oscstate[voice] * pitchmult_inv));
+            ipos = (unsigned int)(p24pmi * oscstate[voice]);
     }
 
     unsigned int delay;
@@ -231,34 +268,22 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
     lipol128 = SIMD_MM(shuffle_ps)(lipol128, lipol128, SIMD_MM_SHUFFLE(0, 0, 0, 0));
 
     int k;
-    const float s = 0.99952f;
-    // add time until next statechange
-    float t;
-    if (oscdata->p[shn_unison_detune].absolute)
-    {
-        // see the comment in ClassicOscillator in the absolute branch
-        t = storage->note_to_pitch_inv_ignoring_tuning(
-            detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443 + l_sync.v);
-
-        if (t < 0.1)
-            t = 0.1;
-    }
-    else
-        t = storage->note_to_pitch_inv_tuningctr(detune + l_sync.v);
+    const float t = tFollower[voice];
 
     float g, gR;
 
-    float wf = l_shape.v * 0.8 * invertcorrelation;
-    float wfabs = fabs(wf);
-    float smooth = l_smooth.v;
-    float rand11 = urng();
-    float randt = rand11 * (1 - wfabs) - wf * last_level[voice];
+    float wf = wfBase * invertcorrelation;
+    float rand11 = rngDistro(rng);
+    // the correlation recursion runs on the uncompensated level
+    float randt = rand11 * oneMinusWfAbs - wf * last_level2[voice];
 
-    randt = randt * mech::rcp(1.0f - wfabs);
+    randt = randt * rcpOneMinusWfAbs;
     randt = min(0.5f, max(-0.5f, randt));
+    last_level2[voice] = randt;
+    randt *= levelComp[voice];
 
     if (state[voice] == 0)
-        pwidth[voice] = l_pw.v;
+        pwidth[voice] = pwTarget;
 
     g = randt - last_level[voice];
     last_level[voice] = randt;
@@ -391,13 +416,15 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     l_sub.process();
     l_sync.process();
 
+    for (l = 0; l < n_unison; l++)
+    {
+        driftLFO[l].next();
+    }
+
+    prepare_block();
+
     if (FM)
     {
-        for (l = 0; l < n_unison; l++)
-        {
-            driftLFO[l].next();
-        }
-
         for (int s = 0; s < BLOCK_SIZE_OS; s++)
         {
             float fmmul = limit_range(1.f + depth * master_osc[s], 0.1f, 1.9f);
@@ -425,8 +452,6 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
 
         for (l = 0; l < n_unison; l++)
         {
-            driftLFO[l].next();
-
             while ((syncstate[l] < a) || (oscstate[l] < a))
             {
                 convolute(l, false, stereo);
@@ -506,5 +531,11 @@ void SampleAndHoldOscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[shn_lowcut].deactivated = true;
         oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f; // high cut at the top
         oscdata->p[shn_sync].deactivated = true;
+    }
+
+    // Economy Mode arrived while revision 31 was current, so older patches load with it off
+    if (streamingRevision < 31)
+    {
+        oscdata->p[shn_sync].deform_type = 0;
     }
 }

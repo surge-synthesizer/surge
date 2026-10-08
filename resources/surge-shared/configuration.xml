@@ -29,7 +29,7 @@
 <type i="10" name="Twist" p4_extend_range="0"/>
 <separator/>
 <type i="11" name="Alias" p4_extend_range="0"/>
-<type i="3" name="S&amp;H Noise" p5_extend_range="0"/>
+<type i="3" name="S&amp;H Noise" p4_deform_type="1" p5_extend_range="0"/>
 <separator/>
 <type i="4" name="Audio Input">
     <snapshot name="Left" p0="-1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" retrigger="0"/>

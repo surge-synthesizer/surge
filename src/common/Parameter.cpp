@@ -388,6 +388,7 @@ bool Parameter::has_deformoptions() const
     case ct_osc_feedback_negative:
     case ct_countedset_percent_extendable_wtdeform:
     case ct_osccount_or_playcount:
+    case ct_syncpitch_deformable:
         return true;
     default:
         break;
@@ -617,6 +618,7 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0;
         break;
     case ct_syncpitch:
+    case ct_syncpitch_deformable:
         valtype = vt_float;
         val_min.f = 0;
         val_max.f = 60;
@@ -1529,6 +1531,7 @@ void Parameter::set_type(int ctrltype)
     case ct_pitch4oct:
     case ct_pitch_extendable_very_low_minval:
     case ct_syncpitch:
+    case ct_syncpitch_deformable:
     case ct_freq_mod:
     case ct_flangerpitch:
         displayType = LinearWithScale;
@@ -1786,6 +1789,7 @@ void Parameter::set_type(int ctrltype)
     case ct_pitch4oct:
     case ct_pitch_extendable_very_low_minval:
     case ct_syncpitch:
+    case ct_syncpitch_deformable:
     case ct_oscspread:
         displayInfo.customFeatures |= kAllowsTuningFractionTypein;
         break;
@@ -1864,6 +1868,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_pitch4oct:
         case ct_pitch_semi7bp:
         case ct_syncpitch:
+        case ct_syncpitch_deformable:
         {
             if (!extend_range)
             {
@@ -4596,6 +4601,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_fmratio:
     case ct_float_toggle:
     case ct_syncpitch:
+    case ct_syncpitch_deformable:
     case ct_amplitude:
     case ct_amplitude_clipper:
     case ct_amplitude_ringmod:
