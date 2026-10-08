@@ -74,7 +74,7 @@ class SampleAndHoldOscillator : public AbstractBlitOscillator
     int FMdelay;
     float FMmul_inv;
     // Everything convolute() needs that only changes once per block, see prepare_block()
-    float tSlave[MAX_UNISON], tMaster[MAX_UNISON], levelComp[MAX_UNISON];
+    float tFollower[MAX_UNISON], tLeader[MAX_UNISON], levelComp[MAX_UNISON];
     float wfBase, oneMinusWfAbs, rcpOneMinusWfAbs, pwTarget, p24pmi;
     bool economy{false};
     std::minstd_rand rng;

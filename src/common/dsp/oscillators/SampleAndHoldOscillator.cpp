@@ -214,8 +214,8 @@ void SampleAndHoldOscillator::prepare_block()
             t = tmin;
         }
 
-        tSlave[v] = t;
-        tMaster[v] = tm;
+        tFollower[v] = t;
+        tLeader[v] = tm;
         levelComp[v] = lc;
     }
 
@@ -243,7 +243,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 
         state[voice] = 0;
         oscstate[voice] = syncstate[voice];
-        syncstate[voice] += tMaster[voice];
+        syncstate[voice] += tLeader[voice];
         syncstate[voice] = max(0.f, syncstate[voice]);
     }
     else
@@ -268,7 +268,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
     lipol128 = SIMD_MM(shuffle_ps)(lipol128, lipol128, SIMD_MM_SHUFFLE(0, 0, 0, 0));
 
     int k;
-    const float t = tSlave[voice];
+    const float t = tFollower[voice];
 
     float g, gR;
 
