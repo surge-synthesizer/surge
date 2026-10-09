@@ -128,6 +128,7 @@ void Wavetable::Copy(Wavetable *wt)
     size_po2 = wt->size_po2;
     flags = wt->flags;
     data_n_tables = wt->data_n_tables;
+    source_n_tables = wt->source_n_tables;
     dt = wt->dt;
     n_tables = wt->n_tables;
 
@@ -290,15 +291,20 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
 
     MipMapWT();
 
+    // Scan for trailing silence once here, so that reading the count later is free
+    ComputeSourceFrameCount();
+
     everBuilt = true;
     return true;
 }
 
-int Wavetable::SourceFrameCount() const
+void Wavetable::ComputeSourceFrameCount()
 {
-    if (!everBuilt || size <= 0 || n_tables == 0)
+    source_n_tables = 0;
+
+    if (size <= 0 || n_tables == 0)
     {
-        return 0;
+        return;
     }
 
     int nf = (data_n_tables > 0) ? data_n_tables : (int)n_tables;
@@ -335,7 +341,7 @@ int Wavetable::SourceFrameCount() const
         }
     }
 
-    return nf;
+    source_n_tables = nf;
 }
 
 std::vector<float> Wavetable::FlattenSource() const
@@ -467,8 +473,11 @@ void Wavetable::MipMapWT()
                         }
                     }
 
-                    // Left at zero before, which only the float-reading wavetable oscillator
-                    // got away with
+                    // These used to be left at zero, which was harmless while only the
+                    // wavetable oscillator played samples: it reads the float tables. The
+                    // window oscillator reads the int16 ones, and picks a mipmap level from
+                    // the read rate, so without these a sample went silent above whatever
+                    // pitch first selected a level other than zero.
                     this->TableI16WeakPointers[l][s][i + FIRoffsetI16] =
                         static_cast<short>(std::clamp<int64_t>(ival >> 16, -32768, 32767));
                 }
