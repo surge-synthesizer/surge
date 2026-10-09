@@ -57,15 +57,15 @@ class Wavetable
     static constexpr int min_reslice_size = 16;
 
     // Recover the source samples this wavetable was built from, by concatenating its top
-    // mipmap level. Sample-mode tables carry trailing silent frames - either the three
-    // BuildWT appends, or however many survived a patch round-trip - so those are trimmed
-    // back off, which keeps repeated re-slices from accumulating padding.
+    // mipmap level, so that a re-slice does not accumulate the padding BuildWT appends.
     std::vector<float> FlattenSource() const;
 
-    // Frames of real content, i.e. n_tables minus any trailing silent padding. For a
-    // wavetable this is just n_tables; for a sample it is the count worth showing the user,
-    // since the padding is an implementation detail of BuildWT.
-    int SourceFrameCount() const;
+    // Frames of real content: n_tables minus any trailing silent padding. Free to call -
+    // the scan behind it runs once per build, since this is read on the audio thread.
+    int SourceFrameCount() const { return source_n_tables; }
+
+    // Scans for trailing silence and caches the answer. Called at the end of BuildWT.
+    void ComputeSourceFrameCount();
 
     // Rebuild in place at a new frame size and/or frame count. newSize <= 0 keeps the
     // current frame size; newFrames <= 0 derives the largest frame count the samples
@@ -78,9 +78,10 @@ class Wavetable
   public:
     bool everBuilt = false;
     int size;
-    // Frames actually populated from the build data, excluding any silence BuildWT
-    // appended. FlattenSource needs this because n_tables counts the padding.
+    // Frames populated from the build data, excluding the silence BuildWT appends
     int data_n_tables{0};
+    // data_n_tables with trailing silent frames trimmed off; see SourceFrameCount()
+    int source_n_tables{0};
     unsigned int n_tables;
     int size_po2;
     int flags;
