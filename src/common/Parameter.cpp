@@ -2206,7 +2206,11 @@ void Parameter::set_extend_range(bool er)
     bool prior_extend = extend_range;
 
     extend_range = er;
-    parameterInfoUpdated = true;
+
+    if (er != prior_extend)
+    {
+        parameterInfoUpdated = true;
+    }
 
     if (!extend_range)
     {

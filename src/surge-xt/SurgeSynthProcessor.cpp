@@ -1102,7 +1102,7 @@ void SurgeSynthProcessor::processBlockOSC()
     }
 }
 
-void SurgeSynthProcessor::processBlockPostFunction()
+void SurgeSynthProcessor::processBlockPostFunction(bool forceInfoCheck)
 {
     // This has to run *after* the block, since a patch enqueued by setStateInformation
     // is only deserialized part way through it, by processControl. See #8096.
@@ -1111,7 +1111,9 @@ void SurgeSynthProcessor::processBlockPostFunction()
         tryLazyOscStartupFromStreamedState();
     }
 
-    if (checkNamesEvery++ > 10)
+    // The counter throttles the common in-process case. A flush happens rarely enough that it
+    // can afford to look every time, and is the only thing that would notice while we are idle
+    if (forceInfoCheck || checkNamesEvery++ > 10)
     {
         checkNamesEvery = 0;
         if (std::atomic_exchange(&parameterInfoUpdated, false))
@@ -1312,7 +1314,7 @@ void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
     }
 
     // While we aren't processing, this is the only place that would notice invalidated info
-    processBlockPostFunction();
+    processBlockPostFunction(true);
 }
 
 void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)

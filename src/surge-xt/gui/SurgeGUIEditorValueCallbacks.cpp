@@ -1749,7 +1749,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->refresh_editor = true;
 
                                 auto pid = synth->idForParameter(p);
+                                juceEditor->beginParameterEdit(p);
                                 synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+                                juceEditor->endParameterEdit(p);
 
                                 juceEditor->processor.paramChangeToListeners(
                                     p, true, juceEditor->processor.SCT_EX_EXTENDRANGE,
@@ -2117,7 +2119,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             // Both branches move the value, so the host's cached one is stale
                             auto pid = synth->idForParameter(p);
+                            juceEditor->beginParameterEdit(p);
                             synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+                            juceEditor->endParameterEdit(p);
 
                             if (lfoDisplay)
                                 lfoDisplay->repaint();
@@ -2196,8 +2200,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     }
 
                                     auto plid = synth->idForParameter(pl);
+                                    juceEditor->beginParameterEdit(pl);
                                     synth->sendParameterAutomation(plid,
                                                                    synth->getParameter01(plid));
+                                    juceEditor->endParameterEdit(pl);
                                 }
                             }
 
@@ -2897,7 +2903,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     synth->refresh_editor = true;
 
                                     auto pid = synth->idForParameter(p);
+                                    juceEditor->beginParameterEdit(p);
                                     synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+                                    juceEditor->endParameterEdit(p);
 
                                     // output updated value to OSC
                                     juceEditor->processor.paramChangeToListeners(
@@ -2944,7 +2952,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         // Absolute leaves the value alone and only changes what it means, but
                         // notifying anyway is what gets a host to re-read the display
                         auto pid = synth->idForParameter(p);
+                        juceEditor->beginParameterEdit(p);
                         synth->sendParameterAutomation(pid, synth->getParameter01(pid));
+                        juceEditor->endParameterEdit(p);
 
                         // output updated value to OSC
                         juceEditor->processor.paramChangeToListeners(

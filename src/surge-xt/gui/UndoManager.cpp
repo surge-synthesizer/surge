@@ -566,6 +566,7 @@ struct UndoManagerImpl
             p->deactivated = pa->deactivated;
             p->set_extend_range(pa->extend_range);
             p->deform_type = pa->deform_type;
+            parameterInfoUpdated = true;
 
             p->porta_constrate = pa->porta_constrate;
             p->porta_gliss = pa->porta_gliss;
@@ -1219,6 +1220,7 @@ struct UndoManagerImpl
                 pa->deactivated = p->undoParamValues[i].deactivated;
                 pa->set_extend_range(p->undoParamValues[i].extend_range);
                 pa->deform_type = p->undoParamValues[i].deform_type;
+                parameterInfoUpdated = true;
             }
 
             if (!p->undoModulations.empty())
