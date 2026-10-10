@@ -1313,6 +1313,14 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                         }
                     }
 
+                    // These sounded as wavetables, because the Window oscillator ignored the
+                    // flag, so honoring it now would turn them into oneshots
+                    if (streamingRevision <= 30 && scene[sc].osc[osc].type.val.i == ot_window &&
+                        (scene[sc].osc[osc].wt.flags & wtf_is_sample))
+                    {
+                        scene[sc].osc[osc].wt.flags &= ~(wtf_is_sample | wtf_loop_sample);
+                    }
+
                     dr += ph->wtsize[sc][osc];
                 }
             }

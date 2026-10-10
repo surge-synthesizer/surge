@@ -58,6 +58,10 @@ class WavetableOscillator : public AbstractBlitOscillator
         SAMPLE_PLAY_COUNT = 1
     };
 
+    // Play count meaning "never stop". Above MAX_UNISON so the whole count range stays
+    // literal; public because the Window oscillator counts plays the same way.
+    static constexpr int infinite_sampleloop = MAX_UNISON + 1;
+
     lipol_ps li_hpf, li_DC, li_integratormult;
     WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy,
                         pdata *localcopyUnmod);
@@ -112,12 +116,8 @@ class WavetableOscillator : public AbstractBlitOscillator
     int FMdelay;
     int nointerp;
     float FMmul_inv;
-    // Play count for sample-mode playback, per voice, counted down each time the sample
-    // wraps. wtf_loop_sample means "never stop" and is represented by the sentinel below:
-    // at that value the countdown is skipped entirely. The sentinel sits above MAX_UNISON
-    // deliberately, so that when the SAMPLE_PLAY_COUNT deform makes the unison voice count
-    // double as the play count, the whole 1..MAX_UNISON range stays a literal play count.
-    static constexpr int infinite_sampleloop = MAX_UNISON + 1;
+    // Plays remaining for sample-mode playback, per voice, counted down each time the sample
+    // wraps. At infinite_sampleloop the countdown is skipped entirely.
     int sampleloop[MAX_UNISON];
 
     pdata *unmodulatedLocalcopy;

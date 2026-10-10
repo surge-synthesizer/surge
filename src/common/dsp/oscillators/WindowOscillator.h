@@ -72,6 +72,14 @@ class WindowOscillator : public Oscillator
         unsigned int DispatchDelay[MAX_UNISON];
         Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 
+        // Sample playback state, per voice, which is what lets unison work on a sample.
+        // The frame a grain reads, advancing one per grain rather than tracking Morph.
+        int Frame[MAX_UNISON];
+        // Plays remaining; at WavetableOscillator::infinite_sampleloop it stops counting down
+        int SampleLoop[MAX_UNISON];
+        // Set on a voice that has run out of plays; it stops being mixed in
+        bool Done[MAX_UNISON];
+
         int FMRatio[MAX_UNISON][BLOCK_SIZE_OS];
     } Window alignas(16);
 

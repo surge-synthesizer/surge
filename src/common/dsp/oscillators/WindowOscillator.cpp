@@ -21,6 +21,7 @@
  */
 
 #include "WindowOscillator.h"
+#include "WavetableOscillator.h"
 #include "DSPUtils.h"
 
 #include <bit>
@@ -52,6 +53,26 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
     update_lagvals<true>();
 
     NumUnison = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON - 1);
+
+    const bool isSample = (oscdata->wt.flags & wtf_is_sample) != 0;
+
+    int playcount = 1;
+
+    if (isSample)
+    {
+        if (oscdata->p[win_unison_voices].deform_type == WavetableOscillator::SAMPLE_PLAY_COUNT)
+        {
+            // The parameter, not NumUnison, which this oscillator clamps to MAX_UNISON - 1
+            playcount = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON);
+            NumUnison = 1;
+        }
+
+        // An explicit loop flag overrides the count rather than adding to it
+        if (oscdata->wt.flags & wtf_loop_sample)
+        {
+            playcount = WavetableOscillator::infinite_sampleloop;
+        }
+    }
 
     if (is_display)
     {
@@ -118,6 +139,22 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
         }
     }
 
+    // Morph is the start point offset, seeded a frame low for the first advance to cancel
+    int startFrame = 0;
+    const int frames = oscdata->wt.SourceFrameCount();
+
+    if (isSample && frames > 0)
+    {
+        startFrame = limit_range((int)((float)frames * l_morph.v), 0, frames - 1);
+    }
+
+    for (int i = 0; i < MAX_UNISON; i++)
+    {
+        Window.Frame[i] = startFrame - 1;
+        Window.SampleLoop[i] = playcount;
+        Window.Done[i] = false;
+    }
+
     hp.coeff_instantize();
     lp.coeff_instantize();
 
@@ -145,8 +182,11 @@ void WindowOscillator::init_ctrltypes()
 
     oscdata->p[win_unison_detune].set_name("Unison Detune");
     oscdata->p[win_unison_detune].set_type(ct_oscspread);
+    oscdata->p[win_unison_detune].dynamicDeactivation = &Surge::Oscillator::sampleUnisonDetuneDeact;
+    oscdata->p[win_unison_detune].dynamicName = &Surge::Oscillator::sampleUnisonDynamicName;
     oscdata->p[win_unison_voices].set_name("Unison Voices");
-    oscdata->p[win_unison_voices].set_type(ct_osccount);
+    oscdata->p[win_unison_voices].set_type(ct_osccount_or_playcount);
+    oscdata->p[win_unison_voices].dynamicName = &Surge::Oscillator::sampleUnisonDynamicName;
 }
 
 void WindowOscillator::init_default_values()
@@ -268,9 +308,15 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
     float frac = oscdata->wt.n_tables * l_morph.v;
     float FTable = limit_range(frac - Table, 0.f, 1.f);
 
-    if (!oscdata->p[win_morph].extend_range)
+    const bool isSample = (oscdata->wt.flags & wtf_is_sample) != 0;
+
+    // Re-derived per block, since the table can be re-sliced under a sounding voice
+    const int lastFrame =
+        std::max(std::min(oscdata->wt.SourceFrameCount(), (int)oscdata->wt.n_tables) - 1, 0);
+
+    if (isSample || !oscdata->p[win_morph].extend_range)
     {
-        // If I'm not extended, then clamp to table
+        // If I'm not extended, then clamp to table. A sample never crossfades either.
         FTable = 0.f;
     }
 
@@ -294,6 +340,12 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
         // SSE2 path
         for (int so = 0; so < NumUnison; so++)
         {
+            // A voice that has run out of plays contributes nothing
+            if (isSample && Window.Done[so])
+            {
+                continue;
+            }
+
             unsigned int Pos = Window.Pos[so];
             unsigned int RatioA = Window.Ratio[so];
 
@@ -303,14 +355,27 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
             unsigned int MipMapA = 0;
             unsigned int MipMapB = 0;
 
-            if (Window.Table[0][so] >= oscdata->wt.n_tables || oscdata->p[win_morph].extend_range)
+            if (isSample)
             {
-                Window.Table[0][so] = Table;
-            }
+                // Both slots hold the playback frame; FTable is pinned to zero anyway
+                const unsigned int f = (unsigned int)limit_range(Window.Frame[so], 0, lastFrame);
 
-            if (Window.Table[1][so] >= oscdata->wt.n_tables || oscdata->p[win_morph].extend_range)
+                Window.Table[0][so] = f;
+                Window.Table[1][so] = f;
+            }
+            else
             {
-                Window.Table[1][so] = TablePlusOne;
+                if (Window.Table[0][so] >= oscdata->wt.n_tables ||
+                    oscdata->p[win_morph].extend_range)
+                {
+                    Window.Table[0][so] = Table;
+                }
+
+                if (Window.Table[1][so] >= oscdata->wt.n_tables ||
+                    oscdata->p[win_morph].extend_range)
+                {
+                    Window.Table[1][so] = TablePlusOne;
+                }
             }
 
             unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
@@ -342,10 +407,46 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
                 if (Pos & ~SizeMaskWin)
                 {
                     Window.FormantMul[so] = FormantMul;
-                    Window.Table[0][so] = Table;
-                    Window.Table[1][so] = TablePlusOne;
-                    WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Table];
-                    WaveAdrP1 = oscdata->wt.TableI16WeakPointers[MipMapB][TablePlusOne];
+
+                    if (isSample)
+                    {
+                        // One frame per grain, so the table plays through in order
+                        Window.Frame[so]++;
+
+                        if (Window.Frame[so] > lastFrame)
+                        {
+                            if (Window.SampleLoop[so] < WavetableOscillator::infinite_sampleloop)
+                            {
+                                Window.SampleLoop[so]--;
+                            }
+
+                            if (Window.SampleLoop[so] > 0)
+                            {
+                                Window.Frame[so] = 0;
+                            }
+                            else
+                            {
+                                // No integrator to drain here, so the voice simply stops
+                                Window.Done[so] = true;
+                                break;
+                            }
+                        }
+
+                        const unsigned int f = (unsigned int)Window.Frame[so];
+
+                        Window.Table[0][so] = f;
+                        Window.Table[1][so] = f;
+                        WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][f];
+                        WaveAdrP1 = WaveAdr;
+                    }
+                    else
+                    {
+                        Window.Table[0][so] = Table;
+                        Window.Table[1][so] = TablePlusOne;
+                        WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Table];
+                        WaveAdrP1 = oscdata->wt.TableI16WeakPointers[MipMapB][TablePlusOne];
+                    }
+
                     Pos = Pos & SizeMaskWin;
                 }
 

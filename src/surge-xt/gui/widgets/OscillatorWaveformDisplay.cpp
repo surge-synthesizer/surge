@@ -690,10 +690,8 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
     const int frames = wt.SourceFrameCount();
     const int totalSamples = frames * wt.size;
 
-    // The window oscillator shares the wavetable but ignores wtf_is_sample entirely, so
-    // oneshot playback is only offered where it does something. Frame size and frame count
-    // still are, since the window oscillator reads both.
-    if (oscdata->type.val.i == ot_wavetable)
+    // Both wavetable-data oscillators play samples, so both get the playback section
+    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
     {
         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "PLAYBACK");
 
@@ -730,9 +728,20 @@ void OscillatorWaveformDisplay::createWTShapeMenu(juce::PopupMenu &contextMenu)
         // here next to the playback modes it belongs with, since that is where it is
         // actually looked for. Only meaningful on a sample that is not looping, because
         // the loop flag overrides the count entirely.
-        if (isSampleOneshot)
+        // The two oscillators number their parameters independently, so match on type
+        Parameter *p = nullptr;
+
+        for (auto &q : oscdata->p)
         {
-            auto *p = &oscdata->p[WavetableOscillator::wt_unison_voices];
+            if (q.ctrltype == ct_osccount_or_playcount)
+            {
+                p = &q;
+                break;
+            }
+        }
+
+        if (isSampleOneshot && p)
+        {
             const bool isLoopCount = p->deform_type == WavetableOscillator::SAMPLE_PLAY_COUNT;
 
             contextMenu.addSeparator();
