@@ -28,19 +28,23 @@ namespace mech = sst::basic_blocks::mechanics;
 
 constexpr int subblock_factor = 3; // divide block by 2^this
 
-std::vector<AirWinBaseClass::Registration> AirWindowsEffect::fxreg;
-std::vector<int> AirWindowsEffect::fxregOrdering;
 AirWindowsEffect::AWFxSelectorMapper AirWindowsEffect::mapper;
+
+const std::vector<AirWinBaseClass::Registration> &AirWindowsEffect::fxreg()
+{
+    static const std::vector<AirWinBaseClass::Registration> reg = AirWinBaseClass::pluginRegistry();
+    return reg;
+}
+
+const std::vector<int> &AirWindowsEffect::fxregOrdering()
+{
+    static const std::vector<int> ordering = AirWinBaseClass::pluginRegistryOrdering();
+    return ordering;
+}
 
 AirWindowsEffect::AirWindowsEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
 {
-    if (fxreg.empty())
-    {
-        fxreg = AirWinBaseClass::pluginRegistry();
-        fxregOrdering = AirWinBaseClass::pluginRegistryOrdering();
-    }
-
     for (int i = 0; i < n_fx_params - 1; i++)
     {
         param_lags[i].newValue(0);
@@ -49,7 +53,22 @@ AirWindowsEffect::AirWindowsEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     }
 }
 
-AirWindowsEffect::~AirWindowsEffect() {}
+AirWindowsEffect::~AirWindowsEffect()
+{
+    /*
+     * The parameter formatters we hand out as user data are members of this object, so nothing
+     * may still be pointing at them once we are gone. loadFx unpublishes them before it deletes
+     * us as well, but keeping the invariant with the object rather than only with one of its
+     * callers means no future delete path can reopen the window. See #6619.
+     */
+    if (fxdata)
+    {
+        for (int i = 0; i < n_fx_params; ++i)
+        {
+            fxdata->p[i].clear_user_data();
+        }
+    }
+}
 
 void AirWindowsEffect::init()
 {
@@ -70,9 +89,12 @@ const char *AirWindowsEffect::group_label(int id)
     {
         if (airwin)
         {
-            static char txt[1024];
-            strncpy(txt, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(), 1023);
-            return (const char *)txt;
+            // This used to be a function local static, so two effect instances - or two
+            // plugin instances - asking for their group label at once scribbled over each
+            // other's answer.
+            strncpy(groupLabel, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(),
+                    sizeof(groupLabel) - 1);
+            return (const char *)groupLabel;
         }
         else
         {
@@ -114,7 +136,7 @@ void AirWindowsEffect::init_ctrltypes()
     fxdata->p[0].set_name("FX");
     fxdata->p[0].set_type(ct_airwindows_fx);
     fxdata->p[0].posy_offset = 1;
-    fxdata->p[0].val_max.i = fxreg.size() - 1;
+    fxdata->p[0].val_max.i = fxreg().size() - 1;
     fxdata->p[0].set_user_data(nullptr);
     fxdata->p[0].deactivated = false;
 
@@ -136,7 +158,7 @@ void AirWindowsEffect::resetCtrlTypes(bool useStreamedValues)
     fxdata->p[0].set_name("FX");
     fxdata->p[0].set_type(ct_airwindows_fx);
     fxdata->p[0].posy_offset = 1;
-    fxdata->p[0].val_max.i = fxreg.size() - 1;
+    fxdata->p[0].val_max.i = fxreg().size() - 1;
 
     fxdata->p[0].set_user_data(&mapper);
     if (airwin)
@@ -281,9 +303,23 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
 
 void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)
 {
-    const auto &r = fxreg[sfx];
+    // sfx comes off a parameter the UI and the host can both be writing, so bound it the same
+    // way the selector mapper does rather than indexing the registry with it raw. See #6619.
+    sfx = mapper.safeIdx(sfx);
+
+    const auto &r = fxreg()[sfx];
     const bool detailedMode = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     int dp = detailedMode ? 6 : 2;
+
+    /*
+     * The parameter formatters read through to airwin, so unpublish them before the instance
+     * they are about to reach through goes away. resetCtrlTypes republishes them below, once
+     * the new instance is in place. See #6619.
+     */
+    for (int i = 1; i < n_fx_params; ++i)
+    {
+        fxdata->p[i].clear_user_data();
+    }
 
     airwin = r.create(r.id, storage->dsamplerate, dp); // FIXME
     airwin->storage = storage;

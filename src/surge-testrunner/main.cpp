@@ -73,6 +73,11 @@ int main(int argc, char **argv)
         {
             Surge::Headless::NonTest::performancePlay(argv[3], std::atoi(argv[4]));
         }
+        if (strcmp(argv[2], "--patch-change-soak") == 0)
+        {
+            Surge::Headless::NonTest::patchChangeSoak(argc > 3 ? std::atoi(argv[3]) : 30,
+                                                      argc > 4 ? std::atoi(argv[4]) : 2);
+        }
         return 0;
     }
     else
@@ -87,6 +92,8 @@ int main(int argc, char **argv)
                 << "   --non-test --stats-from-every-patch    # play every patch and show RMS\n"
                 << "   --non-test --filter-analyzer ft fst    # analyze filter type/subtype for "
                    "response\n"
+                << "   --non-test --patch-change-soak s n     # play notes while rotating patches, "
+                   "with n parameter reader threads (see #6619)\n"
                 << "\n"
                 << "If you exclude the `--non-test` argument, standard catch2 arguments, below, "
                    "apply\n\n";
