@@ -137,7 +137,12 @@ static std::mutex surgeLookAndFeelSetupMutex;
 
 //==============================================================================
 
-SurgeVirtualKeyboard::~SurgeVirtualKeyboard() { clearAllLatches(); }
+SurgeVirtualKeyboard::~SurgeVirtualKeyboard()
+{
+    clearAllLatches();
+    // otherwise closing the editor with a key held leaves the note on
+    releaseAllHeldKeys();
+}
 
 float SurgeVirtualKeyboard::getCurrentVelocity() const { return editor->midiKeyboardVelocity; }
 
@@ -344,6 +349,71 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
     }
 }
 
+// The VKB keeps QWERTY the whole time it is shown; only a text or code editor takes it away.
+bool SurgeSynthEditor::vkbShouldTakeKeys() const
+{
+    // vkbForward covers the typein overlays and the formula editor, the cast the plain
+    // TextEditors such as the BPM field next to the keyboard
+    return sge->getShowVirtualKeyboard() && sge->shouldForwardKeysToVKB() &&
+           dynamic_cast<juce::TextEditor *>(juce::Component::getCurrentlyFocusedComponent()) ==
+               nullptr;
+}
+
+/*
+ * A menu takes the key events without taking the keyboard focus, since PopupMenu's window sets
+ * wantsKeyboardFocus false and runs off modal state and a temporary peer. Opening one is not
+ * observable through the focus system, which is also why JUCE's own focusLost net never covered
+ * menus. So while one is open, read the physical key state instead: keyStateChanged starts and
+ * ends notes from it, so QWERTY keeps playing across the menu.
+ *
+ * Ownership is settled before the menu opens rather than while it is up. The key state is shared
+ * by every instance in the process, and on X11 clicking a menu item moves the focus to the menu
+ * window, so asking once the menu is up answers for the wrong editor.
+ */
+void SurgeSynthEditor::updateVKBFromKeyState()
+{
+    auto *vkb = dynamic_cast<SurgeVirtualKeyboard *>(keyboard.get());
+
+    if (!vkb)
+    {
+        return;
+    }
+
+    // always false on JUCE 7, which cannot tell a menu from any other modal - see JuceAPICope.h
+    const auto menuActive = SST_JUCE_ANY_MENU_ACTIVE();
+
+    if (menuActive)
+    {
+        if (vkbMenuOwnedKeys)
+        {
+            vkb->keyStateChanged(false);
+        }
+    }
+    else
+    {
+        // one more rescan on the way out, since the key up can land in the menu with no tick
+        // left to notice it before it closes
+        if (vkbMenuWasActive && vkbMenuOwnedKeys)
+        {
+            vkb->keyStateChanged(false);
+        }
+
+        // with no menu up the ordinary key events drive the VKB, so all that is left is to drop
+        // held notes when something takes the keys away or we stop being frontmost
+        const auto takingKeys = vkbShouldTakeKeys() && juce::Process::isForegroundProcess();
+
+        if (vkbWasTakingKeys && !takingKeys)
+        {
+            vkb->releaseAllHeldKeys();
+        }
+
+        vkbWasTakingKeys = takingKeys;
+        vkbMenuOwnedKeys = takingKeys && hasKeyboardFocus(true);
+    }
+
+    vkbMenuWasActive = menuActive;
+}
+
 void SurgeSynthEditor::handleAsyncUpdate() {}
 
 void SurgeSynthEditor::paint(juce::Graphics &g)
@@ -367,6 +437,8 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 void SurgeSynthEditor::idle()
 {
     takeInitialKeyboardFocus();
+
+    updateVKBFromKeyState();
 
     sge->idle();
 
@@ -868,7 +940,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
             }
         }
 
-        if (sge->shouldForwardKeysToVKB() && orig != keyboard.get())
+        if (vkbShouldTakeKeys() && orig != keyboard.get())
         {
             return keyboard->keyPressed(key);
         }
@@ -879,8 +951,9 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
 
 bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originatingComponent)
 {
-    if (sge->getShowVirtualKeyboard() && sge->shouldForwardKeysToVKB() &&
-        originatingComponent != keyboard.get())
+    // TextEditor::keyStateChanged returns false on key up, so without vkbShouldTakeKeys() here
+    // the BPM field's key ups would still bubble up and rescan
+    if (vkbShouldTakeKeys() && originatingComponent != keyboard.get())
     {
         return keyboard->keyStateChanged(isKeyDown);
     }

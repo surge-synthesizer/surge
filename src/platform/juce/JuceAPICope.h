@@ -42,4 +42,14 @@
 #define SST_STRING_WIDTH_FLOAT(a, b) a.getStringWidthFloat(b)
 #endif
 
+// Both of these are ours, so only the JUCE 8 fork has them. With no menu query the VKB cannot
+// tell a menu from any other modal, so #5480 stands on JUCE 7.
+#if JUCE_VERSION >= 0x080000
+#define SST_JUCE_ANY_MENU_ACTIVE() juce::PopupMenu::isAnyMenuActive()
+#define SST_JUCE_VKB_RELEASE_HELD_KEYS() resetAnyKeysInUse()
+#else
+#define SST_JUCE_ANY_MENU_ACTIVE() false
+#define SST_JUCE_VKB_RELEASE_HELD_KEYS() focusLost(juce::Component::focusChangedDirectly)
+#endif
+
 #endif // SURGE_SRC_PLATFORM_JUCE_JUCEAPICOPE_H
