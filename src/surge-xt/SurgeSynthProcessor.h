@@ -279,7 +279,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void processBlockPlayhead();
     void processBlockMidiFromGUI();
     void processBlockOSC();
-    void processBlockPostFunction();
+    void processBlockPostFunction(bool forceInfoCheck = false);
 
     void applyMidi(const juce::MidiMessageMetadata &);
     void applyMidi(const juce::MidiMessage &);

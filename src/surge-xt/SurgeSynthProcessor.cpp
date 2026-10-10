@@ -1011,6 +1011,7 @@ void SurgeSynthProcessor::processBlockOSC()
             {
                 om->param->absolute = om->on;
                 surge->storage.getPatch().isDirty = true;
+                parameterInfoUpdated = true;
                 surge->queueForRefresh(om->param->id);
             }
             break;
@@ -1020,6 +1021,7 @@ void SurgeSynthProcessor::processBlockOSC()
             {
                 om->param->temposync = om->on;
                 surge->storage.getPatch().isDirty = true;
+                parameterInfoUpdated = true;
                 surge->queueForRefresh(om->param->id);
             }
             break;
@@ -1043,6 +1045,7 @@ void SurgeSynthProcessor::processBlockOSC()
             {
                 om->param->extend_range = om->on;
                 surge->storage.getPatch().isDirty = true;
+                parameterInfoUpdated = true;
                 surge->queueForRefresh(om->param->id);
             }
             break;
@@ -1052,6 +1055,7 @@ void SurgeSynthProcessor::processBlockOSC()
             {
                 om->param->deform_type = om->ival;
                 surge->storage.getPatch().isDirty = true;
+                parameterInfoUpdated = true;
                 surge->queueForRefresh(om->param->id);
             }
             break;
@@ -1098,7 +1102,7 @@ void SurgeSynthProcessor::processBlockOSC()
     }
 }
 
-void SurgeSynthProcessor::processBlockPostFunction()
+void SurgeSynthProcessor::processBlockPostFunction(bool forceInfoCheck)
 {
     // This has to run *after* the block, since a patch enqueued by setStateInformation
     // is only deserialized part way through it, by processControl. See #8096.
@@ -1107,10 +1111,12 @@ void SurgeSynthProcessor::processBlockPostFunction()
         tryLazyOscStartupFromStreamedState();
     }
 
-    if (checkNamesEvery++ > 10)
+    // The counter throttles the common in-process case. A flush happens rarely enough that it
+    // can afford to look every time, and is the only thing that would notice while we are idle
+    if (forceInfoCheck || checkNamesEvery++ > 10)
     {
         checkNamesEvery = 0;
-        if (std::atomic_exchange(&parameterNameUpdated, false))
+        if (std::atomic_exchange(&parameterInfoUpdated, false))
         {
             updateHostDisplay(
                 juce::AudioProcessorListener::ChangeDetails().withParameterInfoChanged(true));
@@ -1306,6 +1312,9 @@ void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
         // call surge process if we are!
         surge->process();
     }
+
+    // While we aren't processing, this is the only place that would notice invalidated info
+    processBlockPostFunction(true);
 }
 
 void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)

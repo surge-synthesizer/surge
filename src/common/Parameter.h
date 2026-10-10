@@ -639,6 +639,6 @@ class Parameter
 
 // I don't make this a member since param needs to be copyable with memcpy.
 // TODO: Don't need to worry about that anymore.
-extern std::atomic<bool> parameterNameUpdated;
+extern std::atomic<bool> parameterInfoUpdated;
 
 #endif // SURGE_SRC_COMMON_PARAMETER_H
