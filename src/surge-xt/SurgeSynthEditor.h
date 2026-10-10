@@ -25,6 +25,7 @@
 
 #include "SurgeSynthProcessor.h"
 #include "SkinSupport.h"
+#include "juce/JuceAPICope.h"
 
 #include "juce_audio_utils/juce_audio_utils.h"
 
@@ -80,6 +81,15 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     bool keyStateChanged(bool isKeyDown, juce::Component *originatingComponent) override;
 
     void setVKBLayout(const std::string layout);
+
+    // True whenever the VKB is shown and no text or code editor has the keys for itself.
+    bool vkbShouldTakeKeys() const;
+    void updateVKBFromKeyState();
+
+    bool vkbMenuWasActive{false};
+    // Sampled when a menu opens: whether the keys were ours to read at that moment.
+    bool vkbMenuOwnedKeys{false};
+    bool vkbWasTakingKeys{false};
 
     void reapplySurgeComponentColours();
 
@@ -192,6 +202,10 @@ struct SurgeVirtualKeyboard : public juce::MidiKeyboardComponent
     }
 
     ~SurgeVirtualKeyboard();
+
+    // MidiKeyboardComponent only releases held keys from focusLost, which never fires for us
+    // since we take no keyboard focus, so we have to ask for the reset ourselves.
+    void releaseAllHeldKeys() { SST_JUCE_VKB_RELEASE_HELD_KEYS(); }
 
     std::function<void(float)> onVelocityChanged;
 
