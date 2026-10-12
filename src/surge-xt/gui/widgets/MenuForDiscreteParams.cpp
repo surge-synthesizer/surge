@@ -27,6 +27,8 @@
 #include "SurgeImage.h"
 #include "AccessibleHelpers.h"
 
+#include <algorithm>
+
 namespace Surge
 {
 namespace Widgets
@@ -105,7 +107,9 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
 
             if (!gli.empty())
             {
-                auto gim = gli[iv];
+                // iv comes off a parameter value which a patch change can be partway through
+                // rewriting, so bound it rather than indexing the map raw. See #6619.
+                auto gim = gli[std::clamp(iv, 0, (int)gli.size() - 1)];
                 xv = gim.first;
                 yv = gim.second;
             }

@@ -28,19 +28,23 @@ namespace mech = sst::basic_blocks::mechanics;
 
 constexpr int subblock_factor = 3; // divide block by 2^this
 
-std::vector<AirWinBaseClass::Registration> AirWindowsEffect::fxreg;
-std::vector<int> AirWindowsEffect::fxregOrdering;
 AirWindowsEffect::AWFxSelectorMapper AirWindowsEffect::mapper;
+
+const std::vector<AirWinBaseClass::Registration> &AirWindowsEffect::fxreg()
+{
+    static const std::vector<AirWinBaseClass::Registration> reg = AirWinBaseClass::pluginRegistry();
+    return reg;
+}
+
+const std::vector<int> &AirWindowsEffect::fxregOrdering()
+{
+    static const std::vector<int> ordering = AirWinBaseClass::pluginRegistryOrdering();
+    return ordering;
+}
 
 AirWindowsEffect::AirWindowsEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
 {
-    if (fxreg.empty())
-    {
-        fxreg = AirWinBaseClass::pluginRegistry();
-        fxregOrdering = AirWinBaseClass::pluginRegistryOrdering();
-    }
-
     for (int i = 0; i < n_fx_params - 1; i++)
     {
         param_lags[i].newValue(0);
@@ -49,7 +53,22 @@ AirWindowsEffect::AirWindowsEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     }
 }
 
-AirWindowsEffect::~AirWindowsEffect() {}
+AirWindowsEffect::~AirWindowsEffect()
+{
+    // Only our own formatters: in Surge FX a replacement effect publishes onto this same
+    // fxdata before we are destroyed, and clearing blindly would wipe its user data. See #6619
+    if (fxdata)
+    {
+        for (int i = 0; i < n_fx_params - 1; ++i)
+        {
+            if (fxFormatters[i] &&
+                fxdata->p[i + 1].user_data == static_cast<ParamUserData *>(fxFormatters[i].get()))
+            {
+                fxdata->p[i + 1].clear_user_data();
+            }
+        }
+    }
+}
 
 void AirWindowsEffect::init()
 {
@@ -70,9 +89,11 @@ const char *AirWindowsEffect::group_label(int id)
     {
         if (airwin)
         {
-            static char txt[1024];
-            strncpy(txt, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(), 1023);
-            return (const char *)txt;
+            // per instance, since a shared buffer gets scribbled on by a second effect or a
+            // second plugin instance asking for its label at the same time
+            strncpy(groupLabel, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(),
+                    sizeof(groupLabel) - 1);
+            return (const char *)groupLabel;
         }
         else
         {
@@ -114,7 +135,7 @@ void AirWindowsEffect::init_ctrltypes()
     fxdata->p[0].set_name("FX");
     fxdata->p[0].set_type(ct_airwindows_fx);
     fxdata->p[0].posy_offset = 1;
-    fxdata->p[0].val_max.i = fxreg.size() - 1;
+    fxdata->p[0].val_max.i = fxreg().size() - 1;
     fxdata->p[0].set_user_data(nullptr);
     fxdata->p[0].deactivated = false;
 
@@ -136,7 +157,7 @@ void AirWindowsEffect::resetCtrlTypes(bool useStreamedValues)
     fxdata->p[0].set_name("FX");
     fxdata->p[0].set_type(ct_airwindows_fx);
     fxdata->p[0].posy_offset = 1;
-    fxdata->p[0].val_max.i = fxreg.size() - 1;
+    fxdata->p[0].val_max.i = fxreg().size() - 1;
 
     fxdata->p[0].set_user_data(&mapper);
     if (airwin)
@@ -281,9 +302,20 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
 
 void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)
 {
-    const auto &r = fxreg[sfx];
+    // Write the bounded index back: lastSelected below is compared against p[0].val.i
+    // every block, so leaving an out of range value there rebuilds us forever
+    sfx = mapper.safeIdx(sfx);
+    fxdata->p[0].val.i = sfx;
+
+    const auto &r = fxreg()[sfx];
     const bool detailedMode = Surge::Storage::getValueDisplayIsHighPrecision(storage);
     int dp = detailedMode ? 6 : 2;
+
+    // the formatters read through to airwin, so unpublish before replacing it
+    for (int i = 1; i < n_fx_params; ++i)
+    {
+        fxdata->p[i].clear_user_data();
+    }
 
     airwin = r.create(r.id, storage->dsamplerate, dp); // FIXME
     airwin->storage = storage;

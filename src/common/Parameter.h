@@ -26,6 +26,7 @@
 #include <string>
 #include <memory>
 #include <cstdint>
+#include <algorithm>
 #include <functional>
 #include <atomic>
 #include "SkinModel.h"
@@ -470,7 +471,10 @@ class Parameter
         Special,
     };
 
-    std::optional<sst::basic_blocks::params::ParamMetaData> basicBlocksParamMetaData;
+    // Borrowed from a table owned per effect type, never held by value, so clearing it cannot
+    // free anything a reader is inside. Load it into a local before testing it: set_type can
+    // clear it between the test and the use. See #6619
+    const sst::basic_blocks::params::ParamMetaData *basicBlocksParamMetaData{nullptr};
 
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                          ModulationDisplayMode mode,
@@ -602,6 +606,10 @@ class Parameter
     // I take a shallow copy and don't assume ownership and assume I am referenceable
     void set_user_data(ParamUserData *ud);
 
+    // Whoever owns the user data must unpublish it here before it goes away, since the UI
+    // thread and the host both read it off a live parameter. See #6619
+    void clear_user_data() { user_data = nullptr; }
+
     bool supportsDynamicName() const;
     ParameterDynamicNameFunction *dynamicName = nullptr;
 
@@ -627,13 +635,19 @@ class Parameter
      * with the somewhat odd 99 and 005 but put them all in one place and used the
      * consistently.
      */
+    // int64 subtraction and a bounded narrowing, because a torn read of vmax/vmin is float
+    // bits read as ints: the difference overflows and the narrowing is then undefined. See #6619
     static inline float intScaledToFloat(int v, int vmax, int vmin = 0)
     {
-        return 0.005 + 0.99 * ((float)(v - vmin)) / ((float)(vmax - vmin));
+        return 0.005 + 0.99 * ((float)((int64_t)v - vmin)) / ((float)((int64_t)vmax - vmin));
     }
     static inline int intUnscaledFromFloat(float f, int vmax, int vmin = 0)
     {
-        return (int)((1 / 0.99) * (f - 0.005) * (float)(vmax - vmin) + 0.5) + vmin;
+        constexpr double lim = 2147483000.0;
+        const double scaled = (1 / 0.99) * (f - 0.005) * (double)((int64_t)vmax - vmin) + 0.5;
+        const int64_t asInt = (int64_t)std::clamp(scaled, -lim, lim) + vmin;
+
+        return (int)std::clamp(asInt, (int64_t)-2147483648LL, (int64_t)2147483647LL);
     }
 };
 

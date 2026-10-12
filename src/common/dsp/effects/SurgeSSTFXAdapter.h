@@ -193,6 +193,32 @@ template <typename T> struct SurgeSSTFXBase : T
 
     const char *get_effectname() override { return T::displayName; }
 
+    // One shared table per effect type, outliving every effect instance, so that a Parameter
+    // can point at its metadata instead of owning a copy set_type would free under a reader.
+    // See #6619.
+    const sst::basic_blocks::params::ParamMetaData *metadataFor(int i) const
+    {
+        static const std::vector<sst::basic_blocks::params::ParamMetaData> table = [this]() {
+            std::vector<sst::basic_blocks::params::ParamMetaData> res;
+
+            res.reserve(T::numParams);
+
+            for (int j = 0; j < T::numParams; ++j)
+            {
+                res.push_back(this->paramAt(j));
+            }
+
+            return res;
+        }();
+
+        if (i < 0 || i >= (int)table.size())
+        {
+            return nullptr;
+        }
+
+        return &table[i];
+    }
+
     void init_default_values() override
     {
         for (int i = 0; i < T::numParams; ++i)
@@ -230,7 +256,7 @@ template <typename T> struct SurgeSSTFXBase : T
                 started = true;
             }
             this->fxdata->p[i].set_name(pmd.name.c_str());
-            this->fxdata->p[i].basicBlocksParamMetaData = pmd;
+            this->fxdata->p[i].basicBlocksParamMetaData = metadataFor(i);
             auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
                 {

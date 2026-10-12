@@ -3176,6 +3176,10 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             {
                 int cge = p->ctrlgroup_entry;
 
+                // loadFx copies fxsync onto the live patch under this lock, and we are about to
+                // rewrite it from the UI thread, so take it too. See #6619.
+                std::lock_guard<std::mutex> g(fxSpawnMutex);
+
                 fxsync[cge].type.val.i = p->val.i;
 
                 // so funnily we want to set the value *back* so that loadFx picks up the change in
@@ -3311,6 +3315,13 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             fx_reload[s] = false;
 
             std::lock_guard<std::mutex> g(fxSpawnMutex);
+
+            // unpublish before the delete, not after: an effect can hand its own members over
+            // as user data, and readers dereference it off the live parameter. See #6619
+            for (int j = 0; j < n_fx_params; j++)
+            {
+                storage.getPatch().fx[s].p[j].clear_user_data();
+            }
 
             fx[s].reset();
             /*if (!force_reload_all)*/ storage.getPatch().fx[s].type.val.i = fxsync[s].type.val.i;
