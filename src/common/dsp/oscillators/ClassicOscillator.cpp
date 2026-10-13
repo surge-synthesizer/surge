@@ -346,7 +346,30 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
             float cycle = 2.f * t;
 
             // One draw per voice, as before, so the rest of the random sequence is unchanged
-            float phase = storage->rand_01() * cycle;
+            float drand = storage->rand_01();
+            float phase, leaderLeft = 0.f;
+
+            if (l_sync.v > 0)
+            {
+                /*
+                ** With sync on, the cycle that matters for phase is the leader's: ::convolute
+                ** restarts the follower at every leader reset. Draw the phase over the whole
+                ** leader cycle (the unsynced period, as in the sync reset in ::convolute),
+                ** count down to the next reset from there, and place the follower where it
+                ** would be after that many of its own cycles. Seeding syncstate from the
+                ** follower segment instead fires a reset almost at once and throws the
+                ** drawn phase away, which locks unison voices together.
+                */
+                float leaderCycle = 2.f * storage->note_to_pitch_inv_tuningctr(detune);
+                float leaderPhase = drand * leaderCycle;
+
+                leaderLeft = max(0.f, leaderCycle - leaderPhase);
+                phase = std::fmod(leaderPhase, cycle);
+            }
+            else
+            {
+                phase = drand * cycle;
+            }
 
             // mech::rcp, not a division, to match how ::convolute computes this
             float dcu = (1.f + wf) * (1.f - sub) * mech::rcp(t);
@@ -380,7 +403,7 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
             float frac = (seg > 0.f) ? limit_range(elapsed / seg, 0.f, 1.f) : 0.f;
 
             oscstate[i] = max(0.f, seg - elapsed);
-            syncstate[i] = oscstate[i];
+            syncstate[i] = (l_sync.v > 0) ? leaderLeft : oscstate[i];
             last_level[i] = level;
 
             // The level runs linearly from just after the impulse to last_level
