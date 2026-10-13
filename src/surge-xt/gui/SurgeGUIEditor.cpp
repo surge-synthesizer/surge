@@ -7718,25 +7718,17 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             std::string xmlStr;
             xmlStr << doc;
 
-            std::ofstream outFile(fullLocation, std::ios::binary);
-            if (!outFile)
-            {
-                storage->reportError("Failed to open file for writing.", "Write Error");
-                return;
-            }
+            std::vector<uint8_t> compressed;
+            sst::io::wtscript_header header{};
 
-            if (!hasSnapshots)
-            {
-                // Just the XML
-                outFile.write(xmlStr.data(), xmlStr.size());
-            }
-            else
+            // Compress up front, so a compression failure never touches a file
+            if (hasSnapshots)
             {
                 // Compress the binn snapshot data
                 namespace mech = sst::basic_blocks::mechanics;
                 const auto rawSize = binn_size(oscmap);
                 const auto compBound = ZSTD_compressBound(rawSize);
-                std::vector<uint8_t> compressed(compBound);
+                compressed.resize(compBound);
                 const size_t compSize =
                     ZSTD_compress(compressed.data(), compBound, binn_ptr(oscmap), rawSize, 3);
                 if (ZSTD_isError(compSize))
@@ -7747,24 +7739,68 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                 compressed.resize(compSize);
 
                 // Fixed binary header: tag + xmlsize + blobsize
-                sst::io::wtscript_header header{};
                 std::memcpy(header.tag, "wts1", 4);
                 header.xmlsize =
                     mech::endian_write_int32LE(static_cast<unsigned int>(xmlStr.size()));
                 header.blobsize =
                     mech::endian_write_int32LE(static_cast<unsigned int>(compressed.size()));
-
-                outFile.write(reinterpret_cast<const char *>(&header), sizeof(header));
-                outFile.write(xmlStr.data(), xmlStr.size());
-                outFile.write(reinterpret_cast<const char *>(compressed.data()), compressed.size());
             }
 
-            outFile.close();
-            if (!outFile)
+            // Write a temporary first and rename it over the target, so a failed save leaves
+            // the previous script intact. Not a .wtscript, so a leftover stays out of the list.
+            auto tmpLocation = fullLocation;
+            tmpLocation += ".tmp";
+
+            bool renamed = false;
+            const auto cleanupTmp = sst::cpputils::make_scope_guard([&]() {
+                if (!renamed)
+                {
+                    std::error_code ec;
+                    fs::remove(tmpLocation, ec);
+                }
+            });
+
             {
-                storage->reportError("Failed to write file.", "Write Error");
+                std::ofstream outFile(tmpLocation, std::ios::binary);
+                if (!outFile)
+                {
+                    storage->reportError("Failed to open temporary file for writing.",
+                                         "Write Error");
+                    return;
+                }
+
+                if (!hasSnapshots)
+                {
+                    // Just the XML
+                    outFile.write(xmlStr.data(), xmlStr.size());
+                }
+                else
+                {
+                    outFile.write(reinterpret_cast<const char *>(&header), sizeof(header));
+                    outFile.write(xmlStr.data(), xmlStr.size());
+                    outFile.write(reinterpret_cast<const char *>(compressed.data()),
+                                  compressed.size());
+                }
+
+                // close() flushes, so failbit here catches a full disk or an I/O error
+                outFile.close();
+                if (!outFile)
+                {
+                    storage->reportError("Failed to write temporary file.", "Write Error");
+                    return;
+                }
+            }
+
+            // rename replaces an existing target on every platform we build for
+            std::error_code ec;
+            fs::rename(tmpLocation, fullLocation, ec);
+            if (ec)
+            {
+                storage->reportError("Failed to move temporary file into place.", "Write Error");
                 return;
             }
+
+            renamed = true;
 
             storage->refresh_wtlist();
         };
