@@ -173,7 +173,8 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
                 ** and there is no integrator state to prime.
                 **
                 ** One draw per voice, as before, so the rest of the random sequence is
-                ** unchanged. convolute masks state against the mipmapped table size.
+                ** unchanged. convolute masks state against the mipmapped table size on
+                ** first_run, before anything reads it.
                 */
                 float drand = storage->rand_01();
 
@@ -419,6 +420,12 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
             mipmap_ofs[voice] += (ts >> i);
     }
 
+    // ::init seeds state anywhere in the full table, so on first_run it can lie beyond the
+    // mipmapped table. Mask it here, before H-skew and the end-of-cycle formant padding read
+    // it. After the first step state is always already in range, so this is a no-op there.
+    int wtsize = oscdata->wt.size >> mipmap[voice];
+    state[voice] = state[voice] & (wtsize - 1);
+
     // generate pulse
     unsigned int delay = ((ipos >> 24) & 0x3f);
 
@@ -468,13 +475,9 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     float formant = storage->note_to_pitch_tuningctr(-ft);
     dt *= formant * xt;
 
-    int wtsize = oscdata->wt.size >> mipmap[voice];
-
     if (state[voice] >= (wtsize - 1))
         dt += (1 - formant);
     t = dt * tempt;
-
-    state[voice] = state[voice] & (wtsize - 1);
 
     float newlevel;
     newlevel = distort_level((this->*deformSelected)(block_pos, voice));
