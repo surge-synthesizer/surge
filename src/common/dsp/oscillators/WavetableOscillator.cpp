@@ -160,14 +160,47 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
             if (oscdata->retrigger.val.b || is_display)
             {
                 oscstate[i] = 0.f;
+                state[i] = 0;
             }
             else
             {
+                /*
+                ** Start at a random position in the table rather than delaying the first
+                ** step by a random amount, which is what seeding oscstate does and is the
+                ** bug in #7570. Unlike the Classic oscillator this one emits pure steps
+                ** with no DC ramp between them, so firing immediately from a random table
+                ** index puts the voice at the right level with the usual band limiting,
+                ** and there is no integrator state to prime.
+                **
+                ** One draw per voice, as before, so the rest of the random sequence is
+                ** unchanged. convolute masks state against the mipmapped table size on
+                ** first_run, before anything reads it.
+                */
                 float drand = storage->rand_01();
-                oscstate[i] = drand;
-            }
 
-            state[i] = 0;
+                oscstate[i] = 0.f;
+
+                if (oscdata->wt.flags & wtf_is_sample)
+                {
+                    /*
+                    ** A sample is not periodic: its frames are consecutive audio rather
+                    ** than cycles of one waveform, so there is no phase to randomise and
+                    ** it should start at the top. It also cannot start anywhere else.
+                    ** ::init seeds tableid at -1 for a sample and relies on the first
+                    ** advance inside the state == 0 block of ::convolute to land it on
+                    ** frame 0; a random state skips that block, leaving tableid at -1 and
+                    ** indexing before the start of the table.
+                    **
+                    ** The draw above still happens, so the random sequence is unchanged
+                    ** whether or not the wavetable is a sample.
+                    */
+                    state[i] = 0;
+                }
+                else
+                {
+                    state[i] = (int)(drand * oscdata->wt.size) & (oscdata->wt.size - 1);
+                }
+            }
         }
 
         last_level[i] = 0.0;
@@ -362,7 +395,15 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
                 last_tableipol[voice] = tableid[voice];
             }
         }
+    }
 
+    // The mipmap level depends only on pitch, but ::init cannot compute it (pitchmult_inv
+    // is not available there), and with retrigger off a voice starts at a random state and
+    // so skips the state == 0 block above on its first convolute. Recompute it on first_run
+    // too, otherwise the voice runs the un-mipmapped table for its first partial cycle - a
+    // note-on CPU spike rather than an audible artifact. See issue #7570.
+    if (state[voice] == 0 || first_run)
+    {
         int ts = oscdata->wt.size;
         float a = oscdata->wt.dt * pitchmult_inv;
 
@@ -378,6 +419,12 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
         for (int i = 0; i < mipmap[voice]; i++)
             mipmap_ofs[voice] += (ts >> i);
     }
+
+    // ::init seeds state anywhere in the full table, so on first_run it can lie beyond the
+    // mipmapped table. Mask it here, before H-skew and the end-of-cycle formant padding read
+    // it. After the first step state is always already in range, so this is a no-op there.
+    int wtsize = oscdata->wt.size >> mipmap[voice];
+    state[voice] = state[voice] & (wtsize - 1);
 
     // generate pulse
     unsigned int delay = ((ipos >> 24) & 0x3f);
@@ -428,13 +475,9 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     float formant = storage->note_to_pitch_tuningctr(-ft);
     dt *= formant * xt;
 
-    int wtsize = oscdata->wt.size >> mipmap[voice];
-
     if (state[voice] >= (wtsize - 1))
         dt += (1 - formant);
     t = dt * tempt;
-
-    state[voice] = state[voice] & (wtsize - 1);
 
     float newlevel;
     newlevel = distort_level((this->*deformSelected)(block_pos, voice));
@@ -848,6 +891,8 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
             }
         }
     }
+
+    first_run = false;
 }
 
 void WavetableOscillator::handleStreamingMismatches(int streamingRevision,

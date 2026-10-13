@@ -68,6 +68,12 @@ class SampleAndHoldOscillator : public AbstractBlitOscillator
     bool first_run;
     float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
         last_level2[MAX_UNISON], pwidth[MAX_UNISON];
+    // Random start phase (0..1 of the leader cycle) and held level each voice draws in ::init.
+    // They are turned into oscillator state on the first ::process_block, after prepare_block
+    // has worked out the periods and level compensation the voice will run at, and where the
+    // stereo flag needed to seed the shared integrator first arrives.
+    float start_phase[MAX_UNISON], start_level[MAX_UNISON];
+    bool seed_start_phase{false};
     float pitch;
     lag<double> FMdepth, l_pw, l_shape, l_smooth, l_sub, l_sync;
     int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;

@@ -97,6 +97,8 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
     this->pitch = pitch;
     update_lagvals<true>();
 
+    seed_start_phase = !(oscdata->retrigger.val.b || is_display);
+
     int i;
     for (i = 0; i < n_unison; i++)
     {
@@ -104,21 +106,34 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
         {
             oscstate[i] = 0;
             syncstate[i] = 0;
+            last_level[i] = 0.0;
+            start_level[i] = 0.f;
+            pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
         }
         else
         {
-            double drand = (double)storage->rand_01();
-            double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
-                            (detune_bias * float(i) + detune_offset);
-            double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
-            drand = (double)storage->rand_01();
-            double ot = drand * storage->note_to_pitch_tuningctr(detune);
-            oscstate[i] = st;
-            syncstate[i] = st;
+            /*
+            ** Start partway through a held value rather than delaying the first step by a
+            ** random amount, which is what seeding oscstate does and is the bug in #7570.
+            **
+            ** Unlike the Classic oscillator there is no level to reconstruct: the held
+            ** value is random by construction, so any draw from the same range is as
+            ** correct as any other. Draw a phase and a level here, and let the first
+            ** ::process_block place the voice, once prepare_block has the periods.
+            **
+            ** Two draws per voice, matching the previous code, which also drew twice and
+            ** discarded the second - so the rest of the random sequence is unchanged.
+            */
+            start_phase[i] = storage->rand_01();
+            start_level[i] = storage->rand_01() - 0.5f;
+
+            // placeholders until the first ::process_block replaces them
+            oscstate[i] = 0;
+            syncstate[i] = 0;
+            last_level[i] = 0.0;
+            pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
         }
         state[i] = 0;
-        last_level[i] = 0.0;
-        pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
         driftLFO[i].init(nonzero_init_drift);
     }
 
@@ -405,6 +420,7 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     pitchmult_inv =
         max(1.0, storage->dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch));
     pitchmult = 1.f / pitchmult_inv;
+
     // This must be a real division, reciprocal-approximation is not precise enough
     int k, l;
 
@@ -422,6 +438,89 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     }
 
     prepare_block();
+
+    /*
+    ** ::init drew a start phase and a held level for each voice. Turn them into state here,
+    ** after prepare_block, so the voice is placed using the same periods and Economy Mode
+    ** level compensation it is about to run at, and seed the shared integrator, which needs
+    ** the stereo flag that only arrives here. See #7570.
+    **
+    ** Unlike ClassicOscillator this class never cleared first_run, since nothing here
+    ** read it before, so clear it right away rather than at the end of the block.
+    */
+    if (first_run)
+    {
+        first_run = false;
+
+        float sL = 0.f, sR = 0.f;
+
+        for (int u = 0; u < n_unison; u++)
+        {
+            if (seed_start_phase)
+            {
+                const float t = tFollower[u];
+                const float pw = pwTarget;
+                float phase;
+
+                if (l_sync.v > 0)
+                {
+                    /*
+                    ** As in ClassicOscillator: with sync on, the phase is drawn over the
+                    ** leader cycle, syncstate counts down to the next leader reset, and the
+                    ** follower sits where it would be after that many of its own cycles.
+                    */
+                    const float leaderPhase = start_phase[u] * tLeader[u];
+
+                    syncstate[u] = max(0.f, tLeader[u] - leaderPhase);
+                    phase = std::fmod(leaderPhase, t);
+                }
+                else
+                {
+                    phase = start_phase[u] * t;
+                }
+
+                /*
+                ** One follower cycle is two segments: t * pw after a state 0 impulse,
+                ** then t * (1 - pw) after a state 1 impulse. oscstate is the time left in
+                ** the current segment and state is the one the next impulse starts.
+                */
+                if (phase < t * pw)
+                {
+                    oscstate[u] = t * pw - phase;
+                    state[u] = 1;
+                }
+                else
+                {
+                    oscstate[u] = max(0.f, t - phase);
+                    state[u] = 0;
+                }
+
+                if (!(l_sync.v > 0))
+                    syncstate[u] = oscstate[u];
+
+                // the correlation recursion runs on the uncompensated level, as in convolute
+                last_level2[u] = start_level[u];
+                start_level[u] *= levelComp[u];
+                last_level[u] = start_level[u];
+                pwidth[u] = pw;
+            }
+
+            float v = start_level[u] * out_attenuation;
+
+            if (stereo)
+            {
+                sL += v * panL[u];
+                sR += v * panR[u];
+            }
+            else
+            {
+                sL += v;
+            }
+        }
+
+        osc_out = SIMD_MM(set1_ps)(sL);
+        osc_outR = SIMD_MM(set1_ps)(sR);
+    }
 
     if (FM)
     {
