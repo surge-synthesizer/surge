@@ -301,55 +301,6 @@ TEST_CASE("Unison at Different Sample Rates", "[osc]")
     }
 }
 
-TEST_CASE("All Patches Have Bounded Output", "[dsp]")
-{
-    auto surge = Surge::Headless::createSurge(44100);
-    REQUIRE(surge.get());
-
-    Surge::Headless::playerEvents_t scale =
-        Surge::Headless::make120BPMCMajorQuarterNoteScale(0, 44100);
-
-    auto callBack = [](const Patch &p, const PatchCategory &pc, const float *data, int nSamples,
-                       int nChannels) -> void {
-        bool writeWav = false; // toggle this to true to write each sample to a wav file
-        REQUIRE(nSamples * nChannels > 0);
-
-        if (nSamples * nChannels > 0)
-        {
-            const auto minmaxres = std::minmax_element(data, data + nSamples * nChannels);
-            auto mind = minmaxres.first;
-            auto maxd = minmaxres.second;
-
-            float rms = 0, L1 = 0;
-            for (int i = 0; i < nSamples * nChannels; ++i)
-            {
-                rms += data[i] * data[i];
-                L1 += fabs(data[i]);
-            }
-            L1 = L1 / (nChannels * nSamples);
-            rms = sqrt(rms / nChannels / nSamples);
-
-            REQUIRE(L1 < 1);
-            REQUIRE(rms < 1);
-            REQUIRE(*maxd < 6);
-            REQUIRE(*maxd >= 0);
-            REQUIRE(*mind > -6);
-            REQUIRE(*mind <= 0);
-
-            /*
-            std::cout << "cat/patch = " <<  pc.name << " / " << std::left << std::setw(30) <<
-            p.name; std::cout << "  range = [" << std::setw(10)
-                      << std::fixed << *mind << ", " << std::setw(10) << std::fixed << *maxd << "]"
-                      << " L1=" << L1
-                      << " rms=" << rms
-                      << " samp=" << nSamples << " chan=" << nChannels << std::endl;
-            */
-        }
-    };
-
-    // Surge::Headless::playOnNRandomPatches(surge, scale, 100, callBack);
-}
-
 TEST_CASE("Every Oscillator Plays", "[dsp]")
 {
     for (int i = 0; i < n_osc_types; ++i)
