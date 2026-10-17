@@ -245,6 +245,8 @@ struct ModulationSourceButton : public juce::Component,
 
     void buildHamburgerMenu(juce::PopupMenu &menu, const bool addedToModbuttonContextMenu);
 
+    void setModListIndexAndNotify(int idx);
+
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
 
     void resized() override;
