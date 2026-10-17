@@ -353,6 +353,30 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     }
 }
 
+void ModulationSourceButton::setModListIndexAndNotify(int idx)
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    modlistIndex = idx;
+
+    auto ms = getCurrentModSource();
+
+    if (sge)
+    {
+        sge->forceLfoDisplayRepaint();
+
+        if (ms >= ms_lfo1 && ms <= ms_slfo6)
+        {
+            sge->setLFOModulationIndex(sge->current_scene, ms - ms_lfo1, idx);
+        }
+    }
+
+    mouseMode = HAMBURGER;
+    notifyValueChanged();
+    mouseMode = NONE;
+    repaint();
+}
+
 void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
                                                 const bool addedToModbuttonContextMenu)
 {
@@ -407,21 +431,8 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
             if (this->modlistIndex != idx || !addedToModbuttonContextMenu)
             {
                 bool ticked = !addedToModbuttonContextMenu && this->modlistIndex == idx;
-                menu.addItem(modName, true, ticked, [this, sge, idx]() {
-                    sge->forceLfoDisplayRepaint();
-                    this->modlistIndex = idx;
-
-                    int lfo_id = getCurrentModSource() - ms_lfo1;
-                    storage->getPatch()
-                        .dawExtraState.editor
-                        .modulationSourceButtonState[sge->current_scene][lfo_id]
-                        .index = this->modlistIndex;
-
-                    mouseMode = HAMBURGER;
-                    notifyValueChanged();
-                    mouseMode = NONE;
-                    repaint();
-                });
+                menu.addItem(modName, true, ticked,
+                             [this, idx]() { setModListIndexAndNotify(idx); });
             }
 
             idx++;
@@ -856,14 +867,7 @@ void ModulationSourceButton::mouseWheelMove(const juce::MouseEvent &event,
                 n = 0;
             }
 
-            this->modlistIndex = n;
-            mouseMode = HAMBURGER;
-
-            notifyValueChanged();
-
-            mouseMode = NONE;
-
-            repaint();
+            setModListIndexAndNotify(n);
         }
     }
 }
