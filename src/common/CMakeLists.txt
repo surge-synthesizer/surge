@@ -31,6 +31,13 @@ set(ZSTD_BUILD_STATIC ON)
 set(ZSTD_BUILD_SHARED OFF)
 surge_add_lib_subdirectory(zstd)
 
+# zstd enables -Wall -Wextra for its own sources, and combined with the -WX this
+# tree sets globally that makes an unused static function in huf_compress.c a hard
+# error under clang-cl
+if(MSVC)
+  target_compile_options(libzstd_static PRIVATE /WX-)
+endif()
+
 if(NOT SURGE_SKIP_LUA)
   surge_add_lib_subdirectory(luajitlib)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
