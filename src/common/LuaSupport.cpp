@@ -420,8 +420,40 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t featu
     }
     lua_pop(L, 1); // pop global math table and stack is back to f>t
 
-    // and now we are back to f>t so we can setfenv it
+    // And now we are back to f>t, so attach the table as the function's environment.
+    //
+    // On 5.1 that is setfenv. On 5.2 the environment is the _ENV upvalue instead, and
+    // because this is an inner named function rather than a main chunk, _ENV is not
+    // necessarily the first upvalue and need not exist at all: a function that never
+    // reads a global has none, and is already sandboxed by construction.
+#if LUA_VERSION_NUM >= 502
+    bool attached = false;
+
+    for (int i = 1; !attached; ++i)
+    {
+        const char *upvalue = lua_getupvalue(L, -2, i); // stack: f>t>v
+
+        if (upvalue == nullptr)
+        {
+            break; // ran out of upvalues without finding _ENV
+        }
+
+        lua_pop(L, 1); // we only wanted the name, so stack is back to f>t
+
+        if (std::strcmp(upvalue, "_ENV") == 0)
+        {
+            lua_setupvalue(L, -2, i); // pops the table
+            attached = true;
+        }
+    }
+
+    if (!attached)
+    {
+        lua_pop(L, 1); // no _ENV to attach the table to, so discard it
+    }
+#else
     lua_setfenv(L, -2);
+#endif
 
 #endif
 

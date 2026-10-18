@@ -320,9 +320,17 @@ end
         REQUIRE(!res);
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
+        // Lua 5.2 stopped quoting the <eof> token in this message, so the two
+        // backends word it slightly differently. Kept as an exact match per backend
+        // rather than relaxed, since this string reaches the formula editor.
         // clang-format off
-        REQUIRE(err == 
+#if LUA_VERSION_NUM >= 502
+        REQUIRE(err ==
+            "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close 'function' at line 2) near <eof>");
+#else
+        REQUIRE(err ==
             "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close 'function' at line 2) near '<eof>'");
+#endif
         // clang-format on
         lua_pop(L, 1);
         lua_close(L);
