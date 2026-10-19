@@ -327,3 +327,44 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
         }
     }
 }
+
+TEST_CASE("Note During Release Reclaims The Mono Voice", "[voice]")
+{
+    for (auto pm : {pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
+    {
+        for (auto em : {RESTART_FROM_ZERO, RESTART_FROM_LATEST})
+        {
+            DYNAMIC_SECTION("Mode " << play_mode_names[pm] << " envelope " << (int)em)
+            {
+                auto s = surgeOnSine();
+                s->storage.getPatch().scene[0].polymode.val.i = pm;
+                s->storage.getPatch().scene[0].monoVoiceEnvelopeMode = em;
+                s->storage.getPatch().scene[0].adsr[0].r.val.f = 4;
+                s->process();
+
+                auto proc = [&s]() {
+                    for (int i = 0; i < 5; ++i)
+                    {
+                        s->process();
+                    }
+                };
+
+                s->playNote(0, 60, 127, 0, 173);
+                proc();
+                REQUIRE(s->voices[0].size() == 1);
+                auto *firstVoice = s->voices[0].front();
+
+                s->releaseNoteByHostNoteID(173, 0);
+                proc();
+                REQUIRE(s->voices[0].size() == 1);
+                REQUIRE(!firstVoice->state.gate);
+
+                s->playNote(0, 60, 127, 0, 177);
+                proc();
+                REQUIRE(s->voices[0].size() == 1);
+                REQUIRE(s->voices[0].front() == firstVoice);
+                REQUIRE(firstVoice->state.gate);
+            }
+        }
+    }
+}
