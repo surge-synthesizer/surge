@@ -1643,6 +1643,125 @@ void buildSineWT(Wavetable *wt, int frames, int frameSize)
 }
 } // namespace
 
+TEST_CASE("Unpadded Sample Wavetables Receive Silent Padding", "[io]")
+{
+    constexpr int frames = 8;
+    constexpr int frameSize = 64;
+
+    const int trailing = GENERATE(0, 1, 2, 3, 4);
+    CAPTURE(trailing);
+
+    std::vector<float> data((frames + trailing) * frameSize, 0.f);
+
+    for (size_t i = 0; i < frames * frameSize; ++i)
+    {
+        data[i] = static_cast<float>(i + 1) / static_cast<float>(frames * frameSize);
+    }
+
+    wt_header wh{};
+    wh.n_samples = mech::endian_write_int32LE(frameSize);
+    wh.n_tables = mech::endian_write_int16LE(frames + trailing);
+    wh.flags = mech::endian_write_int16LE(wtf_is_sample);
+
+    Wavetable wt{};
+    REQUIRE(wt.BuildWT(data.data(), wh, false));
+
+    const int expectedFrames = frames + std::max(3, trailing);
+    REQUIRE(wt.n_tables == expectedFrames);
+
+    for (int frame = 0; frame < frames; ++frame)
+    {
+        for (int i = 0; i < frameSize; ++i)
+        {
+            REQUIRE(wt.TableF32WeakPointers[0][frame][i] == data[frame * frameSize + i]);
+        }
+    }
+
+    for (int frame = frames; frame < expectedFrames; ++frame)
+    {
+        for (int i = 0; i < frameSize; ++i)
+        {
+            REQUIRE(wt.TableF32WeakPointers[0][frame][i] == 0.f);
+        }
+    }
+
+    std::vector<float> rebuiltData(expectedFrames * frameSize);
+
+    for (int frame = 0; frame < expectedFrames; ++frame)
+    {
+        for (int i = 0; i < frameSize; ++i)
+        {
+            rebuiltData[frame * frameSize + i] = wt.TableF32WeakPointers[0][frame][i];
+        }
+    }
+
+    wh.n_tables = mech::endian_write_int16LE(expectedFrames);
+
+    Wavetable rebuilt{};
+    REQUIRE(rebuilt.BuildWT(rebuiltData.data(), wh, false));
+    REQUIRE(rebuilt.n_tables == expectedFrames);
+}
+
+TEST_CASE("Int16 Sample Wavetables Receive Missing Padding", "[io]")
+{
+    constexpr int frames = 8;
+    constexpr int frameSize = 64;
+
+    const int trailing = GENERATE(0, 1, 2, 3, 4);
+    CAPTURE(trailing);
+
+    std::vector<int16_t> data((frames + trailing) * frameSize, 0);
+
+    for (size_t i = 0; i < frames * frameSize; ++i)
+    {
+        data[i] = mech::endian_write_int16LE(4096);
+    }
+
+    wt_header wh{};
+    wh.n_samples = mech::endian_write_int32LE(frameSize);
+    wh.n_tables = mech::endian_write_int16LE(frames + trailing);
+    wh.flags = mech::endian_write_int16LE(wtf_is_sample | wtf_int16);
+
+    Wavetable wt{};
+    REQUIRE(wt.BuildWT(data.data(), wh, false));
+
+    const int expectedFrames = frames + std::max(3, trailing);
+    REQUIRE(wt.n_tables == expectedFrames);
+
+    for (int frame = 0; frame < expectedFrames; ++frame)
+    {
+        const float expected = frame < frames ? 0.25f : 0.f;
+
+        for (int i = 0; i < frameSize; ++i)
+        {
+            REQUIRE(wt.TableF32WeakPointers[0][frame][i] == expected);
+        }
+    }
+}
+
+TEST_CASE("Sample Padding Respects Wavetable Capacity", "[io]")
+{
+    Wavetable wt;
+    buildRampWT(&wt, 8, 64);
+
+    const auto before = wt.FlattenSource();
+
+    constexpr int frameSize = 64;
+    std::vector<float> data(max_subtables * frameSize, 0.5f);
+
+    wt_header wh{};
+    wh.n_samples = mech::endian_write_int32LE(frameSize);
+    wh.n_tables = mech::endian_write_int16LE(max_subtables);
+    wh.flags = mech::endian_write_int16LE(wtf_is_sample);
+
+    REQUIRE_FALSE(wt.BuildWT(data.data(), wh, false));
+
+    REQUIRE(wt.n_tables == 8);
+    REQUIRE(wt.size == 64);
+    REQUIRE(wt.flags == 0);
+    REQUIRE(wt.FlattenSource() == before);
+}
+
 TEST_CASE("Wavetables Can Be Resliced At Runtime", "[io]")
 {
     SECTION("Frame size drives frame count")
