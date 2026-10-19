@@ -85,7 +85,7 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
         }
     }
 
-    n_unison = is_display ? 1 : oscdata->p[ao_unison_voices].val.i;
+    n_unison = is_display ? 1 : limit_range(oscdata->p[ao_unison_voices].val.i, 1, MAX_UNISON);
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
 
