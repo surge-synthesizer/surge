@@ -185,8 +185,65 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     // Validate before assigning any of it: a rejected header must leave an
     // already-built wavetable alone, rather than leaving it describing itself with
     // counts its buffers do not have.
-    if (newSize <= 0 || newSize > max_wtable_size ||
-        newTables + (AppendSilence ? 3u : 0u) > (unsigned)max_subtables)
+    if (newSize <= 0 || newSize > max_wtable_size || (unsigned)newTables > (unsigned)max_subtables)
+    {
+        return false;
+    }
+
+    int padding = 0;
+
+    if (AppendSilence)
+    {
+        padding = 3;
+    }
+    else if (newFlags & wtf_is_sample)
+    {
+        // Sample tables need three trailing silent frames.
+        // Existing padding is preserved; only missing frames are appended.
+        int trailing = 0;
+        const auto *bytes = static_cast<const char *>(wdata);
+
+        // Inspect at most 3 trailing frames
+        while (trailing < 3 && trailing < newTables)
+        {
+            const int frameIndex = newTables - 1 - trailing;
+
+            // Index of the first sample in this frame.
+            const size_t firstSample = static_cast<size_t>(frameIndex) * newSize;
+            bool silent = true;
+
+            // If at least one sample is not silent, then the frame is not silent.
+            for (int i = 0; i < newSize && silent; ++i)
+            {
+                const size_t sampleIndex = firstSample + i;
+
+                if (newFlags & wtf_int16)
+                {
+                    int16_t sample;
+                    memcpy(&sample, bytes + sampleIndex * sizeof(sample), sizeof(sample));
+                    silent = sample == 0;
+                }
+                else
+                {
+                    int32_t bits;
+                    memcpy(&bits, bytes + sampleIndex * sizeof(bits), sizeof(bits));
+                    const float sample = std::bit_cast<float>(mech::endian_read_int32LE(bits));
+                    silent = sample == 0.f;
+                }
+            }
+
+            // Stops at the first non-silent frame
+            if (!silent)
+                break;
+
+            // Found new silent frame
+            ++trailing;
+        }
+
+        padding = 3 - trailing;
+    }
+
+    if ((unsigned)newTables + (unsigned)padding > (unsigned)max_subtables)
     {
         return false;
     }
@@ -205,10 +262,7 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     int wdata_tables = n_tables;
     data_n_tables = wdata_tables;
 
-    if (AppendSilence)
-    {
-        n_tables += 3; // this "3" should match the "3" in RequiredWTSize
-    }
+    n_tables += padding;
 
     size_po2 = std::bit_width(static_cast<unsigned int>(size)) - 1;
 
