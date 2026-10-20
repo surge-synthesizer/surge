@@ -38,6 +38,17 @@ extern "C"
 
 #include <pffft.h>
 }
+
+/*
+ * LUA_OK arrived in Lua 5.2. Both backends define it - LuaJIT backports it into
+ * its own lua.h, and the vendored PUC drop is 5.2.4 - so this guard is inert
+ * today. It is kept because it is three lines and it is what lets the PUC backend
+ * be pointed at a 5.1 series Lua without touching any comparison site.
+ */
+#ifndef LUA_OK
+#define LUA_OK 0
+#endif
+
 #else
 typedef int lua_State;
 #endif

@@ -8,7 +8,7 @@ CMake should output a series of debug messages and a general error message when 
 
 Alternatively, a pre-built statically linked library can be placed directly in the build output directory at `[builddir]/libs/luajitlib/bin` with the header files in `[builddir]/libs/luajitlib/include`. If named either `libluajit.a` or `lua51.lib`, it should be automatically detected and used instead of compiling LuaJIT from source during the CMake configuration process.
 
-Finally, if all other options fail, Lua support can be disabled altogether by adding `-DSURGE_SKIP_LUA=TRUE` to the CMake configuration options.
+Finally, if all other options fail, there are two ways out. Adding `-DSURGE_LUA_IMPL=puc` builds Surge against PUC-Rio Lua 5.1.5 instead, which needs no out of band build step and keeps Formula Modulator and Wavetable Script working; this is what the Windows ARM targets use, since LuaJIT cannot be built for them at all. Adding `-DSURGE_LUA_IMPL=none` disables Lua support altogether. See `libs/lua/README.md` for both.
 
 ### Cross-compiling
 

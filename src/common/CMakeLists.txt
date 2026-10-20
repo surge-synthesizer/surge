@@ -31,14 +31,16 @@ set(ZSTD_BUILD_STATIC ON)
 set(ZSTD_BUILD_SHARED OFF)
 surge_add_lib_subdirectory(zstd)
 
-if(NOT SURGE_SKIP_LUA)
-  surge_add_lib_subdirectory(luajitlib)
-  target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
-else()
-  # Make sure we know it is missing
-  add_library(luajit-5.1 INTERFACE)
-  target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=0)
+# zstd enables -Wall -Wextra for its own sources, and combined with the -WX this
+# tree sets globally that makes an unused static function in huf_compress.c a hard
+# error under clang-cl
+if(MSVC)
+  target_compile_options(libzstd_static PRIVATE /WX-)
 endif()
+
+# libs/lua owns the backend choice and always exports surge::lua with the right
+# HAS_LUA value, including when Lua is disabled. See SURGE_LUA_IMPL in its README.
+surge_add_lib_subdirectory(lua)
 
 surge_add_lib_subdirectory(sst/sst-cpputils)
 set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases for Surge XT") # Makes ARM64EC use Neon, basically
@@ -354,12 +356,12 @@ add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
   fmt
-  luajit-5.1
   pffft
   libzstd_static
   surge::airwindows
   surge::binn
   surge::eurorack
+  surge::lua
 
   sst-cpputils
   sst-plugininfra
