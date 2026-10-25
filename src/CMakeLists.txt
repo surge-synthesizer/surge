@@ -40,6 +40,13 @@ else()
   message(STATUS "CMake version ${CMAKE_VERSION} allows CLAP build")
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+        AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21)
+  message(STATUS "Silencing #warning on AppleClang ${CMAKE_CXX_COMPILER_VERSION}")
+  string(APPEND CMAKE_CXX_FLAGS " -Wno-#warnings")
+  string(APPEND CMAKE_OBJCXX_FLAGS " -Wno-#warnings")
+endif ()
+
 if(SURGE_BUILD_CLAP)
   add_subdirectory(../libs/clap-juce-extensions clap-extensions EXCLUDE_FROM_ALL)
 endif()
