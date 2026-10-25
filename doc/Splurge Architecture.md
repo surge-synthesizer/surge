@@ -1,6 +1,6 @@
 # Splurge: Architecture & Design Document
 
-**Status:** Revised after codebase verification audit — captures all design decisions through the verification pass (Surge sst-* library audit, oscillator/effect dependency audit, importer ground-truth audit). Factual corrections and consistency fixes from the 2026-10 design review applied; unresolved design problems from that review live in `Splurge Design Critique.md` and are cross-referenced where they bear on a section.
+**Status:** Revised after codebase verification audit — captures all design decisions through the verification pass (Surge sst-* library audit, oscillator/effect dependency audit, importer ground-truth audit). Factual corrections and consistency fixes from the 2026-10 design review applied; unresolved design problems from that review live in `Splurge Design Critique (Fable).md` and are cross-referenced where they bear on a section.
 **Scope:** Architecture and design only. Work breakdown (epics, tasks, sequencing) is intentionally **out of scope** for this document and will be produced as a separate planning effort using this document as input.
 **Constraint:** This document contains no code. It references Surge XT source locations in Appendix A as orientation for planners.
 
@@ -350,7 +350,7 @@ Surge's filter-block feedback (the soft-clipped path that loops the filter chain
 
 - Modules whose DSP supports feedback (filters; delay-based effects; certain shapers) **declare a feedback-input routing destination** in addition to their normal parameters.
 - Any audio-rate signal can be routed into this destination — typically the output of a later module in the same lane, creating a feedback loop.
-- The loop's delay is **one block** (the engine cannot feed a signal forward into a module that hasn't been computed yet within a single block). **This does not match Surge:** Surge's filter-block feedback is a one-*sample* loop evaluated inside the per-sample quad filter chain at the oversampled rate (`QuadFilterChain.cpp`), roughly 64× shorter than one block. The consequences for resonance fidelity and import are a design problem tracked in the critique document (`Splurge Design Critique.md`, item 1); this section's one-block rule stands as written until that is resolved.
+- The loop's delay is **one block** (the engine cannot feed a signal forward into a module that hasn't been computed yet within a single block). **This does not match Surge:** Surge's filter-block feedback is a one-*sample* loop evaluated inside the per-sample quad filter chain at the oversampled rate (`QuadFilterChain.cpp`), roughly 64× shorter than one block. The consequences for resonance fidelity and import are a design problem tracked in the critique document (`Splurge Design Critique (Fable).md`, item 1); this section's one-block rule stands as written until that is resolved.
 - A soft-clip primitive on the feedback path is the module's responsibility (filters and delays inherit Surge's soft-clipper from the Tier B lift; new modules implementing feedback inputs should follow the same convention).
 - The "no cycles" rule on lane-to-lane routing (§5.3) is preserved; intra-lane feedback is a per-module facility that does not violate it, because the 1-block delay makes the edge well-defined.
 
