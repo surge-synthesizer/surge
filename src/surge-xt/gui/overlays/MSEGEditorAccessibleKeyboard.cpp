@@ -252,10 +252,14 @@ std::string MSEGAccessibleKeyboardHandler::nodeAnnouncement(int i) const
 
     if (i == N && ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
         s += ", linked to start node";
-    if (ms->loop_start >= 0 && i == ms->loop_start)
-        s += ", loop start";
-    if (ms->loop_end >= 0 && i == ms->loop_end + 1)
-        s += ", loop end";
+
+    if (ms->editMode != MSEGStorage::EditMode::LFO)
+    {
+        if (ms->loop_start >= 0 && i == ms->loop_start)
+            s += ", loop start";
+        if (ms->loop_end >= 0 && i == ms->loop_end + 1)
+            s += ", loop end";
+    }
 
     if (i < N)
     {
@@ -1258,6 +1262,14 @@ bool MSEGAccessibleKeyboardHandler::processCursorKey(const juce::KeyPress &key)
         if (cb.toggleOrRotate)
             cb.announce("Invert deform is " + cb.toggleOrRotate(tag_deform_invert) +
                         " for current selection.");
+        return true;
+    }
+
+    // scene LFOs have no filter/amp EGs
+    if ((c == 'f' || c == 'a') && lfodata && lfodata->shape.ctrlgroup_entry >= ms_slfo1)
+    {
+        if (cb.announce)
+            cb.announce("Triggering Filter or Amplifier EGs is not available for scene LFOs!");
         return true;
     }
 

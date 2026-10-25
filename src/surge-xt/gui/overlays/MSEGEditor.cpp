@@ -4453,6 +4453,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
             case tag_trigger_filter_eg:
             {
+                if (!controlregion->triggerFilterButton)
+                    return "";
+
                 toggleState = !controlregion->triggerFilterButton->getToggleState();
                 controlregion->triggerFilterButton->setToggleState(toggleState,
                                                                    juce::dontSendNotification);
@@ -4462,6 +4465,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
             case tag_trigger_amp_eg:
             {
+                if (!controlregion->triggerAmpButton)
+                    return "";
+
                 toggleState = !controlregion->triggerAmpButton->getToggleState();
                 controlregion->triggerAmpButton->setToggleState(toggleState,
                                                                 juce::dontSendNotification);
