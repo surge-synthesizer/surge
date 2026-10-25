@@ -1,6 +1,6 @@
 # Splurge: Architecture & Design Document
 
-**Status:** Revised after codebase verification audit — captures all design decisions through the verification pass (Surge sst-* library audit, oscillator/effect dependency audit, importer ground-truth audit).
+**Status:** Revised after codebase verification audit — captures all design decisions through the verification pass (Surge sst-* library audit, oscillator/effect dependency audit, importer ground-truth audit). Factual corrections and consistency fixes from the 2026-10 design review applied; unresolved design problems from that review live in `Splurge Design Critique.md` and are cross-referenced where they bear on a section.
 **Scope:** Architecture and design only. Work breakdown (epics, tasks, sequencing) is intentionally **out of scope** for this document and will be produced as a separate planning effort using this document as input.
 **Constraint:** This document contains no code. It references Surge XT source locations in Appendix A as orientation for planners.
 
@@ -17,7 +17,7 @@ These qualities motivated starting from Surge rather than from scratch:
 - Free and open-source.
 - Integration of high-quality third-party DSP, notably the Airwindows effect suite (which continues to evolve upstream).
 - A large existing preset library (made available to Splurge via one-way import).
-- Deep, interesting individual modules: a rich oscillator roster, an unusually large waveshaper library, MSEG and Lua-scriptable modulators, file-based scale/tuning support via the `tuning-library` (proprietary MTS-ESP is not adopted — §4.5).
+- Deep, interesting individual modules: a rich oscillator roster, an unusually large waveshaper library, MSEG and Lua-scriptable modulators, file-based scale/tuning support via the `tuning-library` (MTS-ESP is not adopted — §4.5).
 - Cross-platform operation (Windows, Linux, macOS) as VST3 and CLAP (and AU via the framework).
 
 ### 1.2 What changes
@@ -66,11 +66,11 @@ A code review of Surge XT (~163k lines across ~362 source files) plus an audit o
 
 - `sst-filters` — the entire per-voice quad-SIMD filter library, halfband resamplers, biquads.
 - `sst-waveshapers` — the 40+-entry transfer-function library.
-- `sst-effects` — 11 effects (Reverb 1 & 2, Delay, Flanger, Phaser, Floaty Delay, Bonsai, Rotary Speaker, Treemonster, Nimbus, Spring Reverb) already factored behind a template-config adapter pattern.
-- `sst-basic-blocks` — DSP primitives, the sinc-table provider, RNG, clippers, resamplers, parameter-metadata helpers.
+- `sst-effects` — 10 effects (Reverb 1 & 2, Delay, Flanger, Phaser, Floaty Delay, Bonsai, Rotary Speaker, Treemonster, Nimbus) already factored behind a template-config adapter pattern. (Spring Reverb is chowdsp-derived Surge code, not an `sst-effects` port — Tier B.)
+- `sst-basic-blocks` — DSP primitives, the sinc-table provider, RNG, clippers, resamplers, parameter-metadata helpers, and the `lipol_sse` block-interpolation smoothers (Surge's `src/common/dsp/vembertech/lipol.h` is a 32-line alias onto these; there is no separate lipol library to lift).
 - Mutable Instruments `eurorack` (MIT) — Clouds/Plaits, used by Twist oscillator and Nimbus effect.
 - Airwindows (MIT) — vendored under `libs/airwindows`.
-- `tuning-library` (GPL-3) — Surge's scale/tuning support (Scala-format files, KBM keyboards).
+- `tuning-library` (MIT) — Surge's scale/tuning support (Scala-format files, KBM keyboards).
 - `LuaJIT` (MIT) — script host for the Formula modulator and wavetable scripting.
 - (Not adopted: ODDSound MTS-ESP — see §4.5 for the open-source-microtonality decision.)
 
@@ -78,10 +78,9 @@ A code review of Surge XT (~163k lines across ~362 source files) plus an audit o
 
 - **Oscillators (12 types)** — Classic, Sine, Wavetable, S&H Noise, Audio Input, FM3, FM2, Window, Modern, String, Twist, Alias. Each its own .h/.cpp pair under `src/common/dsp/oscillators/`.
 - **Modulation system** — `ModulationSource`, `LFOModulationSource`, `ADSRModulationSource`, the MSEG evaluator (`MSEGModulationHelper`), the Formula evaluator (`FormulaModulationHelper`), step sequencer, controller/macro sources. None of this is in `sst-basic-blocks`; it's Surge-internal code in `src/common/dsp/modulators/`.
-- **Lipol smoothing** — Vember Tech's SIMD parameter-smoothing library at `src/common/dsp/vembertech/lipol.h` (~1000 lines, not in `sst-basic-blocks`).
 - **Wavetable data structures and I/O** — `src/common/Wavetable.{h,cpp}`.
-- **Parameter class** — `src/common/Parameter.{h,cpp}` (the parameter-bag interface; §3.2). Self-contained enough to lift (explicitly designed to operate with a null storage pointer for non-UI uses).
-- **Non-adapted effects** — Distortion, Vocoder, Convolution, Mid-Side Tool, EQ 3-Band, Graphic EQ 11-Band, Ring Modulator, Frequency Shifter, Resonator, Conditioner, Chorus, Tape, Combulator, CHOW, Neuron, Exciter, BBD Ensemble, Audio Input, and the Airwindows wrapper — those not yet ported to `sst-effects`.
+- **Parameter class** — `src/common/Parameter.{h,cpp}` (the parameter-bag interface; §3.2). Self-contained enough to lift (explicitly designed to operate with a null storage pointer for non-UI uses). Note that the parameter-bag structs themselves (`OscillatorStorage`, `FxStorage`) are declared inside `src/common/SurgeStorage.h` alongside `SurgeSceneStorage` and `SurgePatch`; extracting them into the module library is part of the lift, not free.
+- **Non-adapted effects** — Distortion, Vocoder, Convolution, Mid-Side Tool, EQ 3-Band, Graphic EQ 11-Band, Ring Modulator, Frequency Shifter, Resonator, Conditioner, Chorus, Tape, Combulator, CHOW, Neuron, Exciter, Spring Reverb, BBD Ensemble, Audio Input, and the Airwindows wrapper — those not yet ported to `sst-effects`.
 
 **Tier C — Build fresh.** The synthesizer above the module boundary is entirely new code:
 
@@ -128,7 +127,7 @@ The `sst-effects` library defines a similar pattern (a `Config` adapter providin
 
 **Sub-decisions captured here for planners:**
 
-- The Alias oscillator has modes (`aow_audiobuffer`, `aow_scenedata`, `aow_dawextrastate`, `aow_stepsequences`) that synthesize from arbitrary patch memory regions. Per Principle 9, these modes are **dropped** in Splurge; patches relying on them generate an import warning and fall back to a benign Alias mode. (Decision: §17 open question on whether to preserve audio-input mode specifically.)
+- The Alias oscillator has modes (`aow_mem_alias`, `aow_mem_oscdata`, `aow_mem_scenedata`, `aow_mem_dawextra`, `aow_mem_stepseqdata`, and `aow_audiobuffer`) that synthesize from arbitrary patch memory regions or the audio-input buffer. Per Principle 9, these modes are **dropped** in Splurge; patches relying on them generate an import warning and fall back to a benign Alias mode. (Decision: §17 open question on whether to preserve audio-input mode specifically.)
 - The Alias oscillator's `shaped_sinetable` (static lookup, non-thread-safe init guard) is moved into engine-controlled init during context construction.
 
 ### 3.4 What is built fresh
@@ -144,7 +143,7 @@ The `sst-effects` library defines a similar pattern (a `Config` adapter providin
 
 A structure along these lines (names indicative):
 
-- `modules/` — Tier B vendored DSP from Surge: oscillators, modulation classes, MSEG/Formula evaluators, lipol, wavetable I/O, the non-adapted effects, the Airwindows wrapper. Evolves under the rules of §10.3. Plus build-time dependencies on Tier A (`sst-*`, `eurorack`, etc.) consumed as ordinary libraries.
+- `modules/` — Tier B vendored DSP from Surge: oscillators, modulation classes, MSEG/Formula evaluators, wavetable I/O, the non-adapted effects, the Airwindows wrapper. Evolves under the rules of §10.3. Plus build-time dependencies on Tier A (`sst-*`, `eurorack`, etc.) consumed as ordinary libraries.
 - `engine/` — Tier C: lane graph runtime, voice runtime, modulation routing, parameter/effective-value system, patch model, engine context, persistence.
 - `ui/` — editor, widgets, browser (JUCE permitted here).
 - `adapters/` — plugin shells: VST3, CLAP, AU, standalone (JUCE permitted here).
@@ -183,7 +182,7 @@ Alternatives were evaluated (iPlug2; DPF; raw CLAP/VST3 SDK plus a UI library su
 
 ### 4.3 Mobile / WebAssembly viability (recorded, deferred)
 
-- The DSP is portable C++ with SSE intrinsics; porting means an SSE-to-NEON shim or scalar fallback for the SIMD layer — bounded work.
+- The DSP is portable C++ written against SSE-style intrinsics through the `SIMD_MM` macro layer, which already resolves to `simde` on ARM; Surge XT ships on Apple Silicon and Linux ARM today, so no additional SIMD porting is required.
 - The UI is the real cost: a touch UI is effectively a full additional UI project, and JUCE's Android and WASM stories are rough.
 - Decision: out of scope for the initial release; not a design constraint; the framework-independent core preserves the option.
 
@@ -195,9 +194,9 @@ VST3 and CLAP as primary targets; AU and standalone via JUCE as the framework ma
 
 - **Splurge is GPL-3.0-or-later.** Surge XT itself is GPL-3.0-or-later, and every Tier A `sst-*` library is GPL-3 as well; a fork cannot license more permissively. The framework-independence rule (§4.2) preserves the option to relicense the engine and module library in a future re-implementation, but the initial Splurge codebase as shipped is GPL-3.
 - **JUCE** is dual-licensed (GPL-3 + commercial). Under GPL-3 it is freely usable for Splurge.
-- **Airwindows** (MIT), **Mutable Instruments `eurorack`** (MIT — used by Twist and Nimbus via Surge's MI fork), **LuaJIT** (MIT), **`simde`** (MIT — already vendored, providing SSE→NEON portability headers we benefit from on ARM), **`fmt`** (MIT), **PEGTL**, **`zstd`** (BSD), **SQLite** (public domain), **CLI11** (BSD-3) are all GPL-3-compatible.
-- **`tuning-library`** is GPL-3.
-- **MTS-ESP (ODDSound) — dropped.** MTS-ESP is not a standard open-source library; it is a client for ODDSound's commercial microtonality service under restrictive terms. **Decision:** Splurge does not adopt MTS-ESP. Native scale/tuning support carries over via the GPL-3 `tuning-library`. Real-time client-side microtonality protocols (the role MTS-ESP fills in Surge) are an evaluated open question for v1.x (§17): candidates include Sevish/Scala-format file loading at patch level (already available via `tuning-library`), an open-source MTS-ESP-compatible client implementation if one emerges, or designing Splurge's own simple host-protocol path. Until that decision lands, Splurge ships with file-based scale/tuning support only.
+- **Airwindows** (MIT), **Mutable Instruments `eurorack`** (MIT — used by Twist and Nimbus via Surge's MI fork), **LuaJIT** (MIT), **`simde`** (MIT — already vendored and already in use on ARM builds), **`fmt`** (MIT), **PEGTL**, **`zstd`** (BSD), **SQLite** (public domain), **CLI11** (BSD-3) are all GPL-3-compatible.
+- **`tuning-library`** is MIT.
+- **MTS-ESP (ODDSound) — dropped.** The client library Surge vendors (`libs/oddsound-mts/MTS-ESP`, libMTSClient) is itself permissively licensed (0BSD), so licensing is **not** the reason. The reason is that the client is only useful against ODDSound's proprietary master-side ecosystem (the MTS-ESP master plugins and the system-installed dynamic library), which makes Splurge's real-time microtonality story dependent on a closed component Splurge cannot ship, test, or fix. **Decision:** Splurge does not adopt MTS-ESP in v1. Native scale/tuning support carries over via `tuning-library`. Real-time client-side microtonality protocols (the role MTS-ESP fills in Surge) are an evaluated open question for v1.x (§17): candidates include Sevish/Scala-format file loading at patch level (already available via `tuning-library`), an open-source MTS-ESP-compatible client implementation if one emerges, or designing Splurge's own simple host-protocol path. Until that decision lands, Splurge ships with file-based scale/tuning support only.
 
 ---
 
@@ -231,6 +230,7 @@ There is deliberately **no** "scene," "voice group," "instrument layer," or othe
 A patch is:
 
 - An ordered list of **lanes**.
+- A **master chain**: the patch's terminal output stage — an implicit, oscillator-free lane that every "→ master" route targets, carrying the master effect chain and master output gain. It is a lane in every structural sense (same module API, post-mix only) but is not user-creatable or deletable, so §5.1's "only one container" rule holds.
 - **Macros** (patch-level, so they can modulate parameters in any lane; modulatable themselves — §9.2).
 - **Global modulators** (mod wheel, aftertouch, MIDI CCs, pitch bend, keytrack-style sources — addressable from any lane).
 - **Metadata**: name, author, license, comment, category, tags (§11.3).
@@ -238,7 +238,7 @@ A patch is:
 
 ### 5.3 Routing and topology rules
 
-- **Cycle prevention by construction:** a lane may route only to a **higher-numbered lane** or to **master**. This numbered-lane rule was chosen over free-form routing with runtime cycle detection for its simplicity and predictability; it makes circular routes impossible rather than detected.
+- **Cycle prevention by construction:** a lane may route only to a **later lane in the patch's lane order** or to **master**. This ordered-lane rule was chosen over free-form routing with runtime cycle detection for its simplicity and predictability; it makes circular routes impossible rather than detected. Consistent with §11.6, routes reference the target lane by its **stable instance ID**, never by position; the ordering constraint is a validation rule evaluated against the current lane order. The numbers the UI displays are labels derived from that order and renumber when lanes are inserted or moved.
 - **Serial vs. parallel is an emergent property of routing**, not a mode switch: lanes that feed other lanes form serial chains; lanes that feed master directly run in parallel; combinations of both are free.
 - **Merging** is implicit: multiple lanes targeting the same destination sum there, and the destination's input label reads `<multi>`.
 - **Sends collapse into routing:** there is no separate send/insert mechanism. A "send" is simply a lane that receives routed input (optionally at a routing weight) from one or more other lanes. Surge's send slots import as exactly this (§12.3).
@@ -350,7 +350,7 @@ Surge's filter-block feedback (the soft-clipped path that loops the filter chain
 
 - Modules whose DSP supports feedback (filters; delay-based effects; certain shapers) **declare a feedback-input routing destination** in addition to their normal parameters.
 - Any audio-rate signal can be routed into this destination — typically the output of a later module in the same lane, creating a feedback loop.
-- The loop's delay is **one block** (the engine cannot feed a signal forward into a module that hasn't been computed yet within a single block). This matches Surge's existing feedback behavior, which is also block-delayed.
+- The loop's delay is **one block** (the engine cannot feed a signal forward into a module that hasn't been computed yet within a single block). **This does not match Surge:** Surge's filter-block feedback is a one-*sample* loop evaluated inside the per-sample quad filter chain at the oversampled rate (`QuadFilterChain.cpp`), roughly 64× shorter than one block. The consequences for resonance fidelity and import are a design problem tracked in the critique document (`Splurge Design Critique.md`, item 1); this section's one-block rule stands as written until that is resolved.
 - A soft-clip primitive on the feedback path is the module's responsibility (filters and delays inherit Surge's soft-clipper from the Tier B lift; new modules implementing feedback inputs should follow the same convention).
 - The "no cycles" rule on lane-to-lane routing (§5.3) is preserved; intra-lane feedback is a per-module facility that does not violate it, because the 1-block delay makes the edge well-defined.
 
@@ -368,7 +368,7 @@ Each oscillator-bearing lane owns: polyphony mode (poly, mono, legato variants, 
 
 ### 7.2 Voice runtime (built fresh)
 
-The engine's voice runtime handles: note on/off and voice allocation per lane; voice stealing; retrigger behavior; glide/portamento; MPE (per-note pitch bend, timbre, pressure); MTS-ESP and native tuning (lifted from Surge's tuning integration). This is the highest-concentration area of audio-domain edge cases being rewritten rather than inherited; it is flagged accordingly in the risk register (§16).
+The engine's voice runtime handles: note on/off and voice allocation per lane; voice stealing; retrigger behavior; glide/portamento; MPE (per-note pitch bend, timbre, pressure); native scale/keyboard-mapping tuning via `tuning-library` (no MTS-ESP — §4.5). This is the highest-concentration area of audio-domain edge cases being rewritten rather than inherited; it is flagged accordingly in the risk register (§16).
 
 ### 7.3 Per-voice state sizing
 
@@ -391,7 +391,7 @@ Design conclusions, settled during review:
 
 - **The setting does not belong to the source.** Two reasons: multiple generators share the lane's voices (a note-voice instances all of them together, so per-generator granularity settings would conflict), and multiple consumers may consume the same lane at *different* granularities — a reverb send takes the summed stream while a per-note filter lane takes the per-note bundle, simultaneously. Sources determine what *exists* to collapse (voice config creates notes; unison creates clones — §7.5); mix points determine what *survives*. Channel layout, by contrast, genuinely is source-side (§5.1).
 - **Module instancing follows the surviving strands.** In a region operating per-note or per-voice, each module runs one instance per strand. Modules with per-voice context support (§6.3) additionally get SIMD voice batching and voice-scoped modulation; other modules run as ordinary independent instances per strand.
-- **Validity.** Per-note or per-voice collapse on a connection requires the producing lane to still carry voice lineage at its output (its own divider hasn't already collapsed below the requested level) and the lanes to share voice scope. The engine validates at routing time; connections that can't satisfy the request run at single-stream.
+- **Validity.** Per-note or per-voice collapse on a connection requires the producing lane to still carry voice lineage at its output (its own divider hasn't already collapsed below the requested level). The consuming lane owns no voices of its own (lanes never share voices — §5.1, §9.5); it instantiates one module instance per surviving strand, keyed by the producing lane's lineage. The engine validates at routing time; connections that can't satisfy the request run at single-stream.
 - **Cost.** Carrying N strands between lanes multiplies memory and CPU. The user opts in deliberately per mix point, and the UI surfaces the cost.
 
 Single-stream is committed for v1. Per-note is the highest-priority extension; per-voice follows. The typed-bus abstraction enabling all three is baked into v1 (§13).
@@ -448,7 +448,7 @@ A modest increase in per-voice CPU overhead is acceptable in exchange for archit
 - **Voice scope** — one modulator instance per sounding voice (envelopes, voice LFOs); state lives on the voice; instantiated at note-on.
 - **Lane scope** — one instance shared by all voices in the lane (Surge's "scene LFOs" map here); runs once per block.
 - **Patch scope** — macros and global sources (mod wheel, aftertouch, MIDI CC, pitch bend, key-tracking sources), addressable from any lane.
-- **Macros are modulatable** (meta-modulation): a macro's output is its base value plus a modulation underlayer, so LFOs/envelopes/other macros can modulate macros. This capability exists in Surge and is preserved.
+- **Macros are modulatable** (meta-modulation): a macro's output is its base value plus a modulation underlayer, so LFOs/envelopes/other macros can modulate macros. This is a **Splurge-native** capability: Surge macros are `ControllerModulationSource` objects, not `Parameter`s, and cannot be modulation targets there.
 - Scope is a property on the modulator; the cross-phase constraint of §6.4 applies at the voice→post-mix boundary.
 
 ### 9.3 Modules expose internal signals as routing sources
@@ -467,14 +467,14 @@ Three options were evaluated for letting oscillators modulate parameters:
 
 Oscillators in Splurge expose **four distinct audio-rate modulation destination ports** rather than a single "FM" input, matching Phase Plant's model. Users wire the modulator's audio output to whichever port produces the timbral character they want:
 
-- **PM (phase modulation)** — adds the modulator signal to the carrier's running phase. The Surge-style "FM" implementation is actually PM; this is the most common port for "FM synth" sounds.
+- **PM (phase modulation)** — adds the modulator signal to the carrier's running phase. This is what Surge's Sine, FM2, FM3, Modern, and Alias oscillators do with their FM input; it is the most common port for "FM synth" sounds.
 - **Linear FM** — adds the modulator signal to the carrier's instantaneous frequency. Brighter than PM at small depths; integrates pitch over time.
 - **Exponential FM** — modulates the carrier's pitch in log-frequency. The analog-FM character (think CV-controlled VCOs); musical-interval feel rather than linear-Hz feel.
 - **AM (audio-rate amplitude modulation)** — multiplies the carrier's output by the modulator signal (typically as 1 + depth × signal). Generates sidebands; the boundary between AM and ring-mod is a depth/offset choice.
 
 These are individual routing destinations on the oscillator module. The UI may surface them as four labeled ports the user drags routings into, or as a context menu when dragging onto an oscillator. Each port has its own depth parameter and (per §9.10) its own routing-edge shaping. No FM-topology enum exists.
 
-**Same-lane (v1):** oscillators in the same lane share voice scope; routing oscillator B's audio into any of oscillator A's four destination ports is a per-voice, audio-rate routing edge resolved at voice instantiation. The lifted modules' existing audio-rate FM input facility (`assign_fm`) supports PM directly; linear-FM, exponential-FM, and AM ports require small additions to the lifted oscillator API during the lift.
+**Same-lane (v1):** oscillators in the same lane share voice scope; routing oscillator B's audio into any of oscillator A's four destination ports is a per-voice, audio-rate routing edge resolved at voice instantiation. The lifted modules' existing audio-rate FM input facility (`assign_fm`) is **not** uniformly PM: Sine/FM2/FM3/Modern/Alias apply the signal to phase, Classic/S&H/Wavetable/Window multiply the phase increment (a clamped linear FM, `limit_range(1 + depth·mod, 0.1, 1.9)`), String converts it to a pitch offset, and Twist downsamples it into Plaits' FM input. How this maps onto the four ports, and the cost of adding true PM to the BLIT-based oscillators, is a design problem tracked in the critique document (item 2).
 
 **Cross-lane (post-v1):** lanes don't share voices, so the only coherent semantic is the upstream lane's *summed* output feeding a downstream port as a single shared (non-per-voice) signal — closer to sidechain modulation. Deferred, and labeled distinctly ("global") in the UI when built.
 
@@ -538,7 +538,7 @@ This pattern applies to settings whose user intent is "set this for everything, 
 - **Filters:** Surge's per-voice filter algorithm library (the SIMD-vectorized implementations), lifted as individual filter modules.
 - **Waveshapers:** the 40+-entry transfer-function library (§10.5).
 - **Modulators:** per §9.7.
-- **Infrastructure:** wavetable structures and I/O, sample loading, MTS-ESP/native tuning, DSP math, oversampling filters, smoothers.
+- **Infrastructure:** wavetable structures and I/O, sample loading, native tuning (`tuning-library`), DSP math, oversampling filters, smoothers.
 
 ### 10.2 Module identity and namespaces
 
@@ -632,7 +632,7 @@ The patch is a **JSON document** with a defined schema. Binary resources (sample
 
 **Clarification on "human-readable":** the requirement is that the patch body is *not an opaque binary blob* — it is inspectable, diffable, debuggable text. It does **not** mean the schema must be simple. The JSON may be as deeply structured and as complicated as is reasonable in service of the forward-compatibility contract (§11.6); flexibility and machine-composability take precedence over hand-editing ergonomics.
 
-- **Versioned from day one**, with Splurge's stream revisions starting **above** Surge's range (e.g., at 100, with Surge XT currently at 28): any patch whose revision is below the Splurge floor is routed to the Surge importer; at or above, it is a native Splurge patch.
+- **Versioned from day one**, with Splurge's stream revisions starting **above** Surge's range (e.g., at 100, with Surge XT's `ff_revision` currently at 30). Format detection is by **container** (an FXP/`sub3` wrapper around XML is a Surge patch; a JSON document or Splurge bundle is native); the revision floor is a secondary guard, not the primary discriminator.
 - Splurge presets are explicitly **not** backward-compatible with Surge (§1.3).
 - Splurge does not load Surge `.fxp` files into the same code path as native `.splurge` patches; the importer (§12) produces a Splurge in-memory model that is then serialized as Splurge JSON.
 
@@ -680,7 +680,7 @@ The guarantee is achievable only if the schema is engineered for evolution from 
 5. **Open extension points.** Every object tolerates unknown keys without error. A reserved extension namespace (e.g., a per-object `extensions` map) exists for experimental data that may later be promoted into the schema proper.
 6. **Unknown-content policy, by case.** (a) Unknown keys in a same-or-older-revision document: preserved and re-serialized on save (round-trip passthrough) where safe — supporting external tools that annotate patches. (b) A higher-revision document: clean refusal per the contract. (c) An unknown module *type* ID: a clean, specific error naming the missing module (§10.2) — distinguishable from schema failure, since it may simply mean a missing optional module pack.
 7. **Migrations are forever.** Once a migration step ships, it is never deleted. The loader migrates any historical revision stepwise to current. The test suite retains golden presets from **every shipped revision** and loads them all on every release (§15).
-8. **No semantic magic numbers.** Enums serialize as strings, not integers (a reordered enum can never corrupt a patch). Units and value semantics are explicit in the schema, never implied by context that could drift between versions.
+8. **No semantic magic numbers.** Enums serialize as strings, not integers (a reordered enum can never corrupt a patch). Units and value semantics are explicit in the schema, never implied by context that could drift between versions. Because the lifted modules keep Surge's `Parameter` class (§3.2), whose enum-valued parameters store integers and whose per-module parameters are positional (`OscillatorStorage::p[n_osc_params]`), this rule requires the module library to publish a **frozen, append-only value-name table** for every enum-valued lifted parameter and a stable string ID for every positional parameter slot. That table is part of the Surge-translation surface frozen under §10.3.
 
 These rules exist precisely so that features not yet conceived — new module types, new routing concepts, new bus types, new lane semantics, things this document doesn't anticipate — land as *additive* schema (new typed objects, new keys, new extension data) without ever breaking the ability to read what came before.
 
@@ -725,16 +725,16 @@ For each populated Surge scene (typically two — scene A and scene B), the impo
 | Scene insert FX (4 per scene) | The lane's post-mix (phase 2) effects, in order |
 | Per-scene FX bypass mode (all / no sends / no send+global / no FX) | A patch-level bypass setting or per-lane equivalent — TBD by engine epic |
 | Send slot levels (4 per scene) | Oscillator-free lanes (Splurge send-bus lanes) receiving weighted input from the scene lanes; one Surge send slot = one Splurge bus lane |
-| Global FX (4) | The master output's effect chain (the master path has its own lane in Splurge) |
+| Global FX (4) | The master chain's effects (§5.2) |
 | Per-FX `return_level` | Carried as the per-effect mix/output parameter |
 | **Character** (warm/neutral/bright) — global patch parameter | Fanned out: each imported oscillator's Character parameter is set to the imported value (§10.7) |
-| 8 macros (custom controllers) | 8 patch-level macros with meta-modulation preserved |
+| 8 macros (custom controllers) | 8 patch-level macros (Surge has no macro modulation to preserve; Splurge's meta-modulation is simply available on them afterwards) |
 | 6 voice LFOs + 6 scene LFOs per scene | 12 modulators in that lane: 6 voice-scoped, 6 lane-scoped |
 | Modulation routings (voice / scene / global lists) | Routing entries with translated source identities, via a **static, frozen lookup table** (~40 entries) from Surge's source enum to Splurge IDs, including indexed outputs (MSEG/Formula output indices → output names) |
 | MSEG, Formula, step-sequencer data | Lifted storage structures, unchanged |
 | Wavetables (embedded or by name) | Same mechanisms, via the generic resource facility (§11.2), with embedded wavetables added as content-hashed resources |
 | Tags, author, comment, license, category | Carried into Splurge metadata; category re-homed into the unified tree |
-| Streaming revision (≤ 28) | Triggers the importer (§11.1) |
+| FXP/XML container (streaming revision currently ≤ 30) | Routes the file to the importer (§11.1) |
 
 ### 12.4 Filter-config mapping (all 8 configs, with feedback)
 
@@ -745,9 +745,9 @@ Surge's `filter_config` enum has eight values, differing chiefly by **feedback t
 | **fc_serial1** | None | Filter 1 → Filter 2 | Between filters (when active) | Two filter modules in series; waveshaper in between if active. No feedback edge. |
 | **fc_serial2** | From final output, soft-clipped, summed into input | Filter 1 → Filter 2 | Between filters | Same series chain; **feedback edge** from after Filter 2 back to Filter 1's feedback input, with soft-clip on the path. |
 | **fc_serial3** | From Filter 2 only, soft-clipped, summed into input | Filter 1 → branch: continue to output **and** to Filter 2 → Filter 2 only feeds feedback | Between Filter 1 and the branch | Series with a feedback edge sourcing from Filter 2's output (a different tap than serial2). Good for physical-modeling patches. |
-| **fc_dual1** | From final output | Filter 1 ‖ Filter 2 (parallel), then mixed | After mix | Sub-lane split: one filter per sub-lane; recombine via mixer module; waveshaper after; feedback edge from output to input. |
-| **fc_dual2** | From final output | Filter 1 → waveshaper → Filter 2 (with secondary path) | Inside the dual chain | Series with a parallel branch; waveshaper position varies. Use sub-lane split if necessary. |
-| **fc_stereo** | Per-channel, from each channel's output | Filter 1 on L only, Filter 2 on R only | Per-channel | Lane uses stereo channel layout (§5.4); Filter 1 on L, Filter 2 on R; per-channel waveshaper and feedback. |
+| **fc_dual1** | From final output | Filter 1 ‖ Filter 2 (parallel), then mixed by filter balance | After the mix | Sub-lane split: one filter per sub-lane; recombine via mixer module; waveshaper after; feedback edge from output to input. |
+| **fc_dual2** | From final output | (Filter 1 → waveshaper) ‖ Filter 2 (parallel), then mixed by filter balance | On the Filter 1 branch only, before the mix | Sub-lane split: Filter 1 + waveshaper in one sub-lane, Filter 2 alone in the other; recombine via mixer module; feedback edge from output to input. |
+| **fc_stereo** | Single path: L+R output summed, soft-clipped, fed into both channel inputs | Filter 1 on L only, Filter 2 on R only | Per-channel (one waveshaper instance per channel, shared drive) | Lane uses stereo channel layout (§5.4); Filter 1 on L, Filter 2 on R; per-channel waveshaper; one feedback edge whose source is the summed L+R output. |
 | **fc_ring** | From final output | Filter 1 ‖ Filter 2, then **ring-modulated** via the mixer's blend params | After ring | Sub-lane split with ring-mod combine module (§10.5); waveshaper after; feedback edge. |
 | **fc_wide** | Per-channel | Four filter instances (L1, R1, L2, R2) — Filter 1 and 2 each duplicated for L/R | Per-channel | Stereo channel layout with **four** filter module instances and per-channel waveshapers; stereo-width module after; per-channel feedback edges. Amplitude correction (×0.6667) applied via the lane output gain. |
 
@@ -756,20 +756,22 @@ Notes:
 - The feedback amount, when present, comes from Surge's per-scene `feedback` parameter (with extended-range support).
 - The soft-clip on feedback paths uses the soft-clip module (§10.5); the importer inserts it explicitly on the feedback routing edge.
 - The waveshaper position is per-config; the importer follows the topology above. (Earlier drafts of this doc incorrectly stated that serial 1/2/3 differ by waveshaper position; the actual distinction is feedback topology. The waveshaper position varies separately per config.)
+- **Filter balance** (`filter_balance`) has per-config semantics: in the dual and ring configs it is the blend between the two parallel branches; in the serial, stereo, and wide configs it is a dry/wet crossfade *around each filter stage* (Surge's `Mix1`/`Mix2`). The importer must map it per config, not as a single "blend between filter outputs."
+- In the serial configs, oscillators routed "Filter 2 only" are summed into the chain *between* Filter 1 (and the waveshaper) and Filter 2, not at the lane input. The import shape therefore needs a mid-chain mix-in point; how that is expressed in the lane model is tracked in the critique document (item 7).
 - `fc_wide` instantiates **four** filter modules in the Splurge lane, not two. This is the import shape; the user can simplify after import.
 
 ### 12.5 FM-routing mapping (corrected)
 
-Surge's four `fm_routing` configurations import as edges into oscillator PM destination ports (§9.5). Note: Surge's "FM" is implemented as phase modulation with cubic depth scaling, hence the **PM** port:
+Surge's four `fm_routing` configurations import as audio-rate edges from oscillator outputs into oscillator modulation ports (§9.5). The table below shows the edge topology; **which port** each edge targets depends on the carrier's oscillator type, because Surge's FM input semantics vary per oscillator (§9.5). Resolution is tracked in the critique document (item 2):
 
 | Surge `fm_routing` | Imported routing edges |
 |---|---|
 | `fm_off` | none |
-| `fm_2to1` | OSC 2 audio → OSC 1 PM port |
-| `fm_3to2to1` | OSC 3 → OSC 2 PM port; OSC 2 → OSC 1 PM port |
-| `fm_2and3to1` | OSC 2 → OSC 1 PM port; OSC 3 → OSC 1 PM port (**both** modulators target carrier 1) |
+| `fm_2to1` | OSC 2 audio → OSC 1 FM-type port |
+| `fm_3to2to1` | OSC 3 → OSC 2 FM-type port; OSC 2 → OSC 1 FM-type port |
+| `fm_2and3to1` | OSC 2 → OSC 1 FM-type port; OSC 3 → OSC 1 FM-type port (**both** modulators target carrier 1; Surge sums them into one buffer first) |
 
-The PM depth is taken from Surge's `fm_depth` parameter; the importer applies Surge's cubic scaling so the perceived depth matches. Splurge users can subsequently re-wire the edges to linear-FM, exp-FM, or AM ports (§9.5) if they want different timbral character.
+The edge depth is taken from Surge's `fm_depth` parameter, which is a decibel value converted with `db_to_linear()` at voice-process time (`SurgeVoice.cpp`); there is no cubic scaling. Splurge users can subsequently re-wire the edges to other ports (§9.5) if they want different timbral character.
 
 ### 12.6 Scene mode → lane filtering
 
@@ -777,7 +779,7 @@ Surge's `scene_mode` enum determines how the two scene lanes consume incoming MI
 
 | Surge `scene_mode` | Splurge lane configuration |
 |---|---|
-| **sm_single** | Only Scene A's lane is created; or both are created and Scene B's key range is set to empty. |
+| **sm_single** | Surge plays only the *active* scene (`scene_active`), which may be A or B. Only that scene's lane is created; or both are created and the inactive scene's lane gets an empty key range. |
 | **sm_split** (with `splitpoint`) | Scene A's lane key-range upper-bounded at splitpoint; Scene B's lane key-range lower-bounded at splitpoint. |
 | **sm_dual** | Both lanes carry the same key range; both receive every note (layering). |
 | **sm_chsplit** | Scene A and Scene B lanes filter on different MIDI channels per Surge's channel-split convention. |
@@ -803,8 +805,8 @@ The importer maintains a **static, frozen lookup table** (~40 entries) mapping S
 
 ### 12.9 What survives, what's hard, what's lost
 
-- **Preserved:** all parameter values (with flags), oscillator/effect type selections, modulation routings and depths, macros (incl. meta-modulation), wavetables, MSEG/Formula/step data, tags and metadata, Character (fanned out per-oscillator), scene-mode key/channel filtering.
-- **Hard parts (bounded):** the per-config filter translations above, especially fc_wide's four-filter expansion and the feedback-path soft-clip insertion; the ~40-entry source translation table (mechanical); MPE/channel-mode mapping; macro meta-modulation (free if the modulator model allows modulators to target modulators, which it does).
+- **Preserved:** all parameter values (with flags), oscillator/effect type selections, modulation routings and depths, macros, wavetables, MSEG/Formula/step data, tags and metadata, Character (fanned out per-oscillator), scene-mode key/channel filtering.
+- **Hard parts (bounded):** the per-config filter translations above, especially fc_wide's four-filter expansion and the feedback-path soft-clip insertion; the ~40-entry source translation table (mechanical); MPE/channel-mode mapping.
 - **Acceptable losses:**
   - Patches exploiting the Alias oscillator's audio-from-patch-memory modes (Principle 9; §3.3); users get an import warning and a benign Alias mode.
   - Patches relying on ODDSound MTS-ESP at load time (the protocol is not adopted; the scale/tuning portion via `tuning-library` works). Surge presets that don't actually use MTS-ESP — the vast majority — are unaffected.
@@ -955,18 +957,18 @@ Quick reference for planners; each decision is elaborated at the cited section.
 
 | # | Decision | Where |
 |---|---|---|
-| 1 | Consume Tier A (sst-\* libs, Airwindows, eurorack, tuning-library, LuaJIT) as standalone libraries; vendor Tier B (oscillators, modulation system, lipol, wavetable I/O, non-adapted effects, Parameter) as a static library; build Tier C (engine, importer, GUI, adapters) fresh | §3.1 |
+| 1 | Consume Tier A (sst-\* libs, Airwindows, eurorack, tuning-library, LuaJIT) as standalone libraries; vendor Tier B (oscillators, modulation system, wavetable I/O, non-adapted effects, Parameter) as a static library; build Tier C (engine, importer, GUI, adapters) fresh | §3.1 |
 | 2 | Keep module parameter-bag structs as the module API surface; emulate or rebase Surge's scene-wide parameter array (TBD per §17) | §3.2 |
 | 3 | Engine-context shim provides services modules currently read from SurgeStorage (pitch tables, sample rate, sinc tables, RNG, tempo, memory pools, audio-in buffers); aligned with `sst-effects` `Config` pattern | §3.3 |
 | 4 | Alias oscillator's memory-aliasing modes dropped (Principle 9); benign fallback + import warning | §3.3 |
 | 5 | Stay on JUCE; confine it to UI and adapters; core stays framework-independent | §4 |
 | 6 | Mobile/WASM deferred; viability recorded; `simde` already vendored | §4.3 |
-| 7 | **GPL-3 license adopted; MTS-ESP not adopted (proprietary); open-source microtonality alternative TBD** | §4.5 |
+| 7 | **GPL-3 license adopted; MTS-ESP not adopted (0BSD client, but tied to a proprietary master-side ecosystem); open-source microtonality alternative TBD** | §4.5 |
 | 8 | Globals → per-unit by default (Principle 2); explicit list of reshaped Surge globals | §10.7 |
 | 9 | Globals-as-defaults mechanism: optional patch-level default with per-unit inherit/override | §9.11 |
 | 10 | The lane is the only container; no scenes, no voice groups | §5.1 |
 | 11 | Macros and global modulators live at patch level | §5.2, §9.2 |
-| 12 | Cycle prevention via the higher-numbered-lane-or-master rule | §5.3 |
+| 12 | Cycle prevention via the later-lane-or-master rule (routes by stable ID; order is a validation constraint) | §5.3 |
 | 13 | Sends are just lanes; serial/parallel emerges from routing | §5.3 |
 | 14 | Typed lane buses: two orthogonal axes — voice (collapse by summation) × channel (adapt by layout rules); merging the axes was considered and rejected | §5.4 |
 | 15 | Multiband splitting is a lane primitive, not an effect | §5.5 |
@@ -982,7 +984,7 @@ Quick reference for planners; each decision is elaborated at the cited section.
 | 25 | Modules expose internal signals (pitch, gate, audio out…) as routing sources | §9.3 |
 | 26 | Audio-rate modulation via hybrid allowlist (PM, lin-FM, exp-FM, AM, filter cutoff, delay time to start) | §9.4 |
 | 27 | **Oscillators expose four distinct destination ports: PM, linear FM, exponential FM, AM (Phase Plant-style)** | §9.5 |
-| 28 | No FM-topology enum; Surge fm_routing maps to routing edges into PM ports | §9.6, §12.5 |
+| 28 | No FM-topology enum; Surge fm_routing maps to routing edges into oscillator FM-type ports (port selection per carrier type under review) | §9.6, §12.5 |
 | 29 | LFO commitments: trigger modes, BPM sync, loop modes (normal/ping-pong/reverse/one-shot), free phase | §9.7 |
 | 30 | Per-parameter effective-value + modulation-range cache with dirty flags | §9.9, §14.2 |
 | 31 | **Routing-edge shaping: every routing carries an optional shape function (linear/exp/S/curve/step/invert); subsumes custom pitch-bend curves** | §9.10 |
@@ -992,7 +994,7 @@ Quick reference for planners; each decision is elaborated at the cited section.
 | 35 | Multieffects dissolved; unified taxonomy; inline source crediting (e.g., "ZLowpass [AW]"); Airwindows hoisted | §10.6 |
 | 36 | **Surge globals reshaped per-unit: Character per-oscillator; filter feedback as routing; per-source mute/solo on oscillator/ring/noise modules; etc.** | §10.7 |
 | 37 | **Patch format: JSON document + content-hashed resource sidecar/bundle; programmatically authorable (Principle 11)** | §11.1 |
-| 38 | Splurge revisions start above Surge's (e.g., 100); one-way import only | §11.1 |
+| 38 | Format detection by container; Splurge revisions start above Surge's (e.g., 100); one-way import only | §11.1 |
 | 39 | Generic content-hashed resource facility | §11.2 |
 | 40 | Tags first-class; unified factory tree by category; inline author credit | §11.3–§11.4 |
 | 41 | Import: perceptual equivalence; importer owns all Surge-specific knowledge; staged build with corpus regression | §12 |
@@ -1022,21 +1024,21 @@ Orientation points for downstream planners, from the design-phase code review an
 **Already-extracted DSP libraries (Tier A — consume as-is):**
 - `libs/sst/sst-filters` (GPL-3) — the per-voice quad-SIMD filter library, halfband resampler, biquads. Consumed in Surge via `QuadFilterChain.h` and `WaveShaperEffect`.
 - `libs/sst/sst-waveshapers` (GPL-3) — 40+ waveshaper transfer functions; `WaveshaperType` enum.
-- `libs/sst/sst-effects` (GPL-3) — 11 effects already ported, consumed via the `SurgeFXConfig` template adapter at `src/common/dsp/effects/SurgeSSTFXAdapter.h`. Pattern: template `Config` providing `GlobalStorage`, `EffectStorage`, `ValueStorage` types. **This is the canonical adapter pattern Splurge's engine context replicates** (§3.3).
-- `libs/sst/sst-basic-blocks` (GPL-3) — DSP primitives, `SincTableProvider`, lipol-like lag, clippers, resamplers, parameter metadata helpers, quadrature oscillators. **No modulation matrix here** — Surge's modulation system is in `src/common/dsp/modulators/` and is Tier B.
+- `libs/sst/sst-effects` (GPL-3) — 10 effects already ported (Reverb 1 & 2, Delay, Flanger, Phaser, Floaty Delay, Bonsai, Rotary Speaker, Treemonster, Nimbus), consumed via the `SurgeFXConfig` template adapter at `src/common/dsp/effects/SurgeSSTFXAdapter.h`. Pattern: template `Config` providing `GlobalStorage`, `EffectStorage`, `ValueStorage` types. **This is the canonical adapter pattern Splurge's engine context replicates** (§3.3).
+- `libs/sst/sst-basic-blocks` (GPL-3) — DSP primitives, `SincTableProvider`, the `lipol_sse` block interpolators (what Surge's `lipol.h` aliases), clippers, resamplers, parameter metadata helpers, quadrature oscillators. **No modulation matrix here** — Surge's modulation system is in `src/common/dsp/modulators/` and is Tier B.
 - `libs/eurorack/eurorack` (MIT — Surge's MI fork) — Plaits (Twist oscillator), Clouds (Nimbus effect).
 - `libs/airwindows` (MIT) — vendored, used via the Airwindows wrapper.
-- `libs/tuning-library` (GPL-3) — Scala/KBM file support.
+- `libs/tuning-library` (MIT) — Scala/KBM file support.
 - `libs/luajitlib/LuaJIT` (MIT) — Formula modulator script host.
-- `libs/simde` (MIT) — SSE→NEON portability. Headers already present; not yet wired across all native intrinsics in Surge.
+- `libs/simde` (MIT) — SSE→NEON portability, reached through the `SIMD_MM` macro layer in `sst-basic-blocks`; already in use for Surge XT's ARM builds.
+- `libs/oddsound-mts/MTS-ESP` (0BSD client library) — not adopted (§4.5).
 
 **Tier B lift surface (un-extracted Surge code Splurge vendors):**
 - Oscillator base & factory: `src/common/dsp/oscillators/OscillatorBase.h`; `spawn_osc` in `Oscillator.cpp`; 12 types in `SurgeStorage.h:283-300`. Audio-rate FM input via `assign_fm` (raw `float*` to the modulator's `output[BLOCK_SIZE_OS]`). Internal unison lives inside the oscillators (`AbstractBlitOscillator` and peers carry per-sub-voice state — detune, drift LFOs, pan, up to `MAX_UNISON` — summed internally to one output buffer); this is the basis for keeping oscillator-internal unison as the cheap path and import target (§7.5).
 - Modulation classes: `src/common/dsp/modulators/` — `ModulationSource`, `LFOModulationSource`, `ADSRModulationSource`, MSEG and Formula evaluators, step sequencer, controller sources.
-- Lipol smoothers: `src/common/dsp/vembertech/lipol.h` (~1000 lines, SIMD parameter smoothing).
 - Wavetable: `src/common/Wavetable.{h,cpp}` — mipmapped, shared across voices.
 - Parameter class: `src/common/Parameter.h:23-31, 615` — designed for null-storage (line 615: `SurgeStorage *storage = nullptr;` "this pointer will be null for legitimate uses").
-- Non-adapted effects (those not in `sst-effects`): Distortion, Vocoder, Convolution, Mid-Side Tool, EQ 3-Band, Graphic EQ 11-Band, Ring Modulator, Frequency Shifter, Resonator, Conditioner, Chorus, Tape, Combulator, CHOW, Neuron, Exciter, BBD Ensemble, Audio Input, and the Airwindows wrapper at `src/common/dsp/effects/airwindows/AirWindowsEffect.{h,cpp}` (parameter 0 selects from ~70+ algorithms).
+- Non-adapted effects (those not in `sst-effects`): Distortion, Vocoder, Convolution, Mid-Side Tool, EQ 3-Band, Graphic EQ 11-Band, Ring Modulator, Frequency Shifter, Resonator, Conditioner, Chorus, Tape, Combulator, CHOW, Neuron, Exciter, Spring Reverb (all five chowdsp-derived, under `effects/chowdsp/`), BBD Ensemble, Audio Input, and the Airwindows wrapper at `src/common/dsp/effects/airwindows/AirWindowsEffect.{h,cpp}` (parameter 0 selects from ~70+ algorithms).
 
 **Engine-context surface (services Surge oscillators read from `SurgeStorage*` — Splurge engine must provide):**
 - Pitch tables: `note_to_pitch()` family — referenced via `OscillatorBase.h:59-71`.
@@ -1048,8 +1050,8 @@ Orientation points for downstream planners, from the design-phase code review an
 - Tempo: `storage->temposyncratio`, `temposyncratio_inv`.
 
 **Dependency surprises confirmed by audit (Splurge must address):**
-- **Character is global in Surge but reaches into individual oscillators:** `ClassicOscillator.cpp:187`, `SineOscillator.cpp:144`, `StringOscillator.cpp:378` all do `charFilt.init(storage->getPatch().character.val.i)`. Splurge makes Character per-oscillator (§10.7); importer fans out the value.
-- **Alias oscillator's modes reach into arbitrary patch memory** (`AliasOscillator.cpp:154-169` accesses `scenedata`, `dawExtraState`, `stepsequences` as wavetable content). Per Principle 9: these modes are dropped (§3.3); audio-input mode is an open question (§17).
+- **Character is global in Surge but reaches into individual oscillators:** six oscillators do `charFilt.init(storage->getPatch().character.val.i)` — `ClassicOscillator.cpp:187`, `SineOscillator.cpp:145`, `StringOscillator.cpp:397`, `ModernOscillator.cpp:305`, `TwistOscillator.cpp:316`, `AliasOscillator.cpp:105`. Splurge makes Character per-oscillator (§10.7); importer fans out the value.
+- **Alias oscillator's modes reach into arbitrary patch memory** (`aow_mem_*` modes in `AliasOscillator.cpp` read oscillator data, scene data, `dawExtraState`, and step-sequencer data as wavetable content; `aow_audiobuffer` reads the audio-input buffer). Per Principle 9: these modes are dropped (§3.3); audio-input mode is an open question (§17).
 - **Static shaped_sinetable init guard** (`AliasOscillator.cpp:55-86`) — non-thread-safe lazy init; Splurge moves to engine-controlled init.
 - **`param_id_in_scene` scene-array indexing:** oscillators cache scene-global parameter array indices at init time and read from `localcopy[id_shape].f` at audio rate (e.g., `ClassicOscillator.cpp:196-201, 582`). Engine must reproduce a per-lane `pdata*` array or rebase indices per-module (open question §17).
 
@@ -1061,19 +1063,19 @@ Orientation points for downstream planners, from the design-phase code review an
 - SIMD voice batching: `src/common/dsp/QuadFilterChain.h`; voices processed in 4-wide batches at `SurgeSynthesizer.cpp:4775`.
 
 **Importer ground-truth references (used by §12):**
-- Filter configs (8 values): `SurgeStorage.h:503-519` (`filter_config` enum). Topology details: `QuadFilterChain.cpp:69-387`. **Differ by feedback topology, not waveshaper position** (a correction from the earlier draft of §12.4).
-- FM routing (4 values): `SurgeStorage.h:521-536` (`fm_routing` enum). The fourth mode is `fm_2and3to1`, meaning **both** OSC 2 and OSC 3 modulate OSC 1, **not** "3→1". Implementation is phase modulation with cubic depth scaling (`FM2Oscillator.cpp:107-122`).
+- Filter configs (8 values): `SurgeStorage.h:514-526` (`filter_config` enum). Topology details: `QuadFilterChain.cpp:69-387`, a per-sample loop over `BLOCK_SIZE_OS` (the filter block runs at the oscillator oversampling rate; decimation to base rate happens at the scene mix, `SurgeSynthesizer.cpp:5015,5034`). Feedback is a one-sample loop (`d.FBlineL`/`FBlineR`), soft-clipped, summed into the chain input. **Configs differ by feedback topology, not waveshaper position** (a correction from the earlier draft of §12.4).
+- FM routing (4 values): `SurgeStorage.h:532-540` (`fm_routing` enum). The fourth mode is `fm_2and3to1`, meaning **both** OSC 2 and OSC 3 modulate OSC 1 (summed into one buffer), **not** "3→1". Wiring is in `SurgeVoice.cpp:558-570` (`assign_fm`); depth is `db_to_linear(fm_depth)` (`SurgeVoice.cpp:1099-1108`). The modulated oscillator decides what the input means: phase (Sine `:938`, FM2 `:139`, FM3 `:174`, Modern `:393`, Alias `:314`), clamped phase-increment multiply (Classic `:640`, S&H `:403`, Wavetable `:712`, Window `:449`), pitch offset (String `:723`), or Plaits FM input (Twist `:388`).
 - Scene modes (4 values): `SurgeStorage.h:162-177` (`scene_mode` enum) — single, split (with `splitkey`), dual, channel-split.
 - Polyphony modes (6 values): `SurgeStorage.h:179-197` (`play_mode` enum) — poly, mono, mono single-trigger, mono fingered-portamento, mono single-trigger + fingered-portamento, latch.
 - Per-scene mixer channels: `SurgeStorage.h:817-834` — `level_o1/2/3`, `route_o1/2/3` (Filter 1 / Both / Filter 2), `mute_o1/2/3`, `solo_o1/2/3`, `level_ring_12`, `level_ring_23` and their route/mute/solo siblings, `level_noise`, `noise_colour`, `route_noise`, `mute_noise`, `solo_noise`, `vca_level`, `level_pfg`.
 - Per-scene signal-flow params: `SurgeStorage.h:840-841` — `filter_balance`, `feedback` (with extend_range), `filterblock_configuration`, `lowcut` (deactivatable), waveshaper unit (`wsunit.type`, `wsunit.drive`).
 - Per-parameter flags: `Parameter.h:537-540` — `temposync`, `extend_range`, `absolute`, `deactivated`, `deform_type`, portamento sub-options.
 - Character: `SurgeStorage.h:268-280` (cm_warm / cm_neutral / cm_bright); patch-level at `SurgePatch.h:1298`.
-- Modulation: source enum at `ModulationSource.h:40-84`; routing struct at `253-266`; three lists (voice, scene, global) in `SurgeStorage.h`; MSEG ≤128 segments, Formula ≤8 outputs (`max_formula_outputs`).
+- Modulation: source enum at `ModulationSource.h:40-84`; routing struct at `253-266`; three lists (voice, scene, global) in `SurgeStorage.h`; MSEG ≤256 segments (`max_msegs`), Formula ≤8 outputs (`max_formula_outputs`). Macros (`ms_ctrl1..8`) are `MacroModulationSource` objects, not `Parameter`s, and are not valid modulation targets (`SurgeSynthesizer::isValidModulation`).
 - Parameter system: `Parameter.h` — `modulateable` flag, normalized-value conversion; **no existing "total modulation range" query** (the gap §9.9 fills).
 
 **Patch system:**
-- Format: FXP wrapper (`sub3` header) around XML plus embedded wavetable blobs; `SurgePatch.cpp:1126` (load), `3764` (XML save). Streaming revision `ff_revision = 28` (`SurgeStorage.h:151`); per-module streaming-mismatch handlers throughout.
+- Format: FXP wrapper (`sub3` header) around XML plus embedded wavetable blobs; `SurgePatch.cpp:1126` (load), `3764` (XML save). Streaming revision `ff_revision = 30` (`SurgeStorage.h:155`); per-module streaming-mismatch handlers throughout.
 - Metadata: name, category, author, license, comment, tags (`SurgePatch.cpp:3789-3798`).
 - Categories derive from folder paths (factory by sound category; third-party by author folder — the layout §11.4 replaces); the in-file category attribute is ignored on preset load. SQLite-backed patch DB at `src/common/PatchDB.*`.
 
@@ -1100,7 +1102,7 @@ A living catalogue of nontrivial sound-design techniques — gathered from the f
 ### B.2 Pseudo-phase-distortion via inverted stereo delay-time modulation (Au5 / Serum-style) ✅
 
 *Goal:* modulate a short stereo delay's L/R times with noise, with R receiving the inverted modulation.
-*Recipe:* noise output → delay **L-time** edge (+); the same source → delay **R-time** edge with inversion shaping (§9.10). The lifted delay has independent L/R time parameters; delay time is on the audio-rate allowlist (§9.4).
+*Recipe:* noise output → delay **L-time** edge (+); the same source → delay **R-time** edge with inversion shaping (§9.10). The lifted delay has independent L/R time parameters; delay time is on the audio-rate allowlist (§9.4). Because the delay is a post-mix module, the noise source must be **lane-scoped** (a lane-scope noise modulator or a post-mix noise generator), not a per-voice generator — a per-voice source could only reach it as an aggregate (§6.4).
 *Validates:* one source feeding many edges with per-edge polarity; per-channel parameters; allowlist growability.
 
 ### B.3 Tempo-synced reece beating (Serum 2 resampling trick) ◐
