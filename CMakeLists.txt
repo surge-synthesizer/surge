@@ -116,11 +116,23 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     message(STATUS "Sanitizer is on.")
   endif()
 
+  # clang-cl does not accept GCC option spellings: it warns "unknown argument ignored",
+  # which the -WX added in the MSVC block turns into a hard error.
+  # Forward the options we genuinely need to the Clang driver with /clang
+  if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    message(STATUS "Clang with an MSVC-style driver; forwarding GCC-style options via /clang:")
+    set(SURGE_CLANG_FWD "/clang:")
+    set(SURGE_MSVC_FRONTEND TRUE)
+  else()
+    set(SURGE_CLANG_FWD "")
+    set(SURGE_MSVC_FRONTEND FALSE)
+  endif()
+
   # Any Clang or any GCC
   add_compile_options(
     -Wno-multichar
-    -fno-math-errno
-    -fno-trapping-math
+    ${SURGE_CLANG_FWD}-fno-math-errno
+    ${SURGE_CLANG_FWD}-fno-trapping-math
 
     # Targeting Windows with GCC/Clang is experimental
     $<$<NOT:$<OR:$<BOOL:${WIN32}>,$<BOOL:${SURGE_SKIP_WERROR}>>>:-Werror>
@@ -130,7 +142,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
 
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
-    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<VERSION_GREATER_EQUAL:${CMAKE_CXX_STANDARD},20>>:-fno-char8_t>
+    # The MSVC-style driver gets /Zc:char8_t- from the MSVC block instead.
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<VERSION_GREATER_EQUAL:${CMAKE_CXX_STANDARD},20>,$<NOT:$<BOOL:${SURGE_MSVC_FRONTEND}>>>:-fno-char8_t>
   )
 
   add_link_options(
