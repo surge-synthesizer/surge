@@ -1403,7 +1403,30 @@ class SurgePatch
     };
     std::vector<Tag> tags;
 
-    std::atomic<bool> isDirty{false};
+    // use setQuietly or raise suppressEditObserver for patch writes that are not a user edit
+    // (host automation, MIDI CC, OSC, and the dirtying a patch load does on its way through)
+    struct DirtyFlag
+    {
+        operator bool() const noexcept { return value.load(); }
+
+        DirtyFlag &operator=(bool v) noexcept
+        {
+            value.store(v);
+
+            if (v && !suppressEditObserver.load() && editObserver)
+            {
+                editObserver->store(true);
+            }
+
+            return *this;
+        }
+
+        void setQuietly(bool v) noexcept { value.store(v); }
+
+        std::atomic<bool> value{false};
+        std::atomic<bool> *editObserver{nullptr};
+        std::atomic<bool> suppressEditObserver{false};
+    } isDirty;
 
     // macro controllers
 #define CUSTOM_CONTROLLER_LABEL_SIZE 20
