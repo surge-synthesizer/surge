@@ -940,7 +940,9 @@ void SurgeSynthProcessor::processBlockOSC()
                                                    om->param->val_min.i);
 
             surge->setParameter01(surge->idForParameter(om->param), pval, true);
-            surge->storage.getPatch().isDirty = true;
+
+            // an OSC stream must not end patch compare mode.
+            surge->storage.getPatch().isDirty.setQuietly(true);
 
             // Special cases: A few control types require a rebuild and
             // SGE Value Callbacks would do it as would the VST3 param handler
