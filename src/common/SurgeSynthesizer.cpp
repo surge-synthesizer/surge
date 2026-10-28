@@ -69,6 +69,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
     fx_suspend_bitmask = 0;
 
+    storage.getPatch().isDirty.editObserver = &compareEditObserved;
+
     for (int i = 0; i < n_fx_slots; ++i)
     {
         fx[i].reset(nullptr);
@@ -3017,7 +3019,10 @@ void SurgeSynthesizer::setParameterSmoothed(long index, float value)
 {
     bool AlreadyExisted;
     ControllerModulationSource *mc = AddControlInterpolator(index, AlreadyExisted);
-    storage.getPatch().isDirty = true;
+
+    // Only reached from channelController, so this is a MIDI CC arriving on a learned parameter
+    // this is not a patch edit, so we set it quietly
+    storage.getPatch().isDirty.setQuietly(true);
 
     if (mc)
     {
@@ -3053,7 +3058,16 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             auto p = storage.getPatch().param_ptr[index];
             if (p->val.i != oldval.i)
             {
-                storage.getPatch().isDirty = true;
+                // `external` is parrameter adjustment coming from the host
+                // this must not end patch compare mode for obvious reasons
+                if (external)
+                {
+                    storage.getPatch().isDirty.setQuietly(true);
+                }
+                else
+                {
+                    storage.getPatch().isDirty = true;
+                }
             }
         }
 
@@ -4349,7 +4363,9 @@ float SurgeSynthesizer::getMacroParameterTarget01(long macroNum) const
 
 void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
 {
-    storage.getPatch().isDirty = true;
+    // Host macro automation and OSC are the only callers here
+    // so, like host parameter automation, this should not end patch compare mode
+    storage.getPatch().isDirty.setQuietly(true);
     ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum])
         ->set_target01(val, true);
 }

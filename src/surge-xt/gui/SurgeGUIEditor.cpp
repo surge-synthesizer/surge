@@ -54,6 +54,7 @@
 #include "overlays/AboutScreen.h"
 #include "overlays/MiniEdit.h"
 #include "overlays/Alert.h"
+#include "overlays/PatchStoreDialog.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/ModulationEditor.h"
@@ -638,11 +639,22 @@ void SurgeGUIEditor::idle()
         {
             patchChanged = patchSelector->sel_id != synth->patchid;
 
-            if (synth->storage.getPatch().isDirty != patchSelector->isDirty)
+            if (synth->storage.getPatch().isDirty != patchSelector->isDirty ||
+                synth->isComparingToOriginal() != patchSelector->isComparing)
             {
                 patchSelector->isDirty = synth->storage.getPatch().isDirty;
+                patchSelector->isComparing = synth->isComparingToOriginal();
                 patchSelector->repaint();
             }
+        }
+
+        // Ending compare means loading a patch, so the observer is raised wherever the edit
+        // happened and acted on here. Pushing current state first puts the original one undo away,
+        // since an accidental nudge must restore edits rather than silently choose between the two.
+        if (synth->isComparingToOriginal() && synth->compareEditObserved.exchange(false))
+        {
+            undoManager()->pushPatch();
+            synth->exitCompareToOriginal();
         }
 
         if (firstErrorIdleCountdown > 0)
@@ -2802,7 +2814,10 @@ const fs::path SurgeGUIEditor::pathForCurrentPatch()
 
 void SurgeGUIEditor::setPatchFromUndo(void *data, size_t datasz)
 {
-    synth->enqueuePatchForLoad(data, datasz);
+    // Undo already carries the user's edits, so the compare stash has nothing left to add and
+    // would silently overwrite whatever is being restored here.
+    synth->dropCompareToOriginal();
+    synth->enqueuePatchForLoad(data, datasz, SurgeSynthesizer::PatchLoadReason::UNDO_REDO);
     synth->processAudioThreadOpsWhenAudioEngineUnavailable();
     synth->refresh_editor = true;
 }
@@ -6214,6 +6229,8 @@ void SurgeGUIEditor::setupKeymapManager()
                               {keymap_t::Modifiers::COMMAND, (int)'F'});
     keyMapManager->addBinding(KeyboardActions::SAVE_PATCH,
                               {keymap_t::Modifiers::COMMAND, (int)'S'});
+    keyMapManager->addBinding(KeyboardActions::COMPARE_TO_ORIGINAL,
+                              {keymap_t::Modifiers::ALT, (int)'C'});
 
     // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
     keyMapManager->addBinding(KeyboardActions::OSC_1, {keymap_t::Modifiers::ALT, (int)'1'});
@@ -6385,7 +6402,10 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             }
             case KeyboardActions::SAVE_PATCH:
-                showOverlay(SurgeGUIEditor::SAVE_PATCH);
+                showSavePatchDialog();
+                return true;
+            case KeyboardActions::COMPARE_TO_ORIGINAL:
+                toggleCompareToOriginal();
                 return true;
             case KeyboardActions::FIND_PATCH:
                 patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
@@ -7291,20 +7311,100 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
 
 void SurgeGUIEditor::loadPatchWithDirtyCheck(std::function<void()> loadAction)
 {
-    if (synth->storage.getPatch().isDirty)
+    // While comparing, live patch is the clean original and unsaved edits are in the compare stash
+    // so that decides whether there is anything to warn about.
+    const bool hasUnsavedEdits = synth->isComparingToOriginal()
+                                     ? synth->compareStashWasDirty
+                                     : (bool)synth->storage.getPatch().isDirty;
+
+    // A new patch replaces both sides of the comparison, so drop the stash rather than restore
+    // but only once the load is actually going ahead.
+    auto load = [this, loadAction]() {
+        synth->dropCompareToOriginal();
+        loadAction();
+    };
+
+    if (hasUnsavedEdits)
     {
         promptForOKCancelWithDontAskAgain(
             "Confirm Patch Loading",
             fmt::format("The currently loaded patch has unsaved changes.\n"
                         "Loading a new patch will discard any such changes.\n\n"
                         "Do you want to proceed?"),
-            Surge::Storage::PromptToLoadOverDirtyPatch, loadAction, DISABLES_CONFIRMATION,
+            Surge::Storage::PromptToLoadOverDirtyPatch, load, DISABLES_CONFIRMATION,
             "Don't ask me again", ALWAYS);
     }
     else
     {
-        loadAction();
+        load();
     }
+}
+
+bool SurgeGUIEditor::canCompareToOriginal() const
+{
+    return synth->storage.getPatch().isDirty && synth->canCompareToOriginal();
+}
+
+void SurgeGUIEditor::toggleCompareToOriginal()
+{
+    if (synth->isComparingToOriginal())
+    {
+        // Nothing is pushed to undo: comparing is not an edit, and the original is one undo away
+        synth->exitCompareToOriginal();
+        enqueueAccessibleAnnouncement("Restored your edits");
+
+        return;
+    }
+
+    if (!canCompareToOriginal())
+    {
+        enqueueAccessibleAnnouncement("Nothing to compare to");
+
+        return;
+    }
+
+    if (synth->enterCompareToOriginal())
+    {
+        enqueueAccessibleAnnouncement("Comparing to original patch");
+    }
+}
+
+void SurgeGUIEditor::showSavePatchDialog(
+    std::function<void(Surge::Overlays::PatchStoreDialog *)> setup)
+{
+    auto show = [this, setup]() {
+        showOverlay(SurgeGUIEditor::SAVE_PATCH, [setup](Surge::Overlays::OverlayComponent *co) {
+            if (auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co))
+            {
+                setup(psd);
+            }
+        });
+    };
+
+    if (!synth->isComparingToOriginal())
+    {
+        show();
+
+        return;
+    }
+
+    // Saving what is on screen would write the original back over itself and throw the edits away,
+    // so offer the thing the user almost certainly meant instead of just refusing.
+    alert = std::make_unique<Surge::Overlays::Alert>();
+    alert->setSkin(currentSkin, bitmapStore);
+    alert->setDescription("Comparing to Original");
+    alert->setWindowTitle("Comparing to Original");
+    addComponentWithTracking(frame.get(), *alert);
+    alert->setLabel("You are currently hearing the patch as it was loaded, not your edits.\n"
+                    "Saving now would store the original and discard those edits.");
+    alert->setOkCancelButtonTexts("Restore Edits and Save", "Cancel");
+    alert->onOk = [this, show]() {
+        synth->exitCompareToOriginal();
+        show();
+    };
+    alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
+    alert->setVisible(true);
+    alert->toFront(true);
 }
 
 void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory)
