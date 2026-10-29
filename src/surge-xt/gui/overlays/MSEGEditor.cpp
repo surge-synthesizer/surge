@@ -5325,8 +5325,9 @@ void MSEGControlRegion::rebuild()
     int ypos = 1;
 
     auto makeToggleRow = [&](std::unique_ptr<juce::ToggleButton> &btn,
-                             std::unique_ptr<juce::Label> &lbl, const std::string &title, int tag,
-                             int colXOffset, int colWidth, int focusOrder) {
+                             std::unique_ptr<juce::Label> &lbl, const std::string &title,
+                             const std::string &accessibleName, int tag, int colXOffset,
+                             int colWidth, int focusOrder) {
         auto boxRect = juce::Rectangle<int>(xpos + colXOffset, ypos, boxW + 2, boxH);
         auto labelRect =
             juce::Rectangle<int>(xpos + colXOffset + boxW + 1, ypos - 1, colWidth - boxW, rowH);
@@ -5341,8 +5342,8 @@ void MSEGControlRegion::rebuild()
 
         btn = std::make_unique<juce::ToggleButton>();
         btn->setButtonText("");
-        btn->setTitle(title);
-        btn->setDescription(title);
+        btn->setTitle(accessibleName);
+        btn->setDescription(accessibleName);
         btn->setBounds(boxRect);
         btn->setAlwaysOnTop(true);
         btn->setExplicitFocusOrder(focusOrder);
@@ -5366,9 +5367,10 @@ void MSEGControlRegion::rebuild()
 
         int useColWidth = 40, invertColWidth = segWidth - useColWidth;
 
-        makeToggleRow(deformUseButton, deformUseLabel, "Use", tag_deform_use, 0, useColWidth, 90);
-        makeToggleRow(deformInvertButton, deformInvertLabel, "Invert", tag_deform_invert,
-                      useColWidth - 3, invertColWidth, 100);
+        makeToggleRow(deformUseButton, deformUseLabel, "Use", "Use Deform", tag_deform_use, 0,
+                      useColWidth, 90);
+        makeToggleRow(deformInvertButton, deformInvertLabel, "Invert", "Invert Deform",
+                      tag_deform_invert, useColWidth - 3, invertColWidth, 100);
 
         xpos += segWidth;
     }
@@ -5391,10 +5393,10 @@ void MSEGControlRegion::rebuild()
 
         const int filterColWidth = 44, ampColWidth = segWidth - filterColWidth;
 
-        makeToggleRow(triggerFilterButton, triggerFilterLabel, "Filter", tag_trigger_filter_eg, 0,
-                      filterColWidth, 110);
-        makeToggleRow(triggerAmpButton, triggerAmpLabel, "Amp", tag_trigger_amp_eg,
-                      filterColWidth - 1, ampColWidth, 120);
+        makeToggleRow(triggerFilterButton, triggerFilterLabel, "Filter", "Trigger Filter EG",
+                      tag_trigger_filter_eg, 0, filterColWidth, 110);
+        makeToggleRow(triggerAmpButton, triggerAmpLabel, "Amp", "Trigger Amp EG",
+                      tag_trigger_amp_eg, filterColWidth - 1, ampColWidth, 120);
 
         xpos += segWidth;
     }
