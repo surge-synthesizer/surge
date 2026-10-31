@@ -78,9 +78,20 @@ std::string segmentTypeName(MSEGStorage::segment::Type t)
         return "Bump";
     case MSEGStorage::segment::SMOOTH_STAIRS:
         return "Smooth Stairs";
-    default:
-        return "Unknown";
+    case MSEGStorage::segment::RATCHET_1:
+    case MSEGStorage::segment::RATCHET_2:
+    case MSEGStorage::segment::RATCHET_3:
+    case MSEGStorage::segment::RATCHET_4:
+    case MSEGStorage::segment::RATCHET_5:
+    case MSEGStorage::segment::RATCHET_6:
+    case MSEGStorage::segment::RATCHET_7:
+    case MSEGStorage::segment::RATCHET_8:
+        return fmt::format("Ratchet {}", t - MSEGStorage::segment::RATCHET_1 + 1);
+    case MSEGStorage::segment::NONE:
+        break;
     }
+
+    return "Unknown";
 }
 
 char lowerChar(const juce::KeyPress &key)
