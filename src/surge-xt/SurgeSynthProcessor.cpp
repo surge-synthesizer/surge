@@ -1649,7 +1649,18 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
     return bypassParameter;
 }
 
-void SurgeSynthProcessor::reset() { blockPos = 0; }
+void SurgeSynthProcessor::reset()
+{
+    blockPos = 0;
+
+    if (!surge)
+    {
+        return;
+    }
+
+    // Hosts stop processing here (VST3 setProcessing(false), CLAP reset) and expect silence after
+    surge->stopSound();
+}
 
 void SurgeSynthProcessor::tryLazyOscStartupFromStreamedState()
 {
