@@ -3,6 +3,7 @@ project(surge-xt-tests)
 
 add_executable(${PROJECT_NAME}
         main.cpp
+        XTTestLifecycle.cpp
         XTTestOSC.cpp
   )
 
