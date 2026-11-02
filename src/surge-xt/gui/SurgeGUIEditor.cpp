@@ -4633,22 +4633,52 @@ void SurgeGUIEditor::openModTypeinOnDrop(modsources ms,
                                 current_scene, modidx);
 }
 
+static std::string normalizeWhitespace(const std::string &s)
+{
+    std::string res;
+    bool pendingSpace = false;
+
+    for (auto c : s)
+    {
+        if (std::isspace((unsigned char)c))
+        {
+            // leading runs never flush, trailing ones are dropped when the loop ends
+            pendingSpace = !res.empty();
+        }
+        else
+        {
+            if (pendingSpace)
+            {
+                res += ' ';
+                pendingSpace = false;
+            }
+
+            res += c;
+        }
+    }
+
+    return res;
+}
+
 void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int> where,
                                            Surge::Widgets::ModulationSourceButton *msb)
 {
+    std::string defaultName = modsource_names[ms_ctrl1 + ccid];
     std::string pval = synth->storage.getPatch().CustomControllerLabel[ccid];
 
     if (pval == "-")
     {
-        pval = "";
+        pval = defaultName;
     }
 
     promptForMiniEdit(
         pval, fmt::format("Enter a new name for Macro {:d}:", ccid + 1), "Rename Macro", where,
-        [this, ccid, msb](const std::string &s) {
-            auto useS = s;
+        [this, ccid, defaultName, msb](const std::string &s) {
+            auto useS = normalizeWhitespace(s);
 
-            if (useS == "")
+            // "-" is the sentinel for an unnamed macro and gets streamed into the patch, so
+            // accepting the prefilled default has to round-trip back to it
+            if (useS.empty() || useS == defaultName)
             {
                 useS = "-";
             }
@@ -4681,21 +4711,31 @@ void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int
                                          juce::Component *c)
 {
     auto msi = modsource_index;
+    auto defaultName = ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene,
+                                                             modsource, msi, false, false, true);
+    std::string currentName = synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
 
-    auto callback = [this, lfo_id, msi](const std::string &nv) {
+    auto callback = [this, lfo_id, msi, defaultName](const std::string &nv) {
+        auto useS = normalizeWhitespace(nv);
+
+        // Accepting the prefilled default has to leave the modulator unnamed, else long names
+        // read "LFO 1 (LFO 1)" and the label stops tracking the LFO's shape. A bare "-" counts
+        // as unnamed too, since that is what it means in the macro labels
+        if (useS == defaultName || useS == "-")
+        {
+            useS = "";
+        }
+
         auto cp = synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
         undoManager()->pushLFORename(current_scene, lfo_id, msi, cp);
-        strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
+        strxcpy(cp, useS.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
         synth->storage.getPatch().isDirty = true;
         synth->refresh_editor = true;
     };
 
-    promptForMiniEdit(
-        synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
-        fmt::format("Enter a new name for {:s}:",
-                    ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, modsource,
-                                                          msi, false, false, true)),
-        "Rename Modulator", juce::Point<int>(10, 10), callback, c);
+    promptForMiniEdit(currentName.empty() ? defaultName : currentName,
+                      fmt::format("Enter a new name for {:s}:", defaultName), "Rename Modulator",
+                      juce::Point<int>(10, 10), callback, c);
 }
 
 void SurgeGUIEditor::resetSmoothing(Modulator::SmoothingMode t)
