@@ -49,7 +49,9 @@ Package: ${PACKAGE_NAME}
 Version: $DEB_VERSION
 Architecture: amd64
 Maintainer: surgeteam <noreply@github.com>
-Depends: libc6 (>=2.27), libcairo2, libfontconfig1, libfreetype6, libx11-6, libxcb-cursor0, libxcb-xkb1, libxcb1, libxkbcommon-x11-0, libxkbcommon0,  xdg-utils, xclip
+Depends: libc6 (>=2.27), libstdc++6, libgcc-s1, libfontconfig1, libfreetype6, libasound2, libx11-6, libxext6, libxcursor1, libxinerama1, libxrandr2
+Recommends: xdg-utils, libxss1, zenity | kdialog
+Suggests: libjack-jackd2-0 | libjack0
 Provides: vst-plugin
 Section: sound
 Priority: optional
