@@ -49,7 +49,7 @@ endfunction()
 
 # Build LuaJIT if existing library is not found
 if(NOT EXISTS "${LUAJIT_LIBRARY}")
-  message(STATUS "Building LuaJIT at CMake time right now; configure with -DSURGE_SKIP_LUA=TRUE to disable")
+  message(STATUS "Building LuaJIT at CMake time right now; configure with -DSURGE_LUA_IMPL=puc to use PUC-Rio Lua instead, or -DSURGE_LUA_IMPL=none to disable Lua")
   # Check APPLE before UNIX
   if(APPLE)
     message(STATUS "Running ./build-macos-luajit.sh \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
