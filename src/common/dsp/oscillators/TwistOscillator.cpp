@@ -328,7 +328,7 @@ void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
     while (cycleInSamples < 10)
         cycleInSamples *= 2;
 
-    if (!(oscdata->retrigger.val.b || is_display))
+    if (!(oscdata->retrigger.val.b || is_display || keepPhaseOnInit))
     {
         cycleInSamples *= (1.0 + storage->rand_01());
     }
@@ -339,6 +339,20 @@ void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 
     process_block_internal<false, true>(pitch, 0, false, 0, std::ceil(cycleInSamples));
 }
+void TwistOscillator::retrigger(float pitch, bool nonzero_drift, bool resetPhase)
+{
+    // Without the LPG there is no per-note attack to re-excite, so a voice which is
+    // keeping its phase has nothing to do here
+    if (!resetPhase && oscdata->p[twist_lpg_response].deactivated)
+    {
+        return;
+    }
+
+    keepPhaseOnInit = !resetPhase;
+    init(pitch, false, nonzero_drift);
+    keepPhaseOnInit = false;
+}
+
 TwistOscillator::~TwistOscillator()
 {
     if (shared_buffer)

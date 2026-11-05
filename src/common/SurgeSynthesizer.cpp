@@ -944,11 +944,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
 
         if (createVoice)
         {
-            int32_t noteIdToReuse = -1;
-            int16_t channelToReuse, keyToReuse;
             SurgeVoice *stealEnvelopesFrom{nullptr};
             bool wasGated{false};
-            float pkeyToReuse{0.f}, pphaseToReuse{0.f};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -957,15 +954,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     if (v->state.gate)
                     {
                         glide = true;
-                        noteIdToReuse = v->host_note_id;
-                        channelToReuse = v->originating_host_channel;
-                        keyToReuse = v->originating_host_key;
                         stealEnvelopesFrom = v;
-                        if (v->state.portaphase < 1 && (v->state.portasrc_key != v->state.pkey))
-                        {
-                            pkeyToReuse = v->state.pkey;
-                            pphaseToReuse = v->state.portaphase;
-                        }
                         wasGated = true;
                     }
                     else
@@ -981,11 +970,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 }
             }
 
-            if (stealEnvelopesFrom &&
-                storage.getPatch().scene[scene].monoVoiceEnvelopeMode != RESTART_FROM_ZERO)
+            if (stealEnvelopesFrom)
             {
                 reclaimVoiceFor(stealEnvelopesFrom, key, channel, velocity, scene, host_noteid,
-                                host_originating_channel, host_originating_key);
+                                host_originating_channel, host_originating_key,
+                                storage.getPatch().scene[scene].monoVoiceEnvelopeMode ==
+                                    RESTART_FROM_ZERO);
                 if (mode == pm_mono_fp && !wasGated)
                 {
                     stealEnvelopesFrom->resetPortamentoFrom(key, channel);
@@ -993,13 +983,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             }
             else
             {
-                if (noteIdToReuse >= 0)
-                {
-                    // We kill the note id on the *old* voice not the *new* one on this
-                    // mode since this mode is supposed to trigger envelopes on keypress
-                    notifyEndedNote(host_noteid, noteIdToReuse, channelToReuse, keyToReuse);
-                }
-
                 SurgeVoice *nvoice = getUnusedVoice(scene);
                 float aegReuse{0.f}, fegReuse{0.f};
 
@@ -1020,17 +1003,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         detune, &channelState[channel].keyState[key], &channelState[mpeMainChannel],
                         &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
                         host_originating_key, host_originating_channel, aegReuse, fegReuse);
-
-                    if (wasGated && pkeyToReuse > 0)
-                    {
-                        // This is commented out since it runs away in some
-                        // cases. It is an attempt to fix #7301
-
-                        // In this case we want to continue the preivously
-                        // initiated porta
-                        // nvoice->state.pkey = pkeyToReuse;
-                        // nvoice->state.portaphase = 1 - pphaseToReuse;
-                    }
                 }
             }
         }
@@ -1137,18 +1109,16 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 {
                     if (v->state.scene_id == scene && !v->state.uberrelease)
                     {
-                        if (storage.getPatch().scene[scene].monoVoiceEnvelopeMode !=
-                            RESTART_FROM_ZERO)
-                            recycleThis = v;
-                        else
-                            v->uber_release(); // make this optional for poly legato
+                        recycleThis = v;
                     }
                 }
             }
-            if (recycleThis)
+            if (recycleThis && !found_one)
             {
                 reclaimVoiceFor(recycleThis, key, channel, velocity, scene, host_noteid,
-                                host_originating_channel, host_originating_key);
+                                host_originating_channel, host_originating_key,
+                                storage.getPatch().scene[scene].monoVoiceEnvelopeMode ==
+                                    RESTART_FROM_ZERO);
             }
             else if (!found_one)
             {
@@ -1649,7 +1619,13 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                                       v->host_note_id, v->originating_host_key,
                                       v->originating_host_channel);
                             doNotifyEndedNote = true;
-                            v->state.gate = false;
+
+                            // playVoice may have reclaimed this very voice to sound the held
+                            // key, in which case the fake gate above has become a real one
+                            if (v->state.uberrelease)
+                            {
+                                v->state.gate = false;
+                            }
                         }
                     }
                 }
@@ -5956,11 +5932,13 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     v->originating_host_key = host_originating_key;
 
     channelState[channel].keyState[key].voiceOrder = voiceCounter++;
+    storage.last_key[scene] = key;
+    storage.last_channel[scene] = channel;
 
     v->resetVelocity((unsigned int)velocity);
     v->restartAEGFEGAttack(aegStart, fegStart);
     v->retriggerLFOEnvelopes();
-    v->retriggerOSCWithIndependentAttacks();
+    v->retriggerOSC(resetToZero);
     v->resetPortamentoFrom(priorKey, priorVoiceChannel);
 
     // Now end this note unless it is used by another scene
