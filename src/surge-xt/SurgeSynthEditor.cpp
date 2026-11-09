@@ -840,30 +840,17 @@ juce::PopupMenu SurgeSynthEditor::modifyHostMenu(juce::PopupMenu menu)
     return menu;
 }
 
-bool SurgeSynthEditor::useHostContextMenus() const
-{
-    const auto host = juce::PluginHostType();
-    const auto isUnknownHost = std::strcmp(host.getHostDescription(), "Unknown") == 0;
-
-    return !(host.isDaVinciResolve() || isUnknownHost);
-}
-
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
-    if (useHostContextMenus())
+    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+
+    if (auto *c = getHostContext())
     {
-        auto par = processor.paramsByID[processor.surge->idForParameter(p)];
-
-        if (auto *c = getHostContext())
+        if (auto menuInfo = c->getContextMenuForParameterIndex(par))
         {
-            if (auto menuInfo = c->getContextMenuForParameterIndex(par))
-            {
-                auto menu = menuInfo->getEquivalentPopupMenu();
+            auto menu = menuInfo->getEquivalentPopupMenu();
 
-                menu = modifyHostMenu(menu);
-
-                return menu;
-            }
+            return modifyHostMenu(menu);
         }
     }
 
@@ -872,20 +859,15 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 {
-    if (useHostContextMenus())
+    auto par = processor.macrosById[macro];
+
+    if (auto *c = getHostContext())
     {
-        auto par = processor.macrosById[macro];
-
-        if (auto *c = getHostContext())
+        if (auto menuInfo = c->getContextMenuForParameterIndex(par))
         {
-            if (auto menuInfo = c->getContextMenuForParameterIndex(par))
-            {
-                auto menu = menuInfo->getEquivalentPopupMenu();
+            auto menu = menuInfo->getEquivalentPopupMenu();
 
-                modifyHostMenu(menu);
-
-                return menu;
-            }
+            return modifyHostMenu(menu);
         }
     }
 
