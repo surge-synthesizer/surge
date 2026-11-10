@@ -70,6 +70,7 @@ class TwistOscillator : public Oscillator
                                 int throwawayBlocks = -1);
 
     virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true) override;
+    virtual void retrigger(float pitch, bool nonzero_drift, bool resetPhase) override;
     virtual void init_ctrltypes(int scene, int oscnum) override { init_ctrltypes(); };
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
@@ -93,6 +94,7 @@ class TwistOscillator : public Oscillator
     int fmwp, fmrp;
 
     bool useCorrectLPGBlockSize{false}; // See #6760
+    bool keepPhaseOnInit{false};
 
     using resamp_t = sst::basic_blocks::dsp::LanczosResampler<BLOCK_SIZE>;
     std::unique_ptr<resamp_t> lancRes, fmDownSampler;

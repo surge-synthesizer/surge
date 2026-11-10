@@ -211,12 +211,16 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     }
 
     auto mode = (exciter_modes)oscdata->p[str_exciter_mode].val.i;
-    phase1 = 0.0, phase2 = 0.0;
 
-    if (!oscdata->retrigger.val.b && !is_display)
+    if (!keepPhaseOnInit)
     {
-        phase1 = urd(gen);
-        phase2 = urd(gen);
+        phase1 = 0.0, phase2 = 0.0;
+
+        if (!oscdata->retrigger.val.b && !is_display)
+        {
+            phase1 = urd(gen);
+            phase2 = urd(gen);
+        }
     }
 
     auto r1 = 1.0 / (pitchmult_inv * getOversampleLevel());
@@ -879,6 +883,13 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
             charFilt.process_block(output, BLOCK_SIZE_OS);
         }
     }
+}
+
+void StringOscillator::retrigger(float pitch, bool nonzero_drift, bool resetPhase)
+{
+    keepPhaseOnInit = !resetPhase;
+    init(pitch, false, nonzero_drift);
+    keepPhaseOnInit = false;
 }
 
 void StringOscillator::init_ctrltypes(int scene, int oscnum)

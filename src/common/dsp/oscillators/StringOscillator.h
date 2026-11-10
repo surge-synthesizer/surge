@@ -92,6 +92,7 @@ class StringOscillator : public Oscillator
     ~StringOscillator();
 
     virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true) override;
+    virtual void retrigger(float pitch, bool nonzero_drift, bool resetPhase) override;
     virtual void init_ctrltypes(int scene, int oscnum) override;
     virtual void init_ctrltypes() override;
 
@@ -104,6 +105,7 @@ class StringOscillator : public Oscillator
     void process_block_internal(float pitch, float drift, bool stereo, float FMdepth);
 
     float phase1 = 0, phase2 = 0;
+    bool keepPhaseOnInit{false};
 
     static constexpr float dustpos = 0.998, dustneg = 1.0 - dustpos;
 

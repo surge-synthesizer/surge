@@ -1689,7 +1689,7 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
     state.portaphase = 0;
 }
 
-void SurgeVoice::retriggerOSCWithIndependentAttacks()
+void SurgeVoice::retriggerOSC(bool resetPhase)
 {
     for (int i = 0; i < n_oscs; ++i)
     {
@@ -1703,18 +1703,7 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
                                                     octaveSize * scene->osc[i].octave.val.i,
                                                 0);
 
-            /*
-             * This is awfully special case but it's the best solution
-             */
-            if (scene->osc[i].type.val.i == ot_string)
-            {
-                osc[i]->init(usep);
-            }
-            if (scene->osc[i].type.val.i == ot_twist &&
-                !scene->osc[i].p[n_osc_params - 2].deactivated)
-            {
-                osc[i]->init(usep);
-            }
+            osc[i]->retrigger(usep, scene->drift.extend_range, resetPhase);
         }
     }
 }
