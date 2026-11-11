@@ -503,6 +503,14 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     std::vector<int> presetOrderToPatchList;
     int juceSidePresetId{0};
 
+    static constexpr int numMidiPrograms{128};
+    int midiProgram{0};
+
+    // Cubendo calls setCurrentProgram() after setStateInformation(), which clobbers the restored
+    // state, so we ignore program changes within this time window after setStateInformation()
+    static constexpr int64_t programChangeSuppressionMs{200};
+    std::atomic<int64_t> suppressProgramChangeUntil{0};
+
     int blockPos = 0;
 
     int checkNamesEvery = 0;
