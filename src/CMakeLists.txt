@@ -6,7 +6,6 @@ option(SURGE_BUILD_RS "Build Surge XT Rust bindings" OFF)
 option(SURGE_BUILD_RS_EXAMPLES "Build examples for Rust bindings" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
-option(SURGE_EXPOSE_PRESETS "Expose Surge XT presets via the JUCE program API" OFF)
 option(SURGE_INCLUDE_MELATONIN_INSPECTOR "Include Melatonin Inspector" OFF)
 
 # Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build

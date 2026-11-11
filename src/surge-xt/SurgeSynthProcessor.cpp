@@ -221,32 +221,14 @@ double SurgeSynthProcessor::getTailLengthSeconds() const { return 2.0; }
 
 int SurgeSynthProcessor::getNumPrograms()
 {
-#ifdef SURGE_EXPOSE_PRESETS
-    return presetOrderToPatchList.size() + 1;
-#else
     // Every other format delivers program change as plain MIDI, but VST3... -_-
     return wrapperType == wrapperType_VST3 ? numMidiPrograms : 1;
-#endif
 }
 
-int SurgeSynthProcessor::getCurrentProgram()
-{
-#ifdef SURGE_EXPOSE_PRESETS
-    return juceSidePresetId;
-#else
-    return midiProgram;
-#endif
-}
+int SurgeSynthProcessor::getCurrentProgram() { return midiProgram; }
 
 void SurgeSynthProcessor::setCurrentProgram(int index)
 {
-#ifdef SURGE_EXPOSE_PRESETS
-    if (index > 0 && index <= presetOrderToPatchList.size())
-    {
-        juceSidePresetId = index;
-        surge->patchid_queue = presetOrderToPatchList[index - 1];
-    }
-#else
     auto until = suppressProgramChangeUntil.load();
 
     if (until != 0)
@@ -267,30 +249,16 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
     midiProgram = index;
 
     surge->programChange(0, index);
-#endif
 }
 
 const juce::String SurgeSynthProcessor::getProgramName(int index)
 {
-#ifdef SURGE_EXPOSE_PRESETS
-    if (index == 0)
-        return "INIT";
-    index--;
-    if (index < 0 || index >= presetOrderToPatchList.size())
-    {
-        return "RANGE ERROR";
-    }
-    auto patch = surge->storage.patch_list[presetOrderToPatchList[index]];
-    auto res = surge->storage.patch_category[patch.category].name + "/" + patch.name;
-    return res;
-#else
     if (index < 0 || index >= numMidiPrograms)
     {
         return "";
     }
 
     return "Program " + juce::String(index);
-#endif
 }
 
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
