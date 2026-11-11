@@ -224,7 +224,8 @@ int SurgeSynthProcessor::getNumPrograms()
 #ifdef SURGE_EXPOSE_PRESETS
     return presetOrderToPatchList.size() + 1;
 #else
-    return 1;
+    // Every other format delivers program change as plain MIDI, but VST3... -_-
+    return wrapperType == wrapperType_VST3 ? numMidiPrograms : 1;
 #endif
 }
 
@@ -233,7 +234,7 @@ int SurgeSynthProcessor::getCurrentProgram()
 #ifdef SURGE_EXPOSE_PRESETS
     return juceSidePresetId;
 #else
-    return 0;
+    return midiProgram;
 #endif
 }
 
@@ -245,6 +246,27 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
         juceSidePresetId = index;
         surge->patchid_queue = presetOrderToPatchList[index - 1];
     }
+#else
+    auto until = suppressProgramChangeUntil.load();
+
+    if (until != 0)
+    {
+        suppressProgramChangeUntil.store(0);
+
+        if (juce::Time::currentTimeMillis() < until)
+        {
+            return;
+        }
+    }
+
+    if (index < 0 || index >= numMidiPrograms)
+    {
+        return;
+    }
+
+    midiProgram = index;
+
+    surge->programChange(0, index);
 #endif
 }
 
@@ -262,7 +284,12 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
     auto res = surge->storage.patch_category[patch.category].name + "/" + patch.name;
     return res;
 #else
-    return "";
+    if (index < 0 || index >= numMidiPrograms)
+    {
+        return "";
+    }
+
+    return "Program " + juce::String(index);
 #endif
 }
 
@@ -1507,8 +1534,7 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
     }
     else if (m.isProgramChange())
     {
-        // apparently this is not enough to actually execute SurgeSynthesizer::programChange
-        // in VST3 case
+        // Enough for everything except VST3...
         surge->programChange(ch, m.getProgramChangeNumber());
     }
     else
@@ -1565,6 +1591,8 @@ void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
     if (!surge)
         return;
+
+    suppressProgramChangeUntil.store(juce::Time::currentTimeMillis() + programChangeSuppressionMs);
 
     surge->enqueuePatchForLoad(data, sizeInBytes);
     surge->processAudioThreadOpsWhenAudioEngineUnavailable();
