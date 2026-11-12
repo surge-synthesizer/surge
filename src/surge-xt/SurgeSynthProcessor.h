@@ -504,7 +504,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     int juceSidePresetId{0};
 
     static constexpr int numMidiPrograms{128};
-    int midiProgram{0};
+    // JUCE drops any program change whose index equals getCurrentProgram(), so "nothing received
+    // yet" has to be an index no program change can ever carry, which means one past the 128 a
+    // MIDI program change can address. Loading the init patch gives that slot something to do
+    static constexpr int initPatchSlot{numMidiPrograms};
+    int midiProgram{initPatchSlot};
 
     // Cubendo calls setCurrentProgram() after setStateInformation(), which clobbers the restored
     // state, so we ignore program changes within this time window after setStateInformation()

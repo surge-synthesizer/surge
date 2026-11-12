@@ -943,6 +943,24 @@ void SurgeStorage::initializePatchDb(bool force)
 
 SurgePatch &SurgeStorage::getPatch() const { return *_patch.get(); }
 
+int SurgeStorage::findInitPatchIndex() const
+{
+    const bool lookingForFactory = (initPatchCategoryType == "Factory");
+
+    for (int i = 0; i < (int)patch_list.size(); ++i)
+    {
+        const auto &p = patch_list[i];
+
+        if (p.name == initPatchName && patch_category[p.category].name == initPatchCategory &&
+            patch_category[p.category].isFactory == lookingForFactory)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 struct PEComparer
 {
     bool operator()(const Patch &a, const Patch &b) { return a.name.compare(b.name) < 0; }
