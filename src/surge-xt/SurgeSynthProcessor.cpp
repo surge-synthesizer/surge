@@ -223,7 +223,6 @@ int SurgeSynthProcessor::getNumPrograms()
 {
     // Every other format delivers program change as plain MIDI, but VST3... -_-
     return wrapperType == wrapperType_VST3 ? numMidiPrograms + 1 : 1;
-#endif
 }
 
 int SurgeSynthProcessor::getCurrentProgram() { return midiProgram; }
@@ -266,7 +265,7 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
 
 const juce::String SurgeSynthProcessor::getProgramName(int index)
 {
-    if (index < 0 || index >= numMidiPrograms)
+    if (index < 0 || index > initPatchSlot)
     {
         return "";
     }
