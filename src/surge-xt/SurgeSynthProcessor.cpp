@@ -225,7 +225,7 @@ int SurgeSynthProcessor::getNumPrograms()
     return presetOrderToPatchList.size() + 1;
 #else
     // Every other format delivers program change as plain MIDI, but VST3... -_-
-    return wrapperType == wrapperType_VST3 ? numMidiPrograms : 1;
+    return wrapperType == wrapperType_VST3 ? numMidiPrograms + 1 : 1;
 #endif
 }
 
@@ -259,12 +259,24 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
         }
     }
 
-    if (index < 0 || index >= numMidiPrograms)
+    if (index < 0 || index > initPatchSlot)
     {
         return;
     }
 
     midiProgram = index;
+
+    if (index == initPatchSlot)
+    {
+        const auto id = surge->storage.findInitPatchIndex();
+
+        if (id >= 0)
+        {
+            surge->patchid_queue = id;
+        }
+
+        return;
+    }
 
     surge->programChange(0, index);
 #endif
@@ -284,9 +296,14 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
     auto res = surge->storage.patch_category[patch.category].name + "/" + patch.name;
     return res;
 #else
-    if (index < 0 || index >= numMidiPrograms)
+    if (index < 0 || index > initPatchSlot)
     {
         return "";
+    }
+
+    if (index == initPatchSlot)
+    {
+        return surge->storage.initPatchName;
     }
 
     return "Program " + juce::String(index);

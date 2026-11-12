@@ -1629,6 +1629,9 @@ class alignas(16) SurgeStorage
     std::string initPatchName{"Init Saw"}, initPatchCategory{"Templates"},
         initPatchCategoryType{"Factory"};
 
+    // index into patch_list, or -1 if the configured init patch is no longer installed
+    int findInitPatchIndex() const;
+
     static constexpr int tuning_table_size = 512;
     float table_pitch alignas(16)[tuning_table_size];
     float table_pitch_inv alignas(16)[tuning_table_size];

@@ -1419,20 +1419,11 @@ void PatchSelector::loadPatch(int id, bool fromFavorites)
 
 void PatchSelector::loadInitPatch()
 {
-    int i = 0;
-    bool lookingForFactory = (storage->initPatchCategoryType == "Factory");
+    const auto id = storage->findInitPatchIndex();
 
-    for (auto p : storage->patch_list)
+    if (id >= 0)
     {
-        if (p.name == storage->initPatchName &&
-            storage->patch_category[p.category].name == storage->initPatchCategory &&
-            storage->patch_category[p.category].isFactory == lookingForFactory)
-        {
-            loadPatch(i);
-            break;
-        }
-
-        ++i;
+        loadPatch(id);
     }
 }
 
