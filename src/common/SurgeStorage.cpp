@@ -1603,6 +1603,8 @@ void SurgeStorage::perform_queued_wtloads()
             }
         }
     }
+
+    patch.isDirty.suppressEditObserver = false;
 }
 
 void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)

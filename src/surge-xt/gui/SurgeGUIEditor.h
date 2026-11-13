@@ -576,6 +576,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void loadPatchWithDirtyCheck(std::function<void()> loadAction);
     void loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory = false);
 
+    void toggleCompareToOriginal();
+    bool canCompareToOriginal() const;
+
+    void showSavePatchDialog(std::function<void(Surge::Overlays::PatchStoreDialog *)> setup =
+                                 [](auto *) {});
+
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
                                Surge::Widgets::ModulationSourceButton *msb);
     void openLFORenameDialog(const int lfo_id, const juce::Point<int> where, juce::Component *r);

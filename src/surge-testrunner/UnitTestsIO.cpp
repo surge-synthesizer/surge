@@ -2686,3 +2686,279 @@ TEST_CASE("Old Window Oscillator Patches Do Not Turn Into Samples", "[io]")
         REQUIRE(flags & wtf_loop_sample);
     }
 }
+
+TEST_CASE("Compare To Original", "[io]") // See issue 7657
+{
+    auto cutoffOf = [](std::shared_ptr<SurgeSynthesizer> s) {
+        return s->storage.getPatch().scene[0].filterunit[0].cutoff.val.f;
+    };
+
+    auto nudgeCutoff = [](std::shared_ptr<SurgeSynthesizer> s, float v01, bool external) {
+        auto *p = &(s->storage.getPatch().scene[0].filterunit[0].cutoff);
+
+        s->setParameter01(s->idForParameter(p), v01, external);
+    };
+
+    auto streamed = [](std::shared_ptr<SurgeSynthesizer> s) {
+        void *d{nullptr};
+        const auto sz = s->storage.getPatch().save_patch(&d);
+
+        REQUIRE(sz > 0);
+
+        // save_patch hands back the patch's own buffer, which the next call clobbers
+        return std::vector<char>((char *)d, (char *)d + sz);
+    };
+
+    // Writes the current patch out and loads it back as a restore, which is what gives compare
+    // a path to flip to. loadPatchByPath is the chokepoint that re-baselines.
+    auto loadFromDisk = [](std::shared_ptr<SurgeSynthesizer> s, const fs::path &path) {
+        s->savePatchToPath(path, false);
+        REQUIRE(s->loadPatchByPath(path_to_string(path).c_str(), -1, "Compare Test", false));
+    };
+
+    SECTION("Round Trips To A Byte Identical Patch And Keeps The Dirty Flag")
+    {
+        auto path = fs::temp_directory_path() / "surge_test_compare_roundtrip.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        loadFromDisk(surge, path);
+
+        const auto original = cutoffOf(surge);
+
+        nudgeCutoff(surge, 0.2f, false);
+        REQUIRE(cutoffOf(surge) != Approx(original));
+        REQUIRE(surge->storage.getPatch().isDirty);
+
+        const auto edited = cutoffOf(surge);
+
+        // populateDawExtraState runs inside enterCompareToOriginal, so run it here too or the
+        // two streams differ by the DAW state alone
+        surge->populateDawExtraState();
+
+        const auto before = streamed(surge);
+
+        REQUIRE(surge->canCompareToOriginal());
+        REQUIRE(surge->enterCompareToOriginal());
+        REQUIRE(surge->isComparingToOriginal());
+
+        // The original is what was on disk, and it is not dirty, because it is saved
+        REQUIRE(cutoffOf(surge) == Approx(original));
+        REQUIRE(!surge->storage.getPatch().isDirty);
+
+        surge->exitCompareToOriginal();
+
+        REQUIRE(!surge->isComparingToOriginal());
+        REQUIRE(cutoffOf(surge) == Approx(edited));
+        REQUIRE(surge->storage.getPatch().isDirty);
+
+        surge->populateDawExtraState();
+
+        const auto after = streamed(surge);
+
+        REQUIRE(after.size() == before.size());
+        REQUIRE(after == before);
+
+        fs::remove(path);
+    }
+
+    SECTION("Toggling Does Not Touch The Baseline")
+    {
+        auto path = fs::temp_directory_path() / "surge_test_compare_toggle.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        loadFromDisk(surge, path);
+
+        const auto original = cutoffOf(surge);
+
+        nudgeCutoff(surge, 0.3f, false);
+
+        const auto edited = cutoffOf(surge);
+
+        for (int i = 0; i < 3; ++i)
+        {
+            REQUIRE(surge->enterCompareToOriginal());
+            REQUIRE(cutoffOf(surge) == Approx(original));
+
+            surge->exitCompareToOriginal();
+            REQUIRE(cutoffOf(surge) == Approx(edited));
+        }
+
+        fs::remove(path);
+    }
+
+    SECTION("A Pathless Patch Falls Back To A Blob")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        // Nothing on disk behind this one, which is the drag and drop and DAW restore case
+        surge->rebaselineCompareToOriginal(fs::path{});
+
+        REQUIRE(surge->compareOriginalPath.empty());
+        REQUIRE(surge->compareOriginalBlobSize > 0);
+        REQUIRE(surge->canCompareToOriginal());
+
+        const auto original = cutoffOf(surge);
+
+        nudgeCutoff(surge, 0.4f, false);
+
+        REQUIRE(surge->enterCompareToOriginal());
+        REQUIRE(cutoffOf(surge) == Approx(original));
+
+        surge->exitCompareToOriginal();
+    }
+
+    SECTION("A Preset Load Keeps Its Displayed Name Across A Toggle")
+    {
+        auto path = fs::temp_directory_path() / "surge_test_compare_preset.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        surge->storage.getPatch().name = "Streamed Name";
+        surge->storage.getPatch().category = "Streamed Category";
+        surge->savePatchToPath(path, false);
+
+        // As a preset, which is what the browser and drag & drop both do: the name and
+        // category in the file are dropped in favour of the caller's. Compare reloads as a
+        // restore, so without care the toggle would rename the patch under the user.
+        REQUIRE(surge->loadPatchByPath(path_to_string(path).c_str(), -1, "Dropped In", true));
+
+        REQUIRE(surge->compareOriginalPath == path);
+        REQUIRE(surge->compareOriginalBlobSize == 0);
+        REQUIRE(surge->storage.getPatch().name == "Dropped In");
+
+        nudgeCutoff(surge, 0.45f, false);
+        REQUIRE(surge->enterCompareToOriginal());
+
+        REQUIRE(surge->storage.getPatch().name == "Dropped In");
+        REQUIRE(surge->storage.getPatch().category == "Drag & Drop");
+
+        surge->exitCompareToOriginal();
+
+        REQUIRE(surge->storage.getPatch().name == "Dropped In");
+
+        fs::remove(path);
+    }
+
+    SECTION("Compare Is Unavailable Once The Remembered File Is Gone")
+    {
+        auto path = fs::temp_directory_path() / "surge_test_compare_vanishes.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        loadFromDisk(surge, path);
+        REQUIRE(surge->canCompareToOriginal());
+
+        fs::remove(path);
+
+        REQUIRE(!surge->canCompareToOriginal());
+        REQUIRE(!surge->enterCompareToOriginal());
+        REQUIRE(!surge->isComparingToOriginal());
+    }
+
+    SECTION("Only Edits From Surge's Own UI End Compare Mode")
+    {
+        auto path = fs::temp_directory_path() / "surge_test_compare_external.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        loadFromDisk(surge, path);
+        nudgeCutoff(surge, 0.5f, false);
+
+        REQUIRE(surge->enterCompareToOriginal());
+        REQUIRE(!surge->compareEditObserved);
+
+        // Host automation and the DAW's generic editor, for both VST3 and CLAP
+        nudgeCutoff(surge, 0.6f, true);
+        REQUIRE(!surge->compareEditObserved);
+
+        // A MIDI CC landing on a learned parameter
+        surge->setParameterSmoothed(
+            surge->idForParameter(&(surge->storage.getPatch().scene[0].filterunit[0].cutoff))
+                .getSynthSideId(),
+            0.65f);
+        REQUIRE(!surge->compareEditObserved);
+
+        // Host macro automation
+        surge->setMacroParameter01(0, 0.7f);
+        REQUIRE(!surge->compareEditObserved);
+
+        nudgeCutoff(surge, 0.8f, false);
+        REQUIRE(surge->compareEditObserved);
+
+        fs::remove(path);
+    }
+
+    SECTION("A Wavetable Patch Does Not Fall Straight Back Out Of Compare")
+    {
+        /*
+         * The wavetable queue is drained after the patch load that queued it and dirties the
+         * patch as it goes, which would read as the user editing and end compare immediately.
+         */
+        auto path = fs::temp_directory_path() / "surge_test_compare_wavetable.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        surge->storage.getPatch().scene[0].osc[0].queue_type = ot_wavetable;
+
+        for (int i = 0; i < 5; ++i)
+        {
+            surge->process();
+        }
+
+        loadFromDisk(surge, path);
+        nudgeCutoff(surge, 0.55f, false);
+
+        REQUIRE(surge->enterCompareToOriginal());
+
+        surge->storage.perform_queued_wtloads();
+
+        for (int i = 0; i < 5; ++i)
+        {
+            surge->process();
+        }
+
+        REQUIRE(!surge->compareEditObserved);
+        REQUIRE(surge->isComparingToOriginal());
+
+        surge->exitCompareToOriginal();
+
+        fs::remove(path);
+    }
+
+    SECTION("Saving Re-Baselines, But A Backup Does Not")
+    {
+        auto path = fs::temp_directory_path() / "surge_test_compare_rebaseline.fxp";
+        auto backup = fs::temp_directory_path() / "surge_test_compare_backup.fxp";
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        loadFromDisk(surge, path);
+        REQUIRE(surge->compareOriginalPath == path);
+
+        nudgeCutoff(surge, 0.75f, false);
+
+        // The backup discipline: refreshPatchList false means touch no bookkeeping at all
+        surge->savePatchToPath(backup, false);
+        REQUIRE(surge->compareOriginalPath == path);
+
+        // What savePatchToPath does for a real Save As, without the patch list rebuild that
+        // makes the full call far too heavy for a unit test
+        surge->rebaselineCompareToOriginal(backup);
+
+        REQUIRE(surge->compareOriginalPath == backup);
+        REQUIRE(surge->compareOriginalBlobSize == 0);
+
+        const auto edited = cutoffOf(surge);
+
+        REQUIRE(surge->enterCompareToOriginal());
+        REQUIRE(cutoffOf(surge) == Approx(edited));
+
+        surge->exitCompareToOriginal();
+
+        fs::remove(path);
+        fs::remove(backup);
+    }
+}
