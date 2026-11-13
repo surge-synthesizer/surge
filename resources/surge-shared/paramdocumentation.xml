@@ -58,7 +58,7 @@
   <param id="global.fx_disable" help_url="#effects"/>
   <param id="scene.gain" help_url="#other-sound-shaping-parameters"/>
   <param id="scene.keytrack_root" help_url="#other-sound-shaping-parameters"/>
-  <param id="global.volume" help_url="#fx-bypass-character-and-global-volume"/>
+  <param id="global.volume" help_url="#fx-bypass-character-global-volume"/>
   <param id="scene.noise_color" help_url="#other-sound-generation-parameters"/>
   <param id="scene.pan" help_url="#scene-output"/>
   <param id="scene.pbrange_dn" help_url="#other-sound-generation-parameters"/>
