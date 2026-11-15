@@ -72,9 +72,10 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     fxstorage = &(storage->getPatch().fx[0]);
     audio_thread_surge_effect.reset();
-    resetFxType(effectNum, false);
     fxstorage->return_level.id = -1;
+
     setupStorageRanges(&(fxstorage->type), &(fxstorage->p[n_fx_params - 1]));
+    resetFxType(effectNum, false);
 
     int nextBaseSlot = 0;
 
@@ -630,7 +631,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
 
     if (xmlState.get() != nullptr)
     {
-        int paramFeaturesCache[n_fx_params];
+        int paramFeaturesCache[n_fx_params]{};
         if (xmlState->hasTagName("surgefx"))
         {
             auto streamingVersion = xmlState->getIntAttribute("streamingVersion", (int)2);

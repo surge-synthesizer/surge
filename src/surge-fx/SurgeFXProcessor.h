@@ -550,7 +550,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::shared_ptr<Effect> audio_thread_surge_effect;
     std::atomic<bool> resettingFx;
     FxStorage *fxstorage;
-    int storage_id_start, storage_id_end;
+    int storage_id_start{0}, storage_id_end{0};
 
     int effectNum;
     std::atomic<bool> hasLoadedFxType{false};
