@@ -303,6 +303,16 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     virtual void handleAsyncUpdate() override
     {
+        // A type change subsumes a plain param refresh, so never do both
+        if (const auto t = pendingFxType.exchange(-1); t >= 0)
+        {
+            resetFxType(t);
+        }
+        else if (pendingParamRefresh.exchange(false))
+        {
+            resetFxParams(true);
+        }
+
         paramChangeListener();
         for (int i = 0; i < n_fx_params; ++i)
             if (wasParamFeatureChanged[i])
@@ -547,8 +557,14 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     };
 
     std::shared_ptr<Effect> surge_effect;
-    std::shared_ptr<Effect> audio_thread_surge_effect;
-    std::atomic<bool> resettingFx;
+
+    // Guards surge_effect and fxstorage against being respawned or retyped underneath an
+    // in-flight process() call
+    juce::CriticalSection fxLock;
+
+    std::atomic<int> pendingFxType{-1};
+    std::atomic<bool> pendingParamRefresh{false};
+
     FxStorage *fxstorage;
     int storage_id_start{0}, storage_id_end{0};
 
