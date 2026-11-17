@@ -1117,6 +1117,12 @@ TEST_CASE("Patch Version Builder", "[io]")
                 case FilterType::fut_cutoffwarp_hp:
                 case FilterType::fut_cutoffwarp_n:
                 case FilterType::fut_cutoffwarp_bp:
+                case FilterType::fut_cytomic_cascade_lp:
+                case FilterType::fut_cytomic_cascade_hp:
+                case FilterType::fut_cytomic_cascade_bp:
+                case FilterType::fut_cytomic_cascade_n:
+                case FilterType::fut_cytomic_cascade_pk:
+                case FilterType::fut_cytomic_cascade_ap:
                 case FilterType::num_filter_types:
                     // These types were unchanged
                     break;

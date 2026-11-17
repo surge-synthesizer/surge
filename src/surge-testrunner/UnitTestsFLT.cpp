@@ -36,7 +36,7 @@ using namespace Surge::Test;
 // These first two are mostly useful targets for valgrind runs
 TEST_CASE("Run Every Filter", "[flt]")
 {
-    for (int fn = 0; fn < sst::filters::num_filter_types; fn++)
+    for (int fn = 0; fn < n_surge_filter_types; fn++)
     {
         DYNAMIC_SECTION("Test Filter " << sst::filters::filter_type_names[fn])
         {
