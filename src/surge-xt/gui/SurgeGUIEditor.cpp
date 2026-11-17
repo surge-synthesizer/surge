@@ -5489,7 +5489,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (parm && parm->supportsTotalIndexOrdering())
             hsw->setIntOrdering(parm->totalIndexOrdering());
 
-        hsw->setMinMax(0, sst::filters::num_filter_types - 1);
+        hsw->setMinMax(0, n_surge_filter_types - 1);
         hsw->setLabel(p->get_name());
 
         auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
@@ -5520,7 +5520,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         if (activeGlyph)
         {
-            for (int i = 0; i < sst::filters::num_filter_types; i++)
+            for (int i = 0; i < n_surge_filter_types; i++)
                 hsw->addGlyphIndexMapEntry(fut_glyph_index[i][0], fut_glyph_index[i][1]);
 
             auto glpc = currentSkin->propertyValue(skinCtrl,

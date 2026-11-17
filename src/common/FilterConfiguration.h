@@ -58,6 +58,9 @@
  * code which referred to the old values.
  */
 
+// sst-filters appends types surge does not offer yet
+constexpr int n_surge_filter_types = sst::filters::FilterType::fut_obxd_xpander + 1;
+
 enum fu_type_sv14
 {
     fut_14_none = 0,
@@ -139,7 +142,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
         for (auto e : mapping)
             inverseMapping[e.first] = c++;
 
-        if (mapping.size() != FilterType::num_filter_types)
+        if (mapping.size() != n_surge_filter_types)
             std::cout << "BAD MAPPING TYPES" << std::endl;
     }
 

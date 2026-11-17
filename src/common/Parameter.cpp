@@ -975,7 +975,7 @@ void Parameter::set_type(int ctrltype)
     case ct_filtertype:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = sst::filters::num_filter_types - 1;
+        val_max.i = n_surge_filter_types - 1;
         val_default.i = 0;
         break;
     case ct_filtersubtype:
@@ -3930,8 +3930,7 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)];
             break;
         case ct_filtertype:
-            txt = sst::filters::filter_type_names[limit_range(
-                i, 0, (int)sst::filters::num_filter_types - 1)];
+            txt = sst::filters::filter_type_names[limit_range(i, 0, n_surge_filter_types - 1)];
             break;
         case ct_filtersubtype:
         {
@@ -3944,7 +3943,7 @@ std::string Parameter::get_display(bool external, float ef) const
                         using sst::filters::FilterType;
 
                         int type = limit_range(patch.scene[scene].filterunit[unit].type.val.i, 0,
-                                               (int)sst::filters::num_filter_types - 1);
+                                               n_surge_filter_types - 1);
                         const auto fType = (FilterType)type;
                         if (i < 0 || i >= sst::filters::fut_subcount[type])
                         {
@@ -4024,6 +4023,14 @@ std::string Parameter::get_display(bool external, float ef) const
                                 return sst::filters::fut_cytomic_subtypes[i];
                             case FilterType::fut_obxd_xpander:
                                 return sst::filters::fut_obxd_xpander_subtypes[i];
+                            case FilterType::fut_cytomic_cascade_lp:
+                            case FilterType::fut_cytomic_cascade_hp:
+                            case FilterType::fut_cytomic_cascade_bp:
+                            case FilterType::fut_cytomic_cascade_n:
+                            case FilterType::fut_cytomic_cascade_pk:
+                            case FilterType::fut_cytomic_cascade_ap:
+                                txt = sst::filters::fut_cytomic_cascade_subtypes[i];
+                                break;
                             case FilterType::num_filter_types:
                                 txt = "ERROR";
                                 break;
