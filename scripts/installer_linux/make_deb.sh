@@ -6,17 +6,35 @@ TARGET_DIR=$3
 VERSION=$4
 
 
-# Valid version for DEB start with a digit.
-DEB_VERSION=$VERSION
-if [[ ${DEB_VERSION:0:1} =~ [0-9] ]]; then
-    echo "DEB VERSION same as version (${DEB_VERSION})"
-elif [[ ${DEB_VERSION} = NIGHTLY* ]]; then
-    DEB_VERSION="9.${VERSION}"
-    echo "NIGHTLY; DEB VERSION is ${DEB_VERSION}"
+# releases are X.Y.Z; nightlies sort above the newest release tag and below the next release
+TAG_PREFIX=release_xt_
+if [[ ${VERSION} =~ ^(${TAG_PREFIX})?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+    DEB_VERSION=${BASH_REMATCH[2]}
 else
-    DEB_VERSION="0.${VERSION}"
-    echo "DEB VERSION is ${DEB_VERSION}"
+    BASE=${DEB_BASE_VERSION:-0.0.0}
+    if ! [[ ${BASE} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "ERROR: DEB_BASE_VERSION '${BASE}' is not X.Y.Z"
+        exit 1
+    fi
+    LAST_REL=$(git -C "${SOURCEDIR}" tag --list "${TAG_PREFIX}*" \
+        | sed -nE "s/^${TAG_PREFIX}([0-9]+\.[0-9]+\.[0-9]+)$/\1/p" | sort -V | tail -n 1)
+    COUNT=$(git -C "${SOURCEDIR}" rev-list --count HEAD || echo 0)
+    DATE=$(TZ=UTC git -C "${SOURCEDIR}" log -1 --format=%cd --date=format-local:%Y%m%d || date -u +%Y%m%d)
+    HASH=$(git -C "${SOURCEDIR}" rev-parse --short HEAD || echo nohash)
+    if [[ $(git -C "${SOURCEDIR}" rev-parse --is-shallow-repository) == true ]]; then
+        echo "WARNING: shallow clone; nightly deb versions will not order correctly"
+    fi
+    if [[ -z ${LAST_REL} ]] || dpkg --compare-versions "${BASE}" gt "${LAST_REL}"; then
+        DEB_VERSION="${BASE}~nightly.${DATE}.${COUNT}.${HASH}"
+    else
+        DEB_VERSION="${LAST_REL}+nightly.${DATE}.${COUNT}.${HASH}"
+    fi
 fi
+if ! [[ ${DEB_VERSION} =~ ^[0-9][A-Za-z0-9.+~]*$ ]]; then
+    echo "ERROR: '${DEB_VERSION}' is not a valid deb version"
+    exit 1
+fi
+echo "DEB VERSION is ${DEB_VERSION}"
 
 # x64 keeps the name the download pages link to
 DEB_ARCH=$(dpkg --print-architecture)
