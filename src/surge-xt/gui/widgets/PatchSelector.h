@@ -176,10 +176,14 @@ struct PatchSelector : public juce::Component,
     std::unique_ptr<Surge::Widgets::TypeAhead> typeAhead;
     std::unique_ptr<PatchDBTypeAheadProvider> patchDbProvider;
 
-    std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
+    std::string getPatchNameAccessibleValue()
+    {
+        return pname + " by " + author + (isComparing ? ", comparing to original" : "");
+    }
 
     void onSkinChanged() override;
     bool isDirty{false};
+    bool isComparing{false};
 
   protected:
     juce::Rectangle<int> favoritesRect, searchRect;

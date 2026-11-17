@@ -409,6 +409,11 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
 
     masterfade = 1.f;
 
+    // The callers all set this too, but only once they have decided the load stuck.
+    // Setting it here is what lets compare re-baseline off a single chokepoint.
+    storage.lastLoadedPatch = string_to_path(fxpPath);
+    rebaselineCompareToOriginal(storage.lastLoadedPatch);
+
     // Notify the host display that the patch name has changed
     storage.getPatch().isDirty = false;
     updateDisplay();
@@ -416,7 +421,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     return true;
 }
 
-void SurgeSynthesizer::enqueuePatchForLoad(const void *data, int size)
+void SurgeSynthesizer::enqueuePatchForLoad(const void *data, int size, PatchLoadReason reason)
 {
     {
         // If we are forcing values on, we don't want to do any enqueued loads
@@ -431,6 +436,7 @@ void SurgeSynthesizer::enqueuePatchForLoad(const void *data, int size)
         enqueuedLoadData.reset(new char[size]);
         memcpy(enqueuedLoadData.get(), data, size);
         enqueuedLoadSize = size;
+        enqueuedLoadReason = reason;
         rawLoadEnqueued = true;
         rawLoadNeedsUIDawExtraState = false;
     }
@@ -451,9 +457,42 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
         std::lock_guard<std::mutex> g(rawLoadQueueMutex);
         rawLoadEnqueued = false;
         const bool retriggerArmed = beginPatchChangeNoteRetrigger();
+        const auto reason = enqueuedLoadReason;
 
         loadRaw(enqueuedLoadData.get(), enqueuedLoadSize);
         loadFromDawExtraState();
+
+        switch (reason)
+        {
+        case PatchLoadReason::NEW_PATCH:
+            // A DAW session restore brings its own lastLoadedPatch back with it,
+            // so by here this is either that path or nothing.
+            rebaselineCompareToOriginal(storage.lastLoadedPatch);
+            break;
+
+        case PatchLoadReason::COMPARE_TOGGLE:
+            if (inCompareMode)
+            {
+                // Compare is deliberately a restore, so the reload takes the metadata in the
+                // file rather than whatever the patch was displayed under.
+                // Put the displayed name back so that toggling doesn't rename under the user.
+                if (!compareOriginalPath.empty())
+                {
+                    storage.getPatch().name = compareOriginalName;
+                    storage.getPatch().category = compareOriginalCategory;
+                }
+            }
+            else
+            {
+                // loadRaw ends by clearing the dirty flag, which is right for the original
+                // and wrong for the unsaved edits we just put back.
+                storage.getPatch().isDirty.setQuietly(compareStashWasDirty);
+            }
+            break;
+
+        case PatchLoadReason::UNDO_REDO:
+            break;
+        }
 
         if (retriggerArmed)
         {
@@ -467,6 +506,12 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
 
 void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 {
+    // Loading dirties the patch on its way through loadFx, loadOscalgos and the wavetable queue
+    // before the clear at the end of this function undoes it.
+    // For patch compare to work properly, we need to stay quiet until perform_queued_wtloads
+    // re-arms us.
+    storage.getPatch().isDirty.suppressEditObserver = true;
+
     halt_engine = true;
     stopSound();
     for (int s = 0; s < n_scenes; s++)
@@ -733,7 +778,190 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
         midiprogramshavechanged = true;
 
         storage.getPatch().isDirty = false;
+
+        // The file just written is what the patch now came from, otherwise compare keeps
+        // offering a state the user has already superseded.
+        // Deliberately not done for the refreshPatchList = false callers,
+        // which includes the periodic backups.
+        rebaselineCompareToOriginal(filename);
     }
 }
 
 unsigned int SurgeSynthesizer::saveRaw(void **data) { return storage.getPatch().save_patch(data); }
+
+void SurgeSynthesizer::rebaselineCompareToOriginal(const fs::path &source)
+{
+    // Moving the baseline voids any comparison in progress, and catches the patch loads that
+    // do not route through the editor's own dirty check, such as Initialize Patch.
+    dropCompareToOriginal();
+
+    compareOriginalBlob.reset();
+    compareOriginalBlobSize = 0;
+    compareOriginalPath = source;
+
+    // A preset load keeps the caller's name and category rather than the ones in the file
+    // so remember what is on screen
+    compareOriginalName = storage.getPatch().name;
+    compareOriginalCategory = storage.getPatch().category;
+
+    if (!compareOriginalPath.empty())
+    {
+        return;
+    }
+
+    // Nothing on disk to re-read, so the only way to do compare in this case is to pay for a copy
+    // Same mechanism as undo, really
+    void *data{nullptr};
+    const auto sz = storage.getPatch().save_patch(&data);
+
+    if (data && sz > 0)
+    {
+        compareOriginalBlob.reset(new char[sz]);
+        memcpy(compareOriginalBlob.get(), data, sz);
+        compareOriginalBlobSize = (int)sz;
+    }
+}
+
+/*
+ * Reads whatever compare should flip back to into a buffer.
+ * Returns 0 when there is nothing to go back to.
+ */
+static int readCompareOriginal(SurgeSynthesizer *synth, std::unique_ptr<char[]> &into)
+{
+    if (synth->compareOriginalBlob && synth->compareOriginalBlobSize > 0)
+    {
+        into.reset(new char[synth->compareOriginalBlobSize]);
+        memcpy(into.get(), synth->compareOriginalBlob.get(), synth->compareOriginalBlobSize);
+
+        return synth->compareOriginalBlobSize;
+    }
+
+    if (synth->compareOriginalPath.empty())
+    {
+        return 0;
+    }
+
+    using namespace sst::io;
+
+    std::filebuf f;
+
+    if (!f.open(synth->compareOriginalPath, std::ios::binary | std::ios::in))
+    {
+        return 0;
+    }
+
+    fxChunkSetCustom fxp;
+
+    if (f.sgetn(reinterpret_cast<char *>(&fxp), sizeof(fxp)) != sizeof(fxp) ||
+        mech::endian_read_int32BE(fxp.chunkMagic) != 'CcnK' ||
+        mech::endian_read_int32BE(fxp.fxMagic) != 'FPCh' ||
+        mech::endian_read_int32BE(fxp.fxID) != 'cjs3')
+    {
+        f.close();
+
+        return 0;
+    }
+
+    const int cs = mech::endian_read_int32BE(fxp.chunkSize);
+
+    if (cs <= 0)
+    {
+        f.close();
+
+        return 0;
+    }
+
+    into.reset(new char[cs]);
+    const auto got = f.sgetn(into.get(), cs);
+    f.close();
+
+    if (got != cs)
+    {
+        into.reset();
+
+        return 0;
+    }
+
+    return cs;
+}
+
+bool SurgeSynthesizer::canCompareToOriginal() const
+{
+    if (compareOriginalBlob && compareOriginalBlobSize > 0)
+    {
+        return true;
+    }
+
+    return !compareOriginalPath.empty() && fs::exists(compareOriginalPath);
+}
+
+bool SurgeSynthesizer::enterCompareToOriginal()
+{
+    if (inCompareMode)
+    {
+        return false;
+    }
+
+    std::unique_ptr<char[]> original;
+    const auto originalSize = readCompareOriginal(this, original);
+
+    if (originalSize == 0)
+    {
+        return false;
+    }
+
+    // Stash before loading and with the DAW state brought up to date, so that flipping back
+    // restores the edits exactly rather than whatever the last host save happened to capture.
+    populateDawExtraState();
+
+    void *data{nullptr};
+    const auto sz = storage.getPatch().save_patch(&data);
+
+    if (!data || sz == 0)
+    {
+        return false;
+    }
+
+    compareStash.reset(new char[sz]);
+    memcpy(compareStash.get(), data, sz);
+    compareStashSize = (int)sz;
+    compareStashWasDirty = storage.getPatch().isDirty;
+
+    inCompareMode = true;
+    compareEditObserved = false;
+
+    enqueuePatchForLoad(original.get(), originalSize, PatchLoadReason::COMPARE_TOGGLE);
+    processAudioThreadOpsWhenAudioEngineUnavailable();
+    refresh_editor = true;
+
+    return true;
+}
+
+void SurgeSynthesizer::exitCompareToOriginal()
+{
+    if (!inCompareMode)
+    {
+        return;
+    }
+
+    inCompareMode = false;
+    compareEditObserved = false;
+
+    if (compareStash && compareStashSize > 0)
+    {
+        enqueuePatchForLoad(compareStash.get(), compareStashSize, PatchLoadReason::COMPARE_TOGGLE);
+        processAudioThreadOpsWhenAudioEngineUnavailable();
+        refresh_editor = true;
+    }
+
+    compareStash.reset();
+    compareStashSize = 0;
+}
+
+void SurgeSynthesizer::dropCompareToOriginal()
+{
+    inCompareMode = false;
+    compareEditObserved = false;
+    compareStash.reset();
+    compareStashSize = 0;
+}

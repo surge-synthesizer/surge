@@ -4259,17 +4259,14 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        showOverlay(SurgeGUIEditor::SAVE_PATCH, [this](Surge::Overlays::OverlayComponent *co) {
-            auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+        // Sampled here rather than in the callback, which may run after an interposed dialog
+        // has been dismissed and the modifier keys released.
+        const bool alt = juce::ModifierKeys::currentModifiers.isAltDown();
+        const bool shift = juce::ModifierKeys::currentModifiers.isShiftDown();
 
-            if (!psd)
-            {
-                return;
-            }
-
-            psd->setShowTagsField(juce::ModifierKeys::currentModifiers.isAltDown());
-            psd->setShowFactoryOverwrite(juce::ModifierKeys::currentModifiers.isShiftDown() &&
-                                         juce::ModifierKeys::currentModifiers.isAltDown());
+        showSavePatchDialog([alt, shift](Surge::Overlays::PatchStoreDialog *psd) {
+            psd->setShowTagsField(alt);
+            psd->setShowFactoryOverwrite(shift && alt);
         });
     }
     break;
