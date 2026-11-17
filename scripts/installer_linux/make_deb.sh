@@ -18,6 +18,23 @@ else
     echo "DEB VERSION is ${DEB_VERSION}"
 fi
 
+# x64 keeps the name the download pages link to
+DEB_ARCH=$(dpkg --print-architecture)
+case ${DEB_ARCH} in
+    amd64)
+        FILE_ARCH=x64
+        TAR_ARCH=x86_64
+        ;;
+    arm64)
+        FILE_ARCH=aarch64
+        TAR_ARCH=aarch64
+        ;;
+    *)
+        FILE_ARCH=${DEB_ARCH}
+        TAR_ARCH=${DEB_ARCH}
+        ;;
+esac
+
 mkdir ./installer-tmp
 pushd ./installer-tmp
 
@@ -47,7 +64,7 @@ cat <<EOT >> ${PACKAGE_NAME}/DEBIAN/control
 Source: ${PACKAGE_NAME}
 Package: ${PACKAGE_NAME}
 Version: $DEB_VERSION
-Architecture: amd64
+Architecture: ${DEB_ARCH}
 Maintainer: surgeteam <noreply@github.com>
 Depends: libc6 (>=2.27), libstdc++6, libgcc-s1, libfontconfig1, libfreetype6, libasound2, libx11-6, libxext6, libxcursor1, libxinerama1, libxrandr2
 Recommends: xdg-utils, libxss1, zenity | kdialog
@@ -55,6 +72,7 @@ Suggests: libjack-jackd2-0 | libjack0
 Provides: vst-plugin
 Section: sound
 Priority: optional
+Sndstation-Kind: clap-plugin
 Description: Subtractive hybrid synthesizer virtual instrument
  Surge XT includes VST3 and CLAP instrument formats for use in compatible hosts and a standalone executable
 EOT
@@ -106,13 +124,13 @@ find ${PACKAGE_NAME}/usr/lib -print
 find ${PACKAGE_NAME}/usr/bin -print
 
 # build deb package
-dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
+dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-${FILE_ARCH}-${VERSION}.deb
 
 # create a tarball of the {PACKAGE_NAME}/usr contents.
 pigz="$(command -v pigz)"
 
 pushd ${PACKAGE_NAME}/usr
-    tar cf - ./* | "${pigz:-gzip}" > "${TARGET_DIR}/${PACKAGE_NAME}-linux-x86_64-${VERSION}.tar.gz"
+    tar cf - ./* | "${pigz:-gzip}" > "${TARGET_DIR}/${PACKAGE_NAME}-linux-${TAR_ARCH}-${VERSION}.tar.gz"
 popd
 
 
