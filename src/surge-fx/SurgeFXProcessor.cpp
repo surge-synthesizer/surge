@@ -71,10 +71,10 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     effectNum = fxt_delay;
 
     fxstorage = &(storage->getPatch().fx[0]);
-    audio_thread_surge_effect.reset();
-    resetFxType(effectNum, false);
     fxstorage->return_level.id = -1;
+
     setupStorageRanges(&(fxstorage->type), &(fxstorage->p[n_fx_params - 1]));
+    resetFxType(effectNum, false);
 
     int nextBaseSlot = 0;
 
@@ -172,7 +172,6 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     }
 
     paramChangeListener = []() {};
-    resettingFx = false;
 
     oscHandler.initOSC(this, storage);
 }
@@ -276,7 +275,11 @@ void SurgefxAudioProcessor::releaseResources()
 
 void SurgefxAudioProcessor::reset()
 {
-    if (surge_effect)
+    // Called on the audio thread, so try rather than wait. Losing the race means a respawn
+    // is underway and resetFxType() will init() the new effect anyway.
+    const juce::ScopedTryLock fxGuard(fxLock);
+
+    if (fxGuard.isLocked() && surge_effect)
     {
         surge_effect->init();
     }
@@ -303,7 +306,11 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 {
     audioRunning = true;
 
-    if (resettingFx || !surge_effect)
+    // Held for the whole block, so nothing can respawn the effect mid-buffer. Losing the
+    // race means this block passes through dry, which is what the old flag check did too.
+    const juce::ScopedTryLock fxGuard(fxLock);
+
+    if (!fxGuard.isLocked() || !surge_effect)
     {
         return;
     }
@@ -336,7 +343,8 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     if (surge_effect->checkHasInvalidatedUI())
     {
-        resetFxParams(true);
+        pendingParamRefresh = true;
+        triggerAsyncUpdate();
     }
 
     auto sampl = buffer.getNumSamples();
@@ -392,26 +400,23 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     auto mainOutput = getBusBuffer(buffer, false, 0);
     auto sideChainInput = getBusBuffer(buffer, true, 1);
 
-    // FIXME: Check: has type changed?
+    // The host changing the type respawns the effect, which can't happen here. Leave
+    // effectNum alone - it belongs to the message thread - and re-request every block
+    // until handleAsyncUpdate() catches up.
     int pt = *fxType;
 
     if (effectNum != pt && pt != fxt_convolution)
     {
-        effectNum = pt;
-        resetFxType(effectNum);
+        pendingFxType.store(pt);
         fxTypeChangedByHost = true;
-    }
-
-    if (audio_thread_surge_effect.get() != surge_effect.get())
-    {
-        audio_thread_surge_effect = surge_effect;
+        triggerAsyncUpdate();
     }
 
     if (nonLatentBlockMode)
     {
         auto sideChainBus = getBus(true, 1);
 
-        for (int outPos = 0; outPos < buffer.getNumSamples() && !resettingFx; outPos += BLOCK_SIZE)
+        for (int outPos = 0; outPos < buffer.getNumSamples(); outPos += BLOCK_SIZE)
         {
             auto outL = mainOutput.getWritePointer(0, outPos);
             auto outR = mainOutput.getWritePointer(1, outPos);
@@ -445,7 +450,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
             if (is_aligned(outL, 16) && is_aligned(outR, 16) && inL == outL && inR == outR)
             {
-                audio_thread_surge_effect->process_ringout(outL, outR, true);
+                surge_effect->process_ringout(outL, outR, true);
                 hardclipBlock(outL, outR);
             }
             else
@@ -455,7 +460,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 memcpy(bufferL, inL, BLOCK_SIZE * sizeof(float));
                 memcpy(bufferR, inR, BLOCK_SIZE * sizeof(float));
 
-                audio_thread_surge_effect->process_ringout(bufferL, bufferR, true);
+                surge_effect->process_ringout(bufferL, bufferR, true);
                 hardclipBlock(bufferL, bufferR);
 
                 memcpy(outL, bufferL, BLOCK_SIZE * sizeof(float));
@@ -509,7 +514,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 }
                 copyGlobaldataSubset(storage_id_start, storage_id_end);
 
-                audio_thread_surge_effect->process_ringout(input_buffer[0], input_buffer[1], true);
+                surge_effect->process_ringout(input_buffer[0], input_buffer[1], true);
                 hardclipBlock(input_buffer[0], input_buffer[1]);
                 memcpy(output_buffer, input_buffer, 2 * BLOCK_SIZE * sizeof(float));
                 input_position = 0;
@@ -626,11 +631,13 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 
 void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
+    const juce::ScopedLock fxGuard(fxLock);
+
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 
     if (xmlState.get() != nullptr)
     {
-        int paramFeaturesCache[n_fx_params];
+        int paramFeaturesCache[n_fx_params]{};
         if (xmlState->hasTagName("surgefx"))
         {
             auto streamingVersion = xmlState->getIntAttribute("streamingVersion", (int)2);
@@ -788,7 +795,8 @@ void SurgefxAudioProcessor::reorderSurgeParams()
 
 void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
 {
-    resettingFx = true;
+    const juce::ScopedLock fxGuard(fxLock);
+
     input_position = 0;
     output_position = -1;
     effectNum = type;
@@ -829,10 +837,10 @@ void SurgefxAudioProcessor::loadFxPreset(const Surge::Storage::FxUserPreset::Pre
     // loadPresetOnto() writes ~12 params' worth of fields (val, temposync,
     // extend_range, deactivated, deform_type) into fxstorage one at a time,
     // non-atomically. The audio thread reads this same fxstorage on every
-    // process() call, so we still need the same resettingFx guard
-    // resetFxType() uses - just without any of the respawn/ct_none-reset
-    // machinery, since the effect type and instance aren't changing here.
-    resettingFx = true;
+    // process() call, so we still need the same lock resetFxType() takes -
+    // just without any of the respawn/ct_none-reset machinery, since the
+    // effect type and instance aren't changing here.
+    const juce::ScopedLock fxGuard(fxLock);
 
     // loadPresetOnto() spawns its own short-lived Effect internally purely to
     // run init_ctrltypes()/handleStreamingMismatches() against fxstorage (so
@@ -842,7 +850,7 @@ void SurgefxAudioProcessor::loadFxPreset(const Surge::Storage::FxUserPreset::Pre
     //
     // Since surge_effect already holds a pointer into this same fxstorage
     // (see resetFxType()), it picks up the new values on its very next
-    // process() call once resettingFx is cleared below. No respawn, no
+    // process() call once the lock is dropped. No respawn, no
     // init()/init_default_values(), no DSP state reset (delay lines, filter
     // histories, LFO phase, etc).
     Surge::Storage::FxUserPreset loader;
@@ -867,7 +875,6 @@ void SurgefxAudioProcessor::loadFxPreset(const Surge::Storage::FxUserPreset::Pre
     reorderSurgeParams();
     updateJuceParamsFromStorage(); // also triggers the async UI update
     updateHostDisplay();
-    resettingFx = false;
 }
 
 void SurgefxAudioProcessor::saveFxPreset(Surge::Storage::FxUserPreset &presetManager,
@@ -878,6 +885,8 @@ void SurgefxAudioProcessor::saveFxPreset(Surge::Storage::FxUserPreset &presetMan
 
 void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
 {
+    const juce::ScopedLock fxGuard(fxLock);
+
     reorderSurgeParams();
 
     // tempo sync etc settings may linger so whack them all to false again
@@ -890,7 +899,6 @@ void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
     }
 
     updateHostDisplay(juce::AudioProcessorListener::ChangeDetails{}.withParameterInfoChanged(true));
-    resettingFx = false;
 }
 
 void SurgefxAudioProcessor::updateJuceParamsFromStorage()
