@@ -24,6 +24,8 @@
 #include <vector>
 #include "SurgeStorage.h"
 #include <random>
+#include <atomic>
+#include <cstdint>
 
 namespace Surge
 {
@@ -31,12 +33,34 @@ namespace MSEG
 {
 void rebuildCache(MSEGStorage *ms);
 
+/*
+ * A fresh seed for each EvaluatorState. Every voice LFO builds one of these whenever a voice
+ * is created or freed, on the audio thread. Drawing each seed from std::random_device is very
+ * slow on Linux: libstdc++ uses RDSEED, about 30 us per draw on some AMD CPUs, so freeing a
+ * pedal's worth of voices in one block could take a whole audio cycle. The seeds only need to
+ * differ, so draw std::random_device once and derive the rest from a counter (golden-ratio
+ * step, then the murmur3 finalizer to spread the bits).
+ */
+inline uint32_t nextEvaluatorSeed()
+{
+    static std::atomic<uint32_t> counter{[] {
+        std::random_device rd;
+        return static_cast<uint32_t>(rd());
+    }()};
+    uint32_t z = counter.fetch_add(0x9E3779B9u, std::memory_order_relaxed);
+    z ^= z >> 16;
+    z *= 0x85EBCA6Bu;
+    z ^= z >> 13;
+    z *= 0xC2B2AE35u;
+    z ^= z >> 16;
+    return z;
+}
+
 struct EvaluatorState
 {
     EvaluatorState()
     {
-        std::random_device rd;
-        gen = std::minstd_rand(rd());
+        gen = std::minstd_rand(nextEvaluatorSeed());
         urd = std::uniform_real_distribution<float>(-1.0, 1.0);
     }
     int lastEval = -1;
