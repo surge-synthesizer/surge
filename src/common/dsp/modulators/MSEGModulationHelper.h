@@ -24,6 +24,7 @@
 #include <vector>
 #include "SurgeStorage.h"
 #include <random>
+#include <cstdint>
 
 namespace Surge
 {
@@ -33,12 +34,10 @@ void rebuildCache(MSEGStorage *ms);
 
 struct EvaluatorState
 {
-    EvaluatorState()
-    {
-        std::random_device rd;
-        gen = std::minstd_rand(rd());
-        urd = std::uniform_real_distribution<float>(-1.0, 1.0);
-    }
+    // cheap on purpose; voices rebuild these on the audio thread and attackFrom reseeds
+    EvaluatorState() = default;
+    explicit EvaluatorState(uint32_t s) : gen(s) {}
+
     int lastEval = -1;
     float lastOutput = 0;
     // 6 is NOT the number of LFOs, but number of MSEG state elements!
@@ -54,7 +53,7 @@ struct EvaluatorState
     double timeAlongSegment{0};
     float releaseStartValue{0};
     std::minstd_rand gen;
-    std::uniform_real_distribution<float> urd;
+    std::uniform_real_distribution<float> urd{-1.f, 1.f};
 
     void seed(long l) { gen = std::minstd_rand(l); }
 };
