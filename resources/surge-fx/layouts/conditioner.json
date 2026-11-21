@@ -1,0 +1,19 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Limiter", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Threshold", "position": {"x": 13, "y": 21, "w": 48, "h": 48}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Attack", "position": {"x": 71, "y": 21, "w": 48, "h": 48}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Release", "position": {"x": 129, "y": 21, "w": 48, "h": 48}},
+    "section1_0": {"class": "group", "label": "Tone", "position": {"x": 8, "y": 94, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Bass", "position": {"x": 18, "y": 110, "w": 38, "h": 38}},
+    "power0": {"class": "light", "binding": {"type": "fx-param", "index": 0}, "position": {"x": 53, "y": 112, "w": 10, "h": 10}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Treble", "position": {"x": 76, "y": 110, "w": 38, "h": 38}},
+    "power1": {"class": "light", "binding": {"type": "fx-param", "index": 1}, "position": {"x": 111, "y": 112, "w": 10, "h": 10}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Lo Cut", "position": {"x": 134, "y": 110, "w": 38, "h": 38}},
+    "section2_0": {"class": "group", "label": "Output", "position": {"x": 8, "y": 179, "w": 174, "h": 14}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Width", "position": {"x": 18, "y": 195, "w": 38, "h": 38}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Balance", "position": {"x": 76, "y": 195, "w": 38, "h": 38}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Gain", "position": {"x": 134, "y": 195, "w": 38, "h": 38}}
+  }
+}

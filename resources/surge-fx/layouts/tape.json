@@ -1,0 +1,21 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Record", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Drive", "position": {"x": 12, "y": 21, "w": 37, "h": 37}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Sat", "position": {"x": 55, "y": 21, "w": 37, "h": 37}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Bias", "position": {"x": 99, "y": 21, "w": 37, "h": 37}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Tone", "position": {"x": 142, "y": 21, "w": 37, "h": 37}},
+    "section1_0": {"class": "group", "label": "Head & Tape", "position": {"x": 8, "y": 94, "w": 174, "h": 14}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Speed", "position": {"x": 15, "y": 110, "w": 30, "h": 30}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Gap", "position": {"x": 58, "y": 110, "w": 30, "h": 30}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Space", "position": {"x": 102, "y": 110, "w": 30, "h": 30}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Thick.", "position": {"x": 145, "y": 110, "w": 30, "h": 30}},
+    "section2_0": {"class": "group", "label": "Degradation", "position": {"x": 8, "y": 179, "w": 113, "h": 14}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Depth", "position": {"x": 12, "y": 195, "w": 30, "h": 30}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Amount", "position": {"x": 49, "y": 195, "w": 30, "h": 30}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Var.", "position": {"x": 87, "y": 195, "w": 30, "h": 30}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 129, "y": 179, "w": 53, "h": 14}},
+    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Mix", "position": {"x": 141, "y": 195, "w": 30, "h": 30}}
+  }
+}

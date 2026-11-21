@@ -1,0 +1,23 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Band 1", "position": {"x": 8, "y": 1, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Gain", "position": {"x": 19, "y": 17, "w": 36, "h": 36}},
+    "power0": {"class": "light", "binding": {"type": "fx-param", "index": 0}, "position": {"x": 52, "y": 19, "w": 10, "h": 10}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Freq", "position": {"x": 77, "y": 17, "w": 36, "h": 36}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Bw", "position": {"x": 135, "y": 17, "w": 36, "h": 36}},
+    "section1_0": {"class": "group", "label": "Band 2", "position": {"x": 8, "y": 67, "w": 174, "h": 14}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Gain", "position": {"x": 21, "y": 83, "w": 33, "h": 33}},
+    "power3": {"class": "light", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 51, "y": 85, "w": 10, "h": 10}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Freq", "position": {"x": 79, "y": 83, "w": 33, "h": 33}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Bw", "position": {"x": 137, "y": 83, "w": 33, "h": 33}},
+    "section2_0": {"class": "group", "label": "Band 3", "position": {"x": 8, "y": 132, "w": 174, "h": 14}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Gain", "position": {"x": 21, "y": 148, "w": 33, "h": 33}},
+    "power6": {"class": "light", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 51, "y": 150, "w": 10, "h": 10}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Freq", "position": {"x": 79, "y": 148, "w": 33, "h": 33}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Bw", "position": {"x": 137, "y": 148, "w": 33, "h": 33}},
+    "section3_0": {"class": "group", "label": "Output", "position": {"x": 8, "y": 197, "w": 174, "h": 14}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Output", "position": {"x": 36, "y": 213, "w": 33, "h": 33}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Mix", "position": {"x": 122, "y": 213, "w": 33, "h": 33}}
+  }
+}

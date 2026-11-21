@@ -216,24 +216,23 @@ void SurgefxAudioProcessor::tryLazyOscStartupFromStreamedState()
 /* OSC (Open Sound Control) */
 bool SurgefxAudioProcessor::initOSCIn(int port)
 {
-    if (port <= 0)
-    {
-        return false;
-    }
-
-    auto state = oscHandler.initOSCIn(port);
-
-    oscReceiving.store(state);
-    oscStartIn = true;
-
-    return state;
+    return oscHandler.initOSCIn(port);
 }
 
 bool SurgefxAudioProcessor::changeOSCInPort(int new_port)
 {
-    oscReceiving.store(false);
-    oscHandler.stopListening();
-    return initOSCIn(new_port);
+    if (new_port < 0 || new_port > 65535)
+        return false;
+    if (new_port == 0)
+    {
+        oscHandler.stopListening();
+        oscStartIn = false;
+    }
+    else if (oscReceiving.load())
+        return initOSCIn(new_port);
+
+    oscPortIn = new_port;
+    return true;
 }
 
 void SurgefxAudioProcessor::initOSCError(int port, std::string outIP)
@@ -958,15 +957,25 @@ float SurgefxAudioProcessor::getParameterValueForString(int i, const std::string
         return 0;
     }
 }
-void SurgefxAudioProcessor::setParameterByString(int i, const std::string &s)
+bool SurgefxAudioProcessor::setParameterByString(int i, const std::string &s)
 {
+    prepareParametersAbsentAudio();
+    if (!canSetParameterByString(i) || getFXStorageAppearsDeactivated(i))
+        return false;
+
     auto *p = &(fxstorage->p[fx_param_remap[i]]);
-    // TODO: range error reporting
+    auto parsed = p->val;
     std::string errMsg;
-    p->set_value_from_string(s, errMsg);
-    *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
-    changedParamsValue[i] = fxstorage->p[fx_param_remap[i]].get_value_f01();
-    triggerAsyncUpdate();
+    if (!p->set_value_from_string_onto(s, parsed, errMsg))
+        return false;
+
+    setUserEditingFXParam(i, true);
+    p->val = parsed;
+    const auto value = p->get_value_f01();
+    *(fxParams[i]) = value;
+    changedParamsValue[i] = value;
+    setUserEditingFXParam(i, false);
+    return true;
 }
 
 bool SurgefxAudioProcessor::canSetParameterByString(int i)

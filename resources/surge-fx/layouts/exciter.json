@@ -1,0 +1,13 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Excitation", "position": {"x": 8, "y": 23, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Drive", "position": {"x": 25, "y": 39, "w": 54, "h": 54}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Tone", "position": {"x": 111, "y": 39, "w": 54, "h": 54}},
+    "section1_0": {"class": "group", "label": "Envelope", "position": {"x": 8, "y": 151, "w": 98, "h": 14}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Attack", "position": {"x": 12, "y": 167, "w": 40, "h": 40}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Release", "position": {"x": 62, "y": 167, "w": 40, "h": 40}},
+    "section1_1": {"class": "group", "label": "Output", "position": {"x": 114, "y": 151, "w": 68, "h": 14}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Mix", "position": {"x": 128, "y": 167, "w": 40, "h": 40}}
+  }
+}

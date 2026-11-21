@@ -1,0 +1,24 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Drive", "position": {"x": 8, "y": 1, "w": 174, "h": 14}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Drive", "position": {"x": 34, "y": 17, "w": 36, "h": 36}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Fdbk", "position": {"x": 120, "y": 17, "w": 36, "h": 36}},
+    "section1_0": {"class": "group", "label": "Pre EQ", "position": {"x": 8, "y": 67, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Gain", "position": {"x": 16, "y": 83, "w": 28, "h": 28}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Freq", "position": {"x": 59, "y": 83, "w": 28, "h": 28}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Bw", "position": {"x": 103, "y": 83, "w": 28, "h": 28}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Hi Cut", "position": {"x": 146, "y": 83, "w": 28, "h": 28}},
+    "power3": {"class": "light", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 171, "y": 85, "w": 10, "h": 10}},
+    "section2_0": {"class": "group", "label": "Post EQ", "position": {"x": 8, "y": 132, "w": 174, "h": 14}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Gain", "position": {"x": 16, "y": 148, "w": 28, "h": 28}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Freq", "position": {"x": 59, "y": 148, "w": 28, "h": 28}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Bw", "position": {"x": 103, "y": 148, "w": 28, "h": 28}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Hi Cut", "position": {"x": 146, "y": 148, "w": 28, "h": 28}},
+    "power9": {"class": "light", "binding": {"type": "fx-param", "index": 9}, "position": {"x": 171, "y": 150, "w": 10, "h": 10}},
+    "section3_0": {"class": "group", "label": "Model", "position": {"x": 8, "y": 197, "w": 96, "h": 14}},
+    "knob11": {"class": "choice", "binding": {"type": "fx-param", "index": 11}, "label": "", "position": {"x": 15, "y": 218, "w": 83, "h": 23}},
+    "section3_1": {"class": "group", "label": "Output", "position": {"x": 112, "y": 197, "w": 70, "h": 14}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Output", "position": {"x": 131, "y": 213, "w": 33, "h": 33}}
+  }
+}

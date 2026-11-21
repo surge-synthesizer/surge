@@ -1,0 +1,18 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Spring", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Size", "position": {"x": 13, "y": 21, "w": 48, "h": 48}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Decay", "position": {"x": 71, "y": 21, "w": 48, "h": 48}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Reflect", "position": {"x": 129, "y": 21, "w": 48, "h": 48}},
+    "section1_0": {"class": "group", "label": "Excitation", "position": {"x": 8, "y": 94, "w": 68, "h": 14}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Knock", "position": {"x": 23, "y": 110, "w": 38, "h": 38}},
+    "section1_1": {"class": "group", "label": "Modulation", "position": {"x": 84, "y": 94, "w": 98, "h": 14}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Spin", "position": {"x": 89, "y": 110, "w": 38, "h": 38}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Chaos", "position": {"x": 139, "y": 110, "w": 38, "h": 38}},
+    "section2_0": {"class": "group", "label": "Damping", "position": {"x": 8, "y": 179, "w": 83, "h": 14}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Damp", "position": {"x": 31, "y": 195, "w": 38, "h": 38}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 99, "y": 179, "w": 83, "h": 14}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Mix", "position": {"x": 121, "y": 195, "w": 38, "h": 38}}
+  }
+}

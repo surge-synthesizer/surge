@@ -1,0 +1,14 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Stereo Shift", "position": {"x": 8, "y": 23, "w": 174, "h": 14}},
+    "left": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Left", "position": {"x": 25, "y": 39, "w": 54, "h": 54}},
+    "extend": {"class": "extendLight", "binding": {"type": "fx-param", "index": 0}, "position": {"x": 76, "y": 41, "w": 10, "h": 10}},
+    "right": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Right", "position": {"x": 111, "y": 39, "w": 54, "h": 54}},
+    "section1_0": {"class": "group", "label": "Delay", "position": {"x": 8, "y": 151, "w": 98, "h": 14}},
+    "time": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Time", "position": {"x": 12, "y": 167, "w": 40, "h": 40}},
+    "feedback": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Fdbk", "position": {"x": 62, "y": 167, "w": 40, "h": 40}},
+    "section1_1": {"class": "group", "label": "Output", "position": {"x": 114, "y": 151, "w": 68, "h": 14}},
+    "mix": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Mix", "position": {"x": 128, "y": 167, "w": 40, "h": 40}}
+  }
+}

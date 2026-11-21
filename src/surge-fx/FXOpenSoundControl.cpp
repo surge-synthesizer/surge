@@ -82,23 +82,33 @@ void FXOpenSoundControl::tryOSCStartup()
 
 bool FXOpenSoundControl::initOSCIn(int port)
 {
-    if (port < 1)
+    if (port < 1 || port > 65535)
+        return false;
+    if (listening && port == iportnum)
+        return true;
+
+    // Bind first so an unavailable port doesn't interrupt the current listener.
+    auto socket = std::make_unique<juce::DatagramSocket>(false);
+    socket->setEnablePortReuse(false);
+    if (!socket->bindToPort(port))
+        return false;
+
+    if (!listening)
+        addListener(this);
+    if (!connectToSocket(*socket))
     {
+        if (!listening)
+            removeListener(this);
         return false;
     }
 
-    if (connect(port))
-    {
-        addListener(this);
-        listening = true;
-        iportnum = port;
-        sfxPtr->oscReceiving = true;
-        sfxPtr->oscStartIn = true;
-        sfxPtr->oscPortIn = port;
-        return true;
-    }
-
-    return false;
+    inputSocket = std::move(socket);
+    listening = true;
+    iportnum = port;
+    sfxPtr->oscReceiving = true;
+    sfxPtr->oscStartIn = true;
+    sfxPtr->oscPortIn = port;
+    return true;
 }
 
 void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
@@ -108,6 +118,8 @@ void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
         return;
     }
 
+    disconnect();
+    inputSocket.reset();
     removeListener(this);
     listening = false;
 
@@ -119,19 +131,6 @@ void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
             sfxPtr->oscStartIn = false;
         }
     }
-}
-
-// Concatenates OSC message data strings separated by spaces into one string (with spaces)
-std::string FXOpenSoundControl::getWholeString(const juce::OSCMessage &om)
-{
-    std::string dataStr = "";
-    for (int i = 0; i < om.size(); i++)
-    {
-        dataStr += om[i].getString().toStdString();
-        if (i < (om.size() - 1))
-            dataStr += " ";
-    }
-    return dataStr;
 }
 
 void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
@@ -187,19 +186,6 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sfxPtr->oscRingBuf.push(SurgefxAudioProcessor::oscToAudio(
                 SurgefxAudioProcessor::FX_PARAM, newval, index - 1));
         }
-    }
-}
-
-bool FXOpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)
-{
-    if (fullString.length() >= ending.length())
-    {
-        return (0 ==
-                fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
-    }
-    else
-    {
-        return false;
     }
 }
 

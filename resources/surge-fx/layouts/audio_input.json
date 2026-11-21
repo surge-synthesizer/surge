@@ -1,0 +1,20 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Audio Input", "position": {"x": 8, "y": 1, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Channel", "position": {"x": 19, "y": 17, "w": 36, "h": 36}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Pan", "position": {"x": 77, "y": 17, "w": 36, "h": 36}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Level", "position": {"x": 135, "y": 17, "w": 36, "h": 36}},
+    "section1_0": {"class": "group", "label": "Effect Input", "position": {"x": 8, "y": 67, "w": 174, "h": 14}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Channel", "position": {"x": 21, "y": 83, "w": 33, "h": 33}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Pan", "position": {"x": 79, "y": 83, "w": 33, "h": 33}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Level", "position": {"x": 137, "y": 83, "w": 33, "h": 33}},
+    "section2_0": {"class": "group", "label": "Scene Input", "position": {"x": 8, "y": 132, "w": 174, "h": 14}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Channel", "position": {"x": 21, "y": 148, "w": 33, "h": 33}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Pan", "position": {"x": 79, "y": 148, "w": 33, "h": 33}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Level", "position": {"x": 137, "y": 148, "w": 33, "h": 33}},
+    "section3_0": {"class": "group", "label": "Output", "position": {"x": 8, "y": 197, "w": 174, "h": 14}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Width", "position": {"x": 36, "y": 213, "w": 33, "h": 33}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Mix", "position": {"x": 122, "y": 213, "w": 33, "h": 33}}
+  }
+}

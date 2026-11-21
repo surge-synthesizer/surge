@@ -1,0 +1,19 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Tracking", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
+    "threshold": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Thresh.", "position": {"x": 28, "y": 21, "w": 48, "h": 48}},
+    "speed": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Speed", "position": {"x": 114, "y": 21, "w": 48, "h": 48}},
+    "section1_0": {"class": "group", "label": "Pitch & Ring Mod", "position": {"x": 8, "y": 94, "w": 174, "h": 14}},
+    "pitch": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Pitch", "position": {"x": 33, "y": 110, "w": 38, "h": 38}},
+    "ringmod": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Ring Mod", "position": {"x": 119, "y": 110, "w": 38, "h": 38}},
+    "section2_0": {"class": "group", "label": "Detection Filter", "position": {"x": 8, "y": 179, "w": 83, "h": 14}},
+    "lowCut": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "position": {"x": 14, "y": 195, "w": 30, "h": 30}, "label": "Lo Cut"},
+    "lowPower": {"class": "light", "binding": {"type": "fx-param", "index": 2}, "position": {"x": 41, "y": 197, "w": 10, "h": 10}},
+    "highCut": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 55, "y": 195, "w": 30, "h": 30}, "label": "Hi Cut"},
+    "highPower": {"class": "light", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 82, "y": 197, "w": 10, "h": 10}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 99, "y": 179, "w": 83, "h": 14}},
+    "width": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Width", "position": {"x": 105, "y": 195, "w": 30, "h": 30}},
+    "mix": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Mix", "position": {"x": 146, "y": 195, "w": 30, "h": 30}}
+  }
+}

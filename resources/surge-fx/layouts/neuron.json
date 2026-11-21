@@ -1,0 +1,21 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Shaper", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Drive", "position": {"x": 12, "y": 21, "w": 37, "h": 37}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Squash", "position": {"x": 55, "y": 21, "w": 37, "h": 37}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Stab", "position": {"x": 99, "y": 21, "w": 37, "h": 37}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Asym", "position": {"x": 142, "y": 21, "w": 37, "h": 37}},
+    "section1_0": {"class": "group", "label": "Modulation", "position": {"x": 8, "y": 94, "w": 174, "h": 14}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Wave", "position": {"x": 15, "y": 110, "w": 30, "h": 30}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Rate", "position": {"x": 58, "y": 110, "w": 30, "h": 30}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Depth", "position": {"x": 102, "y": 110, "w": 30, "h": 30}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Bias", "position": {"x": 145, "y": 110, "w": 30, "h": 30}},
+    "section2_0": {"class": "group", "label": "Comb", "position": {"x": 8, "y": 179, "w": 83, "h": 14}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Freq", "position": {"x": 14, "y": 195, "w": 30, "h": 30}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Spacing", "position": {"x": 55, "y": 195, "w": 30, "h": 30}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 99, "y": 179, "w": 83, "h": 14}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Width", "position": {"x": 105, "y": 195, "w": 30, "h": 30}},
+    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Gain", "position": {"x": 146, "y": 195, "w": 30, "h": 30}}
+  }
+}
