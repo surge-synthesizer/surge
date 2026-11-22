@@ -77,11 +77,7 @@ jobs:
             cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
             uploadResult: true
 
-          - name: ubuntu-arm
-            os: ubuntu-24.04-arm
-            cmakeArgs: -GNinja -DSURGE_LINUX_ARM=TRUE
-            uploadResult: true
-
+          # linux, both arches, ships from docker below
 
     steps:
       - name: "Checkout code"
@@ -142,9 +138,21 @@ jobs:
           name: build-${{ matrix.name }}
 
   build_plugin_docker:
-    name: "Ubuntu 20 Docker"
-    runs-on: ubuntu-latest
+    name: "Ubuntu 22 Docker ${{ matrix.arch }}"
+    runs-on: ${{ matrix.os }}
     needs: [ surge_version ]
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            os: ubuntu-latest
+            image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12:main
+            cmakeArgs: -DSURGE_BUILD_LV2=TRUE
+
+          - arch: arm64
+            os: ubuntu-24.04-arm
+            image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12_arm64:main
+            cmakeArgs: -DSURGE_LINUX_ARM=TRUE
 
     steps:
       - name: "Checkout code"
@@ -156,10 +164,10 @@ jobs:
       - name: "Build in Docker"
         uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
         with:
-          image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12:main
+          image: ${{ matrix.image }}
           username: ${{ github.actor }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          cmakeArgs: -DAZURE_PIPELINE=1  -DSURGE_BUILD_LV2=TRUE -DSURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}" -DCMAKE_BUILD_TYPE=Release -GNinja
+          cmakeArgs: -DAZURE_PIPELINE=1 ${{ matrix.cmakeArgs }} -DSURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}" -DCMAKE_BUILD_TYPE=Release -GNinja
           target: surge-xt-distribution
 
 
@@ -167,11 +175,18 @@ jobs:
         run: |
           ls -l ./build/surge-xt-dist
 
+      - name: "Check glibc"
+        uses: surge-synthesizer/sst-githubactions/check-glibc@main
+        with:
+          path: ./build/surge_xt_products
+          maxGlibc: "2.35"
+          maxGlibcxx: "3.4.30"
+
       - name: "Upload artifact"
         uses: actions/upload-artifact@v4
         with:
           path: build/surge-xt-dist
-          name: build-docker
+          name: build-docker-${{ matrix.arch }}
 
   publish-surge-nightly:
     name: "Publish Surge XT nightly"

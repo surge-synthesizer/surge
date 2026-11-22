@@ -147,8 +147,21 @@ jobs:
           ctest -j 4 || ctest --rerun-failed --output-on-failure
 
   build_plugin_lindoc:
-    name: "PR - Ubuntu 22 Docker"
-    runs-on: ubuntu-latest
+    name: "PR - Ubuntu 22 Docker ${{ matrix.arch }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            os: ubuntu-latest
+            image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12:main
+            cmakeArgs: ""
+
+          - arch: arm64
+            os: ubuntu-24.04-arm
+            image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12_arm64:main
+            cmakeArgs: -DSURGE_LINUX_ARM=TRUE
+
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6
@@ -158,9 +171,16 @@ jobs:
       - name: "Build in Docker"
         uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
         with:
-          image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12:main
+          image: ${{ matrix.image }}
           username: ${{ github.actor }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          cmakeArgs: -DCMAKE_BUILD_TYPE=Debug -GNinja
+          cmakeArgs: -DCMAKE_BUILD_TYPE=Debug -GNinja ${{ matrix.cmakeArgs }}
           target: surge-xt_Standalone surge-fx_Standalone
+
+      - name: "Check glibc"
+        uses: surge-synthesizer/sst-githubactions/check-glibc@main
+        with:
+          path: ./build/surge_xt_products
+          maxGlibc: "2.35"
+          maxGlibcxx: "3.4.30"
 
