@@ -72,29 +72,6 @@ mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
 chmod -R 0755 ${PACKAGE_NAME}
 
-# build control file
-
-if [[ -f ${PACKAGE_NAME}/DEBIAN/control ]]; then
-	rm ${PACKAGE_NAME}/DEBIAN/control
-fi
-touch ${PACKAGE_NAME}/DEBIAN/control
-cat <<EOT >> ${PACKAGE_NAME}/DEBIAN/control
-Source: ${PACKAGE_NAME}
-Package: ${PACKAGE_NAME}
-Version: $DEB_VERSION
-Architecture: ${DEB_ARCH}
-Maintainer: surgeteam <noreply@github.com>
-Depends: libc6 (>=2.27), libstdc++6, libgcc-s1, libfontconfig1, libfreetype6, libasound2, libx11-6, libxext6, libxcursor1, libxinerama1, libxrandr2
-Recommends: xdg-utils, libxss1, zenity | kdialog
-Suggests: libjack-jackd2-0 | libjack0
-Provides: vst-plugin
-Section: sound
-Priority: optional
-Sndstation-Kind: clap-plugin
-Description: Subtractive hybrid synthesizer virtual instrument
- Surge XT includes VST3 and CLAP instrument formats for use in compatible hosts and a standalone executable
-EOT
-
 touch ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
 DATE=`date --rfc-email`
 MSG=`git log -n 1 --pretty="%s (git hash %H)"`
@@ -140,6 +117,54 @@ fi
 echo "----- LIBRARY CONTENTS (except resource) -----"
 find ${PACKAGE_NAME}/usr/lib -print
 find ${PACKAGE_NAME}/usr/bin -print
+
+# linked libs, with version floors, read from the binaries themselves
+SHLIBS=""
+ELFS=()
+while IFS= read -r -d '' f; do
+    if [[ "$(head -c 4 "$f" | tr -d '\0')" == $'\x7f'ELF ]]; then
+        ELFS+=(-e"$f")
+    fi
+done < <(find "${PACKAGE_NAME}/usr/lib" "${PACKAGE_NAME}/usr/bin" -type f -print0)
+
+if command -v dpkg-shlibdeps > /dev/null && [[ ${#ELFS[@]} -gt 0 ]]; then
+    # dpkg-shlibdeps wants a debian/control beside it
+    mkdir -p debian
+    touch debian/control
+    SHLIBS=$(dpkg-shlibdeps -O "${ELFS[@]}" | sed -n 's/^shlibs:Depends=//p') || SHLIBS=""
+    rm -rf debian
+fi
+if [[ -z "${SHLIBS}" ]]; then
+    echo "WARNING: no dpkg-shlibdeps result; using a static Depends floor"
+    SHLIBS="libc6 (>=2.35), libstdc++6 (>=12), libgcc-s1, libfontconfig1, libfreetype6, libasound2"
+fi
+
+# juce dlopens these for the ui and fails without any of them
+DEPENDS="${SHLIBS}"
+for p in libx11-6 libxext6 libxcursor1 libxinerama1 libxrandr2; do
+    if ! [[ ", ${DEPENDS}," =~ ,\ ${p}[\ ,] ]]; then
+        DEPENDS="${DEPENDS}, ${p}"
+    fi
+done
+
+cat <<EOT > ${PACKAGE_NAME}/DEBIAN/control
+Source: ${PACKAGE_NAME}
+Package: ${PACKAGE_NAME}
+Version: $DEB_VERSION
+Architecture: ${DEB_ARCH}
+Maintainer: surgeteam <noreply@github.com>
+Depends: ${DEPENDS}
+Recommends: xdg-utils, libxss1, zenity | kdialog
+Suggests: libjack-jackd2-0 | libjack0
+Provides: vst-plugin
+Section: sound
+Priority: optional
+Sndstation-Kind: clap-plugin
+Description: Subtractive hybrid synthesizer virtual instrument
+ Surge XT includes VST3 and CLAP instrument formats for use in compatible hosts and a standalone executable
+EOT
+
+cat ${PACKAGE_NAME}/DEBIAN/control
 
 # build deb package
 dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-${FILE_ARCH}-${VERSION}.deb
