@@ -2589,13 +2589,14 @@ void SurgeSynthesizer::setSostenutoPedal(int channel, bool down)
 
 void SurgeSynthesizer::purgeHoldbufferByScenemode(int channel)
 {
-    // OK in single mode, only purge scene 0, but in split or dual purge both, and in chsplit
-    // pick based on channel
+    // In single, split and dual mode purge both scenes, and in chsplit pick based on channel.
+    // releaseNote adds a held note to every scene's hold buffer, so single mode has to purge
+    // the inactive scene too; otherwise that buffer grows with every release under the pedal,
+    // and playNote, which walks every scene's buffer while the pedal is down, slows down the
+    // longer the patch is played.
     switch (storage.getPatch().scenemode.val.i)
     {
     case sm_single:
-        purgeHoldbuffer(storage.getPatch().scene_active.val.i);
-        break;
     case sm_split:
     case sm_dual:
         purgeHoldbuffer(0);
