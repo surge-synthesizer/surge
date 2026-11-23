@@ -60,11 +60,25 @@ struct ParameterKnob : sst::jucegui::components::Knob
         {
             return discreteStep > 0.f ? discreteStep : Continuous::getQuantizedStepSize();
         }
+        float quantizeValue(float v) override
+        {
+            if (discreteStep <= 0.f)
+                return Continuous::quantizeValue(v);
+
+            // Use a valid grid point as the origin: Surge integer parameters
+            // occupy [0.005, 0.995], not [0, 1].
+            return std::clamp(defaultValue +
+                                  std::round((v - defaultValue) / discreteStep) * discreteStep,
+                              0.f, 1.f);
+        }
         std::string getLabel() const override { return name; }
         std::string getValueAsStringFor(float) const override { return text; }
         bool isBipolar() const override { return bipolar; }
         void setValueFromGUI(const float &v) override { write(v, false); }
-        void setValueFromGUIQuantized(const float &v) override { write(v, true); }
+        void setValueFromGUIQuantized(const float &v) override
+        {
+            write(discreteStep > 0.f ? quantizeValue(v) : v, true);
+        }
         void setValueFromModel(const float &v) override { value = v; }
         bool trySetValueAsString(const std::string &s) override
         {
@@ -294,7 +308,9 @@ struct ParameterKnob : sst::jucegui::components::Knob
     {
         if (isEditingBlocked())
             return;
-        // Upstream quantized scrolling on macOS scales by wheel magnitude rather than one step.
+#if JUCE_MAC
+        // sst-jucegui's macOS wheel path scales by delta magnitude even when
+        // alwaysQuantize is on, which can leave coarse discrete controls stuck.
         if (binding.discreteStep > 0.f)
         {
             const auto delta = wheel.deltaY != 0.f ? wheel.deltaY : wheel.deltaX;
@@ -303,10 +319,12 @@ struct ParameterKnob : sst::jucegui::components::Knob
             const auto step =
                 std::copysign(binding.discreteStep, wheel.isReversed ? -delta : delta);
             onBeginEdit();
-            binding.setValueFromGUI(std::clamp(binding.value + step, 0.f, 1.f));
+            binding.setValueFromGUIQuantized(binding.value + step);
             onEndEdit();
+            notifyAccessibleChange();
             return;
         }
+#endif
         Knob::mouseWheelMove(e, wheel);
     }
 
@@ -322,15 +340,6 @@ struct ParameterKnob : sst::jucegui::components::Knob
         if (isEditingBlocked())
             return false;
         const bool adjusting = action == Action::Increase || action == Action::Decrease;
-        if (binding.discreteStep > 0.f && adjusting)
-        {
-            const auto step =
-                action == Action::Increase ? binding.discreteStep : -binding.discreteStep;
-            onBeginEdit();
-            binding.setValueFromGUI(std::clamp(binding.value + step, 0.f, 1.f));
-            onEndEdit();
-            return true;
-        }
         const auto handled = Knob::keyPressed(key);
         // The upstream editor adjusts on arrow keys but does not report them as consumed.
         return handled || adjusting;

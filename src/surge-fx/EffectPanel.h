@@ -37,13 +37,14 @@ namespace surge::fx::effectPanel
 inline constexpr int contentWidth = 224;
 inline constexpr int gutter = 10;
 inline constexpr int width = contentWidth + 2 * gutter, height = 320;
-inline constexpr int defaultZoom = 125;
+inline constexpr int defaultZoom = 100;
+inline constexpr double nativeScale = 1.25;
 inline constexpr int captionHeight = 14;
 inline constexpr int captionFontHeight = 12;
 inline const juce::Rectangle<int> frame(2, 2, width - 4, height - 4);
 inline const juce::Point<int> contentOrigin(gutter, 30);
 inline const juce::Rectangle<int> headerArea(gutter, 6, contentWidth, 22);
-inline const juce::Rectangle<int> statusArea(gutter, 296, contentWidth, 18);
+inline const juce::Rectangle<int> statusArea(gutter, 296, contentWidth, 20);
 
 enum class Kind
 {
@@ -230,10 +231,9 @@ inline auto panelStyle()
         sheet->setColour(PopupMenu::styleClass, PopupMenu::hightlightbackground, borderColour);
         sheet->setColour(PopupMenu::styleClass, PopupMenu::hightlighttextcolor,
                          juce::Colours::white);
-        sheet->setFont(
-            PopupMenu::styleClass, PopupMenu::menufont,
-            sheet->getFont(KnobStyles::styleClass, KnobStyles::labelfont)
-                .withHeight(captionFontHeight));
+        sheet->setFont(PopupMenu::styleClass, PopupMenu::menufont,
+                       sheet->getFont(KnobStyles::styleClass, KnobStyles::labelfont)
+                           .withHeight(captionFontHeight));
         sheet->setKnobRingStrokeWidth(3, 3, 25);
         return sheet;
     }();

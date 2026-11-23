@@ -135,7 +135,10 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void refreshParameterControls();
 
     void showParameterMenu(int i);
-    void showTempoSyncMenu();
+    void toggleTempoSync();
+    void refreshTempoSyncButton();
+    void setZoomPercent(int percent);
+    int getZoomPercent() const;
     void showSettingsMenu();
     juce::PopupMenu makeOSCMenu();
     void showOSCInputPortDialog();

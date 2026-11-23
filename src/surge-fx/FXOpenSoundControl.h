@@ -28,6 +28,8 @@
 #include "juce_osc/juce_osc.h"
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
+#include <fmt/core.h>
+#include <fmt/format.h>
 
 class SurgefxAudioProcessor;
 
@@ -50,15 +52,40 @@ class FXOpenSoundControl : public juce::OSCReceiver,
 
     int iportnum = DEFAULT_OSC_PORT_IN;
     bool listening = false;
+    bool sendingOSC = false;
 
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
+
+    /*
+    void send(juce::OSCMessage om, bool needsMessageThread);
+    void sendAllParams();
+    void sendAllModulators();
+    void stopSending(bool updateOSCStartInStorage = true);
+    */
 
   private:
     std::unique_ptr<juce::DatagramSocket> inputSocket;
     SurgeStorage *storage{nullptr};
     SurgefxAudioProcessor *sfxPtr{nullptr};
+    std::string getWholeString(const juce::OSCMessage &message);
+    // juce::OSCSender juceOSCSender;
+    // void sendError(std::string errorMsg);
+    // void sendNotFloatError(std::string addr, std::string msg);
+    // void sendDataCountError(std::string addr, std::string count);
+
+    // void sendFailed();
+    bool hasEnding(std::string const &fullString, std::string const &ending);
+
+    // JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FXOpenSoundControl)
 };
+
+// Makes sure that decimal *points* are used, not commas
+inline std::string float_to_clocalestr_wprec(float value, int precision)
+{
+    return fmt::vformat(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}",
+                        fmt::make_format_args(value));
+}
 
 } // namespace FxOSC
 } // namespace SurgeFX

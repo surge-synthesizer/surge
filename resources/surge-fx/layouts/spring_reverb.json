@@ -5,14 +5,11 @@
     "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Size", "position": {"x": 24, "y": 32, "w": 48, "h": 48}},
     "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Decay", "position": {"x": 88, "y": 32, "w": 48, "h": 48}},
     "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Reflect", "position": {"x": 152, "y": 32, "w": 48, "h": 48}},
-    "section1_0": {"class": "group", "label": "Excitation", "position": {"x": 4, "y": 105, "w": 84, "h": 18}},
     "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Knock", "position": {"x": 26, "y": 128, "w": 40, "h": 40}},
     "section1_1": {"class": "group", "label": "Modulation", "position": {"x": 98, "y": 105, "w": 122, "h": 18}},
     "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Spin", "position": {"x": 108, "y": 128, "w": 40, "h": 40}},
     "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Chaos", "position": {"x": 170, "y": 128, "w": 40, "h": 40}},
-    "section2_0": {"class": "group", "label": "Damping", "position": {"x": 4, "y": 185, "w": 96, "h": 18}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Damp", "position": {"x": 32, "y": 208, "w": 40, "h": 40}},
-    "section2_1": {"class": "group", "label": "Output", "position": {"x": 124, "y": 185, "w": 96, "h": 18}},
-    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Mix", "position": {"x": 152, "y": 208, "w": 40, "h": 40}}
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Damp", "position": {"x": 32, "y": 200, "w": 40, "h": 40}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Mix", "position": {"x": 152, "y": 200, "w": 40, "h": 40}}
   }
 }

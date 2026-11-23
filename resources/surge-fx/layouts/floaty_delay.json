@@ -14,7 +14,6 @@
     "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Lo Cut", "position": {"x": 7, "y": 208, "w": 40, "h": 40}},
     "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Cutoff", "position": {"x": 54, "y": 208, "w": 40, "h": 40}},
     "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Res", "position": {"x": 101, "y": 208, "w": 40, "h": 40}},
-    "section2_1": {"class": "group", "label": "Output", "position": {"x": 154, "y": 185, "w": 66, "h": 18}},
     "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Mix", "position": {"x": 167, "y": 208, "w": 40, "h": 40}}
   }
 }

@@ -15,7 +15,6 @@
     "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Depth", "position": {"x": 7, "y": 208, "w": 40, "h": 40}},
     "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Amount", "position": {"x": 54, "y": 208, "w": 40, "h": 40}},
     "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Var.", "position": {"x": 101, "y": 208, "w": 40, "h": 40}},
-    "section2_1": {"class": "group", "label": "Output", "position": {"x": 154, "y": 185, "w": 66, "h": 18}},
     "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Mix", "position": {"x": 167, "y": 208, "w": 40, "h": 40}}
   }
 }

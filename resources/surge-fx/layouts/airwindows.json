@@ -1,19 +1,17 @@
 {
   "include": "classes.json",
   "controls": {
-    "knob0": {"class": "choice", "binding": {"type": "fx-param", "index": 0}, "label": "", "position": {"x": 4, "y": 22, "w": 216, "h": 32}},
-    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "position": {"x": 6, "y": 83, "w": 23, "h": 23}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "position": {"x": 118, "y": 83, "w": 23, "h": 23}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 6, "y": 113, "w": 23, "h": 23}},
-    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "position": {"x": 118, "y": 113, "w": 23, "h": 23}},
-    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "position": {"x": 6, "y": 143, "w": 23, "h": 23}},
-    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 118, "y": 143, "w": 23, "h": 23}},
-    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "position": {"x": 6, "y": 173, "w": 23, "h": 23}},
-    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "position": {"x": 118, "y": 173, "w": 23, "h": 23}},
-    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "position": {"x": 6, "y": 203, "w": 23, "h": 23}},
-    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "position": {"x": 118, "y": 203, "w": 23, "h": 23}},
-    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "position": {"x": 6, "y": 233, "w": 23, "h": 23}},
-    "algorithmGroup": {"class": "group", "label": "Algorithm", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
-    "parametersGroup": {"class": "group", "label": "Parameters", "position": {"x": 4, "y": 61, "w": 216, "h": 18}}
+    "knob0": {"class": "choice", "binding": {"type": "fx-param", "index": 0}, "label": "", "position": {"x": 4, "y": 12, "w": 216, "h": 32}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "position": {"x": 6, "y": 67, "w": 23, "h": 23}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "position": {"x": 118, "y": 67, "w": 23, "h": 23}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 6, "y": 99, "w": 23, "h": 23}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "position": {"x": 118, "y": 99, "w": 23, "h": 23}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "position": {"x": 6, "y": 131, "w": 23, "h": 23}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 118, "y": 131, "w": 23, "h": 23}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "position": {"x": 6, "y": 163, "w": 23, "h": 23}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "position": {"x": 118, "y": 163, "w": 23, "h": 23}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "position": {"x": 6, "y": 195, "w": 23, "h": 23}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "position": {"x": 118, "y": 195, "w": 23, "h": 23}},
+    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "position": {"x": 6, "y": 227, "w": 23, "h": 23}}
   }
 }

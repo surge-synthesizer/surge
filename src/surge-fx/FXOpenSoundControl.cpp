@@ -133,6 +133,19 @@ void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
     }
 }
 
+// Concatenates OSC message data strings separated by spaces into one string (with spaces)
+std::string FXOpenSoundControl::getWholeString(const juce::OSCMessage &om)
+{
+    std::string dataStr = "";
+    for (int i = 0; i < om.size(); i++)
+    {
+        dataStr += om[i].getString().toStdString();
+        if (i < (om.size() - 1))
+            dataStr += " ";
+    }
+    return dataStr;
+}
+
 void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
@@ -186,6 +199,19 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sfxPtr->oscRingBuf.push(SurgefxAudioProcessor::oscToAudio(
                 SurgefxAudioProcessor::FX_PARAM, newval, index - 1));
         }
+    }
+}
+
+bool FXOpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)
+{
+    if (fullString.length() >= ending.length())
+    {
+        return (0 ==
+                fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+    }
+    else
+    {
+        return false;
     }
 }
 

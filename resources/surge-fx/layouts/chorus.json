@@ -1,9 +1,8 @@
 {
   "include": "classes.json",
   "controls": {
-    "section0_0": {"class": "group", "label": "Modulation", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
-    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Rate", "position": {"x": 19, "y": 22, "w": 58, "h": 58}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Depth", "position": {"x": 147, "y": 22, "w": 58, "h": 58}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Rate", "position": {"x": 19, "y": 14, "w": 58, "h": 58}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Depth", "position": {"x": 147, "y": 14, "w": 58, "h": 58}},
     "section1_0": {"class": "group", "label": "Delay", "position": {"x": 4, "y": 105, "w": 96, "h": 18}},
     "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Time", "position": {"x": 6, "y": 128, "w": 40, "h": 40}},
     "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Fdbk", "position": {"x": 58, "y": 128, "w": 40, "h": 40}},
