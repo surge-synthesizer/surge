@@ -44,6 +44,7 @@
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/socket.h>
+#include <cerrno>
 #endif
 
 namespace Surge
@@ -143,6 +144,8 @@ void OpenSoundControl::tryOSCStartup()
 
 bool OpenSoundControl::initOSCIn(int port)
 {
+    inboundBlocked = false;
+
     if (port < 1 || port > 65535 || port == oportnum)
     {
         return false;
@@ -177,6 +180,17 @@ bool OpenSoundControl::initOSCIn(int port)
     {
         return false;
     }
+
+#if !defined(_WIN32) && !defined(_WIN64)
+    // sandboxed out-of-process AU hosts allow the bind but fail every recv with EPERM
+    char probe;
+    if (::recv(handle, &probe, 1, MSG_PEEK | MSG_DONTWAIT) < 0 && errno == EPERM)
+    {
+        std::cerr << "OSC: incoming packets blocked by host sandbox on port " << port << std::endl;
+        inboundBlocked = true;
+        return false;
+    }
+#endif
 
     // connectToSocket disconnects any prior receiver, freeing the old socket for replacement
     if (!connectToSocket(*sock))
@@ -217,6 +231,11 @@ bool OpenSoundControl::initOSCInRange(int startPort, int endPort)
         if (initOSCIn(p))
         {
             return true;
+        }
+
+        if (inboundBlocked)
+        {
+            return false;
         }
     }
 

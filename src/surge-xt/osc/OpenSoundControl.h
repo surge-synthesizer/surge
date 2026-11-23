@@ -71,6 +71,8 @@ class OpenSoundControl : public juce::OSCReceiver,
     bool listening = false;
     bool sendingOSC = false;
     bool restoredFromLastBound = false;
+    // host sandbox allows bind but refuses incoming packets
+    bool inboundBlocked = false;
 
     std::unique_ptr<juce::DatagramSocket> ownedInSocket;
     std::unique_ptr<juce::DatagramSocket> ownedOutSocket;

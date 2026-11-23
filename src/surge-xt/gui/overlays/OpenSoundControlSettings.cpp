@@ -551,7 +551,7 @@ bool OpenSoundControlSettings::updateAll()
             }
             else
             {
-                ssp->initOSCError(newPort);
+                ssp->initOSCError(newPort, outIP->getText().toStdString());
                 allgood = false;
             }
         }

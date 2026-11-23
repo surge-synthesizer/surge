@@ -336,6 +336,15 @@ void SurgeSynthProcessor::stopOSCOut(bool updateOSCStartInStorage)
 
 void SurgeSynthProcessor::initOSCError(int port, std::string outIP)
 {
+    if (outIP.empty() && oscHandler.inboundBlocked)
+    {
+        surge->storage.reportError(
+            "This host runs Surge XT in a sandbox which blocks incoming network traffic, "
+            "so OSC input is not available here. OSC output is unaffected.",
+            "OSC Initialization Error");
+        return;
+    }
+
     std::ostringstream msg;
 
     msg << "Surge XT was unable to connect to OSC port " << port;
