@@ -2443,3 +2443,55 @@ TEST_CASE("Held Notes Are Retriggered Across a Patch Change", "[midi]") // #8438
         REQUIRE(gatedKeys(surge) == std::vector<int>{64});
     }
 }
+
+TEST_CASE("Sustain Pedal Empties Every Scene's Hold Buffer", "[midi]")
+{
+    // A note released with the sustain pedal down goes into the hold buffer of every scene, so
+    // releasing the pedal has to empty all of them, whatever the scene mode. Otherwise the
+    // buffer of a scene that isn't playing grows with every held release, and playNote, which
+    // walks every scene's buffer while the pedal is down, gets slower the longer you play.
+    auto step = [](auto surge) {
+        for (int i = 0; i < 5; ++i)
+            surge->process();
+    };
+    auto playBars = [&](auto surge, int bars) {
+        for (int bar = 0; bar < bars; ++bar)
+        {
+            surge->channelController(0, 64, 127);
+            step(surge);
+            for (int k : {48, 52, 55, 60})
+            {
+                surge->playNote(0, k, 100, 0);
+                step(surge);
+                surge->releaseNote(0, k, 0);
+                step(surge);
+            }
+            surge->channelController(0, 64, 0);
+            step(surge);
+        }
+    };
+
+    for (int mode : {sm_single, sm_split, sm_dual})
+    {
+        for (int active : {0, 1})
+        {
+            DYNAMIC_SECTION("Scene mode " << mode << ", active scene " << active)
+            {
+                auto surge = Surge::Headless::createSurge(44100);
+                REQUIRE(surge);
+                surge->storage.getPatch().scenemode.val.i = mode;
+                surge->storage.getPatch().scene_active.val.i = active;
+                surge->storage.getPatch().scene[0].polymode.val.i = pm_poly;
+                surge->storage.getPatch().scene[1].polymode.val.i = pm_poly;
+
+                playBars(surge, 50);
+
+                REQUIRE(surge->holdbuffer[0].empty());
+                REQUIRE(surge->holdbuffer[1].empty());
+                for (int sc = 0; sc < n_scenes; ++sc)
+                    for (auto v : surge->voices[sc])
+                        REQUIRE(!v->state.gate);
+            }
+        }
+    }
+}
