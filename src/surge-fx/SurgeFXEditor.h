@@ -24,7 +24,7 @@
 #define SURGE_SRC_SURGE_FX_SURGEFXEDITOR_H
 
 #include "SurgeFXProcessor.h"
-#include "SurgeLookAndFeel.h"
+#include "sst/jucegui/style/JUCELookAndFeelAdapter.h"
 #include "FXWidgets.h"
 #include "EffectPanel.h"
 #include "FxPresetAndClipboardManager.h"
@@ -52,7 +52,6 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
             SECTION,
             FX
         } type;
-        bool isBreak{false};
         std::string name;
         int fxtype{-1};
     };
@@ -60,8 +59,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<Picker> picker;
     std::unique_ptr<PresetPicker> presetPicker;
 
-    void makeMenu();
-    void showMenu();
+    void buildEffectMenu();
+    void showEffectMenu();
     void showHostContextMenuFor(juce::AudioProcessorParameter *param);
     void toggleLatencyMode();
 
@@ -85,28 +84,11 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     //==============================================================================
     void paint(juce::Graphics &) override;
-    juce::String getPanelStatus() const;
+    int getStatusParameter() const;
     void resized() override;
     void parentHierarchyChanged() override;
     void mouseEnter(const juce::MouseEvent &) override;
     void mouseExit(const juce::MouseEvent &) override;
-
-    /**
-     * findLargestFittingZoomBetween
-     *
-     * Finds the largest zoom which will fit your current screen between a lower and upper bound.
-     * Will never return something smaller than lower or larger than upper. Default is as large as
-     * possible, quantized in units of zoomQuanta, with the maximum screen usage percentages
-     * protecting for screen real estate. The function also needs to know the 100% size of the UI
-     * the baseW and baseH)
-     *
-     * for instance findLargestFittingZoomBetween( 100, 200, 5, 90, bw, bh )
-     *
-     * would find the largest possible zoom which uses at most 90% of your screen real estate but
-     * would also guarantee that the result % 5 == 0.
-     */
-    int findLargestFittingZoomBetween(int zoomLow, int zoomHigh, int zoomQuanta,
-                                      int percentageOfScreenAvailable, float baseW, float baseH);
 
     void paramsChangedCallback();
     void setEffectType(int i);
@@ -150,19 +132,20 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     int panelLabelEffect{-1};
     int hoveredParam{-1};
 
-    void blastToggleState(int i);
-    void resetLabels();
+    void refreshParameterControls();
 
-    std::unique_ptr<juce::TextEditor> valueEditor;
-    void showValueEditor(int i);
     void showParameterMenu(int i);
-    void addSettingsMenuItems(juce::PopupMenu &);
+    void showTempoSyncMenu();
+    void showSettingsMenu();
     juce::PopupMenu makeOSCMenu();
     void showOSCInputPortDialog();
     std::unique_ptr<juce::AlertWindow> oscPortDialog;
     juce::PopupMenu modifyHostMenu(juce::PopupMenu menu, juce::AudioProcessorParameter *param);
 
-    std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
+    sst::jucegui::style::LookAndFeelManager lookAndFeel{this};
+    juce::Component popupLayer;
+    std::unique_ptr<juce::Button> tempoSyncPicker, settingsButton;
+    juce::PopupMenu::Options menuOptions(juce::Component *anchor = nullptr);
     std::unique_ptr<Surge::Storage::FxUserPreset> fxPresetManager;
 
     void addAndMakeVisibleRecordOrder(juce::Component *c)

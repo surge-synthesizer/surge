@@ -1,12 +1,12 @@
 {
   "include": "classes.json",
   "controls": {
-    "section0_0": {"class": "group", "label": "Shaping", "position": {"x": 8, "y": 23, "w": 174, "h": 14}},
-    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Threshold", "position": {"x": 63, "y": 39, "w": 64, "h": 64}},
-    "section1_0": {"class": "group", "label": "Dynamics", "position": {"x": 8, "y": 151, "w": 98, "h": 14}},
-    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Ratio", "position": {"x": 12, "y": 167, "w": 40, "h": 40}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Flip", "position": {"x": 62, "y": 167, "w": 40, "h": 40}},
-    "section1_1": {"class": "group", "label": "Output", "position": {"x": 114, "y": 151, "w": 68, "h": 14}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Mix", "position": {"x": 128, "y": 167, "w": 40, "h": 40}}
+    "section0_0": {"class": "group", "label": "Shaping", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Threshold", "position": {"x": 83, "y": 22, "w": 58, "h": 58}},
+    "section1_0": {"class": "group", "label": "Dynamics", "position": {"x": 4, "y": 145, "w": 122, "h": 18}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Ratio", "position": {"x": 14, "y": 168, "w": 40, "h": 40}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Flip", "position": {"x": 76, "y": 168, "w": 40, "h": 40}},
+    "section1_1": {"class": "group", "label": "Output", "position": {"x": 136, "y": 145, "w": 84, "h": 18}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Mix", "position": {"x": 158, "y": 168, "w": 40, "h": 40}}
   }
 }

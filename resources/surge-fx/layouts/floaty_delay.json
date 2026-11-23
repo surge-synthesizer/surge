@@ -1,20 +1,20 @@
 {
   "include": "classes.json",
   "controls": {
-    "section0_0": {"class": "group", "label": "Delay", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
-    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Time", "position": {"x": 13, "y": 21, "w": 48, "h": 48}},
-    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Speed", "position": {"x": 71, "y": 21, "w": 48, "h": 48}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Fdbk", "position": {"x": 129, "y": 21, "w": 48, "h": 48}},
-    "section1_0": {"class": "group", "label": "Warp", "position": {"x": 8, "y": 94, "w": 174, "h": 14}},
-    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Rate", "position": {"x": 15, "y": 110, "w": 30, "h": 30}},
-    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Width", "position": {"x": 58, "y": 110, "w": 30, "h": 30}},
-    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Pitch", "position": {"x": 102, "y": 110, "w": 30, "h": 30}},
-    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Filter", "position": {"x": 145, "y": 110, "w": 30, "h": 30}},
-    "section2_0": {"class": "group", "label": "Filter", "position": {"x": 8, "y": 179, "w": 113, "h": 14}},
-    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Lo Cut", "position": {"x": 12, "y": 195, "w": 30, "h": 30}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Cutoff", "position": {"x": 49, "y": 195, "w": 30, "h": 30}},
-    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Res", "position": {"x": 87, "y": 195, "w": 30, "h": 30}},
-    "section2_1": {"class": "group", "label": "Output", "position": {"x": 129, "y": 179, "w": 53, "h": 14}},
-    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Mix", "position": {"x": 141, "y": 195, "w": 30, "h": 30}}
+    "section0_0": {"class": "group", "label": "Delay", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Time", "position": {"x": 24, "y": 32, "w": 48, "h": 48}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Speed", "position": {"x": 88, "y": 32, "w": 48, "h": 48}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Fdbk", "position": {"x": 152, "y": 32, "w": 48, "h": 48}},
+    "section1_0": {"class": "group", "label": "Warp", "position": {"x": 4, "y": 105, "w": 216, "h": 18}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Rate", "position": {"x": 6, "y": 128, "w": 40, "h": 40}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Width", "position": {"x": 58, "y": 128, "w": 40, "h": 40}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Pitch", "position": {"x": 126, "y": 128, "w": 40, "h": 40}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Filter", "position": {"x": 178, "y": 128, "w": 40, "h": 40}},
+    "section2_0": {"class": "group", "label": "Filter", "position": {"x": 4, "y": 185, "w": 140, "h": 18}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Lo Cut", "position": {"x": 7, "y": 208, "w": 40, "h": 40}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Cutoff", "position": {"x": 54, "y": 208, "w": 40, "h": 40}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Res", "position": {"x": 101, "y": 208, "w": 40, "h": 40}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 154, "y": 185, "w": 66, "h": 18}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Mix", "position": {"x": 167, "y": 208, "w": 40, "h": 40}}
   }
 }

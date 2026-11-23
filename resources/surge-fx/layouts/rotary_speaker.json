@@ -1,18 +1,18 @@
 {
   "include": "classes.json",
   "controls": {
-    "section0_0": {"class": "group", "label": "Rotor Speeds", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
-    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Horn", "position": {"x": 28, "y": 21, "w": 48, "h": 48}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Rotor", "position": {"x": 114, "y": 21, "w": 48, "h": 48}},
-    "section1_0": {"class": "group", "label": "Motion", "position": {"x": 8, "y": 94, "w": 83, "h": 14}},
-    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Doppler", "position": {"x": 14, "y": 110, "w": 30, "h": 30}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Trem", "position": {"x": 55, "y": 110, "w": 30, "h": 30}},
-    "section1_1": {"class": "group", "label": "Drive", "position": {"x": 99, "y": 94, "w": 83, "h": 14}},
-    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Model", "position": {"x": 105, "y": 110, "w": 30, "h": 30}},
-    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Drive", "position": {"x": 146, "y": 110, "w": 30, "h": 30}},
-    "power4": {"class": "light", "binding": {"type": "fx-param", "index": 4}, "position": {"x": 173, "y": 112, "w": 10, "h": 10}},
-    "section2_0": {"class": "group", "label": "Output", "position": {"x": 8, "y": 179, "w": 174, "h": 14}},
-    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Width", "position": {"x": 33, "y": 195, "w": 38, "h": 38}},
-    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Mix", "position": {"x": 119, "y": 195, "w": 38, "h": 38}}
+    "section0_0": {"class": "group", "label": "Rotor Speeds", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Horn", "position": {"x": 19, "y": 22, "w": 58, "h": 58}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Rotor", "position": {"x": 147, "y": 22, "w": 58, "h": 58}},
+    "section1_0": {"class": "group", "label": "Motion", "position": {"x": 4, "y": 105, "w": 96, "h": 18}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Doppler", "position": {"x": 6, "y": 128, "w": 40, "h": 40}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Trem", "position": {"x": 58, "y": 128, "w": 40, "h": 40}},
+    "section1_1": {"class": "group", "label": "Drive", "position": {"x": 124, "y": 105, "w": 96, "h": 18}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Model", "position": {"x": 126, "y": 128, "w": 40, "h": 40}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Drive", "position": {"x": 178, "y": 128, "w": 40, "h": 40}},
+    "power4": {"class": "light", "binding": {"type": "fx-param", "index": 4}, "position": {"x": 214, "y": 129, "w": 10, "h": 10}},
+    "section2_0": {"class": "group", "label": "Output", "position": {"x": 4, "y": 185, "w": 216, "h": 18}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Width", "position": {"x": 28, "y": 208, "w": 40, "h": 40}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Mix", "position": {"x": 156, "y": 208, "w": 40, "h": 40}}
   }
 }

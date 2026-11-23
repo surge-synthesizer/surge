@@ -1,20 +1,20 @@
 {
   "include": "classes.json",
   "controls": {
-    "section0_0": {"class": "group", "label": "Carrier", "position": {"x": 8, "y": 5, "w": 174, "h": 14}},
-    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Freq", "position": {"x": 12, "y": 21, "w": 37, "h": 37}},
-    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Shape", "position": {"x": 55, "y": 21, "w": 37, "h": 37}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Voices", "position": {"x": 99, "y": 21, "w": 37, "h": 37}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Detune", "position": {"x": 142, "y": 21, "w": 37, "h": 37}},
-    "section1_0": {"class": "group", "label": "Diode", "position": {"x": 8, "y": 94, "w": 174, "h": 14}},
-    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Bias", "position": {"x": 33, "y": 110, "w": 38, "h": 38}},
-    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Linear", "position": {"x": 119, "y": 110, "w": 38, "h": 38}},
-    "section2_0": {"class": "group", "label": "Filter", "position": {"x": 8, "y": 179, "w": 98, "h": 14}},
-    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Lo Cut", "position": {"x": 13, "y": 195, "w": 38, "h": 38}},
-    "power6": {"class": "light", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 48, "y": 197, "w": 10, "h": 10}},
-    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Hi Cut", "position": {"x": 63, "y": 195, "w": 38, "h": 38}},
-    "power7": {"class": "light", "binding": {"type": "fx-param", "index": 7}, "position": {"x": 98, "y": 197, "w": 10, "h": 10}},
-    "section2_1": {"class": "group", "label": "Output", "position": {"x": 114, "y": 179, "w": 68, "h": 14}},
-    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Mix", "position": {"x": 129, "y": 195, "w": 38, "h": 38}}
+    "section0_0": {"class": "group", "label": "Carrier", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Freq", "position": {"x": 6, "y": 23, "w": 40, "h": 40}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Shape", "position": {"x": 58, "y": 23, "w": 40, "h": 40}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Voices", "position": {"x": 126, "y": 23, "w": 40, "h": 40}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Detune", "position": {"x": 178, "y": 23, "w": 40, "h": 40}},
+    "section1_0": {"class": "group", "label": "Diode", "position": {"x": 4, "y": 105, "w": 216, "h": 18}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Bias", "position": {"x": 28, "y": 128, "w": 40, "h": 40}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Linear", "position": {"x": 156, "y": 128, "w": 40, "h": 40}},
+    "section2_0": {"class": "group", "label": "Filter", "position": {"x": 4, "y": 185, "w": 122, "h": 18}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Lo Cut", "position": {"x": 14, "y": 208, "w": 40, "h": 40}},
+    "power6": {"class": "light", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 54, "y": 209, "w": 10, "h": 10}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Hi Cut", "position": {"x": 76, "y": 208, "w": 40, "h": 40}},
+    "power7": {"class": "light", "binding": {"type": "fx-param", "index": 7}, "position": {"x": 116, "y": 209, "w": 10, "h": 10}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 136, "y": 185, "w": 84, "h": 18}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Mix", "position": {"x": 158, "y": 208, "w": 40, "h": 40}}
   }
 }

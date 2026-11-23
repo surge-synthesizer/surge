@@ -1,19 +1,19 @@
 {
   "include": "classes.json",
   "controls": {
-    "bands": {"class": "group", "label": "Band Gain · dB", "position": {"x": 8, "y": 12, "w": 174, "h": 16}},
-    "band30": {"class": "fader", "binding": {"type": "fx-param", "index": 0}, "label": "30", "position": {"x": 7, "y": 35, "w": 16, "h": 141}},
-    "band60": {"class": "fader", "binding": {"type": "fx-param", "index": 1}, "label": "60", "position": {"x": 23, "y": 35, "w": 16, "h": 141}},
-    "band120": {"class": "fader", "binding": {"type": "fx-param", "index": 2}, "label": "120", "position": {"x": 39, "y": 35, "w": 16, "h": 141}},
-    "band250": {"class": "fader", "binding": {"type": "fx-param", "index": 3}, "label": "250", "position": {"x": 55, "y": 35, "w": 16, "h": 141}},
-    "band500": {"class": "fader", "binding": {"type": "fx-param", "index": 4}, "label": "500", "position": {"x": 71, "y": 35, "w": 16, "h": 141}},
-    "band1k": {"class": "fader", "binding": {"type": "fx-param", "index": 5}, "label": "1k", "position": {"x": 87, "y": 35, "w": 16, "h": 141}},
-    "band2k": {"class": "fader", "binding": {"type": "fx-param", "index": 6}, "label": "2k", "position": {"x": 103, "y": 35, "w": 16, "h": 141}},
-    "band4k": {"class": "fader", "binding": {"type": "fx-param", "index": 7}, "label": "4k", "position": {"x": 119, "y": 35, "w": 16, "h": 141}},
-    "band8k": {"class": "fader", "binding": {"type": "fx-param", "index": 8}, "label": "8k", "position": {"x": 135, "y": 35, "w": 16, "h": 141}},
-    "band12k": {"class": "fader", "binding": {"type": "fx-param", "index": 9}, "label": "12k", "position": {"x": 151, "y": 35, "w": 16, "h": 141}},
-    "band16k": {"class": "fader", "binding": {"type": "fx-param", "index": 10}, "label": "16k", "position": {"x": 167, "y": 35, "w": 16, "h": 141}},
-    "output": {"class": "group", "label": "Output", "position": {"x": 8, "y": 197, "w": 174, "h": 15}},
-    "gain": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Gain", "position": {"x": 80, "y": 215, "w": 30, "h": 30}}
+    "bands": {"class": "group", "label": "Band Gain · dB", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
+    "band30": {"class": "fader", "binding": {"type": "fx-param", "index": 0}, "label": "30", "position": {"x": 3, "y": 23, "w": 18, "h": 140}},
+    "band60": {"class": "fader", "binding": {"type": "fx-param", "index": 1}, "label": "60", "position": {"x": 23, "y": 23, "w": 18, "h": 140}},
+    "band120": {"class": "fader", "binding": {"type": "fx-param", "index": 2}, "label": "120", "position": {"x": 43, "y": 23, "w": 18, "h": 140}},
+    "band250": {"class": "fader", "binding": {"type": "fx-param", "index": 3}, "label": "250", "position": {"x": 63, "y": 23, "w": 18, "h": 140}},
+    "band500": {"class": "fader", "binding": {"type": "fx-param", "index": 4}, "label": "500", "position": {"x": 83, "y": 23, "w": 18, "h": 140}},
+    "band1k": {"class": "fader", "binding": {"type": "fx-param", "index": 5}, "label": "1k", "position": {"x": 103, "y": 23, "w": 18, "h": 140}},
+    "band2k": {"class": "fader", "binding": {"type": "fx-param", "index": 6}, "label": "2k", "position": {"x": 123, "y": 23, "w": 18, "h": 140}},
+    "band4k": {"class": "fader", "binding": {"type": "fx-param", "index": 7}, "label": "4k", "position": {"x": 143, "y": 23, "w": 18, "h": 140}},
+    "band8k": {"class": "fader", "binding": {"type": "fx-param", "index": 8}, "label": "8k", "position": {"x": 163, "y": 23, "w": 18, "h": 140}},
+    "band12k": {"class": "fader", "binding": {"type": "fx-param", "index": 9}, "label": "12k", "position": {"x": 183, "y": 23, "w": 18, "h": 140}},
+    "band16k": {"class": "fader", "binding": {"type": "fx-param", "index": 10}, "label": "16k", "position": {"x": 203, "y": 23, "w": 18, "h": 140}},
+    "output": {"class": "group", "label": "Output", "position": {"x": 4, "y": 185, "w": 216, "h": 18}},
+    "gain": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Gain", "position": {"x": 95, "y": 208, "w": 34, "h": 34}}
   }
 }

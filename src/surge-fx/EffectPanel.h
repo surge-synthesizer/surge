@@ -1,5 +1,26 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-#pragma once
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
+#ifndef SURGE_SRC_SURGE_FX_EFFECTPANEL_H
+#define SURGE_SRC_SURGE_FX_EFFECTPANEL_H
 
 #include "BinaryData.h"
 #include "SurgeStorage.h"
@@ -11,17 +32,18 @@
 
 namespace surge::fx::effectPanel
 {
-// Keep the 190 x 262 layout canvas independent of the header and value readout.
-inline constexpr int width = 198, height = 336;
+// Layouts share a 224px canvas. Inset full-width section rules by 4px, keep
+// control centres aligned between rows, and reserve space for captions and option glyphs.
+inline constexpr int contentWidth = 224;
+inline constexpr int gutter = 10;
+inline constexpr int width = contentWidth + 2 * gutter, height = 320;
 inline constexpr int defaultZoom = 125;
-inline constexpr int contentWidth = 190;
 inline constexpr int captionHeight = 14;
 inline constexpr int captionFontHeight = 12;
 inline const juce::Rectangle<int> frame(2, 2, width - 4, height - 4);
-inline const juce::Point<int> contentOrigin(4, 52);
-inline const juce::Rectangle<int> titleArea(9, 5, 180, 22);
-inline const juce::Rectangle<int> presetArea(9, 29, 180, 18);
-inline const juce::Rectangle<int> statusArea(9, 314, 180, 18);
+inline const juce::Point<int> contentOrigin(gutter, 30);
+inline const juce::Rectangle<int> headerArea(gutter, 6, contentWidth, 22);
+inline const juce::Rectangle<int> statusArea(gutter, 296, contentWidth, 18);
 
 enum class Kind
 {
@@ -203,6 +225,15 @@ inline auto panelStyle()
         sheet->setColour(KnobStyles::styleClass, KnobStyles::handle_hover, hover(handle));
         sheet->setFont(BaseLabel::styleClass, BaseLabel::labelfont,
                        juce::Font(juce::FontOptions().withPointHeight(11.f)));
+        sheet->setColour(PopupMenu::styleClass, PopupMenu::background, panelColour);
+        sheet->setColour(PopupMenu::styleClass, PopupMenu::labelcolor, textColour);
+        sheet->setColour(PopupMenu::styleClass, PopupMenu::hightlightbackground, borderColour);
+        sheet->setColour(PopupMenu::styleClass, PopupMenu::hightlighttextcolor,
+                         juce::Colours::white);
+        sheet->setFont(
+            PopupMenu::styleClass, PopupMenu::menufont,
+            sheet->getFont(KnobStyles::styleClass, KnobStyles::labelfont)
+                .withHeight(captionFontHeight));
         sheet->setKnobRingStrokeWidth(3, 3, 25);
         return sheet;
     }();
@@ -231,3 +262,5 @@ inline void paint(juce::Graphics &g, juce::Rectangle<float> panel)
     g.drawRoundedRectangle(frame.toFloat().reduced(0.5f), 2.f, 1.f);
 }
 } // namespace surge::fx::effectPanel
+
+#endif // SURGE_SRC_SURGE_FX_EFFECTPANEL_H

@@ -1,21 +1,21 @@
 {
   "include": "classes.json",
   "controls": {
-    "section0_0": {"class": "group", "label": "Engine", "position": {"x": 8, "y": 1, "w": 174, "h": 14}},
-    "knob0": {"class": "choice", "binding": {"type": "fx-param", "index": 0}, "label": "Mode", "position": {"x": 11, "y": 23, "w": 82, "h": 23}},
-    "knob1": {"class": "choice", "binding": {"type": "fx-param", "index": 1}, "label": "Quality", "position": {"x": 97, "y": 23, "w": 82, "h": 23}},
-    "section1_0": {"class": "group", "label": "Grain", "position": {"x": 8, "y": 67, "w": 174, "h": 14}},
-    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Position", "position": {"x": 16, "y": 83, "w": 28, "h": 28}},
-    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 59, "y": 83, "w": 28, "h": 28}},
-    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Pitch", "position": {"x": 103, "y": 83, "w": 28, "h": 28}},
-    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "position": {"x": 146, "y": 83, "w": 28, "h": 28}},
-    "section2_0": {"class": "group", "label": "Playback", "position": {"x": 8, "y": 132, "w": 174, "h": 14}},
-    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 21, "y": 148, "w": 33, "h": 33}},
-    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Freeze", "position": {"x": 79, "y": 148, "w": 33, "h": 33}},
-    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Fdbk", "position": {"x": 137, "y": 148, "w": 33, "h": 33}},
-    "section3_0": {"class": "group", "label": "Output", "position": {"x": 8, "y": 197, "w": 174, "h": 14}},
-    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Spread", "position": {"x": 21, "y": 213, "w": 33, "h": 33}},
-    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Reverb", "position": {"x": 79, "y": 213, "w": 33, "h": 33}},
-    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Mix", "position": {"x": 137, "y": 213, "w": 33, "h": 33}}
+    "section0_0": {"class": "group", "label": "Engine", "position": {"x": 4, "y": 0, "w": 216, "h": 15}},
+    "knob0": {"class": "choice", "binding": {"type": "fx-param", "index": 0}, "label": "Mode", "position": {"x": 7, "y": 25, "w": 102, "h": 23}},
+    "knob1": {"class": "choice", "binding": {"type": "fx-param", "index": 1}, "label": "Quality", "position": {"x": 115, "y": 25, "w": 102, "h": 23}},
+    "section1_0": {"class": "group", "label": "Grain", "position": {"x": 4, "y": 66, "w": 216, "h": 15}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Position", "position": {"x": 10, "y": 86, "w": 32, "h": 32}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 62, "y": 86, "w": 32, "h": 32}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Pitch", "position": {"x": 130, "y": 86, "w": 32, "h": 32}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "position": {"x": 182, "y": 86, "w": 32, "h": 32}},
+    "section2_0": {"class": "group", "label": "Playback", "position": {"x": 4, "y": 132, "w": 216, "h": 15}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 32, "y": 152, "w": 32, "h": 32}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Freeze", "position": {"x": 96, "y": 152, "w": 32, "h": 32}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Fdbk", "position": {"x": 160, "y": 152, "w": 32, "h": 32}},
+    "section3_0": {"class": "group", "label": "Output", "position": {"x": 4, "y": 198, "w": 216, "h": 15}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Spread", "position": {"x": 32, "y": 218, "w": 32, "h": 32}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Reverb", "position": {"x": 96, "y": 218, "w": 32, "h": 32}},
+    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Mix", "position": {"x": 160, "y": 218, "w": 32, "h": 32}}
   }
 }

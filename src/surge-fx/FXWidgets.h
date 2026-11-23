@@ -1,5 +1,26 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-#pragma once
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2024, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
+#ifndef SURGE_SRC_SURGE_FX_FXWIDGETS_H
+#define SURGE_SRC_SURGE_FX_FXWIDGETS_H
 
 #include "sst/jucegui/components/Knob.h"
 #include "sst/jucegui/components/Label.h"
@@ -66,23 +87,32 @@ struct ParameterKnob : sst::jucegui::components::Knob
     ~ParameterKnob() override { clearSource(); }
 
     bool isEditingBlocked() const { return binding.blocked; }
-    bool opensChoiceMenu{false};
-    bool drawFader{false};
-    std::function<void()> onEditValue;
-
-    void setOpensChoiceMenu(bool enabled)
+    enum class Presentation
     {
-        if (opensChoiceMenu == enabled)
-            return;
-        opensChoiceMenu = enabled;
-        invalidateAccessibilityHandler();
-        setMouseCursor(enabled ? juce::MouseCursor::PointingHandCursor
-                               : juce::MouseCursor::NormalCursor);
+        rotary,
+        fader,
+        choice
+    };
+
+    bool isChoice() const { return presentation == Presentation::choice; }
+    bool isFader() const { return presentation == Presentation::fader; }
+
+    void setPresentation(Presentation next)
+    {
+        const bool wasChoice = isChoice();
+        presentation = next;
+        if (isChoice() != wasChoice)
+        {
+            invalidateAccessibilityHandler();
+            setMouseCursor(isChoice() ? juce::MouseCursor::PointingHandCursor
+                                      : juce::MouseCursor::NormalCursor);
+        }
     }
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
     {
-        if (!opensChoiceMenu)
+        // The upstream slider handler always reports writable and its Show Menu action is a no-op.
+        if (!isChoice())
         {
             struct SliderValue : juce::AccessibilityValueInterface
             {
@@ -143,7 +173,7 @@ struct ParameterKnob : sst::jucegui::components::Knob
 
     void update(float value, const std::string &text)
     {
-        const bool titleChanged = opensChoiceMenu && binding.text != text;
+        const bool titleChanged = isChoice() && binding.text != text;
         binding.setValueFromModel(value);
         binding.text = text;
         repaint();
@@ -152,13 +182,13 @@ struct ParameterKnob : sst::jucegui::components::Knob
             if (auto *handler = getAccessibilityHandler())
                 handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
         }
-        else if (!opensChoiceMenu)
+        else if (!isChoice())
             notifyAccessibleChange();
     }
 
     void paint(juce::Graphics &g) override
     {
-        if (opensChoiceMenu)
+        if (isChoice())
         {
             // A discrete algorithm is a menu, not a continuous rotary control.
             const auto bounds = getLocalBounds().toFloat().reduced(0.5f);
@@ -185,7 +215,7 @@ struct ParameterKnob : sst::jucegui::components::Knob
         juce::Graphics::ScopedSaveState state(g);
         if (isEditingBlocked())
             g.beginTransparencyLayer(0.45f);
-        if (drawFader)
+        if (isFader())
             paintFader(g);
         else
             Knob::paint(g);
@@ -231,7 +261,7 @@ struct ParameterKnob : sst::jucegui::components::Knob
         {
             if (isEditingBlocked())
                 return;
-            if (opensChoiceMenu)
+            if (isChoice())
             {
                 grabKeyboardFocus();
                 onPopupMenu(e.mods);
@@ -251,9 +281,9 @@ struct ParameterKnob : sst::jucegui::components::Knob
     }
     void mouseDoubleClick(const juce::MouseEvent &e) override
     {
-        if (e.getNumberOfClicks() == 2 && !opensChoiceMenu && !isEditingBlocked() &&
-            !e.mods.isPopupMenu())
-            Knob::mouseDoubleClick(e);
+        if (e.getNumberOfClicks() != 2 || isChoice() || isEditingBlocked() || e.mods.isPopupMenu())
+            return;
+        Knob::mouseDoubleClick(e);
     }
     void mouseDrag(const juce::MouseEvent &e) override
     {
@@ -264,6 +294,7 @@ struct ParameterKnob : sst::jucegui::components::Knob
     {
         if (isEditingBlocked())
             return;
+        // Upstream quantized scrolling on macOS scales by wheel magnitude rather than one step.
         if (binding.discreteStep > 0.f)
         {
             const auto delta = wheel.deltaY != 0.f ? wheel.deltaY : wheel.deltaX;
@@ -281,32 +312,28 @@ struct ParameterKnob : sst::jucegui::components::Knob
 
     bool keyPressed(const juce::KeyPress &key) override
     {
-        using Keys = juce::KeyPress;
-        const auto code = key.getKeyCode();
-        if (code == Keys::F10Key && key.getModifiers().isShiftDown())
+        using Action = decltype(accessibleEdit(key));
+        const auto action = accessibleEdit(key).action;
+        if (action == Action::OpenMenu || action == Action::OpenEditor || action == Action::Trigger)
         {
             onPopupMenu(key.getModifiers());
             return true;
         }
         if (isEditingBlocked())
             return false;
-        if (code == Keys::returnKey)
+        const bool adjusting = action == Action::Increase || action == Action::Decrease;
+        if (binding.discreteStep > 0.f && adjusting)
         {
-            if (!opensChoiceMenu && binding.acceptsText && onEditValue)
-                onEditValue();
-            else
-                onPopupMenu(key.getModifiers());
-            return true;
-        }
-        if (binding.discreteStep > 0.f && (code == Keys::upKey || code == Keys::downKey))
-        {
-            const auto step = code == Keys::upKey ? binding.discreteStep : -binding.discreteStep;
+            const auto step =
+                action == Action::Increase ? binding.discreteStep : -binding.discreteStep;
             onBeginEdit();
             binding.setValueFromGUI(std::clamp(binding.value + step, 0.f, 1.f));
             onEndEdit();
             return true;
         }
-        return Knob::keyPressed(key);
+        const auto handled = Knob::keyPressed(key);
+        // The upstream editor adjusts on arrow keys but does not report them as consumed.
+        return handled || adjusting;
     }
 
   private:
@@ -315,6 +342,7 @@ struct ParameterKnob : sst::jucegui::components::Knob
         if (auto *parent = getParentComponent())
             parent->repaint();
     }
+    Presentation presentation{Presentation::rotary};
     std::optional<float> rubberbandValue;
 };
 
@@ -355,3 +383,5 @@ struct ParameterOption : sst::jucegui::components::ToggleButton
     std::function<void()> onClick;
 };
 } // namespace surge::fx
+
+#endif // SURGE_SRC_SURGE_FX_FXWIDGETS_H

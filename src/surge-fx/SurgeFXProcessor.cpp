@@ -214,10 +214,7 @@ void SurgefxAudioProcessor::tryLazyOscStartupFromStreamedState()
 
 //==============================================================================
 /* OSC (Open Sound Control) */
-bool SurgefxAudioProcessor::initOSCIn(int port)
-{
-    return oscHandler.initOSCIn(port);
-}
+bool SurgefxAudioProcessor::initOSCIn(int port) { return oscHandler.initOSCIn(port); }
 
 bool SurgefxAudioProcessor::changeOSCInPort(int new_port)
 {
@@ -918,7 +915,7 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
         fxAbsolutedParams[i]->mutableName =
             canAbsolute(i) ? fmt::format("Absolute {}", paramName) : "-";
         fxDeactivatedParams[i]->mutableName =
-            canDeactitvate(i) ? fmt::format("Deactivate {}", paramName) : "-";
+            canDeactivate(i) ? fmt::format("Deactivate {}", paramName) : "-";
 
         paramFeatures[i] = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
     }

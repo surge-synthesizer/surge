@@ -267,7 +267,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     {
         return fxstorage->p[fx_param_remap[i]].appears_deactivated();
     }
-    bool canDeactitvate(int i) { return fxstorage->p[fx_param_remap[i]].can_deactivate(); }
+    bool canDeactivate(int i) { return fxstorage->p[fx_param_remap[i]].can_deactivate(); }
 
     virtual void parameterValueChanged(int parameterIndex, float newValue) override
     {
@@ -485,7 +485,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         case SurgeFX::ParamKind::Absolute:
             return canAbsolute(i) ? fxAbsolutedParams[i] : nullptr;
         case SurgeFX::ParamKind::Deactivated:
-            return canDeactitvate(i) ? fxDeactivatedParams[i] : nullptr;
+            return canDeactivate(i) ? fxDeactivatedParams[i] : nullptr;
         default:
             return nullptr;
         }

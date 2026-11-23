@@ -12,7 +12,6 @@ endif()
 
 juce_add_binary_data(surge-fx-binary
   SOURCES
-    ${CMAKE_SOURCE_DIR}/resources/surge-fx/SurgeLogoOnlyBlack.svg
     ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/classes.json
     ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/airwindows.json
     ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/audio_input.json
@@ -89,7 +88,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.h
   SurgeFXProcessor.cpp
   SurgeFXProcessor.h
-  SurgeLookAndFeel.h
   FXWidgets.h
   EffectPanel.h
   FXOpenSoundControl.cpp
