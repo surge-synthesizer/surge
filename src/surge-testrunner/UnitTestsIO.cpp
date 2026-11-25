@@ -2550,6 +2550,10 @@ TEST_CASE("The Window Oscillator Plays Samples", "[dsp]")
         for (int i = 0; i < 5; ++i)
             surge->process();
 
+        // Without this the note starts at a random point inside the first grain, which with
+        // Morph at 0.875 is the whole note, so the energy below swings by the full grain
+        osc->retrigger.val.b = true;
+
         auto &wt = osc->wt;
         buildSineWT(&wt, 8, 1024);
         REQUIRE(wt.Reslice(-1, -1, wt.flags | wtf_is_sample | (looped ? wtf_loop_sample : 0)));
