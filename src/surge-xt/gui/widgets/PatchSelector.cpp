@@ -364,7 +364,11 @@ void PatchSelector::paint(juce::Graphics &g)
 
         auto uname = pname;
 
-        if (isDirty)
+        if (isComparing)
+        {
+            uname += u8" \U00002194";
+        }
+        else if (isDirty)
         {
             uname += "*";
         }
@@ -665,6 +669,15 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         contextMenu, Surge::GUI::toOSCase("Initialize Patch"),
         sge->getShortcutDescription(Surge::GUI::KeyboardActions::INITIALIZE_PATCH),
         [this]() { loadInitPatch(); });
+
+    const bool comparing = sge->synth->isComparingToOriginal();
+
+    Surge::GUI::addMenuItemWithShortcut(
+        contextMenu,
+        Surge::GUI::toOSCase(comparing ? "Restore Your Edits" : "Compare to Original Patch"),
+        sge->getShortcutDescription(Surge::GUI::KeyboardActions::COMPARE_TO_ORIGINAL),
+        comparing || sge->canCompareToOriginal(), comparing,
+        [sge]() { sge->toggleCompareToOriginal(); });
 
     // Loading a patch straight off disk leaves current_category at -1 and current_patch stale,
     // since such a patch has no entry in the patch list to point at. There is nothing sensible to

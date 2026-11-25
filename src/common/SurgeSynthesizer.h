@@ -493,12 +493,25 @@ class alignas(16) SurgeSynthesizer
     void removeModulationAPIListener(ModulationAPIListener *l) { modListeners.erase(l); }
 
   public:
+    // only NEW_PATCH load moves the point patch compare returns to
+    enum class PatchLoadReason
+    {
+        NEW_PATCH,
+        UNDO_REDO,
+        COMPARE_TOGGLE
+    };
+
     std::atomic<bool> rawLoadEnqueued{false}, rawLoadNeedsUIDawExtraState{false};
     std::mutex rawLoadQueueMutex;
     std::unique_ptr<char[]> enqueuedLoadData{nullptr}; // if this is set I need to free it
     int enqueuedLoadSize{0};
-    void enqueuePatchForLoad(const void *data, int size); // safe from any thread
-    void processEnqueuedPatchIfNeeded();                  // only safe from audio thread
+    PatchLoadReason enqueuedLoadReason{PatchLoadReason::NEW_PATCH};
+
+    // safe from any thread
+    void enqueuePatchForLoad(const void *data, int size,
+                             PatchLoadReason reason = PatchLoadReason::NEW_PATCH);
+    // only safe from audio thread
+    void processEnqueuedPatchIfNeeded();
 
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
@@ -516,6 +529,36 @@ class alignas(16) SurgeSynthesizer
 
     void savePatchToPath(fs::path p, bool refreshPatchList = true);
     void savePatch(bool factoryInPlace = false, bool skipOverwrite = false);
+
+    //==============================================================================
+    // Compare to original: flip between the patch as it was loaded and the edits made since.
+    // See SurgeSynthesizerIO.cpp.
+
+    // Records what compare should flip back to. A path costs nothing to keep,
+    // so a blob is only streamed when the load has no file behind it to re-read.
+    void rebaselineCompareToOriginal(const fs::path &source);
+
+    bool canCompareToOriginal() const;
+    bool enterCompareToOriginal();
+    void exitCompareToOriginal();
+
+    // Abandons compare without restoring the edits, for when they are about to be replaced.
+    void dropCompareToOriginal();
+
+    bool isComparingToOriginal() const { return inCompareMode.load(); }
+
+    std::atomic<bool> inCompareMode{false};
+    std::atomic<bool> compareEditObserved{false};
+
+    fs::path compareOriginalPath{};
+    std::string compareOriginalName, compareOriginalCategory;
+    std::unique_ptr<char[]> compareOriginalBlob{nullptr};
+    int compareOriginalBlobSize{0};
+    std::unique_ptr<char[]> compareStash{nullptr};
+    int compareStashSize{0};
+    bool compareStashWasDirty{false};
+
+    //==============================================================================
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);
     unsigned int saveRaw(void **data);

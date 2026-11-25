@@ -36,6 +36,7 @@ enum KeyboardActions
     REDO,
 
     SAVE_PATCH,
+    COMPARE_TO_ORIGINAL,
     FIND_PATCH,
     FAVORITE_PATCH,
     INITIALIZE_PATCH,
@@ -108,6 +109,8 @@ inline std::string keyboardActionName(KeyboardActions a)
 
     case SAVE_PATCH:
         return "SAVE_PATCH";
+    case COMPARE_TO_ORIGINAL:
+        return "COMPARE_TO_ORIGINAL";
     case FIND_PATCH:
         return "FIND_PATCH";
     case FAVORITE_PATCH:
@@ -232,6 +235,9 @@ inline std::string keyboardActionDescription(KeyboardActions a)
 
     case SAVE_PATCH:
         desc = "Save Patch";
+        break;
+    case COMPARE_TO_ORIGINAL:
+        desc = "Compare to Original Patch";
         break;
     case FIND_PATCH:
         desc = "Find Patch";
