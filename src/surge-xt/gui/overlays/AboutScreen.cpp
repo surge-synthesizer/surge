@@ -196,8 +196,8 @@ void AboutScreen::populateData()
 
     const auto ramsize = juce::SystemStats::getMemorySizeInMegabytes();
     const auto ramString =
-        fmt::format("{:.0f} {} RAM", ramsize >= 1024 ? std::roundf(ramsize / 1024.f) : ramsize,
-                    ramsize >= 1024 ? "GB" : "MB");
+        fmt::format("{:.0f} {} RAM", ramsize >= 1000 ? std::roundf(ramsize / 1000.f) : ramsize,
+                    ramsize >= 1000 ? "GB" : "MB");
 
     const auto bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
     const auto system = fmt::format("{} {}{} on {}, {}", platform, bitness,
