@@ -642,6 +642,11 @@ void SurgeGUIEditor::idle()
             {
                 patchSelector->isDirty = synth->storage.getPatch().isDirty;
                 patchSelector->repaint();
+
+                if (auto *h = patchSelector->getAccessibilityHandler())
+                {
+                    h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+                }
             }
         }
 
