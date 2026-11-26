@@ -426,6 +426,12 @@ template <juce::AccessibilityRole ROLE> struct MultiSwitchAccOverlayButton : pub
         juce::AccessibleState getCurrentState() const override
         {
             auto state = AccessibilityHandler::getCurrentState();
+
+            // Momentary cells (patch and category jog, FX preset jog) are plain buttons,
+            // so they must not report the switch's resting value as on or off
+            if constexpr (ROLE == juce::AccessibilityRole::button)
+                return state;
+
             state = state.withCheckable();
             if (mswitch->getIntegerValue() == button->ival)
                 state = state.withChecked();

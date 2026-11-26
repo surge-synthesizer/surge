@@ -210,6 +210,12 @@ struct SwitchAH : public juce::AccessibilityHandler
     juce::AccessibleState getCurrentState() const override
     {
         auto state = AccessibilityHandler::getCurrentState();
+
+        // A momentary button (undo, redo, menus) has no on or off to report. Marking it
+        // checkable makes VoiceOver read "Off" and UIA expose it as a toggle button.
+        if (mswitch->isAlwaysAccessibleMomentary())
+            return state;
+
         state = state.withCheckable();
         if (mswitch->getValue() > 0.5)
             state = state.withChecked();
