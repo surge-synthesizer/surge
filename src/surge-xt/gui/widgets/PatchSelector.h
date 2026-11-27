@@ -176,7 +176,11 @@ struct PatchSelector : public juce::Component,
     std::unique_ptr<Surge::Widgets::TypeAhead> typeAhead;
     std::unique_ptr<PatchDBTypeAheadProvider> patchDbProvider;
 
-    std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
+    // The asterisk that marks unsaved changes is only drawn, so say it in words too
+    std::string getPatchNameAccessibleValue()
+    {
+        return pname + " by " + author + (isDirty ? ", edited" : "");
+    }
 
     void onSkinChanged() override;
     bool isDirty{false};
