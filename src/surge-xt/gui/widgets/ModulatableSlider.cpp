@@ -688,6 +688,11 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
         double getCurrentValue() const override { return slider->getValue(); }
         void setValue(double newValue) override
         {
+            // Bracket the change like a keyboard or mouse edit does. Begin edit is where the
+            // undo step is recorded and where the host learns a gesture started, so without it
+            // a VoiceOver increment or a typed value could not be undone
+            slider->notifyBeginEdit();
+
             if (slider->isEditingModulation)
             {
                 slider->setModValue(newValue);
@@ -699,6 +704,7 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
             }
             slider->repaint();
             slider->notifyValueChanged();
+            slider->notifyEndEdit();
         }
         virtual juce::String getCurrentValueAsString() const override
         {
