@@ -532,8 +532,7 @@ Connector shape = Connector("lfo.shape", 235, 480, 359, 84, Components::LFODispl
 
 Connector mseg_editor =
     Connector("lfo.mseg_editor", 597, 484, 11, 11, Components::Switch, Connector::MSEG_EDITOR_OPEN)
-        .withBackground(IDB_LFO_MSEG_EDIT)
-        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
+        .withBackground(IDB_LFO_MSEG_EDIT);
 
 Connector lfo_eg_panel = Connector("lfo.envelope.panel", 616, 493, Components::Group);
 Connector delay = Connector("lfo.delay", 0, 0).inParent("lfo.envelope.panel");
