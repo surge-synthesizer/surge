@@ -57,8 +57,18 @@ struct ModulationSourceButton : public juce::Component,
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
-    void setAccessibleLabel(const std::string &s)
+    void setAccessibleLabel(const std::string &label)
     {
+        // A named macro reads "Macro 1: Cutoff", so it can't be confused with the Cutoff
+        // parameter itself. An unnamed macro ("-") reads just "Macro 1"
+        auto s = label;
+
+        if (!modlist.empty() && isCustomController(getCurrentModSource()))
+        {
+            std::string base = modsource_names[getCurrentModSource()];
+            s = (label.empty() || label == "-" || label == base) ? base : base + ": " + label;
+        }
+
 #if MAC
         setDescription(std::string("Modulator ") + s);
         setTitle(s);
@@ -66,6 +76,25 @@ struct ModulationSourceButton : public juce::Component,
         setDescription("Modulator");
         setTitle(s);
 #endif
+
+        // Name the macro slider after its macro, so a flat walk with Tab or the VoiceOver
+        // item chooser doesn't land on eight sliders all called "macro value"
+        if (macroSlider)
+        {
+            macroSlider->setTitle(s);
+            macroSlider->setDescription(s);
+        }
+
+        for (auto *c : {(juce::Component *)this, macroSlider.get()})
+        {
+            if (c)
+            {
+                if (auto *h = c->getAccessibilityHandler())
+                {
+                    h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+                }
+            }
+        }
     }
 
     modsources getCurrentModSource() const { return std::get<0>(modlist[modlistIndex]); }
@@ -76,6 +105,9 @@ struct ModulationSourceButton : public juce::Component,
     {
         jassert(modlist.size() == 1 && modlistIndex == 0);
         std::get<2>(modlist[modlistIndex]) = s;
+
+        // Keep the accessible name in step with a renamed macro
+        setAccessibleLabel(s);
         repaint();
     }
 
