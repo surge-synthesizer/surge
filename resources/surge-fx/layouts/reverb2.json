@@ -1,0 +1,19 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Space", "position": {"x": 4, "y": 0, "w": 216, "h": 18}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Size", "position": {"x": 24, "y": 32, "w": 48, "h": 48}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Decay", "position": {"x": 88, "y": 32, "w": 48, "h": 48}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Pre Dly", "position": {"x": 152, "y": 32, "w": 48, "h": 48}},
+    "section1_0": {"class": "group", "label": "Diffusion", "position": {"x": 4, "y": 105, "w": 216, "h": 18}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Diffuse", "position": {"x": 28, "y": 128, "w": 40, "h": 40}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Buildup", "position": {"x": 92, "y": 128, "w": 40, "h": 40}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Mod", "position": {"x": 156, "y": 128, "w": 40, "h": 40}},
+    "section2_0": {"class": "group", "label": "Damping", "position": {"x": 4, "y": 185, "w": 96, "h": 18}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Low", "position": {"x": 6, "y": 208, "w": 40, "h": 40}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "High", "position": {"x": 58, "y": 208, "w": 40, "h": 40}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 124, "y": 185, "w": 96, "h": 18}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Width", "position": {"x": 126, "y": 208, "w": 40, "h": 40}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Mix", "position": {"x": 178, "y": 208, "w": 40, "h": 40}}
+  }
+}

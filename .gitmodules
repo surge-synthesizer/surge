@@ -68,3 +68,6 @@
 [submodule "src/surge-rs/surge-rs"]
 	path = src/surge-rs/surge-rs
 	url = https://github.com/surge-synthesizer/surge-rs
+[submodule "libs/sst/sst-jucegui"]
+	path = libs/sst/sst-jucegui
+	url = https://github.com/surge-synthesizer/sst-jucegui.git

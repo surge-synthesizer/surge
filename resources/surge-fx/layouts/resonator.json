@@ -1,0 +1,24 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Band 1", "position": {"x": 4, "y": 0, "w": 216, "h": 15}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Freq", "position": {"x": 32, "y": 20, "w": 32, "h": 32}},
+    "light0": {"class": "extendLight", "binding": {"type": "fx-param", "index": 0}, "position": {"x": 64, "y": 21, "w": 10, "h": 10}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Res", "position": {"x": 96, "y": 20, "w": 32, "h": 32}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Gain", "position": {"x": 160, "y": 20, "w": 32, "h": 32}},
+    "section1_0": {"class": "group", "label": "Band 2", "position": {"x": 4, "y": 66, "w": 216, "h": 15}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Freq", "position": {"x": 32, "y": 86, "w": 32, "h": 32}},
+    "light3": {"class": "extendLight", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 64, "y": 87, "w": 10, "h": 10}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Res", "position": {"x": 96, "y": 86, "w": 32, "h": 32}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Gain", "position": {"x": 160, "y": 86, "w": 32, "h": 32}},
+    "section2_0": {"class": "group", "label": "Band 3", "position": {"x": 4, "y": 132, "w": 216, "h": 15}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Freq", "position": {"x": 32, "y": 152, "w": 32, "h": 32}},
+    "light6": {"class": "extendLight", "binding": {"type": "fx-param", "index": 6}, "position": {"x": 64, "y": 153, "w": 10, "h": 10}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Res", "position": {"x": 96, "y": 152, "w": 32, "h": 32}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Gain", "position": {"x": 160, "y": 152, "w": 32, "h": 32}},
+    "knob9": {"class": "choice", "binding": {"type": "fx-param", "index": 9}, "label": "Mode", "position": {"x": 8, "y": 215, "w": 88, "h": 22}},
+    "section3_1": {"class": "group", "label": "Output", "position": {"x": 124, "y": 198, "w": 96, "h": 15}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Output", "position": {"x": 130, "y": 218, "w": 32, "h": 32}},
+    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Mix", "position": {"x": 182, "y": 218, "w": 32, "h": 32}}
+  }
+}

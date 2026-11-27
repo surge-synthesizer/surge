@@ -1,0 +1,21 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Modulation", "position": {"x": 4, "y": 0, "w": 216, "h": 15}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Rate", "position": {"x": 32, "y": 20, "w": 32, "h": 32}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Depth", "position": {"x": 160, "y": 20, "w": 32, "h": 32}},
+    "section1_0": {"class": "group", "label": "Comb", "position": {"x": 4, "y": 66, "w": 216, "h": 15}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Count", "position": {"x": 32, "y": 86, "w": 32, "h": 32}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Pitch", "position": {"x": 96, "y": 86, "w": 32, "h": 32}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Spacing", "position": {"x": 160, "y": 86, "w": 32, "h": 32}},
+    "section2_0": {"class": "group", "label": "Feedback", "position": {"x": 4, "y": 132, "w": 96, "h": 15}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Depth", "position": {"x": 10, "y": 152, "w": 32, "h": 32}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Damp", "position": {"x": 62, "y": 152, "w": 32, "h": 32}},
+    "section2_1": {"class": "group", "label": "Output", "position": {"x": 124, "y": 132, "w": 96, "h": 15}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Width", "position": {"x": 130, "y": 152, "w": 32, "h": 32}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Mix", "position": {"x": 182, "y": 152, "w": 32, "h": 32}},
+    "section3_0": {"class": "group", "label": "Modulation Shape", "position": {"x": 4, "y": 198, "w": 216, "h": 15}},
+    "knob0": {"class": "choice", "binding": {"type": "fx-param", "index": 0}, "label": "Mode", "position": {"x": 7, "y": 223, "w": 102, "h": 23}},
+    "knob1": {"class": "choice", "binding": {"type": "fx-param", "index": 1}, "label": "Wave", "position": {"x": 115, "y": 223, "w": 102, "h": 23}}
+  }
+}

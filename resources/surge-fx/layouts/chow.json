@@ -1,0 +1,9 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Threshold", "position": {"x": 83, "y": 32, "w": 58, "h": 58}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Ratio", "position": {"x": 20, "y": 166, "w": 40, "h": 40}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Flip", "position": {"x": 92, "y": 166, "w": 40, "h": 40}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Mix", "position": {"x": 164, "y": 166, "w": 40, "h": 40}}
+  }
+}

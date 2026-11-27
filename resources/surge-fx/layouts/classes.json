@@ -1,0 +1,22 @@
+{
+  "classes": {
+    "knob": {
+      "control-type": "knob"
+    },
+    "fader": {
+      "control-type": "fader"
+    },
+    "choice": {
+      "control-type": "choice"
+    },
+    "light": {
+      "control-type": "power"
+    },
+    "extendLight": {
+      "control-type": "extend-light"
+    },
+    "group": {
+      "control-type": "group"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Rate", "position": {"x": 19, "y": 14, "w": 58, "h": 58}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Depth", "position": {"x": 147, "y": 14, "w": 58, "h": 58}},
+    "section1_0": {"class": "group", "label": "Delay", "position": {"x": 4, "y": 105, "w": 96, "h": 18}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Time", "position": {"x": 6, "y": 128, "w": 40, "h": 40}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Fdbk", "position": {"x": 58, "y": 128, "w": 40, "h": 40}},
+    "section1_1": {"class": "group", "label": "Filter", "position": {"x": 124, "y": 105, "w": 96, "h": 18}},
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Lo Cut", "position": {"x": 126, "y": 128, "w": 40, "h": 40}},
+    "power4": {"class": "light", "binding": {"type": "fx-param", "index": 4}, "position": {"x": 166, "y": 129, "w": 10, "h": 10}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Hi Cut", "position": {"x": 178, "y": 128, "w": 40, "h": 40}},
+    "power5": {"class": "light", "binding": {"type": "fx-param", "index": 5}, "position": {"x": 214, "y": 129, "w": 10, "h": 10}},
+    "section2_0": {"class": "group", "label": "Output", "position": {"x": 4, "y": 185, "w": 216, "h": 18}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Width", "position": {"x": 28, "y": 208, "w": 40, "h": 40}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Mix", "position": {"x": 156, "y": 208, "w": 40, "h": 40}}
+  }
+}

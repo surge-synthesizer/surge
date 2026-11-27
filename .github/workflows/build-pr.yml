@@ -41,14 +41,6 @@ jobs:
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "Windows MSVC JUCE 7"
-            os: windows-2022
-            target: surge-xt_Standalone surge-fx_Standalone
-            cmakeConfig: -A x64
-            cmakeOpt: DEBUG
-            runTests: false
-            revertJuce: true
-
           #- name: "Windows Clang"
           #  os: windows-2022
           #  target: surge-xt_Standalone
@@ -119,14 +111,6 @@ jobs:
         with:
           submodules: recursive
 
-
-      - name: "Revert JUCE"
-        if: ${{ matrix.revertJuce }}
-        run: |
-          cd libs/JUCE
-          git fetch origin
-          git fetch origin -t
-          git checkout surge-7.0.12
 
       - name: "Prepare for JUCE"
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main

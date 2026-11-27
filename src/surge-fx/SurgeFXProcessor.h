@@ -31,6 +31,8 @@
 #include "FXOpenSoundControl.h"
 #include "FxPresetAndClipboardManager.h"
 #include <atomic>
+#include <optional>
+#include <utility>
 #include "sst/filters/HalfRateFilter.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
@@ -165,6 +167,24 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     }
 
     int getEffectType() { return effectNum; }
+    int getStorageParamIndex(int i) const { return fx_param_remap[i]; }
+    std::optional<std::pair<int, int>> getFXParamChoiceRange(int i) const
+    {
+        const auto &p = fxstorage->p[fx_param_remap[i]];
+        if (p.valtype == vt_int && p.val_max.i > p.val_min.i)
+            return std::pair{p.val_min.i, p.val_max.i};
+        return std::nullopt;
+    }
+    bool isParamBipolar(int i) const { return fxstorage->p[fx_param_remap[i]].is_bipolar(); }
+    double getFXParamDiscreteStep(int i) const
+    {
+        const auto &p = fxstorage->p[fx_param_remap[i]];
+        if (p.valtype == vt_bool || p.ctrltype == ct_float_toggle)
+            return 1.;
+        if (p.valtype == vt_int && p.val_max.i > p.val_min.i)
+            return 0.99 / (static_cast<double>(p.val_max.i) - p.val_min.i);
+        return 0.;
+    }
     float getFXStorageValue01(int i) { return fxstorage->p[fx_param_remap[i]].get_value_f01(); }
     float getFXDefaultValue01(int i)
     {
@@ -247,7 +267,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     {
         return fxstorage->p[fx_param_remap[i]].appears_deactivated();
     }
-    bool canDeactitvate(int i) { return fxstorage->p[fx_param_remap[i]].can_deactivate(); }
+    bool canDeactivate(int i) { return fxstorage->p[fx_param_remap[i]].can_deactivate(); }
 
     virtual void parameterValueChanged(int parameterIndex, float newValue) override
     {
@@ -465,7 +485,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         case SurgeFX::ParamKind::Absolute:
             return canAbsolute(i) ? fxAbsolutedParams[i] : nullptr;
         case SurgeFX::ParamKind::Deactivated:
-            return canDeactitvate(i) ? fxDeactivatedParams[i] : nullptr;
+            return canDeactivate(i) ? fxDeactivatedParams[i] : nullptr;
         default:
             return nullptr;
         }
@@ -591,7 +611,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::atomic<bool> fxTypeChangedByHost{false};
 
     void prepareParametersAbsentAudio();
-    void setParameterByString(int i, const std::string &s);
+    bool setParameterByString(int i, const std::string &s);
     float getParameterValueForString(int i, const std::string &s);
     bool canSetParameterByString(int i);
 

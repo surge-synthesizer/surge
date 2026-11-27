@@ -1,0 +1,12 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "left": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Left", "position": {"x": 19, "y": 14, "w": 58, "h": 58}},
+    "extend": {"class": "extendLight", "binding": {"type": "fx-param", "index": 0}, "position": {"x": 77, "y": 15, "w": 10, "h": 10}},
+    "right": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Right", "position": {"x": 147, "y": 14, "w": 58, "h": 58}},
+    "section1_0": {"class": "group", "label": "Delay", "position": {"x": 4, "y": 145, "w": 122, "h": 18}},
+    "time": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Time", "position": {"x": 14, "y": 168, "w": 40, "h": 40}},
+    "feedback": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Fdbk", "position": {"x": 76, "y": 168, "w": 40, "h": 40}},
+    "mix": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Mix", "position": {"x": 158, "y": 168, "w": 40, "h": 40}}
+  }
+}

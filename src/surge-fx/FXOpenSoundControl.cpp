@@ -82,23 +82,33 @@ void FXOpenSoundControl::tryOSCStartup()
 
 bool FXOpenSoundControl::initOSCIn(int port)
 {
-    if (port < 1)
+    if (port < 1 || port > 65535)
+        return false;
+    if (listening && port == iportnum)
+        return true;
+
+    // Bind first so an unavailable port doesn't interrupt the current listener.
+    auto socket = std::make_unique<juce::DatagramSocket>(false);
+    socket->setEnablePortReuse(false);
+    if (!socket->bindToPort(port))
+        return false;
+
+    if (!listening)
+        addListener(this);
+    if (!connectToSocket(*socket))
     {
+        if (!listening)
+            removeListener(this);
         return false;
     }
 
-    if (connect(port))
-    {
-        addListener(this);
-        listening = true;
-        iportnum = port;
-        sfxPtr->oscReceiving = true;
-        sfxPtr->oscStartIn = true;
-        sfxPtr->oscPortIn = port;
-        return true;
-    }
-
-    return false;
+    inputSocket = std::move(socket);
+    listening = true;
+    iportnum = port;
+    sfxPtr->oscReceiving = true;
+    sfxPtr->oscStartIn = true;
+    sfxPtr->oscPortIn = port;
+    return true;
 }
 
 void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
@@ -108,6 +118,8 @@ void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
         return;
     }
 
+    disconnect();
+    inputSocket.reset();
     removeListener(this);
     listening = false;
 

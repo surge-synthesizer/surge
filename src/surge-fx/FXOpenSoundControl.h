@@ -65,6 +65,7 @@ class FXOpenSoundControl : public juce::OSCReceiver,
     */
 
   private:
+    std::unique_ptr<juce::DatagramSocket> inputSocket;
     SurgeStorage *storage{nullptr};
     SurgefxAudioProcessor *sfxPtr{nullptr};
     std::string getWholeString(const juce::OSCMessage &message);

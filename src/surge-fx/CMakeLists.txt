@@ -1,19 +1,50 @@
 # vi:set sw=2 et:
 project(surge-fx VERSION ${CMAKE_PROJECT_VERSION})
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/libs/sst/sst-jucegui
+                 ${CMAKE_CURRENT_BINARY_DIR}/sst-jucegui EXCLUDE_FROM_ALL)
+
 if(WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4)
   set(SURGE_FX_PRODUCT_NAME "Surge XT Effects (32-bit)")
 else()
   set(SURGE_FX_PRODUCT_NAME "Surge XT Effects")
 endif()
 
-file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
-  ${CMAKE_SOURCE_DIR}/resources/surge-fx/*.svg
-  ${CMAKE_SOURCE_DIR}/resources/surge-fx/icons/*.svg
-  )
-
 juce_add_binary_data(surge-fx-binary
-  SOURCES ${SURGE_FX_BANK_RESOURCES_GLOB}
+  SOURCES
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/classes.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/airwindows.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/audio_input.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/bonsai.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/chorus.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/chow.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/combulator.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/conditioner.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/convolution.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/delay.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/distortion.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/ensemble.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/exciter.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/flanger.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/floaty_delay.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/frequency_shifter.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/graphic_eq.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/mid_side.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/neuron.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/nimbus.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/off.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/parametric_eq.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/phaser.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/resonator.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/reverb1.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/reverb2.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/ring_modulator.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/rotary_speaker.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/spring_reverb.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/tape.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/treemonster.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/vocoder.json
+    ${CMAKE_SOURCE_DIR}/resources/surge-fx/layouts/waveshaper.json
   )
 
 juce_add_plugin(${PROJECT_NAME}
@@ -57,7 +88,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.h
   SurgeFXProcessor.cpp
   SurgeFXProcessor.h
-  SurgeLookAndFeel.h
+  FXWidgets.h
+  EffectPanel.h
   FXOpenSoundControl.cpp
   FXOpenSoundControl.h
   )
@@ -67,7 +99,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-fx-binary
   surge-juce
   surge-platform
-  #sst-jucegui
+  sst-jucegui
   juce::juce_audio_utils
   juce::juce_audio_processors
   juce::juce_osc

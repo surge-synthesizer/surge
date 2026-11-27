@@ -22,34 +22,73 @@
 
 #include "SurgeFXProcessor.h"
 #include "SurgeFXEditor.h"
+#include "sst/jucegui/components/RuledLabel.h"
+#include "dsp/effects/DelayEffect.h"
+#include "dsp/effects/airwindows/AirWindowsEffect.h"
+
+#include <charconv>
+#include <map>
 #include "FxPresetAndClipboardManager.h"
 #include "tinyxml/tinyxml.h"
 #include "fmt/core.h"
 #include "SurgeStorage.h"
 
-static void drawUpDownArrows(juce::Graphics &g, juce::Rectangle<float> arrowRect,
-                             juce::Colour colour)
+namespace effectPanel = surge::fx::effectPanel;
+
+namespace
 {
-    g.setColour(colour);
+// As in Shortcircuit, focus the value field after the popup has opened.
+class MenuValueEntry : public juce::PopupMenu::CustomComponent
+{
+  public:
+    MenuValueEntry(const juce::String &name, const juce::String &value,
+                   std::function<bool(const juce::String &)> commit)
+        : CustomComponent(false)
+    {
+        input.setTitle(name);
+        input.setFont(effectPanel::font().withHeight(effectPanel::captionFontHeight));
+        input.setColour(juce::TextEditor::backgroundColourId, effectPanel::panelColour);
+        input.setColour(juce::TextEditor::textColourId, effectPanel::text());
+        input.setColour(juce::TextEditor::focusedOutlineColourId, effectPanel::accent());
+        input.setText(value, false);
+        input.onReturnKey = [this, commit = std::move(commit)] {
+            if (commit(input.getText()))
+                triggerMenuItem();
+            else
+            {
+                input.setColour(juce::TextEditor::focusedOutlineColourId, juce::Colours::salmon);
+                input.selectAll();
+            }
+        };
+        input.onEscapeKey = [this] { triggerMenuItem(); };
+        addAndMakeVisible(input);
+    }
 
-    const float w = arrowRect.getWidth();
-    const float h = arrowRect.getHeight();
-    const float cx = arrowRect.getCentreX();
-    const float cy = arrowRect.getCentreY();
-    const float sz = std::min(w * 0.25f, h * 0.25f);
-    const float gap = sz * 0.8f;
+    void getIdealSize(int &width, int &height) override
+    {
+        width = 156;
+        height = 22;
+    }
 
-    juce::Path up;
-    up.addTriangle(cx - sz, cy - gap, cx + sz, cy - gap, cx, cy - gap - sz * 1.25f);
-    g.fillPath(up);
+    void resized() override { input.setBounds(getLocalBounds().reduced(3, 1)); }
 
-    juce::Path dn;
-    dn.addTriangle(cx - sz, cy + gap, cx + sz, cy + gap, cx, cy + gap + sz * 1.25f);
-    g.fillPath(dn);
-}
+    void visibilityChanged() override
+    {
+        if (!isVisible())
+            return;
+        juce::Timer::callAfterDelay(2, [safe = juce::Component::SafePointer(&input)] {
+            if (safe && safe->isShowing())
+            {
+                safe->grabKeyboardFocus();
+                safe->selectAll();
+            }
+        });
+    }
 
-static constexpr float arrowZoneWidth = 24.f;
-static constexpr float pickerFontSize = 20.f;
+  private:
+    juce::TextEditor input;
+};
+} // namespace
 
 struct PickerBase : public juce::Component
 {
@@ -59,48 +98,40 @@ struct PickerBase : public juce::Component
         setTitle(accessibleName);
         setDescription(accessibleName);
         setWantsKeyboardFocus(true);
+        setMouseCursor(juce::MouseCursor::PointingHandCursor);
+    }
+
+    bool menuOpen{false};
+
+    void paintFocus(juce::Graphics &g)
+    {
+        if (showFocusOutline && hasKeyboardFocus(false) && !menuOpen)
+        {
+            g.setColour(effectPanel::borderColour);
+            g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(0.5f), 3.f, 1.f);
+        }
+    }
+    void focusGained(FocusChangeType cause) override
+    {
+        if (cause != focusChangedDirectly)
+            showFocusOutline = cause == focusChangedByTabKey;
+        repaint();
+    }
+    bool showFocusOutline{false};
+    void focusLost(FocusChangeType) override { repaint(); }
+
+    static void drawMenuArrow(juce::Graphics &g, juce::Rectangle<float> bounds)
+    {
+        const auto x = bounds.getRight() - 8.f;
+        const auto y = bounds.getCentreY();
+        juce::Path arrow;
+        arrow.addTriangle(x - 3.f, y - 1.5f, x + 3.f, y - 1.5f, x, y + 2.f);
+        g.fillPath(arrow);
     }
 
     virtual std::string currentLabel() const = 0;
     virtual void openMenu() = 0;
     virtual void step(int direction) = 0;
-
-    float arrowSplitX() const { return getWidth() - arrowZoneWidth * editor->getImpliedZoom(); }
-
-    void paint(juce::Graphics &g) override
-    {
-        auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
-        auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
-        auto textCol = findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay);
-
-        g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledBg));
-        g.fillRoundedRectangle(bounds, 5);
-        g.setColour(edge);
-        g.drawRoundedRectangle(bounds, 5, 1);
-
-        const float splitX = arrowSplitX();
-        g.setColour(edge.withAlpha(0.5f));
-        g.drawLine(splitX, bounds.getY() + 4, splitX, bounds.getBottom() - 4, 1.f);
-
-        if (!isLabelHidden())
-        {
-            g.setColour(textCol);
-            g.setFont(SST_JUCE_FONT_OPTIONS(pickerFontSize * editor->getImpliedZoom()));
-            g.drawText(currentLabel(), labelBounds(), juce::Justification::centred, true);
-        }
-
-        drawUpDownArrows(g, bounds.withLeft(splitX), textCol);
-    }
-
-    // The area left of the divider where the label is drawn
-    juce::Rectangle<float> labelBounds() const
-    {
-        auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
-
-        return bounds.withWidth(arrowSplitX() - bounds.getX() - 4.f).reduced(8, 3);
-    }
-
-    virtual bool isLabelHidden() const { return false; }
 
     bool keyPressed(const juce::KeyPress &p) override
     {
@@ -125,18 +156,11 @@ struct PickerBase : public juce::Component
         return false;
     }
 
-    void mouseDown(const juce::MouseEvent &e) override
+    void mouseDown(const juce::MouseEvent &) override
     {
-        if (e.x >= arrowSplitX())
-        {
-
-            const float mid = getHeight() * 0.5f;
-            step(e.y < mid ? -1 : 1);
-        }
-        else
-        {
-            openMenu();
-        }
+        showFocusOutline = false;
+        repaint();
+        openMenu();
     }
 
     void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &wheel) override
@@ -208,7 +232,19 @@ struct Picker : public PickerBase
         return fx_type_names[editor->processor.getEffectType()];
     }
 
-    void openMenu() override { editor->showMenu(); }
+    void paint(juce::Graphics &g) override
+    {
+        const auto bounds = getLocalBounds().toFloat();
+        paintFocus(g);
+        g.setColour(menuOpen ? effectPanel::accent() : effectPanel::text());
+        g.fillRoundedRectangle(1.f, bounds.getCentreY() - 4.f, 8.f, 8.f, 1.f);
+        g.setFont(effectPanel::font().withHeight(15.f));
+        g.drawText(currentLabel(), bounds.withTrimmedLeft(13.f).withTrimmedRight(13.f),
+                   juce::Justification::centredLeft, true);
+        drawMenuArrow(g, bounds);
+    }
+
+    void openMenu() override { editor->showEffectMenu(); }
 
     // Walk the editor's menu list to find the next/previous selectable FX entry
     // relative to the currently active effect type, wrapping around at the ends.
@@ -256,6 +292,48 @@ struct Picker : public PickerBase
     }
 };
 
+struct PanelGlyphButton : juce::Button
+{
+    using Glyph = sst::jucegui::components::GlyphPainter;
+
+    PanelGlyphButton(const juce::String &label, Glyph::GlyphType icon) : Button(label), glyph(icon)
+    {
+        setTooltip(label);
+        setMouseCursor(juce::MouseCursor::PointingHandCursor);
+    }
+
+    void focusGained(FocusChangeType cause) override
+    {
+        if (cause != focusChangedDirectly)
+            showFocusOutline = cause == focusChangedByTabKey;
+        Button::focusGained(cause);
+    }
+
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        showFocusOutline = false;
+        repaint();
+        Button::mouseDown(event);
+    }
+
+    void paintButton(juce::Graphics &g, bool highlighted, bool down) override
+    {
+        const bool active = isToggleable() ? getToggleState() : highlighted || down;
+        // The settings SVG has generous padding around the gear.
+        const int size = glyph == Glyph::SETTINGS ? 26 : 18;
+        Glyph::paintGlyph(g, getLocalBounds().withSizeKeepingCentre(size, size), glyph,
+                          active ? effectPanel::accent() : effectPanel::text());
+        if (showFocusOutline && hasKeyboardFocus(false))
+        {
+            g.setColour(effectPanel::borderColour);
+            g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.f), 3.f, 1.f);
+        }
+    }
+
+    Glyph::GlyphType glyph;
+    bool showFocusOutline{false};
+};
+
 struct PresetPicker : public PickerBase, juce::TextEditor::Listener
 {
     PresetPicker(SurgefxAudioProcessorEditor *ed) : PickerBase(ed, "FX Preset") {}
@@ -264,6 +342,25 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
     std::function<void(const std::string &)> onNameCommit;
     bool editingName{false};
 
+    void paint(juce::Graphics &g) override
+    {
+        const auto bounds = getLocalBounds().toFloat();
+        if (editingName)
+        {
+            g.setColour(effectPanel::surroundColour);
+            g.fillRoundedRectangle(bounds, 3.f);
+            g.setColour(effectPanel::accent());
+            g.drawRoundedRectangle(bounds.reduced(0.5f), 3.f, 1.f);
+            return;
+        }
+
+        paintFocus(g);
+        g.setColour(menuOpen ? effectPanel::accent() : effectPanel::text());
+        for (int i = -1; i <= 1; ++i)
+            g.fillEllipse(bounds.getCentreX() + 6.f * i - 1.5f, bounds.getCentreY() - 1.5f, 3.f,
+                          3.f);
+    }
+
     // Turns the label into a text field. Enter hands the typed text to onCommit, while
     // Escape or clicking elsewhere cancels.
     void beginNameEdit(const std::string &initialText,
@@ -271,8 +368,7 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
     {
         if (!nameEditor)
         {
-            auto textCol = findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay);
-            auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
+            auto textCol = effectPanel::accent();
 
             nameEditor = std::make_unique<juce::TextEditor>();
             nameEditor->setColour(juce::TextEditor::backgroundColourId,
@@ -282,7 +378,7 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
             nameEditor->setColour(juce::TextEditor::focusedOutlineColourId,
                                   juce::Colours::transparentBlack);
             nameEditor->setColour(juce::TextEditor::textColourId, textCol);
-            nameEditor->setColour(juce::TextEditor::highlightColourId, edge.withAlpha(0.5f));
+            nameEditor->setColour(juce::TextEditor::highlightColourId, textCol.withAlpha(0.3f));
             nameEditor->setColour(juce::TextEditor::highlightedTextColourId, textCol);
             nameEditor->setColour(juce::CaretComponent::caretColourId, textCol);
             nameEditor->setJustification(juce::Justification::centred);
@@ -295,10 +391,11 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
         onNameCommit = std::move(onCommit);
         editingName = true;
 
-        resized();
+        editor->resized();
+        toFront(false);
         nameEditor->setText(initialText, juce::NotificationType::dontSendNotification);
         nameEditor->setVisible(true);
-        repaint();
+        editor->repaint();
 
         // Grab focus once the popup menu that started this has fully gone away, so it
         // can't take focus back
@@ -325,7 +422,8 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
         onNameCommit = nullptr;
 
         nameEditor->setVisible(false);
-        repaint();
+        editor->resized();
+        editor->repaint();
 
         if (commit && cb)
         {
@@ -337,16 +435,12 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
     {
         if (nameEditor)
         {
-            auto font =
-                juce::Font(SST_JUCE_FONT_OPTIONS(pickerFontSize * editor->getImpliedZoom()));
-
+            const auto font = effectPanel::font();
             nameEditor->setFont(font);
             nameEditor->applyFontToAllText(font);
-            nameEditor->setBounds(labelBounds().toNearestIntEdges());
+            nameEditor->setBounds(getLocalBounds().reduced(4, 0));
         }
     }
-
-    bool isLabelHidden() const override { return editingName; }
 
     void textEditorReturnKeyPressed(juce::TextEditor &) override { endNameEdit(true); }
     void textEditorEscapeKeyPressed(juce::TextEditor &) override { endNameEdit(false); }
@@ -366,18 +460,6 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
 
     void openMenu() override { editor->showPresetMenu(); }
 
-    void mouseDown(const juce::MouseEvent &e) override
-    {
-        // Right-click is a shortcut for Save FX Preset As...
-        if (e.mods.isPopupMenu())
-        {
-            editor->saveCurrentPreset();
-            return;
-        }
-
-        PickerBase::mouseDown(e);
-    }
-
     void step(int direction) override
     {
         // Keeps the mouse wheel from changing presets underneath the name being typed
@@ -389,35 +471,25 @@ struct PresetPicker : public PickerBase, juce::TextEditor::Listener
 };
 
 //==============================================================================
-void SurgefxAudioProcessorEditor::mouseDown(const juce::MouseEvent &e)
+void SurgefxAudioProcessorEditor::mouseEnter(const juce::MouseEvent &e)
 {
-    if (e.mods.isAltDown())
+    for (int i = 0; i < n_fx_params; ++i)
     {
-        for (int i = 0; i < n_fx_params; ++i)
+        if (e.eventComponent == &fxParamKnobs[i])
         {
-            if (&fxParamSliders[i] == e.eventComponent)
-            {
-                rubberbandParamIdx = i;
-            }
+            hoveredParam = i;
+            repaint();
+            break;
         }
-
-        rubberbandValue = (float)fxParamSliders[rubberbandParamIdx].getValue();
-        rubberbandMode = true;
     }
 }
 
-void SurgefxAudioProcessorEditor::mouseUp(const juce::MouseEvent &e)
+void SurgefxAudioProcessorEditor::mouseExit(const juce::MouseEvent &e)
 {
-    if (rubberbandMode && rubberbandParamIdx > -1)
+    if (hoveredParam >= 0 && e.eventComponent == &fxParamKnobs[hoveredParam])
     {
-        const auto idx = rubberbandParamIdx;
-
-        processor.setFXParamValue01(idx, rubberbandValue, false);
-        fxParamSliders[idx].setValue(rubberbandValue, juce::NotificationType::dontSendNotification);
-        fxParamDisplay[idx].setDisplay(processor.getParamValue(idx));
-        fxParamSliders[idx].setTextValue(processor.getParamValue(idx).c_str());
-
-        rubberbandMode = false;
+        hoveredParam = -1;
+        repaint();
     }
 }
 
@@ -429,11 +501,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
-    makeMenu();
+    buildEffectMenu();
 
-    surgeLookFeel.reset(new SurgeLookAndFeel());
-    setLookAndFeel(surgeLookFeel.get());
-    juce::LookAndFeel::setDefaultLookAndFeel(surgeLookFeel.get());
+    lookAndFeel.setStyle(effectPanel::panelStyle());
+    popupLayer.setInterceptsMouseClicks(false, true);
+    popupLayer.setAlwaysOnTop(true);
+    addAndMakeVisible(popupLayer);
 
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
@@ -489,55 +562,54 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     selectPresetByStoredName();
     lastSeenEffectType = processor.getEffectType();
 
+    tempoSyncPicker =
+        std::make_unique<PanelGlyphButton>("Tempo sync all", PanelGlyphButton::Glyph::METRONOME);
+    tempoSyncPicker->setClickingTogglesState(true);
+    tempoSyncPicker->onClick = [this] { toggleTempoSync(); };
+    addAndMakeVisibleRecordOrder(tempoSyncPicker.get());
+
     presetPicker = std::make_unique<PresetPicker>(this);
     addAndMakeVisibleRecordOrder(presetPicker.get());
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        fxParamSliders[i].setRange(0.0, 1.0, 0.0);
-        fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
-                                   juce::NotificationType::dontSendNotification);
-        fxParamSliders[i].setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-        fxParamSliders[i].setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0,
-                                          0);
-        fxParamSliders[i].setMouseDragSensitivity(750);
-        fxParamSliders[i].setVelocityModeParameters(0.04, 1, 0.04, true,
-                                                    juce::ModifierKeys::shiftModifier);
-        fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
-        fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
-        fxParamSliders[i].addMouseListener(this, false);
-        fxParamSliders[i].onValueChange = [i, this]() {
-            const bool forceInteger = juce::ModifierKeys::getCurrentModifiers().isCtrlDown();
-
+        auto &knob = fxParamKnobs[i];
+        const auto style = effectPanel::panelStyle();
+        knob.setStyle(style);
+        knob.addMouseListener(this, false);
+        knob.binding.editText = [this, i](const std::string &value) {
+            if (!processor.setParameterByString(i, value))
+                return false;
+            fxParamKnobs[i].update(processor.getFXStorageValue01(i), processor.getParamValue(i));
+            repaint();
+            return true;
+        };
+        knob.binding.edit = [this, i](float value, bool quantized) {
             processor.prepareParametersAbsentAudio();
-            processor.setFXParamValue01(i, this->fxParamSliders[i].getValue(), forceInteger);
+            processor.setFXParamValue01(i, value, quantized);
+            fxParamKnobs[i].update(processor.getFXStorageValue01(i), processor.getParamValue(i));
+            if (processor.getEffectType() == fxt_nimbus && processor.getStorageParamIndex(i) == 0)
+                refreshParameterControls();
+            else if (hoveredParam == i || fxParamKnobs[i].hasKeyboardFocus(false))
+                repaint();
+        };
+        knob.onPopupMenu = [this, i](const auto &) { showParameterMenu(i); };
+        knob.onBeginEdit = [this, i]() { processor.setUserEditingFXParam(i, true); };
+        knob.onEndEdit = [this, i]() { processor.setUserEditingFXParam(i, false); };
+        addAndMakeVisibleRecordOrder(&knob);
 
-            if (forceInteger)
-            {
-                fxParamSliders[i].setValue(processor.getFXParamValue01(i),
-                                           juce::NotificationType::dontSendNotification);
-            }
+        fxParamLabels[i].setStyle(style);
+        fxParamLabels[i].setAccessible(false); // The knob exposes the parameter name.
+        fxParamLabels[i].setInterceptsMouseClicks(false, false);
+        addChildComponent(fxParamLabels[i]);
 
-            fxParamDisplay[i].setDisplay(processor.getParamValue(i));
-            fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
-        };
-        fxParamSliders[i].onPopupMenu = [this, i]() {
-            if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Knob))
-            {
-                showHostContextMenuFor(param);
-            }
-        };
-        fxParamSliders[i].onDragStart = [i, this]() {
-            this->processor.setUserEditingFXParam(i, true);
-        };
-        fxParamSliders[i].onDragEnd = [i, this]() {
-            this->processor.setUserEditingFXParam(i, false);
-        };
-        fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
-        addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
+        using Glyph = sst::jucegui::components::GlyphPainter;
+        fxDeactivated[i].binding.invert = true;
+        fxDeactivated[i].setStyle(style);
+        fxDeactivated[i].setGlyph(Glyph::SMALL_POWER_LIGHT);
+        fxExtended[i].setStyle(style);
+        fxExtended[i].setGlyph(Glyph::PLUS_MINUS);
 
-        fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
-                                     BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
@@ -545,22 +617,20 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamTempoSync(i, this->fxTempoSync[i].getToggleState());
             this->processor.setFXStorageTempoSync(i, this->fxTempoSync[i].getToggleState());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamKnobs[i].update(processor.getFXStorageValue01(i), processor.getParamValue(i));
             this->processor.setUserEditingParamFeature(i, false);
+            refreshTempoSyncButton();
+            repaint();
         };
-        fxTempoSync[i].onPopupMenu = [this, i]() {
+        fxTempoSync[i].onPopupMenu = [this, i](const auto &) {
             if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::TempoSync))
             {
                 showHostContextMenuFor(param);
             }
         };
         fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " Tempo Sync");
-        addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
-        fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
-                                       BinaryData::DE_Deact_svg, BinaryData::DE_Deact_svgSize);
-        fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
+        fxDeactivated[i].setEnabled(processor.canDeactivate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
         fxDeactivated[i].onClick = [i, this]() {
@@ -569,10 +639,10 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setFXStorageDeactivated(i, this->fxDeactivated[i].getToggleState());
 
             // Special case - coupled dectivation
-            this->resetLabels();
+            this->refreshParameterControls();
             this->processor.setUserEditingParamFeature(i, false);
         };
-        fxDeactivated[i].onPopupMenu = [this, i]() {
+        fxDeactivated[i].onPopupMenu = [this, i](const auto &) {
             if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Deactivated))
             {
                 showHostContextMenuFor(param);
@@ -581,8 +651,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
         addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
 
-        fxExtended[i].setOnOffImage(BinaryData::EX_Act_svg, BinaryData::EX_Act_svgSize,
-                                    BinaryData::EX_Deact_svg, BinaryData::EX_Deact_svgSize);
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
                                      juce::NotificationType::dontSendNotification);
@@ -590,21 +658,19 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamExtended(i, this->fxExtended[i].getToggleState());
             this->processor.setFXStorageExtended(i, this->fxExtended[i].getToggleState());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamKnobs[i].update(processor.getFXStorageValue01(i), processor.getParamValue(i));
             this->processor.setUserEditingParamFeature(i, false);
         };
-        fxExtended[i].onPopupMenu = [this, i]() {
+        fxExtended[i].onPopupMenu = [this, i](const auto &) {
             if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Extended))
             {
                 showHostContextMenuFor(param);
             }
         };
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
-        addAndMakeVisibleRecordOrder(&(fxExtended[i]));
+        addAndMakeVisibleRecordOrder(&fxExtended[i]);
+        fxExtended[i].setVisible(false);
 
-        fxAbsoluted[i].setOnOffImage(BinaryData::AB_Act_svg, BinaryData::AB_Act_svgSize,
-                                     BinaryData::AB_Deact_svg, BinaryData::AB_Deact_svgSize);
         fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
         fxAbsoluted[i].setToggleState(processor.getFXParamAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
@@ -612,58 +678,32 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamAbsolute(i, this->fxAbsoluted[i].getToggleState());
             this->processor.setFXStorageAbsolute(i, this->fxAbsoluted[i].getToggleState());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamKnobs[i].update(processor.getFXStorageValue01(i), processor.getParamValue(i));
             this->processor.setUserEditingParamFeature(i, false);
         };
-        fxAbsoluted[i].onPopupMenu = [this, i]() {
+        fxAbsoluted[i].onPopupMenu = [this, i](const auto &) {
             if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Absolute))
             {
                 showHostContextMenuFor(param);
             }
         };
         fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absolute");
-        addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
-
-        processor.prepareParametersAbsentAudio();
-
-        fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
-        fxParamDisplay[i].setName(processor.getParamName(i).c_str());
-        fxParamDisplay[i].setDisplay(processor.getParamValue(i));
-        fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
-        fxParamDisplay[i].onOverlayEntered = [i, this](const std::string &s) {
-            processor.setParameterByString(i, s);
-        };
-        addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
-
-    logoButton = std::make_unique<LogoButton>();
-    logoButton->logo = juce::Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlack_svg,
-                                                           BinaryData::SurgeLogoOnlyBlack_svgSize);
-    logoButton->onClick = [this]() { showLogoMenu(); };
-    addAndMakeVisibleRecordOrder(logoButton.get());
-
-    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
-    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26));
-    fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
-    fxNameLabel->setJustificationType(juce::Justification::centredLeft);
-    addAndMakeVisibleRecordOrder(fxNameLabel.get());
 
     this->processor.setParameterChangeListener([this]() { this->triggerAsyncUpdate(); });
 
     setTitle("Surge XT Effects");
     setDescription("Surge XT Effects");
-    resetLabels();
+    settingsButton =
+        std::make_unique<PanelGlyphButton>("Settings", PanelGlyphButton::Glyph::SETTINGS);
+    settingsButton->onClick = [this] { showSettingsMenu(); };
+    addAndMakeVisibleRecordOrder(settingsButton.get());
+    refreshParameterControls();
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    auto dzf = Surge::Storage::getUserDefaultValue(processor.storage.get(),
-                                                   Surge::Storage::FXUnitDefaultZoom, 100);
-
-    setSize(0.01 * dzf * baseWidth, 0.01 * dzf * baseHeight);
-    setResizable(true, true);
-    getConstrainer()->setMinimumWidth(baseWidth * 0.75);
-    getConstrainer()->setFixedAspectRatio(baseWidth * 1.0 / baseHeight);
+    setZoomPercent(effectPanel::defaultZoom);
+    setResizable(false, false); // Resize only through the editor's zoom controls.
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 25);
@@ -672,17 +712,19 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 juce::PopupMenu SurgefxAudioProcessorEditor::modifyHostMenu(juce::PopupMenu menu,
                                                             juce::AudioProcessorParameter *param)
 {
+    const juce::PluginHostType host;
+    if (!host.isFruityLoops() && !host.isReaper())
+        return menu;
+
     auto newMenu = juce::PopupMenu();
 
     const auto kind = processor.paramKindForIndex[param->getParameterIndex()];
     const auto slot = processor.paramSlotForIndex[param->getParameterIndex()];
-
     newMenu.addSectionHeader(processor.getMutableName(kind, slot));
-
     newMenu.addSeparator();
 
     // make things look a bit nicer for our friends from Image-Line
-    if (juce::PluginHostType().isFruityLoops())
+    if (host.isFruityLoops())
     {
         auto it = juce::PopupMenu::MenuItemIterator(menu);
 
@@ -701,7 +743,7 @@ juce::PopupMenu SurgefxAudioProcessorEditor::modifyHostMenu(juce::PopupMenu menu
     }
 
     // we really don't need that parameter name repeated in Reaper...
-    if (juce::PluginHostType().isReaper())
+    else if (host.isReaper())
     {
         auto it = juce::PopupMenu::MenuItemIterator(menu);
 
@@ -750,9 +792,10 @@ void SurgefxAudioProcessorEditor::parentHierarchyChanged()
     AudioProcessorEditor::parentHierarchyChanged();
 }
 
-void SurgefxAudioProcessorEditor::resetLabels()
+void SurgefxAudioProcessorEditor::refreshParameterControls()
 {
     processor.prepareParametersAbsentAudio();
+    const auto &layout = effectPanel::layout(processor.getEffectType());
 
     auto st = [](auto &thing, const std::string &title) {
         thing.setTitle(title);
@@ -766,23 +809,28 @@ void SurgefxAudioProcessorEditor::resetLabels()
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
-        fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
-                                   juce::NotificationType::dontSendNotification);
-        fxParamSliders[i].setDoubleClickReturnValue(true, processor.getFXDefaultValue01(i),
-                                                    juce::ModifierKeys());
-        fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
-                                     !processor.getFXStorageAppearsDeactivated(i));
-
-        st(fxParamSliders[i], nm + " Knob");
-        fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
-
-        fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
-        fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
-        fxParamDisplay[i].setName(processor.getParamName(i).c_str());
-        fxParamDisplay[i].allowsTypein = processor.canSetParameterByString(i);
-
-        fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
-        fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
+        auto &knob = fxParamKnobs[i];
+        knob.binding.name = juce::String(nm).trim().toStdString();
+        knob.binding.defaultValue = processor.getFXDefaultValue01(i);
+        knob.binding.discreteStep = processor.getFXParamDiscreteStep(i);
+        knob.setAlwaysQuantize(knob.binding.discreteStep > 0.f);
+        knob.binding.bipolar = processor.isParamBipolar(i);
+        knob.binding.acceptsText = processor.canSetParameterByString(i);
+        const auto slot = processor.getStorageParamIndex(i);
+        using Kind = effectPanel::Kind;
+        using Presentation = surge::fx::ParameterKnob::Presentation;
+        const auto display = std::ranges::find_if(layout, [slot](const auto &c) {
+            return c.slot == slot && (c.kind == Kind::choice || c.kind == Kind::fader);
+        });
+        auto presentation = Presentation::rotary;
+        if (display != layout.end())
+            presentation =
+                display->kind == Kind::choice ? Presentation::choice : Presentation::fader;
+        knob.setPresentation(presentation);
+        knob.binding.blocked = processor.getFXStorageAppearsDeactivated(i);
+        knob.setEnabled(processor.getParamEnabled(i));
+        st(knob, knob.binding.name);
+        knob.update(processor.getFXStorageValue01(i), processor.getParamValue(i));
 
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setAccessible(processor.canTempoSync(i));
@@ -802,11 +850,11 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
         st(fxAbsoluted[i], nm + " Absolute");
 
-        fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
+        fxDeactivated[i].setEnabled(processor.canDeactivate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
-        fxDeactivated[i].setAccessible(processor.canDeactitvate(i));
-        st(fxDeactivated[i], nm + " Deactivated");
+        fxDeactivated[i].setAccessible(processor.canDeactivate(i));
+        st(fxDeactivated[i], nm + " Enabled");
     }
 
     picker->repaint();
@@ -814,6 +862,9 @@ void SurgefxAudioProcessorEditor::resetLabels()
     {
         presetPicker->repaint();
     }
+
+    resized();
+    repaint();
 
     if (auto h = getAccessibilityHandler())
     {
@@ -824,7 +875,6 @@ void SurgefxAudioProcessorEditor::resetLabels()
 void SurgefxAudioProcessorEditor::setEffectType(int i)
 {
     processor.resetFxType(i);
-    blastToggleState(i - 1);
 
     // Rebuild preset list for the new FX type and reset selection. The settings are the new
     // type's defaults now, not the previously loaded preset.
@@ -833,7 +883,7 @@ void SurgefxAudioProcessorEditor::setEffectType(int i)
     currentPresetIndex = defaultPresetIndexForCurrentType();
     lastSeenEffectType = i;
 
-    resetLabels();
+    refreshParameterControls();
     picker->repaint();
 
     if (presetPicker)
@@ -857,8 +907,12 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             if (i < n_fx_params)
             {
-                fxParamSliders[i].setValue(fv[i], juce::NotificationType::dontSendNotification);
-                fxParamDisplay[i].setDisplay(processor.getParamValueFor(i, fv[i]));
+                fxParamKnobs[i].update(fv[i], processor.getParamValueFor(i, fv[i]));
+                if (processor.getEffectType() == fxt_nimbus &&
+                    processor.getStorageParamIndex(i) == 0)
+                    refreshParameterControls();
+                else if (hoveredParam == i || fxParamKnobs[i].hasKeyboardFocus(false))
+                    repaint();
             }
             else
             {
@@ -874,20 +928,22 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
                 if (newType != lastSeenEffectType)
                 {
                     lastSeenEffectType = newType;
-                    blastToggleState(newType - 1);
                     rebuildCurrentPresets();
 
                     // A host type change has already dropped the stored name, while a state
                     // restore has just set the one to select
                     selectPresetByStoredName();
-                    resetLabels();
                 }
+
+                // The processor also signals metadata changes without a type change,
+                // e.g. when Airwindows finishes configuring a different algorithm.
+                refreshParameterControls();
             }
         }
 
         bool anyDeactivationChanged{false};
 
-        auto syncToggle = [](SurgeParamOptionSwitch &sw, bool newState) -> bool {
+        auto syncToggle = [](surge::fx::ParameterOption &sw, bool newState) -> bool {
             const bool old = sw.getToggleState();
             sw.setToggleState(newState, juce::NotificationType::dontSendNotification);
             return old != newState;
@@ -897,7 +953,11 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             bool displayDirty = false;
 
-            displayDirty |= syncToggle(fxTempoSync[i], processor.getFXStorageTempoSync(i));
+            if (syncToggle(fxTempoSync[i], processor.getFXStorageTempoSync(i)))
+            {
+                refreshTempoSyncButton();
+                displayDirty = true;
+            }
             displayDirty |= syncToggle(fxExtended[i], processor.getFXStorageExtended(i));
             displayDirty |= syncToggle(fxAbsoluted[i], processor.getFXStorageAbsolute(i));
 
@@ -908,19 +968,17 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
 
             if (displayDirty)
             {
-                fxParamDisplay[i].setDisplay(
-                    processor.getParamValueFromFloat(i, fxParamSliders[i].getValue()));
+                fxParamKnobs[i].update(processor.getFXStorageValue01(i),
+                                       processor.getParamValue(i));
             }
         }
 
         if (anyDeactivationChanged)
         {
-            resetLabels();
+            refreshParameterControls();
         }
     }
 }
-
-void SurgefxAudioProcessorEditor::blastToggleState(int w) {}
 
 void SurgefxAudioProcessorEditor::rebuildCurrentPresets()
 {
@@ -1012,8 +1070,7 @@ void SurgefxAudioProcessorEditor::loadCurrentPreset()
     // cross an FX-type boundary.
     processor.loadFxPreset(preset);
     processor.setCurrentPresetName(preset.name);
-    blastToggleState(processor.getEffectType() - 1);
-    resetLabels();
+    refreshParameterControls();
 
     if (presetPicker)
     {
@@ -1023,59 +1080,46 @@ void SurgefxAudioProcessorEditor::loadCurrentPreset()
 
 void SurgefxAudioProcessorEditor::showPresetMenu()
 {
-    constexpr int itemsPerColumn = 25;
+    if (presetPicker->menuOpen)
+        return;
 
     auto p = juce::PopupMenu();
+    p.addSectionHeader(presetPicker->currentLabel());
 
-    auto addFunctionsAndShow = [this, &p]() {
-        p.addColumnBreak();
-        p.addSectionHeader("FUNCTIONS");
+    p.addItem(Surge::GUI::toOSCase("Save FX Preset As..."),
+              [w = juce::Component::SafePointer(this)]() {
+                  if (w)
+                  {
+                      w->saveCurrentPreset();
+                  }
+              });
 
-        p.addItem(Surge::GUI::toOSCase("Save FX Preset As..."),
-                  [w = juce::Component::SafePointer(this)]() {
-                      if (w)
-                      {
-                          w->saveCurrentPreset();
-                      }
-                  });
-
-        if (currentPresetIndex >= 0 && currentPresetIndex < (int)currentPresets.size() &&
-            !currentPresets[currentPresetIndex].isFactory &&
-            !currentPresets[currentPresetIndex].file.empty())
-        {
-            p.addItem(Surge::GUI::toOSCase("Delete FX Preset"),
-                      [w = juce::Component::SafePointer(this)]() {
-                          if (w)
-                          {
-                              w->deleteCurrentPreset();
-                          }
-                      });
-        }
-
-        p.addSeparator();
-
-        p.addItem(Surge::GUI::toOSCase("Refresh FX Preset List"),
-                  [w = juce::Component::SafePointer(this)]() {
-                      if (w)
-                      {
-                          w->refreshPresetList();
-                      }
-                  });
-
-        auto o =
-            juce::PopupMenu::Options()
-                .withTargetComponent(presetPicker.get())
-                .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
-
-        p.showMenuAsync(o);
-    };
-
-    if (currentPresets.empty())
+    if (currentPresetIndex >= 0 && currentPresetIndex < (int)currentPresets.size() &&
+        !currentPresets[currentPresetIndex].isFactory &&
+        !currentPresets[currentPresetIndex].file.empty())
     {
-        p.addItem("No presets available", false, false, []() {});
-        addFunctionsAndShow();
-        return;
+        p.addItem(Surge::GUI::toOSCase("Delete FX Preset"),
+                  [w = juce::Component::SafePointer(this)]() {
+                      if (w)
+                      {
+                          w->deleteCurrentPreset();
+                      }
+                  });
     }
+
+    p.addSeparator();
+
+    p.addItem(Surge::GUI::toOSCase("Refresh FX Preset List"),
+              [w = juce::Component::SafePointer(this)]() {
+                  if (w)
+                  {
+                      w->refreshPresetList();
+                  }
+              });
+
+    p.addSeparator();
+    if (currentPresets.empty())
+        p.addItem("No presets available", false, false, [] {});
 
     // Group by (isFactory, subPath), then list presets within each group.
     // Factory presets come first (already sorted that way by the scanner),
@@ -1102,8 +1146,6 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
         }
     };
 
-    int flatItemsInColumn = 0;
-
     for (int idx = 0; idx < (int)currentPresets.size(); ++idx)
     {
         const auto &preset = currentPresets[idx];
@@ -1121,13 +1163,7 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
         {
             flushSubMenu();
 
-            if (!firstSection)
-            {
-                p.addColumnBreak();
-            }
-
             firstSection = false;
-            flatItemsInColumn = 0;
 
             p.addSectionHeader(preset.isFactory ? "FACTORY" : "USER");
             lastIsFactory = preset.isFactory;
@@ -1138,15 +1174,7 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
         {
             flushSubMenu();
 
-            if (flatItemsInColumn >= itemsPerColumn)
-            {
-                p.addColumnBreak();
-                p.addSectionHeader("#GHOST#");
-                flatItemsInColumn = 0;
-            }
-
             addItem(p);
-            ++flatItemsInColumn;
         }
         else
         {
@@ -1162,7 +1190,18 @@ void SurgefxAudioProcessorEditor::showPresetMenu()
     }
 
     flushSubMenu();
-    addFunctionsAndShow();
+    presetPicker->menuOpen = true;
+    presetPicker->repaint();
+    p.showMenuAsync(
+        menuOptions(presetPicker.get())
+            .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards),
+        [safe = juce::Component::SafePointer(this)](int) {
+            if (safe)
+            {
+                safe->presetPicker->menuOpen = false;
+                safe->presetPicker->repaint();
+            }
+        });
 }
 
 void SurgefxAudioProcessorEditor::saveCurrentPreset()
@@ -1236,6 +1275,7 @@ void SurgefxAudioProcessorEditor::finishPresetSave()
         {
             presetPicker->repaint();
         }
+        repaint();
     }
 }
 
@@ -1318,6 +1358,7 @@ void SurgefxAudioProcessorEditor::rebuildCurrentPresetsKeepingSelection()
     {
         presetPicker->repaint();
     }
+    repaint();
 }
 
 void SurgefxAudioProcessorEditor::selectPresetByStoredName()
@@ -1359,114 +1400,266 @@ int SurgefxAudioProcessorEditor::findPresetIndex(bool isFactory, const fs::path 
 }
 
 //==============================================================================
+int SurgefxAudioProcessorEditor::getStatusParameter() const
+{
+    if (hoveredParam >= 0 && fxParamKnobs[hoveredParam].isVisible())
+        return hoveredParam;
+
+    for (int i = 0; i < n_fx_params; ++i)
+        if (fxParamKnobs[i].hasKeyboardFocus(false))
+            return i;
+    return -1;
+}
+
 void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 {
-    surgeLookFeel->paintComponentBackground(g, getWidth(), getHeight(), getImpliedZoom());
+    const auto panel = getLocalBounds().toFloat();
+    effectPanel::paint(g, panel);
+    if (panel.isEmpty())
+        return;
+
+    g.addTransform(effectPanel::panelTransform(panel));
+    g.setColour(effectPanel::borderColour);
+    const auto ruleStart = static_cast<float>(effectPanel::gutter);
+    const auto ruleEnd = ruleStart + effectPanel::contentWidth;
+    if (!presetPicker->editingName)
+    {
+        const auto right =
+            tempoSyncPicker->isVisible() ? tempoSyncPicker->getX() : presetPicker->getX();
+        if (right - picker->getRight() > 12)
+            g.drawHorizontalLine(effectPanel::headerArea.getCentreY(), picker->getRight() + 6.f,
+                                 right - 6.f);
+    }
+    g.drawHorizontalLine(effectPanel::statusArea.getY(), ruleStart, ruleEnd);
+    auto statusBounds = effectPanel::statusArea.withRight(settingsButton->getX() - 4);
+    juce::String status;
+    g.setFont(effectPanel::font().withHeight(11.f));
+    if (!processor.m_audioValid && !processor.m_audioValidMessage.empty())
+    {
+        status = processor.m_audioValidMessage;
+    }
+    else if (const auto param = getStatusParameter(); param >= 0)
+    {
+        status =
+            juce::String(processor.getParamName(param)) + ": " + fxParamKnobs[param].binding.text;
+        using Glyph = sst::jucegui::components::GlyphPainter;
+        const auto active = [](const auto &option) {
+            return option.isEnabled() && option.getToggleState();
+        };
+        const auto drawGlyph = [&](Glyph::GlyphType glyph) {
+            const auto area = statusBounds.removeFromRight(15).withSizeKeepingCentre(12, 12);
+            Glyph::paintGlyph(g, area, glyph, effectPanel::accent());
+        };
+        if (active(fxDeactivated[param]))
+        {
+            const bool linked =
+                processor.getEffectType() == fxt_delay &&
+                processor.getStorageParamIndex(param) == DelayEffect::dly_time_right;
+            drawGlyph(linked ? Glyph::LINK : Glyph::SMALL_POWER_LIGHT_OFF);
+        }
+        if (active(fxAbsoluted[param]))
+        {
+            g.setColour(effectPanel::accent());
+            g.drawText("|x|", statusBounds.removeFromRight(15), juce::Justification::centred);
+        }
+        if (active(fxExtended[param]))
+            drawGlyph(Glyph::PLUS_MINUS);
+        if (active(fxTempoSync[param]))
+            drawGlyph(Glyph::METRONOME);
+    }
+    g.setColour(status.isEmpty() ? effectPanel::text().withAlpha(0.55f) : effectPanel::accent());
+    g.drawText(status.isEmpty() ? juce::String("SURGE XT  /  EFFECTS") : status, statusBounds,
+               juce::Justification::centredLeft, true);
+
+    if (processor.getEffectType() == fxt_off)
+    {
+        g.setColour(effectPanel::text());
+        g.setFont(effectPanel::font().boldened());
+        g.drawText("No effect selected", effectPanel::gutter, 117, effectPanel::contentWidth, 22,
+                   juce::Justification::centred);
+        g.setColour(effectPanel::text().withAlpha(0.8f));
+        g.setFont(effectPanel::font());
+        g.drawText("Choose an effect from the menu above", effectPanel::gutter, 141,
+                   effectPanel::contentWidth, 18, juce::Justification::centred);
+    }
 }
 
 void SurgefxAudioProcessorEditor::resized()
 {
-    auto z = getImpliedZoom();
+    const auto panel = getLocalBounds().toFloat();
+    if (panel.isEmpty())
+        return;
 
-    const float pickerY = 16 * z;
-    const float pickerH = (topSection - 36.f) * z;
-    const float sideMargin = 9 * z;
-    const float pickerGap = 18 * z;
-    const float totalPickerW = getWidth() - 2.f * sideMargin - pickerGap;
-    const float halfW = totalPickerW * 0.5f;
-    const float footer = 40.f * z;
-    const float padding = 4.f * z;
-    const float logoSide = footer - (padding * 2.f);
-
-    picker->setBounds(
-        juce::Rectangle<float>(sideMargin, pickerY, halfW, pickerH).toNearestIntEdges());
-
-    if (presetPicker)
+    const auto transform = effectPanel::panelTransform(panel);
+    popupLayer.setBounds(0, 0, baseWidth, baseHeight);
+    popupLayer.setTransform(transform);
+    settingsButton->setTransform(transform);
+    settingsButton->setBounds(
+        effectPanel::statusArea.withTrimmedLeft(effectPanel::contentWidth - 24));
+    auto header = effectPanel::headerArea;
+    presetPicker->setTransform(transform);
+    presetPicker->setBounds(presetPicker->editingName ? header : header.removeFromRight(26));
+    tempoSyncPicker->setTransform(transform);
+    const bool hasTempoSync =
+        std::ranges::any_of(fxTempoSync, [](const auto &option) { return option.isEnabled(); });
+    tempoSyncPicker->setVisible(hasTempoSync && !presetPicker->editingName);
+    if (tempoSyncPicker->isVisible())
     {
-        presetPicker->setBounds(
-            juce::Rectangle<float>(sideMargin + halfW + pickerGap, pickerY, halfW, pickerH)
-                .toNearestIntEdges());
+        header.removeFromRight(3);
+        tempoSyncPicker->setBounds(header.removeFromRight(24));
+    }
+    refreshTempoSyncButton();
+    picker->setTransform(transform);
+    const auto titleWidth = juce::GlyphArrangement::getStringWidthInt(
+        effectPanel::font().withHeight(15.f), picker->currentLabel());
+    picker->setBounds(header.removeFromLeft(juce::jlimit(48, 160, titleWidth + 29)));
+
+    using Kind = effectPanel::Kind;
+    const auto effect = processor.getEffectType();
+    const auto &layout = effectPanel::layout(effect);
+    const auto origin = effectPanel::contentOrigin;
+    if (panelLabelEffect != effect)
+    {
+        panelLabelEffect = effect;
+        panelLabels.clear();
+        for (const auto &control : layout)
+        {
+            if (control.kind != Kind::group)
+                continue;
+
+            auto widget = std::make_unique<sst::jucegui::components::RuledLabel>();
+            widget->setStyle(effectPanel::panelStyle());
+            widget->setText(control.label.toStdString());
+            widget->setInterceptsMouseClicks(false, false);
+            widget->setAccessible(false); // Group names are part of each knob's accessible title.
+            addAndMakeVisible(*widget);
+            panelLabels.push_back(std::move(widget));
+        }
     }
 
-    const auto ypos0 = (topSection - 5.f) * z;
-    const auto rowHeight = (getHeight() - topSection * z - 40.f * z - 10.f * z) / 6.f;
-    const auto byoff = 7 * z;
-    const auto sliderOff = (getWidth() < baseWidth) ? 2.f * z : 5.f * z;
-    const auto buttonSize = (getWidth() < baseWidth) ? 17.f * z : 19.f * z;
-    const auto buttonMargin = std::max(1, (int)(1.f * z));
+    std::array<int, n_fx_params> slotToParam;
+    slotToParam.fill(-1);
+    int lastSlot = 0;
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        if (!processor.getParamEnabled(i))
+            continue;
+        const auto slot = processor.getStorageParamIndex(i);
+        if (slot < 0 || slot >= n_fx_params)
+            continue;
+        slotToParam[slot] = i;
+        lastSlot = std::max(lastSlot, slot);
+    }
+    const bool roomyAirwindows = effect == fxt_airwindows && lastSlot <= 6;
+
+    std::array<bool, n_fx_params> visibleKnobs{}, visibleNames{}, visibleLights{}, visibleExtend{};
+    size_t labelIndex = 0;
+    for (const auto &control : layout)
+    {
+        const auto pixels = control.bounds.toNearestIntEdges() + origin;
+        if (control.kind == Kind::group)
+        {
+            auto &label = *panelLabels[labelIndex++];
+            label.setTransform(transform);
+            label.setBounds(pixels);
+            continue;
+        }
+        if (control.slot < 0 || control.slot >= n_fx_params)
+            continue;
+        const int i = slotToParam[control.slot];
+        if (i < 0)
+            continue;
+
+        switch (control.kind)
+        {
+        case Kind::knob:
+        case Kind::fader:
+        case Kind::choice:
+        {
+            auto controlBounds = pixels;
+            if (roomyAirwindows && control.slot > 0)
+            {
+                const auto slot = control.slot - 1;
+                controlBounds =
+                    juce::Rectangle<int>(36 + 112 * (slot % 2), 69 + 61 * (slot / 2), 40, 40) +
+                    origin;
+            }
+            const auto size = std::min(controlBounds.getWidth(), controlBounds.getHeight());
+            auto &knob = fxParamKnobs[i];
+            knob.setTransform(transform);
+            knob.setBounds(control.kind == Kind::knob
+                               ? controlBounds.withSizeKeepingCentre(size, size)
+                               : controlBounds);
+            knob.repaint();
+            visibleKnobs[i] = true;
+
+            auto name =
+                control.useParamName ? processor.getParamName(i) : control.label.toStdString();
+            if (!name.empty())
+            {
+                auto &label = fxParamLabels[i];
+                label.setText(name);
+                label.setTransform(transform);
+                if (knob.isFader())
+                {
+                    label.setFontHeightOverride(10);
+                    label.setJustification(juce::Justification::centred);
+                    label.setBounds(pixels.withY(pixels.getBottom() + 3)
+                                        .withHeight(effectPanel::captionHeight));
+                }
+                else if (effect == fxt_airwindows)
+                {
+                    label.setFontHeightOverride(effectPanel::captionFontHeight);
+                    if (roomyAirwindows)
+                    {
+                        label.setJustification(juce::Justification::centred);
+                        label.setBounds(controlBounds.getCentreX() - 42, controlBounds.getBottom(),
+                                        84, effectPanel::captionHeight);
+                    }
+                    else
+                    {
+                        label.setJustification(juce::Justification::centredLeft);
+                        const auto labelLeft = pixels.getRight() + 3;
+                        const auto columnEnd = (control.slot % 2 == 1 ? 112 : 224) + origin.x;
+                        label.setBounds(labelLeft, pixels.getY(), columnEnd - labelLeft - 4,
+                                        pixels.getHeight());
+                    }
+                }
+                else
+                {
+                    label.setFontHeightOverride(effectPanel::captionFontHeight);
+                    label.setJustification(juce::Justification::centred);
+                    label.setBounds(effectPanel::captionBounds(layout, control) + origin);
+                }
+                visibleNames[i] = true;
+            }
+            break;
+        }
+        case Kind::power:
+            fxDeactivated[i].setTransform(transform);
+            fxDeactivated[i].setBounds(pixels);
+            visibleLights[i] = true;
+            break;
+        case Kind::extend:
+            fxExtended[i].setTransform(transform);
+            fxExtended[i].setBounds(pixels);
+            visibleExtend[i] = true;
+            break;
+        case Kind::group:
+            break; // Already placed above.
+        }
+    }
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        juce::Rectangle<float> position{(i / 6) * getWidth() / 2.f + sliderOff,
-                                        (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
-                                        rowHeight - sliderOff};
-        fxParamSliders[i].setBounds(position.toNearestIntEdges());
-
-        juce::Rectangle<float> tsPos{(i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z,
-                                     (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize,
-                                     buttonSize};
-        fxTempoSync[i].setBounds(tsPos.toNearestIntEdges());
-
-        juce::Rectangle<float> daPos{(i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z,
-                                     (i % 6) * rowHeight + ypos0 + byoff + 2.f * buttonMargin +
-                                         buttonSize,
-                                     buttonSize, buttonSize};
-        fxDeactivated[i].setBounds(daPos.toNearestIntEdges());
-
-        juce::Rectangle<float> exPos{
-            (i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z + buttonMargin + buttonSize,
-            (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize, buttonSize};
-        fxExtended[i].setBounds(exPos.toNearestIntEdges());
-
-        juce::Rectangle<float> abPos{
-            (i / 6) * getWidth() / 2.f + 2.f * z + rowHeight - 5.f * z + buttonMargin + buttonSize,
-            (i % 6) * rowHeight + ypos0 + byoff + 2.f * buttonMargin + buttonSize, buttonSize,
-            buttonSize};
-        fxAbsoluted[i].setBounds(abPos.toNearestIntEdges());
-
-        juce::Rectangle<float> dispPos{(i / 6) * getWidth() / 2.f + 4.f * z + rowHeight - 5.f * z +
-                                           2.f * buttonMargin + 2.f * buttonSize,
-                                       (i % 6) * rowHeight + ypos0,
-                                       getWidth() / 2.f - rowHeight - 8.f * z - 2.f * buttonMargin -
-                                           2.f * buttonSize,
-                                       rowHeight - 5.f * z};
-        fxParamDisplay[i].setBounds(dispPos.toNearestIntEdges());
+        fxParamKnobs[i].setVisible(visibleKnobs[i]);
+        fxParamLabels[i].setVisible(visibleNames[i]);
+        fxDeactivated[i].setVisible(visibleLights[i]);
+        fxExtended[i].setVisible(visibleExtend[i]);
     }
-
-    logoButton->setBounds(
-        juce::Rectangle<float>(3.f * z, getHeight() - footer + padding, logoSide, logoSide)
-            .toNearestIntEdges());
-
-    juce::Rectangle<float> titleRect{34.f * z, getHeight() - (40.f * z), 350.f * z, 40.f * z};
-
-    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26 * z));
-    fxNameLabel->setBounds(titleRect.toNearestIntEdges());
 }
 
-int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(int zoomLow, int zoomHigh,
-                                                               int zoomQuanta,
-                                                               int percentageOfScreenAvailable,
-                                                               float baseW, float baseH)
-{
-    // Here is a very crude implementation
-    int result = zoomHigh;
-    auto screenDim = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea;
-    float sx = screenDim.getWidth() * percentageOfScreenAvailable / 100.0;
-    float sy = screenDim.getHeight() * percentageOfScreenAvailable / 100.0;
-
-    while (result > zoomLow)
-    {
-        if (result * baseW / 100.0 <= sx && result * baseH / 100.0 <= sy)
-            break;
-        result -= zoomQuanta;
-    }
-    if (result < zoomLow)
-        result = zoomLow;
-
-    return result;
-}
-
-void SurgefxAudioProcessorEditor::makeMenu()
+void SurgefxAudioProcessorEditor::buildEffectMenu()
 {
     auto storage = processor.storage.get();
     auto fxConfiguration = storage->getSnapshotSection("fx");
@@ -1498,9 +1691,6 @@ void SurgefxAudioProcessorEditor::makeMenu()
         else
         {
             men.type = FxMenu::SECTION;
-            int bk = 0;
-            c->QueryIntAttribute("columnbreak", &bk);
-            men.isBreak = bk;
         }
         menu.push_back(men);
 
@@ -1508,17 +1698,16 @@ void SurgefxAudioProcessorEditor::makeMenu()
     }
 }
 
-void SurgefxAudioProcessorEditor::showMenu()
+void SurgefxAudioProcessorEditor::showEffectMenu()
 {
+    if (picker->menuOpen)
+        return;
+
     auto p = juce::PopupMenu();
+    auto safe = juce::Component::SafePointer(this);
 
     for (const auto &m : menu)
     {
-        if (m.isBreak)
-        {
-            p.addColumnBreak();
-        }
-
         if (m.type == FxMenu::SECTION)
         {
             p.addSectionHeader(m.name);
@@ -1526,87 +1715,239 @@ void SurgefxAudioProcessorEditor::showMenu()
 
         if (m.type == FxMenu::FX)
         {
-            p.addItem(m.name, [this, m]() {
-                if (m.fxtype > 0)
-                {
-                    setEffectType(m.fxtype);
-                }
+            p.addItem(m.name, [safe, type = m.fxtype]() {
+                if (safe && type > 0)
+                    safe->setEffectType(type);
             });
         }
     }
 
-    auto o = juce::PopupMenu::Options()
-                 .withTargetComponent(picker.get())
+    auto o = menuOptions(picker.get())
                  .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::downwards);
 
-    p.showMenuAsync(o);
+    picker->menuOpen = true;
+    picker->repaint();
+    p.showMenuAsync(o, [safe](int) {
+        if (safe)
+        {
+            safe->picker->menuOpen = false;
+            safe->picker->repaint();
+        }
+    });
 }
 
-void SurgefxAudioProcessorEditor::showLogoMenu()
+void SurgefxAudioProcessorEditor::toggleTempoSync()
 {
-    auto p = juce::PopupMenu();
-    auto oscm = makeOSCMenu();
-
-    p.addSubMenu("OSC", oscm);
-
-    std::vector<int> zoomTos = {{75, 100, 125, 150, 200}};
-    std::string lab;
-    auto dzf = Surge::Storage::getUserDefaultValue(processor.storage.get(),
-                                                   Surge::Storage::FXUnitDefaultZoom, 100);
-
-    auto zm = juce::PopupMenu();
-    auto zoomTo = [this](int zf) { setSize(baseWidth * zf * 0.01, baseHeight * zf * 0.01); };
-
-    auto zoomFactor = (int)std::round(100.0 * getWidth() / baseWidth);
-
-    for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
+    const bool enable = tempoSyncPicker->getToggleState();
+    for (auto &option : fxTempoSync)
     {
-        lab = fmt::format("Zoom to {:d}%", s);
+        if (!option.isEnabled() || option.getToggleState() == enable)
+            continue;
+        option.setToggleState(enable, juce::dontSendNotification);
+        option.onClick();
+    }
+}
 
-        bool ticked = (s == zoomFactor);
+void SurgefxAudioProcessorEditor::refreshTempoSyncButton()
+{
+    const bool any =
+        std::ranges::any_of(fxTempoSync, [](const auto &option) { return option.isEnabled(); });
+    const bool all = std::ranges::all_of(fxTempoSync, [](const auto &option) {
+        return !option.isEnabled() || option.getToggleState();
+    });
+    tempoSyncPicker->setToggleState(any && all, juce::dontSendNotification);
+}
 
-        zm.addItem(lab, true, ticked, [this, s, zoomTo]() { zoomTo(s); });
+void SurgefxAudioProcessorEditor::setZoomPercent(int percent)
+{
+    const auto scale = effectPanel::nativeScale * percent * 0.01;
+    setSize(juce::roundToInt(baseWidth * scale), juce::roundToInt(baseHeight * scale));
+}
+
+int SurgefxAudioProcessorEditor::getZoomPercent() const
+{
+    return juce::roundToInt(100.0 * getWidth() / (effectPanel::nativeScale * baseWidth));
+}
+
+void SurgefxAudioProcessorEditor::showSettingsMenu()
+{
+    juce::PopupMenu menu;
+    menu.addSubMenu("OSC", makeOSCMenu());
+
+    juce::PopupMenu zm;
+    const auto zoomFactor = getZoomPercent();
+    for (int percent : {75, effectPanel::defaultZoom, 125, 150, 200})
+    {
+        zm.addItem(fmt::format("Zoom to {}%", percent), true, percent == zoomFactor,
+                   [this, percent] { setZoomPercent(percent); });
     }
 
-    zm.addSeparator();
+    menu.addSubMenu("Zoom", zm);
 
-    lab = fmt::format("Zoom to Default ({:d}%)", dzf);
+    menu.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
+                 [this]() { toggleLatencyMode(); });
+    menu.showMenuAsync(
+        menuOptions(settingsButton.get())
+            .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::upwards));
+}
 
-    zm.addItem(Surge::GUI::toOSCase(lab), [this, dzf, zoomTo]() { zoomTo(dzf); });
+juce::PopupMenu::Options SurgefxAudioProcessorEditor::menuOptions(juce::Component *anchor)
+{
+    // Six Sines parents menus inside its zoom transform. Use the same logical
+    // coordinates here without transforming the host-facing editor bounds.
+    // The editor is too narrow for adjacent menu columns.
+    auto options =
+        juce::PopupMenu::Options().withParentComponent(&popupLayer).withMaximumNumColumns(1);
+    return anchor ? options.withTargetComponent(anchor) : options;
+}
 
-    if ((int)zoomFactor != dzf)
+void SurgefxAudioProcessorEditor::showParameterMenu(int i)
+{
+    const int effectType = processor.getEffectType();
+    juce::PopupMenu menu;
+    menu.addSectionHeader(juce::String(processor.getParamName(i)) + ": " +
+                          juce::String(processor.getParamValue(i)));
+    auto safe = juce::Component::SafePointer(this);
+    if (fxParamKnobs[i].isChoice() && !fxParamKnobs[i].isEditingBlocked())
     {
-        lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
+        const auto select = [safe, i, effectType](float normalized) {
+            if (!safe || safe->processor.getEffectType() != effectType)
+                return;
+            auto &knob = safe->fxParamKnobs[i];
+            if (!knob.isChoice() || knob.isEditingBlocked())
+                return;
+            knob.onBeginEdit();
+            knob.binding.setValueFromGUI(normalized);
+            knob.onEndEdit();
+        };
+        if (effectType != fxt_airwindows)
+        {
+            if (const auto range = processor.getFXParamChoiceRange(i))
+            {
+                const auto [first, last] = *range;
+                const auto selected =
+                    Parameter::intUnscaledFromFloat(processor.getFXStorageValue01(i), last, first);
+                for (int value = first; value <= last; ++value)
+                {
+                    const auto normalized = Parameter::intScaledToFloat(value, last, first);
+                    menu.addItem(processor.getParamValueFor(i, normalized), true, selected == value,
+                                 [select, normalized]() { select(normalized); });
+                }
+                menu.addSeparator();
+            }
+        }
+        else
+        {
+            const auto &algorithms = AirWindowsEffect::fxreg();
+            const auto last = static_cast<int>(algorithms.size()) - 1;
+            const auto value = processor.getFXStorageValue01(i);
+            std::map<std::string, juce::PopupMenu> groups;
+            for (int index : AirWindowsEffect::fxregOrdering())
+            {
+                if (index < 0 ||
+                    index > last) // The display ordering also contains heading markers.
+                    continue;
+                const auto &algorithm = algorithms[index];
+                const auto normalized = Parameter::intScaledToFloat(index, last);
+                const auto selected = std::abs(value - normalized) < 0.5f / (last + 1);
+                groups[algorithm.groupName].addItem(algorithm.name, true, selected,
+                                                    [select, normalized]() { select(normalized); });
+            }
+            for (auto &[group, choices] : groups)
+                menu.addSubMenu(juce::String(group.empty() ? "Other" : group), std::move(choices));
+            menu.addSeparator();
+        }
+    }
+    if (!fxParamKnobs[i].isEditingBlocked())
+    {
+        const auto reset = [safe, i, effectType]() {
+            if (!safe || safe->processor.getEffectType() != effectType)
+                return;
+            auto &knob = safe->fxParamKnobs[i];
+            if (knob.isEditingBlocked())
+                return;
+            knob.onBeginEdit();
+            knob.binding.setValueFromGUI(knob.binding.getDefaultValue());
+            knob.onEndEdit();
+        };
+        if (fxParamKnobs[i].binding.acceptsText && !fxParamKnobs[i].isChoice())
+        {
+            menu.addSeparator();
+            menu.addCustomItem(-1,
+                               std::make_unique<MenuValueEntry>(
+                                   processor.getParamName(i), processor.getParamValue(i),
+                                   [safe, i, effectType, reset](const juce::String &value) {
+                                       if (!safe || safe->processor.getEffectType() != effectType)
+                                           return true;
+                                       if (value.trim().isEmpty())
+                                       {
+                                           reset();
+                                           return true;
+                                       }
+                                       return safe->fxParamKnobs[i].binding.trySetValueAsString(
+                                           value.toStdString());
+                                   }));
+            menu.addSeparator();
+        }
+        menu.addItem("Set to Default", reset);
+    }
 
-        zm.addItem(Surge::GUI::toOSCase(lab), [this, zoomFactor]() {
-            Surge::Storage::updateUserDefaultValue(processor.storage.get(),
-                                                   Surge::Storage::FXUnitDefaultZoom, zoomFactor);
+    auto addOption = [&](const char *name, surge::fx::ParameterOption *option) {
+        if (!option->isEnabled())
+            return;
+        menu.addItem(name, true, option->getToggleState(), [safe, effectType, option]() {
+            if (safe && safe->processor.getEffectType() == effectType && option->isEnabled())
+            {
+                option->setToggleState(!option->getToggleState(), juce::dontSendNotification);
+                option->onClick();
+            }
         });
-    }
-
-    if (isResizable())
-    {
-        p.addSubMenu("Zoom", zm);
-    }
-
-    p.addSeparator();
-
-    p.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
-              [this]() { toggleLatencyMode(); });
-
-    logoButton->menuOpen = true;
-    logoButton->repaint();
-
-    auto o = juce::PopupMenu::Options()
-                 .withTargetComponent(logoButton.get())
-                 .withPreferredPopupDirection(juce::PopupMenu::Options::PopupDirection::upwards);
-
-    auto closeAction = [this](int) {
-        logoButton->menuOpen = false;
-        logoButton->repaint();
     };
+    addOption("Tempo sync", &fxTempoSync[i]);
+    addOption("Extended range", &fxExtended[i]);
+    addOption("Absolute", &fxAbsoluted[i]);
+    addOption(effectType == fxt_delay &&
+                      processor.getStorageParamIndex(i) == DelayEffect::dly_time_right
+                  ? "Link right delay time"
+                  : "Deactivate",
+              &fxDeactivated[i]);
 
-    p.showMenuAsync(o, closeAction);
+    if (auto *context = getHostContext())
+    {
+        if (auto *param = processor.getHostParameterFor(i, SurgeFX::ParamKind::Knob))
+        {
+            if (auto hostMenu = context->getContextMenuForParameter(param))
+            {
+                auto items = modifyHostMenu(hostMenu->getEquivalentPopupMenu(), param);
+                if (items.getNumItems() > 0)
+                {
+                    menu.addSeparator();
+                    menu.addItem("Host Automation...", [safe, i, effectType,
+                                                        items = std::move(items)]() mutable {
+                        if (!safe || safe->processor.getEffectType() != effectType)
+                            return;
+                        auto &knob = safe->fxParamKnobs[i];
+                        auto options = safe->menuOptions(knob.isShowing() ? &knob : nullptr);
+                        items.showMenuAsync(options.withMinimumWidth(baseWidth - 32));
+                    });
+                }
+            }
+        }
+    }
+    auto *anchor = fxParamKnobs[i].isVisible() ? static_cast<juce::Component *>(&fxParamKnobs[i])
+                                               : picker.get();
+    menu.showMenuAsync(menuOptions(anchor), [safe, i, effectType](int) {
+        if (!safe || safe->processor.getEffectType() != effectType)
+            return;
+
+        // The inline editor takes focus from the knob. Put it back unless the user
+        // or a host menu action moved focus outside the FX editor.
+        auto *focused = juce::Component::getCurrentlyFocusedComponent();
+        auto &knob = safe->fxParamKnobs[i];
+        if (knob.isShowing() &&
+            (!focused || focused == safe.getComponent() || safe->isParentOf(focused)))
+            knob.grabKeyboardFocus();
+    });
 }
 
 void SurgefxAudioProcessorEditor::showHostContextMenuFor(juce::AudioProcessorParameter *param)
@@ -1623,172 +1964,83 @@ void SurgefxAudioProcessorEditor::showHostContextMenuFor(juce::AudioProcessorPar
             auto menu = menuInfo->getEquivalentPopupMenu();
 
             menu = modifyHostMenu(menu, param);
-            menu.showMenuAsync(juce::PopupMenu::Options{});
+            menu.showMenuAsync(menuOptions());
         }
     }
 }
 
 juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
 {
-    auto oscSubMenu = juce::PopupMenu();
+    juce::PopupMenu menu;
+    auto safe = juce::Component::SafePointer(this);
+    const bool listening = processor.oscReceiving.load();
+    menu.addItem("Enable OSC server", listening || processor.oscPortIn > 0, listening, [safe]() {
+        if (!safe)
+            return;
+        auto &processor = safe->processor;
+        if (processor.oscReceiving.load())
+            processor.oscHandler.stopListening();
+        else if (!processor.initOSCIn(processor.oscPortIn))
+            processor.initOSCError(processor.oscPortIn);
+    });
 
-    if (processor.oscReceiving.load())
-    {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Connections"),
-                           [this]() { processor.oscHandler.stopListening(); });
-    }
-    else
-    {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Connections"), [this]() {
-            if (processor.oscPortIn > 0)
-            {
-                if (!processor.initOSCIn(processor.oscPortIn))
-                {
-                    processor.initOSCError(processor.oscPortIn);
-                }
-            }
-        });
-    }
+    menu.addItem("Input OSC port (" + juce::String(processor.oscPortIn) + ")", [safe]() {
+        if (safe)
+            safe->showOSCInputPortDialog();
+    });
 
-    std::string iport =
-        (processor.oscPortIn == 0) ? "not used" : std::to_string(processor.oscPortIn);
-
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Set OSC Input Port (Current: " + iport + ")"),
-                       [w = juce::Component::SafePointer(this), iport]() {
-                           if (!w)
-                               return;
-                           w->promptForTypeinValue(
-                               "Enter a new OSC input port number:", iport, [w](const auto &a) {
-                                   int newPort;
-                                   try
-                                   {
-                                       newPort = std::stoi(a);
-                                   }
-                                   catch (...)
-                                   {
-                                       std::ostringstream msg;
-                                       msg << "Entered value is not a number. Please try again!";
-                                       w->processor.storage->reportError(msg.str(), "Input Error");
-                                       return;
-                                   }
-
-                                   if (newPort > 65535 || newPort < 0)
-                                   {
-                                       std::ostringstream msg;
-                                       msg << "Port number must be between 0 and 65535!";
-                                       w->processor.storage->reportError(
-                                           msg.str(), "Port Number Out Of Range");
-                                       return;
-                                   }
-
-                                   if (newPort == 0)
-                                   {
-                                       w->processor.oscHandler.stopListening();
-                                       w->processor.oscPortIn = newPort;
-                                   }
-                                   else if (w->processor.changeOSCInPort(newPort))
-                                   {
-                                       w->processor.oscPortIn = newPort;
-                                   }
-                                   else
-                                   {
-                                       w->processor.initOSCError(newPort);
-                                   }
-                               });
-                       });
-
-    oscSubMenu.addItem(
-        Surge::GUI::toOSCase("FX OSC Message Format"), [w = juce::Component::SafePointer(this)]() {
-            if (!w)
-                return;
-
-            std::string form_str =
-                "'/fx/param/<n> <val>'; replace <n> with 1 - 12 and <val> with 0.0 - 1.0 ";
-            w->processor.storage->reportError(form_str, "OSC Message Format");
-        });
-
-    return oscSubMenu;
+    menu.addItem("FX Message format", [safe]() {
+        if (safe)
+            juce::NativeMessageBox::showMessageBoxAsync(
+                juce::MessageBoxIconType::InfoIcon, "OSC message format",
+                "Example: /fx/param/1 0.5\nParameters 1–12, values 0–1.", safe.getComponent());
+    });
+    return menu;
 }
 
-struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextEditor::Listener
+void SurgefxAudioProcessorEditor::showOSCInputPortDialog()
 {
-    std::string prompt;
-    std::unique_ptr<juce::TextEditor> ed;
-    std::function<void(const std::string &)> cb{nullptr};
-
-    PromptOverlay()
-    {
-        ed = std::make_unique<juce::TextEditor>();
-        ed->setFont(SST_JUCE_FONT_OPTIONS(28));
-        ed->setColour(juce::TextEditor::ColourIds::textColourId, juce::Colours::white);
-        ed->setJustification(juce::Justification::centred);
-        ed->addListener(this);
-        ed->setWantsKeyboardFocus(true);
-        addAndMakeVisible(*ed);
-    }
-
-    void setInitVal(const std::string &s)
-    {
-        ed->clear();
-        ed->setText(s, juce::NotificationType::dontSendNotification);
-        ed->applyFontToAllText(SST_JUCE_FONT_OPTIONS(28));
-        ed->applyColourToAllText(juce::Colours::white);
-        ed->repaint();
-    }
-
-    void resized() override
-    {
-        auto teh = 35;
-        auto h = (getHeight() - teh) * 0.5;
-        ed->setBounds(10, h, getWidth() - 20, teh);
-    }
-
-    void paint(juce::Graphics &g) override
-    {
-        g.fillAll(juce::Colours::black.withAlpha(0.9f));
-        g.setColour(juce::Colours::white);
-        g.setFont(SST_JUCE_FONT_OPTIONS(28));
-        g.drawMultiLineText(prompt, 0, 50, getWidth(), juce::Justification::centred);
-    }
-
-    void textEditorReturnKeyPressed(juce::TextEditor &editor) override
-    {
-        if (cb)
-            cb(ed->getText().toStdString());
-        dismiss();
-    }
-
-    void textEditorEscapeKeyPressed(juce::TextEditor &editor) override { dismiss(); }
-
-    void visibilityChanged() override
-    {
-        if (isVisible())
-            ed->setWantsKeyboardFocus(true);
-    }
-
-    void dismiss()
-    {
-        cb = nullptr;
-        setVisible(false);
-    }
-};
-
-void SurgefxAudioProcessorEditor::promptForTypeinValue(const std::string &prompt,
-                                                       const std::string &initValue,
-                                                       std::function<void(const std::string &)> cb)
-{
-    if (promptOverlay && promptOverlay->isVisible())
+    if (oscPortDialog)
         return;
 
-    if (!promptOverlay)
-        promptOverlay = std::make_unique<PromptOverlay>();
+    oscPortDialog = std::make_unique<juce::AlertWindow>(
+        "OSC input port", "Enter a port from 1 to 65535, or 0 to disable the OSC server.",
+        juce::MessageBoxIconType::NoIcon, this);
+    auto &dialog = *oscPortDialog;
+    dialog.addTextEditor("port", juce::String(processor.oscPortIn), "Port");
+    dialog.addButton("Apply", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    dialog.addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
 
-    promptOverlay->prompt = prompt;
-    promptOverlay->cb = cb;
-    promptOverlay->setInitVal(initValue);
+    auto *input = dialog.getTextEditor("port");
+    input->setTitle("OSC input port");
+    dialog.getButton("Apply")->onClick = [this, input]() {
+        const auto text = input->getText().trim().toStdString();
+        const auto end = text.data() + text.size();
+        unsigned int port = 0;
+        const auto [ptr, error] = std::from_chars(text.data(), end, port);
+        if (error != std::errc{} || ptr != end || port > 65535)
+            oscPortDialog->setMessage("Enter a whole number from 0 to 65535.");
+        else if (!processor.changeOSCInPort(static_cast<int>(port)))
+            oscPortDialog->setMessage("Could not open port " + juce::String(port) +
+                                      ". Your previous setting is unchanged.");
+        else
+        {
+            oscPortDialog->exitModalState(1);
+            return;
+        }
 
-    promptOverlay->setBounds(getLocalBounds());
-    addAndMakeVisible(*promptOverlay);
+        input->grabKeyboardFocus();
+        input->selectAll();
+    };
+
+    dialog.setVisible(true);
+    dialog.enterModalState(
+        true, juce::ModalCallbackFunction::create([safe = juce::Component::SafePointer(this)](int) {
+            if (safe)
+                safe->oscPortDialog.reset();
+        }));
+    input->grabKeyboardFocus();
+    input->selectAll();
 }
 
 void SurgefxAudioProcessorEditor::onSurgeError(const std::string &msg, const std::string &title,
@@ -1799,11 +2051,6 @@ void SurgefxAudioProcessorEditor::onSurgeError(const std::string &msg, const std
         juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, title,
                                                msg, "OK");
     });
-}
-
-void SurgefxAudioProcessorEditor::changeOSCInputPort()
-{
-    // TODO: fill this out
 }
 
 void SurgefxAudioProcessorEditor::toggleLatencyMode()
@@ -1836,26 +2083,14 @@ struct FxFocusTrav : public juce::ComponentTraverser
     }
     juce::Component *searchDir(juce::Component *from, int dir)
     {
-        const auto iter = std::find(editor->accessibleOrderWeakRefs.cbegin(),
-                                    editor->accessibleOrderWeakRefs.cend(), from);
-        if (iter == editor->accessibleOrderWeakRefs.cend())
+        const auto visible = getAllComponents(editor);
+        const auto iter = std::find(visible.begin(), visible.end(), from);
+        if (iter == visible.end())
             return nullptr;
-
-        switch (dir)
-        {
-        case 1:
-            if (iter != std::prev(editor->accessibleOrderWeakRefs.cend()))
-            {
-                return *std::next(iter);
-            }
-            break;
-        case -1:
-            if (iter != editor->accessibleOrderWeakRefs.cbegin())
-            {
-                return *std::prev(iter);
-            }
-            break;
-        }
+        if (dir > 0 && std::next(iter) != visible.end())
+            return *std::next(iter);
+        if (dir < 0 && iter != visible.begin())
+            return *std::prev(iter);
         return nullptr;
     }
     juce::Component *getNextComponent(juce::Component *current) override
@@ -1866,9 +2101,13 @@ struct FxFocusTrav : public juce::ComponentTraverser
     {
         return searchDir(current, -1);
     }
-    std::vector<juce::Component *> getAllComponents(juce::Component *parentComponent) override
+    std::vector<juce::Component *> getAllComponents(juce::Component *) override
     {
-        return editor->accessibleOrderWeakRefs;
+        std::vector<juce::Component *> visible;
+        for (auto *component : editor->accessibleOrderWeakRefs)
+            if (component->isVisible() && component->isAccessible())
+                visible.push_back(component);
+        return visible;
     }
     SurgefxAudioProcessorEditor *editor{nullptr};
 };
@@ -1880,14 +2119,12 @@ std::unique_ptr<juce::ComponentTraverser> SurgefxAudioProcessorEditor::createFoc
 
 bool SurgefxAudioProcessorEditor::keyPressed(const juce::KeyPress &key)
 {
-    auto zoomTo = [this](int zf) { setSize(baseWidth * zf * 0.01, baseHeight * zf * 0.01); };
-    auto zoomFactor = (int)std::round(100.0 * getWidth() / baseWidth);
+    auto zoomTo = [this](int zf) { setZoomPercent(zf); };
+    auto zoomFactor = getZoomPercent();
 
     if (key.getTextCharacter() == '/' && (key.getModifiers().isShiftDown()))
     {
-        auto dzf = Surge::Storage::getUserDefaultValue(processor.storage.get(),
-                                                       Surge::Storage::FXUnitDefaultZoom, 100);
-        zoomTo(dzf);
+        zoomTo(effectPanel::defaultZoom);
         return true;
     }
     int incrZoom = 0;
@@ -1918,17 +2155,7 @@ void SurgefxAudioProcessorEditor::idle()
     {
         priorValid = processor.m_audioValid;
 
-        if (!processor.m_audioValid)
-        {
-            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(18 * getImpliedZoom()));
-            fxNameLabel->setText(processor.m_audioValidMessage,
-                                 juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(26 * getImpliedZoom()));
-            fxNameLabel->setText("Surge XT Effects", juce::NotificationType::dontSendNotification);
-        }
+        repaint();
     }
 
     auto pending = processor.consumePendingPresetName();
@@ -1937,6 +2164,6 @@ void SurgefxAudioProcessorEditor::idle()
     {
         rebuildCurrentPresets();
         selectPresetByStoredName();
-        resetLabels();
+        refreshParameterControls();
     }
 }

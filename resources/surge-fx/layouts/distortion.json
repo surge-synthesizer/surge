@@ -1,0 +1,21 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "knob4": {"class": "knob", "binding": {"type": "fx-param", "index": 4}, "label": "Drive", "position": {"x": 32, "y": 12, "w": 32, "h": 32}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Fdbk", "position": {"x": 160, "y": 12, "w": 32, "h": 32}},
+    "section1_0": {"class": "group", "label": "Pre EQ", "position": {"x": 4, "y": 66, "w": 216, "h": 15}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Gain", "position": {"x": 10, "y": 86, "w": 32, "h": 32}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Freq", "position": {"x": 62, "y": 86, "w": 32, "h": 32}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Bw", "position": {"x": 130, "y": 86, "w": 32, "h": 32}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Hi Cut", "position": {"x": 182, "y": 86, "w": 32, "h": 32}},
+    "power3": {"class": "light", "binding": {"type": "fx-param", "index": 3}, "position": {"x": 214, "y": 87, "w": 10, "h": 10}},
+    "section2_0": {"class": "group", "label": "Post EQ", "position": {"x": 4, "y": 132, "w": 216, "h": 15}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Gain", "position": {"x": 10, "y": 152, "w": 32, "h": 32}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Freq", "position": {"x": 62, "y": 152, "w": 32, "h": 32}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Bw", "position": {"x": 130, "y": 152, "w": 32, "h": 32}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Hi Cut", "position": {"x": 182, "y": 152, "w": 32, "h": 32}},
+    "power9": {"class": "light", "binding": {"type": "fx-param", "index": 9}, "position": {"x": 214, "y": 153, "w": 10, "h": 10}},
+    "knob11": {"class": "choice", "binding": {"type": "fx-param", "index": 11}, "label": "Model", "position": {"x": 13, "y": 215, "w": 103, "h": 23}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Output", "position": {"x": 161, "y": 210, "w": 32, "h": 32}}
+  }
+}

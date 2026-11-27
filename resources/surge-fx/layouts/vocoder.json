@@ -1,0 +1,20 @@
+{
+  "include": "classes.json",
+  "controls": {
+    "section0_0": {"class": "group", "label": "Modulator", "position": {"x": 4, "y": 0, "w": 216, "h": 15}},
+    "knob8": {"class": "knob", "binding": {"type": "fx-param", "index": 8}, "label": "Input", "position": {"x": 32, "y": 20, "w": 32, "h": 32}},
+    "knob9": {"class": "knob", "binding": {"type": "fx-param", "index": 9}, "label": "Range", "position": {"x": 96, "y": 20, "w": 32, "h": 32}},
+    "knob10": {"class": "knob", "binding": {"type": "fx-param", "index": 10}, "label": "Center", "position": {"x": 160, "y": 20, "w": 32, "h": 32}},
+    "section1_0": {"class": "group", "label": "Input", "position": {"x": 4, "y": 66, "w": 96, "h": 15}},
+    "knob0": {"class": "knob", "binding": {"type": "fx-param", "index": 0}, "label": "Gain", "position": {"x": 10, "y": 86, "w": 32, "h": 32}},
+    "knob1": {"class": "knob", "binding": {"type": "fx-param", "index": 1}, "label": "Gate", "position": {"x": 62, "y": 86, "w": 32, "h": 32}},
+    "section1_1": {"class": "group", "label": "Band Range", "position": {"x": 124, "y": 66, "w": 96, "h": 15}},
+    "knob6": {"class": "knob", "binding": {"type": "fx-param", "index": 6}, "label": "Min", "position": {"x": 130, "y": 86, "w": 32, "h": 32}},
+    "knob7": {"class": "knob", "binding": {"type": "fx-param", "index": 7}, "label": "Max", "position": {"x": 182, "y": 86, "w": 32, "h": 32}},
+    "section2_0": {"class": "group", "label": "Filter Bank", "position": {"x": 4, "y": 132, "w": 216, "h": 15}},
+    "knob2": {"class": "knob", "binding": {"type": "fx-param", "index": 2}, "label": "Follow", "position": {"x": 32, "y": 152, "w": 32, "h": 32}},
+    "knob3": {"class": "knob", "binding": {"type": "fx-param", "index": 3}, "label": "Res", "position": {"x": 96, "y": 152, "w": 32, "h": 32}},
+    "knob5": {"class": "knob", "binding": {"type": "fx-param", "index": 5}, "label": "Bands", "position": {"x": 160, "y": 152, "w": 32, "h": 32}},
+    "knob11": {"class": "knob", "binding": {"type": "fx-param", "index": 11}, "label": "Mix", "position": {"x": 96, "y": 210, "w": 32, "h": 32}}
+  }
+}
